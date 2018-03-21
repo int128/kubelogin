@@ -1,0 +1,36 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.10
+    working_directory: /go/src/github.com/int128/kubelogin
+    steps:
+      - checkout
+      - run: go get -v -t -d
+      - run: go get github.com/golang/lint/golint
+      - run: golint
+      - run: go build -v
+
+  release:
+    docker:
+      - image: circleci/golang:1.10
+    working_directory: /go/src/github.com/int128/kubelogin
+    steps:
+      - checkout
+      - run: go get -v -t -d
+      - run: go get github.com/mitchellh/gox
+      - run: go get github.com/tcnksm/ghr
+      - run: gox --osarch 'darwin/amd64 linux/amd64 windows/amd64' -output 'dist/{{.Dir}}_{{.OS}}_{{.Arch}}'
+      - run: ghr -u "$CIRCLE_PROJECT_USERNAME" -r "$CIRCLE_PROJECT_REPONAME" "$CIRCLE_TAG" dist
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+      - release:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.*/
