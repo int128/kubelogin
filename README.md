@@ -1,8 +1,6 @@
 # kubelogin [![CircleCI](https://circleci.com/gh/int128/kubelogin.svg?style=shield)](https://circleci.com/gh/int128/kubelogin)
 
-`kubelogin` is a command tool to setup authentication for `kubectl`.
-
-Currently OpenID Connect (OIDC) is supported.
+`kubelogin` is a command to setup OpenID Connect (OIDC) authentication for `kubectl`.
 
 ## Getting Started
 
@@ -32,19 +30,24 @@ spec:
 
 ### 3. Setup kubectl
 
+Share the following script to setup `kubectl`:
+
 ```sh
 CLUSTER_NAME=hello.k8s.local
 
+# Set the cluster
 kubectl config set-cluster $CLUSTER_NAME \
   --server https://api.example.com \
   --certificate-authority ~/.kube/$CLUSTER_NAME.crt
 
+# Set the credentials
 kubectl config set-credentials $CLUSTER_NAME \
   --auth-provider oidc \
   --auth-provider-arg idp-issuer-url=https://keycloak.example.com/auth/realms/hello \
   --auth-provider-arg client-id=kubernetes \
   --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
 
+# Set the context
 kubectl config set-context $CLUSTER_NAME --cluster $CLUSTER_NAME --user $CLUSTER_NAME
 ```
 
