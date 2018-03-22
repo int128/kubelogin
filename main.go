@@ -23,7 +23,7 @@ func main() {
 		log.Fatal("Could not find the current user")
 	}
 	authProvider := authInfo.AuthProvider
-	if authInfo == nil {
+	if authProvider == nil {
 		log.Fatal("auth-provider is not set in the config")
 	}
 
