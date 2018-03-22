@@ -17,6 +17,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Using current context: %s", kubeConfig.CurrentContext)
 
 	authInfo := GetCurrentAuthInfo(*kubeConfig)
 	if authInfo == nil {
@@ -32,8 +33,8 @@ func main() {
 		if err := mutateConfigWithOIDC(authProvider); err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("Updating %s", kubeConfigPath)
 		WriteKubeConfig(*kubeConfig, kubeConfigPath)
+		log.Printf("Updated %s", kubeConfigPath)
 
 	default:
 		log.Fatalf("Currently auth-provider `%s` is not supported", authProvider.Name)
@@ -44,7 +45,9 @@ func mutateConfigWithOIDC(authProvider *api.AuthProviderConfig) error {
 	issuer := authProvider.Config["idp-issuer-url"]
 	clientID := authProvider.Config["client-id"]
 	clientSecret := authProvider.Config["client-secret"]
-	oidcToken, err := GetOIDCTokenByAuthCode(issuer, clientID, clientSecret)
+	log.Printf("Using issuer: %s", issuer)
+	log.Printf("Using client ID: %s", clientID)
+	oidcToken, err := GetOIDCToken(issuer, clientID, clientSecret)
 	if err != nil {
 		return err
 	}
