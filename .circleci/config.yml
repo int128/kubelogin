@@ -20,7 +20,7 @@ jobs:
       - run: go get -v -t -d
       - run: go get github.com/mitchellh/gox
       - run: go get github.com/tcnksm/ghr
-      - run: gox --osarch 'darwin/amd64 linux/amd64 windows/amd64' -output 'dist/{{.Dir}}_{{.OS}}_{{.Arch}}'
+      - run: gox --osarch 'darwin/amd64 linux/amd64 windows/amd64 windows/386' -output 'dist/{{.Dir}}_{{.OS}}_{{.Arch}}'
       - run: ghr -u "$CIRCLE_PROJECT_USERNAME" -r "$CIRCLE_PROJECT_REPONAME" "$CIRCLE_TAG" dist
 
 workflows:
