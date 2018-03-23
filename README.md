@@ -46,7 +46,16 @@ Enter the code:
 Open http://localhost:8000 in your browser.
 If you cannot access to localhost, you can get the authorization code and enter it manually instead.
 
-Then, `kubelogin` will update your `~/.kube/config` with the ID token and refresh token, as follows:
+Then, `kubelogin` will update your `~/.kube/config` with the ID token and refresh token.
+
+```
+2018/03/23 18:01:46 Exchanging code and token...
+2018/03/23 18:01:46 Verifying ID token...
+2018/03/23 18:01:46 You are logged in as foo@example.com (********)
+2018/03/23 18:01:46 Updated /home/user/.kube/config
+```
+
+Your `~/.kube/config` looks like:
 
 ```yaml
 # ~/.kube/config (snip)
