@@ -133,22 +133,28 @@ kubectl config set-credentials CLUSTER_NAME \
 In actual team operation, you can share the following config to your team members for easy setup.
 
 ```yaml
+#!/bin/sh
 CLUSTER_NAME="hello.k8s.local"
 
 # Set the certificate
-echo "YOUR_CERTIFICATE" > "~/.kube/$CLUSTER_NAME.crt"
+mkdir -p "$HOME/.kube"
+cat > "$HOME/.kube/$CLUSTER_NAME.crt" <<EOF
+-----BEGIN CERTIFICATE-----
+MII...
+-----END CERTIFICATE-----
+EOF
 
 # Set the cluster
 kubectl config set-cluster "$CLUSTER_NAME" \
-  --server https://api-xxx.elb.amazonaws.com \
-  --certificate-authority "~/.kube/$CLUSTER_NAME.crt"
+  --server https://api-xxx.xxx.elb.amazonaws.com \
+  --certificate-authority "$HOME/.kube/$CLUSTER_NAME.crt"
 
 # Set the credentials
 kubectl config set-credentials "$CLUSTER_NAME" \
   --auth-provider oidc \
   --auth-provider-arg idp-issuer-url=https://keycloak.example.com/auth/realms/hello \
   --auth-provider-arg client-id=kubernetes \
-  --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
+  --auth-provider-arg client-secret=YOUR_SECRET
 
 # Set the context
 kubectl config set-context "$CLUSTER_NAME" --cluster "$CLUSTER_NAME" --user "$CLUSTER_NAME"
