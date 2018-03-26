@@ -55,16 +55,10 @@ Then, `kubelogin` will update your `~/.kube/config` with the ID token and refres
 2018/03/23 18:01:46 Updated /home/user/.kube/config
 ```
 
-Your `~/.kube/config` looks like:
+Now your `~/.kube/config` looks like:
 
 ```yaml
 # ~/.kube/config (snip)
-current-context: hello.k8s.local
-contexts:
-- context:
-    cluster: hello.k8s.local
-    user: hello.k8s.local
-  name: hello.k8s.local
 users:
 - name: hello.k8s.local
   user:
@@ -136,9 +130,9 @@ kubectl config set-credentials CLUSTER_NAME \
   --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
 ```
 
-In actual team operation, you can share the following script to your team members for easy setup.
+In actual team operation, you can share the following config to your team members for easy setup.
 
-```sh
+```yaml
 CLUSTER_NAME="hello.k8s.local"
 
 # Set the certificate
@@ -166,8 +160,12 @@ kubectl config set-context "$CLUSTER_NAME" --cluster "$CLUSTER_NAME" --user "$CL
 This is an open source software licensed under Apache License 2.0.
 Feel free to open issues and pull requests.
 
-### How to build
+### Build
 
 ```sh
 go get github.com/int128/kubelogin
 ```
+
+### Release
+
+CircleCI publishes the build to GitHub. See [.circleci/config.yml](.circleci/config.yml).
