@@ -160,7 +160,7 @@ kubectl config set-credentials "$CLUSTER_NAME" \
 kubectl config set-context "$CLUSTER_NAME" --cluster "$CLUSTER_NAME" --user "$CLUSTER_NAME"
 
 # Set the current context
-kubectl config set-context "$CLUSTER_NAME"
+kubectl config use-context "$CLUSTER_NAME"
 ```
 
 
