@@ -6,7 +6,7 @@ jobs:
     working_directory: /go/src/github.com/int128/kubelogin
     steps:
       - checkout
-      - run: go get -v -t -d
+      - run: go get -v -t -d ./...
       - run: go get github.com/golang/lint/golint
       - run: golint
       - run: go build -v
@@ -17,7 +17,7 @@ jobs:
     working_directory: /go/src/github.com/int128/kubelogin
     steps:
       - checkout
-      - run: go get -v -t -d
+      - run: go get -v -t -d ./...
       - run: go get github.com/mitchellh/gox
       - run: go get github.com/tcnksm/ghr
       - run: gox --osarch 'darwin/amd64 linux/amd64 windows/amd64 windows/386' -output 'dist/{{.Dir}}_{{.OS}}_{{.Arch}}'

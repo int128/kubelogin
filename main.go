@@ -3,23 +3,24 @@ package main
 import (
 	"log"
 
+	"github.com/int128/kubelogin/kubeconfig"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 func main() {
-	kubeConfigPath, err := FindKubeConfig()
+	kubeConfigPath, err := kubeconfig.Find()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Printf("Reading config from %s", kubeConfigPath)
-	kubeConfig, err := ReadKubeConfig(kubeConfigPath)
+	kubeConfig, err := kubeconfig.Load(kubeConfigPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("Using current context: %s", kubeConfig.CurrentContext)
 
-	authInfo := GetCurrentAuthInfo(*kubeConfig)
+	authInfo := kubeconfig.FindCurrentAuthInfo(kubeConfig)
 	if authInfo == nil {
 		log.Fatal("Could not find the current user")
 	}
@@ -33,7 +34,7 @@ func main() {
 		if err := mutateConfigWithOIDC(authProvider); err != nil {
 			log.Fatal(err)
 		}
-		WriteKubeConfig(*kubeConfig, kubeConfigPath)
+		kubeconfig.Write(kubeConfig, kubeConfigPath)
 		log.Printf("Updated %s", kubeConfigPath)
 
 	default:
