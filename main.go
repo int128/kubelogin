@@ -12,14 +12,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	log.Printf("Reading config from %s", kubeConfigPath)
 	kubeConfig, err := kubeconfig.Load(kubeConfigPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("Using current context: %s", kubeConfig.CurrentContext)
-
 	authInfo := kubeconfig.FindCurrentAuthInfo(kubeConfig)
 	if authInfo == nil {
 		log.Fatal("Could not find the current user")
@@ -28,18 +26,15 @@ func main() {
 	if authProvider == nil {
 		log.Fatal("auth-provider is not set in the config")
 	}
-
-	switch authProvider.Name {
-	case "oidc":
-		if err := mutateConfigWithOIDC(authProvider); err != nil {
-			log.Fatal(err)
-		}
-		kubeconfig.Write(kubeConfig, kubeConfigPath)
-		log.Printf("Updated %s", kubeConfigPath)
-
-	default:
+	if authProvider.Name != "oidc" {
 		log.Fatalf("Currently auth-provider `%s` is not supported", authProvider.Name)
 	}
+
+	if err := mutateConfigWithOIDC(authProvider); err != nil {
+		log.Fatal(err)
+	}
+	kubeconfig.Write(kubeConfig, kubeConfigPath)
+	log.Printf("Updated %s", kubeConfigPath)
 }
 
 func mutateConfigWithOIDC(authProvider *api.AuthProviderConfig) error {
