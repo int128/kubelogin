@@ -12,15 +12,23 @@ import (
 const userKubeConfig = "~/.kube/config"
 
 // Find returns path to the kubeconfig file,
-// that is given by env:KUBECONFIG or default ~/.kube/config.
+// that is given by env:KUBECONFIG or ~/.kube/config.
+// This returns an error if it is not found or I/O error occurred.
 func Find() (string, error) {
-	env := os.Getenv("KUBECONFIG")
-	if env != "" {
-		return env, nil
+	path := os.Getenv("KUBECONFIG")
+	if path == "" {
+		var err error
+		path, err = homedir.Expand(userKubeConfig)
+		if err != nil {
+			return "", fmt.Errorf("Could not expand %s: %s", userKubeConfig, err)
+		}
 	}
-	path, err := homedir.Expand(userKubeConfig)
+	info, err := os.Stat(path)
 	if err != nil {
-		return "", fmt.Errorf("Could not expand %s: %s", userKubeConfig, err)
+		return "", fmt.Errorf("Could not stat %s: %s", userKubeConfig, err)
+	}
+	if info.IsDir() {
+		return "", fmt.Errorf("%s should be a file", userKubeConfig)
 	}
 	return path, nil
 }
