@@ -4,50 +4,34 @@ import (
 	"log"
 
 	"github.com/int128/kubelogin/kubeconfig"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 func main() {
-	kubeConfigPath, err := kubeconfig.Find()
+	path, err := kubeconfig.Find()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Could not find kubeconfig: %s", err)
 	}
-	log.Printf("Reading config from %s", kubeConfigPath)
-	kubeConfig, err := kubeconfig.Load(kubeConfigPath)
+	log.Printf("Reading %s", path)
+	cfg, err := kubeconfig.Load(path)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Could not load kubeconfig: %s", err)
 	}
-	log.Printf("Using current context: %s", kubeConfig.CurrentContext)
-	authInfo := kubeconfig.FindCurrentAuthInfo(kubeConfig)
+	log.Printf("Using current-context: %s", cfg.CurrentContext)
+	authInfo := kubeconfig.FindCurrentAuthInfo(cfg)
 	if authInfo == nil {
-		log.Fatal("Could not find the current user")
+		log.Fatalf("Could not find the current-context: %s", cfg.CurrentContext)
 	}
-	authProvider := authInfo.AuthProvider
-	if authProvider == nil {
-		log.Fatal("auth-provider is not set in the config")
-	}
-	if authProvider.Name != "oidc" {
-		log.Fatalf("Currently auth-provider `%s` is not supported", authProvider.Name)
-	}
-
-	if err := mutateConfigWithOIDC(authProvider); err != nil {
-		log.Fatal(err)
-	}
-	kubeconfig.Write(kubeConfig, kubeConfigPath)
-	log.Printf("Updated %s", kubeConfigPath)
-}
-
-func mutateConfigWithOIDC(authProvider *api.AuthProviderConfig) error {
-	issuer := authProvider.Config["idp-issuer-url"]
-	clientID := authProvider.Config["client-id"]
-	clientSecret := authProvider.Config["client-secret"]
-	log.Printf("Using issuer: %s", issuer)
-	log.Printf("Using client ID: %s", clientID)
-	oidcToken, err := GetOIDCToken(issuer, clientID, clientSecret)
+	provider, err := kubeconfig.ToOIDCAuthProviderConfig(authInfo)
 	if err != nil {
-		return err
+		log.Fatalf("Could not find the OIDC auth-provider: %s", err)
 	}
-	authProvider.Config["id-token"] = oidcToken.IDToken
-	authProvider.Config["refresh-token"] = oidcToken.RefreshToken
-	return nil
+	token, err := GetOIDCToken(provider.IDPIssuerURL(), provider.ClientID(), provider.ClientSecret())
+	if err != nil {
+		log.Fatalf("OIDC authentication error: %s", err)
+	}
+
+	provider.SetIDToken(token.IDToken)
+	provider.SetRefreshToken(token.RefreshToken)
+	kubeconfig.Write(cfg, path)
+	log.Printf("Updated %s", path)
 }
