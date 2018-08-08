@@ -18,7 +18,7 @@ func FindCurrentAuthInfo(config *api.Config) *api.AuthInfo {
 
 func ToOIDCAuthProviderConfig(authInfo *api.AuthInfo) (*OIDCAuthProviderConfig, error) {
 	if authInfo.AuthProvider == nil {
-		return nil, fmt.Errorf("auth-provider is not set")
+		return nil, fmt.Errorf("auth-provider is not set, did you setup kubectl as listed here: https://github.com/int128/kubelogin#3-setup-kubectl")
 	}
 	if authInfo.AuthProvider.Name != "oidc" {
 		return nil, fmt.Errorf("auth-provider `%s` is not supported", authInfo.AuthProvider.Name)
