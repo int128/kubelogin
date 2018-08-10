@@ -35,7 +35,7 @@ func GetOIDCToken(issuer string, clientID string, clientSecret string) (*OIDCTok
 		ClientSecret: clientSecret,
 		RedirectURL:  fmt.Sprintf("http://localhost:%d/", port),
 		Endpoint:     provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "email"},
+		Scopes:       []string{oidc.ScopeOpenID, "email", "groups", "offline_access", "profile"},
 	}
 
 	cliConfig := oauth2.Config{
@@ -43,11 +43,12 @@ func GetOIDCToken(issuer string, clientID string, clientSecret string) (*OIDCTok
 		ClientSecret: clientSecret,
 		RedirectURL:  "urn:ietf:wg:oauth:2.0:oob",
 		Endpoint:     provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "email"},
+		Scopes:       []string{oidc.ScopeOpenID, "email", "groups", "offline_access", "profile"},
 	}
 
 	showInstructionToGetToken(webBrowserConfig.RedirectURL, cliConfig.AuthCodeURL(state))
 	token, err := getTokenByWebBrowserOrCLI(webBrowserConfig, cliConfig, state)
+
 	if err != nil {
 		return nil, err
 	}
