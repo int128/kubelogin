@@ -22,37 +22,12 @@ Run `kubelogin`.
 
 ```
 % kubelogin
-2018/03/23 18:01:40 Reading config from /home/user/.kube/config
-2018/03/23 18:01:40 Using current context: hello.k8s.local
-2018/03/23 18:01:40 Using issuer: https://keycloak.example.com/auth/realms/hello
-2018/03/23 18:01:40 Using client ID: kubernetes
-2018/03/23 18:01:41 Starting OpenID Connect authentication:
-
-## Automatic (recommended)
-
-Open the following URL in the web browser:
-
-http://localhost:8000/
-
-## Manual
-
-If you cannot access to localhost, instead open the following URL:
-
-https://keycloak.example.com/auth/realms/hello/protocol/openid-connect/auth?client_id=kubernetes&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=code&scope=openid+email&state=********
-
-Enter the code:
-```
-
-Open http://localhost:8000 in your browser.
-If you cannot access to localhost, you can get the authorization code and enter it manually instead.
-
-Then, `kubelogin` will update your `~/.kube/config` with the ID token and refresh token.
-
-```
-2018/03/23 18:01:46 Exchanging code and token...
-2018/03/23 18:01:46 Verifying ID token...
-2018/03/23 18:01:46 You are logged in as foo@example.com (********)
-2018/03/23 18:01:46 Updated /home/user/.kube/config
+2018/08/10 10:36:38 Reading .kubeconfig
+2018/08/10 10:36:38 Using current context: devops.hidetake.org
+2018/08/10 10:36:41 Open http://localhost:8000 for authorization
+2018/08/10 10:36:45 GET /
+2018/08/10 10:37:07 GET /?state=...&session_state=...&code=ey...
+2018/08/10 10:37:08 Updated .kubeconfig
 ```
 
 Now your `~/.kube/config` looks like:
@@ -99,9 +74,7 @@ This tutorial assumes you have created an OIDC client with the following:
 - Issuer URL: `https://keycloak.example.com/auth/realms/hello`
 - Client ID: `kubernetes`
 - Client Secret: `YOUR_CLIENT_SECRET`
-- Allowed redirect URLs:
-  - `http://localhost:8000/`
-  - `urn:ietf:wg:oauth:2.0:oob`
+- Allowed redirect URLs: `http://localhost:8000/`
 - Groups claim: `groups` (optional for group based access controll)
 
 ### 2. Setup Kubernetes API Server
