@@ -3,6 +3,13 @@
 `kubelogin` is a command to get an OpenID Connect (OIDC) token for `kubectl` authentication.
 
 
+## TL;DR
+
+1. Setup your OpenID Connect provider, e.g. Google Identity Platform or Keycloak.
+1. Setup your Kubernetes cluster.
+1. Setup `kubectl` and `kubelogin`.
+
+
 ## Getting Started with Google Account
 
 ### 1. Setup Google API
@@ -12,10 +19,9 @@ Open [Google APIs Console](https://console.developers.google.com/apis/credential
 - Application Type: Web application
 - Redirect URL: `http://localhost:8000/`
 
-### 2. Setup Kubernetes API Server
+### 2. Setup Kubernetes cluster
 
-Setup the Kubernetes API Server accepts an ID token.
-
+Configure your Kubernetes API Server accepts [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
 If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and append the following settings:
 
 ```yaml
@@ -24,8 +30,6 @@ spec:
     oidcIssuerURL: https://accounts.google.com
     oidcClientID: YOUR_CLIENT_ID.apps.googleusercontent.com
 ```
-
-### 3. Assign a role
 
 Here assign the `cluster-admin` role to your user.
 
@@ -43,7 +47,7 @@ subjects:
   name: https://accounts.google.com#1234567890
 ```
 
-### 4. Setup kubectl and kubelogin
+### 3. Setup kubectl and kubelogin
 
 Setup `kubectl` to authenticate with your identity provider.
 
@@ -54,6 +58,8 @@ kubectl config set-credentials CLUSTER_NAME \
   --auth-provider-arg client-id=YOUR_CLIENT_ID.apps.googleusercontent.com \
   --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
 ```
+
+Download [the latest release](https://github.com/int128/kubelogin/releases) and save it.
 
 Run `kubelogin` and open http://localhost:8000 in your browser.
 
@@ -106,10 +112,9 @@ Create an OIDC client as follows:
 
 Then create a group `kubernetes:admin` and join to it.
 
-### 2. Setup Kubernetes API Server
+### 2. Setup Kubernetes cluster
 
-Setup the Kubernetes API Server accepts an ID token.
-
+Configure your Kubernetes API Server accepts [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
 If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and append the following settings:
 
 ```yaml
@@ -119,8 +124,6 @@ spec:
     oidcClientID: kubernetes
     oidcGroupsClaim: groups
 ```
-
-### 3. Assign a role
 
 Here assign the `cluster-admin` role to the `kubernetes:admin` group.
 
@@ -138,7 +141,7 @@ subjects:
   name: /kubernetes:admin
 ```
 
-### 4. Setup kubectl and kubelogin
+### 3. Setup kubectl and kubelogin
 
 Setup `kubectl` to authenticate with your identity provider.
 
@@ -150,7 +153,10 @@ kubectl config set-credentials CLUSTER_NAME \
   --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
 ```
 
+Download [the latest release](https://github.com/int128/kubelogin/releases) and save it.
+
 Run `kubelogin` and make sure you can access to the cluster.
+See the previous section for details.
 
 
 ## Tips
