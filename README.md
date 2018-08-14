@@ -3,136 +3,188 @@
 `kubelogin` is a command to get an OpenID Connect (OIDC) token for `kubectl` authentication.
 
 
-## Getting Started
+## Getting Started with Google Account
 
-Download [the latest release](https://github.com/int128/kubelogin/releases) and save it as `/usr/local/bin/kubelogin`.
+### 1. Setup Google API
 
-You have to configure `kubectl` to authenticate with OIDC.
-See the later section for details.
+Open [Google APIs Console](https://console.developers.google.com/apis/credentials) and create an OAuth client as follows:
+
+- Application Type: Web application
+- Redirect URL: `http://localhost:8000/`
+
+### 2. Setup Kubernetes API Server
+
+Setup the Kubernetes API Server accepts an ID token.
+
+If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and append the following settings:
+
+```yaml
+spec:
+  kubeAPIServer:
+    oidcIssuerURL: https://accounts.google.com
+    oidcClientID: YOUR_CLIENT_ID.apps.googleusercontent.com
+```
+
+### 3. Assign a role
+
+Here assign the `cluster-admin` role to your user.
+
+```yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: oidc-admin-group
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: User
+  name: https://accounts.google.com#1234567890
+```
+
+### 4. Setup kubectl and kubelogin
+
+Setup `kubectl` to authenticate with your identity provider.
 
 ```sh
 kubectl config set-credentials CLUSTER_NAME \
   --auth-provider oidc \
-  --auth-provider-arg idp-issuer-url=https://keycloak.example.com/auth/realms/hello \
-  --auth-provider-arg client-id=kubernetes \
+  --auth-provider-arg idp-issuer-url=https://accounts.google.com \
+  --auth-provider-arg client-id=YOUR_CLIENT_ID.apps.googleusercontent.com \
   --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
 ```
 
-Run `kubelogin`.
+Run `kubelogin` and open http://localhost:8000 in your browser.
 
 ```
 % kubelogin
 2018/08/10 10:36:38 Reading .kubeconfig
-2018/08/10 10:36:38 Using current context: devops.hidetake.org
+2018/08/10 10:36:38 Using current context: hello.k8s.local
 2018/08/10 10:36:41 Open http://localhost:8000 for authorization
 2018/08/10 10:36:45 GET /
 2018/08/10 10:37:07 GET /?state=...&session_state=...&code=ey...
 2018/08/10 10:37:08 Updated .kubeconfig
 ```
 
-Now your `~/.kube/config` looks like:
+Now your `~/.kube/config` should be like:
 
 ```yaml
-# ~/.kube/config (snip)
 users:
 - name: hello.k8s.local
   user:
     auth-provider:
       config:
-        idp-issuer-url: https://keycloak.example.com/auth/realms/hello
-        client-id: kubernetes
+        idp-issuer-url: https://accounts.google.com
+        client-id: YOUR_CLIENT_ID.apps.googleusercontent.com
         client-secret: YOUR_SECRET
         id-token: ey...       # kubelogin will update ID token here
         refresh-token: ey...  # kubelogin will update refresh token here
       name: oidc
 ```
 
-Make sure you can access to the Kubernetes cluster:
+Make sure you can access to the Kubernetes cluster.
 
 ```
-% kubectl version
-Client Version: version.Info{...}
-Server Version: version.Info{...}
+% kubectl get nodes
+NAME                                    STATUS    ROLES     AGE       VERSION
+ip-1-2-3-4.us-west-2.compute.internal   Ready     node      21d       v1.9.6
+ip-1-2-3-5.us-west-2.compute.internal   Ready     node      20d       v1.9.6
 ```
 
 
-## Configuration
+## Getting Started with Keycloak
 
-You can set the following environment variable:
+### 1. Setup Keycloak
 
-- `KUBECONFIG` - Path to the config. Defaults to `~/.kube/config`.
+Create an OIDC client as follows:
 
-
-## Prerequisite
-
-You have to setup your OIDC identity provider and Kubernetes cluster.
-
-### 1. Setup OIDC Identity Provider
-
-This tutorial assumes you have created an OIDC client with the following:
-
-- Issuer URL: `https://keycloak.example.com/auth/realms/hello`
+- Redirect URL: `http://localhost:8000/`
+- Issuer URL: `https://keycloak.example.com/auth/realms/YOUR_REALM`
 - Client ID: `kubernetes`
-- Client Secret: `YOUR_CLIENT_SECRET`
-- Allowed redirect URLs: `http://localhost:8000/`
-- Groups claim: `groups` (optional for group based access controll)
+- Groups claim: `groups`
+
+Then create a group `kubernetes:admin` and join to it.
 
 ### 2. Setup Kubernetes API Server
 
-Configure the Kubernetes API server allows your identity provider.
+Setup the Kubernetes API Server accepts an ID token.
 
-If you are using [kops](https://github.com/kubernetes/kops), `kops edit cluster` and append the following settings:
+If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and append the following settings:
 
 ```yaml
 spec:
   kubeAPIServer:
+    oidcIssuerURL: https://keycloak.example.com/auth/realms/YOUR_REALM
     oidcClientID: kubernetes
     oidcGroupsClaim: groups
-    oidcIssuerURL: https://keycloak.example.com/auth/realms/hello
 ```
 
-### 3. Setup kubectl
+### 3. Assign a role
 
-Run the following command to configure `kubectl` to authenticate by your identity provider.
+Here assign the `cluster-admin` role to the `kubernetes:admin` group.
+
+```yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: keycloak-admin-group
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: Group
+  name: /kubernetes:admin
+```
+
+### 4. Setup kubectl and kubelogin
+
+Setup `kubectl` to authenticate with your identity provider.
 
 ```sh
 kubectl config set-credentials CLUSTER_NAME \
   --auth-provider oidc \
-  --auth-provider-arg idp-issuer-url=https://keycloak.example.com/auth/realms/hello \
+  --auth-provider-arg idp-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM \
   --auth-provider-arg client-id=kubernetes \
   --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
 ```
 
-In actual team operation, you can share the following config to your team members for easy setup.
+Run `kubelogin` and make sure you can access to the cluster.
 
-```yaml
-#!/bin/sh
+
+## Tips
+
+### Config file
+
+You can set the environment variable `KUBECONFIG` to point the config file.
+Default to `~/.kube/config`.
+
+```sh
+export KUBECONFIG="$PWD/.kubeconfig"
+```
+
+### Setup script
+
+In actual team operation, you can share the following script to your team members for easy setup.
+
+```sh
+#!/bin/sh -xe
 CLUSTER_NAME="hello.k8s.local"
 
-# Set the certificate
-mkdir -p "$HOME/.kube"
-cat > "$HOME/.kube/$CLUSTER_NAME.crt" <<EOF
------BEGIN CERTIFICATE-----
-MII...
------END CERTIFICATE-----
-EOF
+export KUBECONFIG="$PWD/.kubeconfig"
 
-# Set the cluster
 kubectl config set-cluster "$CLUSTER_NAME" \
   --server https://api-xxx.xxx.elb.amazonaws.com \
-  --certificate-authority "$HOME/.kube/$CLUSTER_NAME.crt"
+  --certificate-authority "$PWD/cluster.crt"
 
-# Set the credentials
 kubectl config set-credentials "$CLUSTER_NAME" \
   --auth-provider oidc \
-  --auth-provider-arg idp-issuer-url=https://keycloak.example.com/auth/realms/hello \
-  --auth-provider-arg client-id=kubernetes \
-  --auth-provider-arg client-secret=YOUR_SECRET
+  --auth-provider-arg idp-issuer-url=https://accounts.google.com \
+  --auth-provider-arg client-id=YOUR_CLIENT_ID.apps.googleusercontent.com \
+  --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
 
-# Set the context
 kubectl config set-context "$CLUSTER_NAME" --cluster "$CLUSTER_NAME" --user "$CLUSTER_NAME"
-
-# Set the current context
 kubectl config use-context "$CLUSTER_NAME"
 ```
 
