@@ -2,16 +2,48 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/int128/kubelogin/authn"
 	"github.com/int128/kubelogin/kubeconfig"
+	flags "github.com/jessevdk/go-flags"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
-func main() {
-	path, err := kubeconfig.Find()
+type options struct {
+	KubeConfig string `long:"kubeconfig" default:"~/.kube/config" env:"KUBECONFIG" description:"Path to the kubeconfig file."`
+}
+
+func (o *options) ExpandKubeConfig() (string, error) {
+	d, err := homedir.Expand(o.KubeConfig)
 	if err != nil {
-		log.Fatalf("Could not find kubeconfig: %s", err)
+		return "", fmt.Errorf("Could not expand %s", o.KubeConfig)
+	}
+	return d, nil
+}
+
+func parseOptions() (*options, error) {
+	var o options
+	parser := flags.NewParser(&o, flags.HelpFlag)
+	args, err := parser.Parse()
+	if err != nil {
+		return nil, err
+	}
+	if len(args) > 0 {
+		return nil, fmt.Errorf("Too many argument")
+	}
+	return &o, nil
+}
+
+func main() {
+	opts, err := parseOptions()
+	if err != nil {
+		log.Fatal(err)
+	}
+	path, err := opts.ExpandKubeConfig()
+	if err != nil {
+		log.Fatal(err)
 	}
 	log.Printf("Reading %s", path)
 	cfg, err := kubeconfig.Load(path)

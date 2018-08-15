@@ -7,7 +7,19 @@
 
 1. Setup your OpenID Connect provider, e.g. Google Identity Platform or Keycloak.
 1. Setup your Kubernetes cluster.
-1. Setup `kubectl` and `kubelogin`.
+1. Setup your `kubectl`.
+
+```
+% kubelogin --help
+2018/08/15 19:08:58 Usage:
+  kubelogin [OPTIONS]
+
+Application Options:
+      --kubeconfig= Path to the kubeconfig file. (default: ~/.kube/config) [$KUBECONFIG]
+
+Help Options:
+  -h, --help        Show this help message
+```
 
 
 ## Getting Started with Google Account
