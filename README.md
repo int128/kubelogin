@@ -15,7 +15,9 @@
   kubelogin [OPTIONS]
 
 Application Options:
-      --kubeconfig= Path to the kubeconfig file. (default: ~/.kube/config) [$KUBECONFIG]
+      --kubeconfig=               Path to the kubeconfig file (default: ~/.kube/config) [$KUBECONFIG]
+      --insecure-skip-tls-verify  If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+                                  [$KUBELOGIN_INSECURE_SKIP_TLS_VERIFY]
 
 Help Options:
   -h, --help        Show this help message

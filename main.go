@@ -2,17 +2,22 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/int128/kubelogin/authn"
 	"github.com/int128/kubelogin/kubeconfig"
 	flags "github.com/jessevdk/go-flags"
 	homedir "github.com/mitchellh/go-homedir"
+	"golang.org/x/oauth2"
 )
 
 type options struct {
-	KubeConfig string `long:"kubeconfig" default:"~/.kube/config" env:"KUBECONFIG" description:"Path to the kubeconfig file."`
+	KubeConfig    string `long:"kubeconfig" default:"~/.kube/config" env:"KUBECONFIG" description:"Path to the kubeconfig file"`
+	SkipTLSVerify bool   `long:"insecure-skip-tls-verify" env:"KUBELOGIN_INSECURE_SKIP_TLS_VERIFY" description:"If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure"`
+	// CertificateAuthority string `long:"certificate-authority" env:"KUBELOGIN_CERTIFICATE_AUTHORITY" description:"Path to a cert file for the certificate authority"`
 }
 
 func (o *options) ExpandKubeConfig() (string, error) {
@@ -60,7 +65,11 @@ func main() {
 		log.Fatalf("Could not find auth-provider: %s", err)
 	}
 
+	client := &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: opts.SkipTLSVerify},
+	}}
 	ctx := context.Background()
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, client)
 	token, err := authn.GetTokenSet(ctx, authProvider.IDPIssuerURL(), authProvider.ClientID(), authProvider.ClientSecret())
 	if err != nil {
 		log.Fatalf("Authentication error: %s", err)
