@@ -10,6 +10,7 @@ jobs:
       - run: go get github.com/golang/lint/golint
       - run: golint
       - run: go build -v
+      - run: go test -v ./...
 
   release:
     docker:

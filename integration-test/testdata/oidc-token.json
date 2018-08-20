@@ -1,0 +1,7 @@
+{
+  "access_token": "7eaae8ab-8f69-45d9-ab7c-73560cd9444d",
+  "token_type": "Bearer",
+  "refresh_token": "44df4c82-5ce7-4260-b54d-1da0d396ef2a",
+  "expires_in": 3600,
+  "id_token": "{{ .IDToken }}"
+}
