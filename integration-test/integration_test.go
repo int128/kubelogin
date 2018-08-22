@@ -3,12 +3,10 @@ package integration
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/int128/kubelogin/cli"
@@ -27,7 +25,7 @@ func Test(t *testing.T) {
 		Handler: NewAuthHandler(conf.Issuer),
 	}
 	defer authServer.Shutdown(context.Background())
-	kubeconfig := createKubeconfig(t, conf)
+	kubeconfig := createKubeconfig(t, conf.Issuer)
 	defer os.Remove(kubeconfig)
 
 	go func() {
@@ -60,22 +58,4 @@ func Test(t *testing.T) {
 	if strings.Index(string(b), "refresh-token: 44df4c82-5ce7-4260-b54d-1da0d396ef2a") == -1 {
 		t.Errorf("kubeconfig wants refresh-token but %s", string(b))
 	}
-}
-
-func createKubeconfig(t *testing.T, conf configuration) string {
-	t.Helper()
-	f, err := ioutil.TempFile("", "kubeconfig")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer f.Close()
-	tpl, err := template.ParseFiles("testdata/kubeconfig.yaml")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := tpl.Execute(f, conf); err != nil {
-		t.Fatal(err)
-	}
-	log.Printf("Created %s", f.Name())
-	return f.Name()
 }
