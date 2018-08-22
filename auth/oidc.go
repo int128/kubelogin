@@ -1,11 +1,10 @@
-package authn
+package auth
 
 import (
 	"context"
 	"fmt"
 
 	oidc "github.com/coreos/go-oidc"
-	"github.com/int128/kubelogin/authz"
 	"golang.org/x/oauth2"
 )
 
@@ -27,7 +26,7 @@ func GetTokenSet(ctx context.Context, issuer string, clientID string, clientSecr
 	if err != nil {
 		return nil, fmt.Errorf("Could not access OIDC issuer: %s", err)
 	}
-	flow := authz.BrowserAuthCodeFlow{
+	flow := BrowserAuthCodeFlow{
 		Port: 8000,
 		Config: oauth2.Config{
 			Endpoint:     provider.Endpoint(),

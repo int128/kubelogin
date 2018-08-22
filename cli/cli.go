@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/int128/kubelogin/authn"
+	"github.com/int128/kubelogin/auth"
 	"github.com/int128/kubelogin/kubeconfig"
 	flags "github.com/jessevdk/go-flags"
 	homedir "github.com/mitchellh/go-homedir"
@@ -70,7 +70,7 @@ func (c *CLI) Run() error {
 	}}
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, client)
-	token, err := authn.GetTokenSet(ctx, authProvider.IDPIssuerURL(), authProvider.ClientID(), authProvider.ClientSecret())
+	token, err := auth.GetTokenSet(ctx, authProvider.IDPIssuerURL(), authProvider.ClientID(), authProvider.ClientSecret())
 	if err != nil {
 		return fmt.Errorf("Authentication error: %s", err)
 	}

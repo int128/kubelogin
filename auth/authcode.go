@@ -1,7 +1,9 @@
-package authz
+package auth
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/binary"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,9 +20,9 @@ type BrowserAuthCodeFlow struct {
 // GetToken returns a token.
 func (f *BrowserAuthCodeFlow) GetToken(ctx context.Context) (*oauth2.Token, error) {
 	f.Config.RedirectURL = fmt.Sprintf("http://localhost:%d/", f.Port)
-	state, err := generateOAuthState()
+	state, err := generateState()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Could not generate state parameter: %s", err)
 	}
 	log.Printf("Open http://localhost:%d for authorization", f.Port)
 	code, err := f.getCode(ctx, &f.Config, state)
@@ -32,6 +34,14 @@ func (f *BrowserAuthCodeFlow) GetToken(ctx context.Context) (*oauth2.Token, erro
 		return nil, fmt.Errorf("Could not exchange oauth code: %s", err)
 	}
 	return token, nil
+}
+
+func generateState() (string, error) {
+	var n uint64
+	if err := binary.Read(rand.Reader, binary.LittleEndian, &n); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", n), nil
 }
 
 func (f *BrowserAuthCodeFlow) getCode(ctx context.Context, config *oauth2.Config, state string) (string, error) {
