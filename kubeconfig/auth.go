@@ -16,6 +16,7 @@ func FindCurrentAuthInfo(config *api.Config) *api.AuthInfo {
 	return config.AuthInfos[context.AuthInfo]
 }
 
+// ToOIDCAuthProviderConfig converts from api.AuthInfo to OIDCAuthProviderConfig.
 func ToOIDCAuthProviderConfig(authInfo *api.AuthInfo) (*OIDCAuthProviderConfig, error) {
 	if authInfo.AuthProvider == nil {
 		return nil, fmt.Errorf("auth-provider is not set, did you setup kubectl as listed here: https://github.com/int128/kubelogin#3-setup-kubectl")
@@ -26,6 +27,7 @@ func ToOIDCAuthProviderConfig(authInfo *api.AuthInfo) (*OIDCAuthProviderConfig, 
 	return (*OIDCAuthProviderConfig)(authInfo.AuthProvider), nil
 }
 
+// OIDCAuthProviderConfig represents OIDC configuration in the kubeconfig.
 type OIDCAuthProviderConfig api.AuthProviderConfig
 
 // IDPIssuerURL returns the idp-issuer-url.
@@ -43,10 +45,22 @@ func (c *OIDCAuthProviderConfig) ClientSecret() string {
 	return c.Config["client-secret"]
 }
 
+// IDPCertificateAuthority returns the idp-certificate-authority.
+func (c *OIDCAuthProviderConfig) IDPCertificateAuthority() string {
+	return c.Config["idp-certificate-authority"]
+}
+
+// IDPCertificateAuthorityData returns the idp-certificate-authority-data.
+func (c *OIDCAuthProviderConfig) IDPCertificateAuthorityData() string {
+	return c.Config["idp-certificate-authority-data"]
+}
+
+// SetIDToken replaces the id-token.
 func (c *OIDCAuthProviderConfig) SetIDToken(idToken string) {
 	c.Config["id-token"] = idToken
 }
 
+// SetRefreshToken replaces the refresh-token.
 func (c *OIDCAuthProviderConfig) SetRefreshToken(refreshToken string) {
 	c.Config["refresh-token"] = refreshToken
 }

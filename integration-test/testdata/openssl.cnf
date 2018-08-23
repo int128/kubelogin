@@ -1,0 +1,37 @@
+[ ca ]
+default_ca      = CA_default
+
+[ CA_default ]
+dir             = ./CA
+certs           = $dir
+crl_dir         = $dir
+database        = $dir/index.txt
+new_certs_dir   = $dir
+default_md      = sha256
+policy          = policy_match
+serial          = $dir/serial
+default_days    = 365
+
+[ policy_match ]
+countryName             = optional
+stateOrProvinceName     = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+distinguished_name	= req_distinguished_name
+req_extensions = v3_req
+x509_extensions = v3_ca
+
+[ req_distinguished_name ]
+commonName			= Common Name (e.g. server FQDN or YOUR name)
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = DNS:localhost
+
+[ v3_ca ]
+basicConstraints = CA:true

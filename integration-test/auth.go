@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"testing"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -29,7 +30,7 @@ type AuthHandler struct {
 }
 
 // NewAuthHandler returns a new AuthHandler.
-func NewAuthHandler(issuer string) *AuthHandler {
+func NewAuthHandler(t *testing.T, issuer string) *AuthHandler {
 	h := &AuthHandler{
 		Issuer:        issuer,
 		AuthCode:      "0b70006b-f62a-4438-aba5-c0b96775d8e5",
@@ -44,11 +45,11 @@ func NewAuthHandler(issuer string) *AuthHandler {
 	})
 	k, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
-		log.Fatal(err)
+		t.Fatalf("Could not generate a key pair: %s", err)
 	}
 	h.IDToken, err = token.SignedString(k)
 	if err != nil {
-		log.Fatal(err)
+		t.Fatalf("Could not generate an ID token: %s", err)
 	}
 	h.PrivateKey.E = base64.RawURLEncoding.EncodeToString(big.NewInt(int64(k.E)).Bytes())
 	h.PrivateKey.N = base64.RawURLEncoding.EncodeToString(k.N.Bytes())
