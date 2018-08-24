@@ -21,13 +21,14 @@ type Claims struct {
 }
 
 // GetTokenSet retrieves a token from the OIDC provider.
-func GetTokenSet(ctx context.Context, issuer string, clientID string, clientSecret string) (*TokenSet, error) {
+func GetTokenSet(ctx context.Context, issuer string, clientID string, clientSecret string, skipOpenBrowser bool) (*TokenSet, error) {
 	provider, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
 		return nil, fmt.Errorf("Could not access OIDC issuer: %s", err)
 	}
 	flow := BrowserAuthCodeFlow{
-		Port: 8000,
+		Port:            8000,
+		SkipOpenBrowser: skipOpenBrowser,
 		Config: oauth2.Config{
 			Endpoint:     provider.Endpoint(),
 			ClientID:     clientID,

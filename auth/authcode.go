@@ -8,13 +8,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/pkg/browser"
+
 	"golang.org/x/oauth2"
 )
 
 // BrowserAuthCodeFlow is a flow to get a token by browser interaction.
 type BrowserAuthCodeFlow struct {
 	oauth2.Config
-	Port int // HTTP server port
+	Port            int  // HTTP server port
+	SkipOpenBrowser bool // skip opening browser if true
 }
 
 // GetToken returns a token.
@@ -25,6 +28,9 @@ func (f *BrowserAuthCodeFlow) GetToken(ctx context.Context) (*oauth2.Token, erro
 		return nil, fmt.Errorf("Could not generate state parameter: %s", err)
 	}
 	log.Printf("Open http://localhost:%d for authorization", f.Port)
+	if !f.SkipOpenBrowser {
+		browser.OpenURL(fmt.Sprintf("http://localhost:%d/", f.Port))
+	}
 	code, err := f.getCode(ctx, &f.Config, state)
 	if err != nil {
 		return nil, err
