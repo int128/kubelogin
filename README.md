@@ -173,15 +173,24 @@ Run `kubelogin` and make sure you can access to the cluster.
 See the previous section for details.
 
 
-## Tips
+## Configuration
 
-### Config file
+### Kubeconfig
 
 You can set the environment variable `KUBECONFIG` to point the config file.
 Default to `~/.kube/config`.
 
 ```sh
 export KUBECONFIG="$PWD/.kubeconfig"
+```
+
+### OpenID Connect Provider CA Certificate
+
+You can specify the CA certificate of your OpenID Connect provider by [`idp-certificate-authority` or `idp-certificate-authority-data` in the kubeconfig](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
+
+```sh
+kubectl config set-credentials CLUSTER_NAME \
+  --auth-provider-arg idp-certificate-authority=$PWD/ca.crt
 ```
 
 ### Setup script
