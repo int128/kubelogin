@@ -35,7 +35,6 @@ func Parse(args []string) (*CLI, error) {
 type CLI struct {
 	KubeConfig    string `long:"kubeconfig" default:"~/.kube/config" env:"KUBECONFIG" description:"Path to the kubeconfig file"`
 	SkipTLSVerify bool   `long:"insecure-skip-tls-verify" env:"KUBELOGIN_INSECURE_SKIP_TLS_VERIFY" description:"If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure"`
-	// CertificateAuthority string `long:"certificate-authority" env:"KUBELOGIN_CERTIFICATE_AUTHORITY" description:"Path to a cert file for the certificate authority"`
 }
 
 // ExpandKubeConfig returns an expanded KubeConfig path.
