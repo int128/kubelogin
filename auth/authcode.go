@@ -54,7 +54,7 @@ func (f *BrowserAuthCodeFlow) getCode(ctx context.Context, config *oauth2.Config
 	codeCh := make(chan string)
 	errCh := make(chan error)
 	server := http.Server{
-		Addr: fmt.Sprintf(":%d", f.Port),
+		Addr: fmt.Sprintf("localhost:%d", f.Port),
 		Handler: &handler{
 			AuthCodeURL: config.AuthCodeURL(state),
 			Callback: func(code string, actualState string, err error) {
@@ -100,10 +100,11 @@ func (s *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case code != "":
 			s.Callback(code, state, nil)
-			fmt.Fprintf(w, "Back to command line.")
+			w.Header().Add("Content-Type", "text/html")
+			fmt.Fprintf(w, `<html><body>OK<script>window.close()</script></body></html>`)
 		case errorCode != "":
 			s.Callback("", "", fmt.Errorf("OAuth Error: %s %s", errorCode, errorDescription))
-			fmt.Fprintf(w, "Back to command line.")
+			http.Error(w, "OAuth Error", 500)
 		default:
 			http.Redirect(w, r, s.AuthCodeURL, 302)
 		}
