@@ -7,8 +7,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-// Load loads the file and returns the Config.
-func Load(path string) (*api.Config, error) {
+// Read parses the file and returns the Config.
+func Read(path string) (*api.Config, error) {
 	config, err := clientcmd.LoadFromFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("Could not load kubeconfig from %s: %s", path, err)

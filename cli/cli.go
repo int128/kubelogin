@@ -2,11 +2,7 @@ package cli
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -54,7 +50,7 @@ func (c *CLI) Run(ctx context.Context) error {
 		return err
 	}
 	log.Printf("Reading %s", path)
-	cfg, err := kubeconfig.Load(path)
+	cfg, err := kubeconfig.Read(path)
 	if err != nil {
 		return fmt.Errorf("Could not load kubeconfig: %s", err)
 	}
@@ -63,7 +59,7 @@ func (c *CLI) Run(ctx context.Context) error {
 	if authInfo == nil {
 		return fmt.Errorf("Could not find current context: %s", cfg.CurrentContext)
 	}
-	authProvider, err := kubeconfig.ToOIDCAuthProviderConfig(authInfo)
+	authProvider, err := kubeconfig.FindOIDCAuthProvider(authInfo)
 	if err != nil {
 		return fmt.Errorf("Could not find auth-provider: %s", err)
 	}
@@ -83,33 +79,4 @@ func (c *CLI) Run(ctx context.Context) error {
 	kubeconfig.Write(cfg, path)
 	log.Printf("Updated %s", path)
 	return nil
-}
-
-func (c *CLI) tlsConfig(authProvider *kubeconfig.OIDCAuthProviderConfig) (*tls.Config, error) {
-	p := x509.NewCertPool()
-	if authProvider.IDPCertificateAuthority() != "" {
-		b, err := ioutil.ReadFile(authProvider.IDPCertificateAuthority())
-		if err != nil {
-			return nil, fmt.Errorf("Could not read idp-certificate-authority: %s", err)
-		}
-		if p.AppendCertsFromPEM(b) != true {
-			return nil, fmt.Errorf("Could not load CA certificate from idp-certificate-authority: %s", err)
-		}
-		log.Printf("Using CA certificate: %s", authProvider.IDPCertificateAuthority())
-	}
-	if authProvider.IDPCertificateAuthorityData() != "" {
-		b, err := base64.StdEncoding.DecodeString(authProvider.IDPCertificateAuthorityData())
-		if err != nil {
-			return nil, fmt.Errorf("Could not decode idp-certificate-authority-data: %s", err)
-		}
-		if p.AppendCertsFromPEM(b) != true {
-			return nil, fmt.Errorf("Could not load CA certificate from idp-certificate-authority-data: %s", err)
-		}
-		log.Printf("Using CA certificate of idp-certificate-authority-data")
-	}
-	cfg := &tls.Config{InsecureSkipVerify: c.SkipTLSVerify}
-	if len(p.Subjects()) > 0 {
-		cfg.RootCAs = p
-	}
-	return cfg, nil
 }
