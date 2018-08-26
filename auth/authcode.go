@@ -8,13 +8,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/pkg/browser"
+
 	"golang.org/x/oauth2"
 )
 
 // BrowserAuthCodeFlow is a flow to get a token by browser interaction.
 type BrowserAuthCodeFlow struct {
 	oauth2.Config
-	Port int // HTTP server port
+	Port            int  // HTTP server port
+	SkipOpenBrowser bool // skip opening browser if true
 }
 
 // GetToken returns a token.
@@ -25,6 +28,9 @@ func (f *BrowserAuthCodeFlow) GetToken(ctx context.Context) (*oauth2.Token, erro
 		return nil, fmt.Errorf("Could not generate state parameter: %s", err)
 	}
 	log.Printf("Open http://localhost:%d for authorization", f.Port)
+	if !f.SkipOpenBrowser {
+		browser.OpenURL(fmt.Sprintf("http://localhost:%d/", f.Port))
+	}
 	code, err := f.getCode(ctx, &f.Config, state)
 	if err != nil {
 		return nil, err
@@ -48,7 +54,7 @@ func (f *BrowserAuthCodeFlow) getCode(ctx context.Context, config *oauth2.Config
 	codeCh := make(chan string)
 	errCh := make(chan error)
 	server := http.Server{
-		Addr: fmt.Sprintf(":%d", f.Port),
+		Addr: fmt.Sprintf("localhost:%d", f.Port),
 		Handler: &handler{
 			AuthCodeURL: config.AuthCodeURL(state),
 			Callback: func(code string, actualState string, err error) {
@@ -94,10 +100,11 @@ func (s *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case code != "":
 			s.Callback(code, state, nil)
-			fmt.Fprintf(w, "Back to command line.")
+			w.Header().Add("Content-Type", "text/html")
+			fmt.Fprintf(w, `<html><body>OK<script>window.close()</script></body></html>`)
 		case errorCode != "":
 			s.Callback("", "", fmt.Errorf("OAuth Error: %s %s", errorCode, errorDescription))
-			fmt.Fprintf(w, "Back to command line.")
+			http.Error(w, "OAuth Error", 500)
 		default:
 			http.Redirect(w, r, s.AuthCodeURL, 302)
 		}

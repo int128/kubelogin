@@ -33,8 +33,9 @@ func Parse(args []string) (*CLI, error) {
 
 // CLI represents an interface of this command.
 type CLI struct {
-	KubeConfig    string `long:"kubeconfig" default:"~/.kube/config" env:"KUBECONFIG" description:"Path to the kubeconfig file"`
-	SkipTLSVerify bool   `long:"insecure-skip-tls-verify" env:"KUBELOGIN_INSECURE_SKIP_TLS_VERIFY" description:"If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure"`
+	KubeConfig      string `long:"kubeconfig" default:"~/.kube/config" env:"KUBECONFIG" description:"Path to the kubeconfig file"`
+	SkipTLSVerify   bool   `long:"insecure-skip-tls-verify" env:"KUBELOGIN_INSECURE_SKIP_TLS_VERIFY" description:"If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure"`
+	SkipOpenBrowser bool   `long:"skip-open-browser" env:"KUBELOGIN_SKIP_OPEN_BROWSER" description:"If set, it does not open the browser on authentication."`
 }
 
 // ExpandKubeConfig returns an expanded KubeConfig path.
@@ -72,7 +73,7 @@ func (c *CLI) Run(ctx context.Context) error {
 	}
 	client := &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, client)
-	token, err := auth.GetTokenSet(ctx, authProvider.IDPIssuerURL(), authProvider.ClientID(), authProvider.ClientSecret())
+	token, err := auth.GetTokenSet(ctx, authProvider.IDPIssuerURL(), authProvider.ClientID(), authProvider.ClientSecret(), c.SkipOpenBrowser)
 	if err != nil {
 		return fmt.Errorf("Authentication error: %s", err)
 	}

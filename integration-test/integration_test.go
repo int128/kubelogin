@@ -34,7 +34,8 @@ func Test(t *testing.T) {
 	go authenticate(t, &tls.Config{})
 
 	c := cli.CLI{
-		KubeConfig: kubeconfig,
+		KubeConfig:      kubeconfig,
+		SkipOpenBrowser: true,
 	}
 	if err := c.Run(ctx); err != nil {
 		t.Fatal(err)
@@ -58,8 +59,9 @@ func TestWithSkipTLSVerify(t *testing.T) {
 	go authenticate(t, &tls.Config{InsecureSkipVerify: true})
 
 	c := cli.CLI{
-		KubeConfig:    kubeconfig,
-		SkipTLSVerify: true,
+		KubeConfig:      kubeconfig,
+		SkipTLSVerify:   true,
+		SkipOpenBrowser: true,
 	}
 	if err := c.Run(ctx); err != nil {
 		t.Fatal(err)
@@ -84,7 +86,8 @@ func TestWithCACert(t *testing.T) {
 	go authenticate(t, &tls.Config{RootCAs: loadCACert(t)})
 
 	c := cli.CLI{
-		KubeConfig: kubeconfig,
+		KubeConfig:      kubeconfig,
+		SkipOpenBrowser: true,
 	}
 	if err := c.Run(ctx); err != nil {
 		t.Fatal(err)
@@ -113,7 +116,8 @@ func TestWithCACertData(t *testing.T) {
 	go authenticate(t, &tls.Config{RootCAs: loadCACert(t)})
 
 	c := cli.CLI{
-		KubeConfig: kubeconfig,
+		KubeConfig:      kubeconfig,
+		SkipOpenBrowser: true,
 	}
 	if err := c.Run(ctx); err != nil {
 		t.Fatal(err)
