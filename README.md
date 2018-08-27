@@ -1,17 +1,39 @@
 # kubelogin [![CircleCI](https://circleci.com/gh/int128/kubelogin.svg?style=shield)](https://circleci.com/gh/int128/kubelogin)
 
-`kubelogin` is a command to get an OpenID Connect (OIDC) token for `kubectl` authentication.
+This is a helper command for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
+It gets a token from the OIDC provider (e.g. Google or Keycloak) and writes it to the kubeconfig.
 
 
 ## TL;DR
 
-1. Setup your OpenID Connect provider, e.g. Google Identity Platform or Keycloak.
-1. Setup your Kubernetes cluster.
-1. Setup your `kubectl`.
+You need to setup Kubernetes OIDC authentication.
+See the later section for details.
+
+To update the kubeconfig, just run the command.
 
 ```
-% kubelogin --help
-2018/08/15 19:08:58 Usage:
+% kubelogin
+2018/08/27 15:03:06 Reading /home/user/.kube/config
+2018/08/27 15:03:06 Using current context: hello.k8s.local
+2018/08/27 15:03:07 Open http://localhost:8000 for authorization
+```
+
+It automatically opens the browser and you can log in to the provider.
+Then it updates the access token and refresh token in the kubeconfig.
+
+```
+2018/08/27 15:03:07 GET /
+2018/08/27 15:03:08 GET /?state=a51081925f20c043&session_state=5637cbdf-ffdc-4fab-9fc7-68a3e6f2e73f&code=ey...
+2018/08/27 15:03:09 Got token for subject=cf228a73-47fe-4986-a2a8-b2ced80a884b
+2018/08/27 15:03:09 Updated /home/user/.kube/config
+```
+
+Now `kubectl` is ready.
+
+
+## Usage
+
+```
   kubelogin [OPTIONS]
 
 Application Options:
@@ -176,7 +198,7 @@ See the previous section for details.
 
 ## Configuration
 
-### Kubeconfig
+### Kubeconfig path
 
 You can set the environment variable `KUBECONFIG` to point the config file.
 Default to `~/.kube/config`.
@@ -185,7 +207,7 @@ Default to `~/.kube/config`.
 export KUBECONFIG="$PWD/.kubeconfig"
 ```
 
-### OpenID Connect Provider CA Certificate
+## OIDC provider CA certificate
 
 You can specify the CA certificate of your OpenID Connect provider by [`idp-certificate-authority` or `idp-certificate-authority-data` in the kubeconfig](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
 
@@ -194,7 +216,7 @@ kubectl config set-credentials CLUSTER_NAME \
   --auth-provider-arg idp-certificate-authority=$PWD/ca.crt
 ```
 
-### Setup script
+### Setup by script
 
 In actual team operation, you can share the following script to your team members for easy setup.
 
