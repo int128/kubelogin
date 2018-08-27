@@ -10,7 +10,6 @@ import (
 	"github.com/int128/kubelogin/kubeconfig"
 	flags "github.com/jessevdk/go-flags"
 	homedir "github.com/mitchellh/go-homedir"
-	"golang.org/x/oauth2"
 )
 
 // Parse parses command line arguments and returns a CLI instance.
@@ -67,9 +66,15 @@ func (c *CLI) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("Could not configure TLS: %s", err)
 	}
-	client := &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, client)
-	token, err := auth.GetTokenSet(ctx, authProvider.IDPIssuerURL(), authProvider.ClientID(), authProvider.ClientSecret(), c.SkipOpenBrowser)
+	authConfig := &auth.Config{
+		Issuer:          authProvider.IDPIssuerURL(),
+		ClientID:        authProvider.ClientID(),
+		ClientSecret:    authProvider.ClientSecret(),
+		Client:          &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}},
+		ServerPort:      8000,
+		SkipOpenBrowser: c.SkipOpenBrowser,
+	}
+	token, err := authConfig.GetTokenSet(ctx)
 	if err != nil {
 		return fmt.Errorf("Authentication error: %s", err)
 	}

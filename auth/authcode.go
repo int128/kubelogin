@@ -2,76 +2,66 @@ package auth
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/binary"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/pkg/browser"
-
 	"golang.org/x/oauth2"
 )
 
-// BrowserAuthCodeFlow is a flow to get a token by browser interaction.
-type BrowserAuthCodeFlow struct {
-	oauth2.Config
-	Port            int  // HTTP server port
+type authCodeFlow struct {
+	Config          *oauth2.Config
+	ServerPort      int  // HTTP server port
 	SkipOpenBrowser bool // skip opening browser if true
 }
 
-// GetToken returns a token.
-func (f *BrowserAuthCodeFlow) GetToken(ctx context.Context) (*oauth2.Token, error) {
-	f.Config.RedirectURL = fmt.Sprintf("http://localhost:%d/", f.Port)
-	state, err := generateState()
+func (f *authCodeFlow) getToken(ctx context.Context) (*oauth2.Token, error) {
+	code, err := f.getAuthCode(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Could not generate state parameter: %s", err)
-	}
-	log.Printf("Open http://localhost:%d for authorization", f.Port)
-	if !f.SkipOpenBrowser {
-		browser.OpenURL(fmt.Sprintf("http://localhost:%d/", f.Port))
-	}
-	code, err := f.getCode(ctx, &f.Config, state)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Could not get an auth code: %s", err)
 	}
 	token, err := f.Config.Exchange(ctx, code)
 	if err != nil {
-		return nil, fmt.Errorf("Could not exchange oauth code: %s", err)
+		return nil, fmt.Errorf("Could not exchange token: %s", err)
 	}
 	return token, nil
 }
 
-func generateState() (string, error) {
-	var n uint64
-	if err := binary.Read(rand.Reader, binary.LittleEndian, &n); err != nil {
-		return "", err
+func (f *authCodeFlow) getAuthCode(ctx context.Context) (string, error) {
+	state, err := generateState()
+	if err != nil {
+		return "", fmt.Errorf("Could not generate state parameter: %s", err)
 	}
-	return fmt.Sprintf("%x", n), nil
-}
-
-func (f *BrowserAuthCodeFlow) getCode(ctx context.Context, config *oauth2.Config, state string) (string, error) {
 	codeCh := make(chan string)
+	defer close(codeCh)
 	errCh := make(chan error)
+	defer close(errCh)
 	server := http.Server{
-		Addr: fmt.Sprintf("localhost:%d", f.Port),
-		Handler: &handler{
-			AuthCodeURL: config.AuthCodeURL(state),
-			Callback: func(code string, actualState string, err error) {
-				switch {
-				case err != nil:
-					errCh <- err
-				case actualState != state:
-					errCh <- fmt.Errorf("OAuth state did not match, should be %s but %s", state, actualState)
-				default:
+		Addr: fmt.Sprintf("localhost:%d", f.ServerPort),
+		Handler: &authCodeHandler{
+			authCodeURL: f.Config.AuthCodeURL(state),
+			gotCode: func(code string, gotState string) {
+				if gotState == state {
 					codeCh <- code
+				} else {
+					errCh <- fmt.Errorf("State does not match, wants %s but %s", state, gotState)
 				}
+			},
+			gotError: func(err error) {
+				errCh <- err
 			},
 		},
 	}
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errCh <- err
+		}
+	}()
+	go func() {
+		log.Printf("Open http://localhost:%d for authorization", f.ServerPort)
+		if !f.SkipOpenBrowser {
+			browser.OpenURL(fmt.Sprintf("http://localhost:%d/", f.ServerPort))
 		}
 	}()
 	select {
@@ -81,33 +71,36 @@ func (f *BrowserAuthCodeFlow) getCode(ctx context.Context, config *oauth2.Config
 	case code := <-codeCh:
 		server.Shutdown(ctx)
 		return code, nil
+	case <-ctx.Done():
+		server.Shutdown(ctx)
+		return "", ctx.Err()
 	}
 }
 
-type handler struct {
-	AuthCodeURL string
-	Callback    func(code string, state string, err error)
+type authCodeHandler struct {
+	authCodeURL string
+	gotCode     func(code string, state string)
+	gotError    func(err error)
 }
 
-func (s *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *authCodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s %s", r.Method, r.RequestURI)
-	switch r.URL.Path {
-	case "/":
-		code := r.URL.Query().Get("code")
-		state := r.URL.Query().Get("state")
-		errorCode := r.URL.Query().Get("error")
-		errorDescription := r.URL.Query().Get("error_description")
-		switch {
-		case code != "":
-			s.Callback(code, state, nil)
-			w.Header().Add("Content-Type", "text/html")
-			fmt.Fprintf(w, `<html><body>OK<script>window.close()</script></body></html>`)
-		case errorCode != "":
-			s.Callback("", "", fmt.Errorf("OAuth Error: %s %s", errorCode, errorDescription))
-			http.Error(w, "OAuth Error", 500)
-		default:
-			http.Redirect(w, r, s.AuthCodeURL, 302)
-		}
+	m := r.Method
+	p := r.URL.Path
+	q := r.URL.Query()
+	switch {
+	case m == "GET" && p == "/" && q.Get("error") != "":
+		h.gotError(fmt.Errorf("OAuth Error: %s %s", q.Get("error"), q.Get("error_description")))
+		http.Error(w, "OAuth Error", 500)
+
+	case m == "GET" && p == "/" && q.Get("code") != "":
+		h.gotCode(q.Get("code"), q.Get("state"))
+		w.Header().Add("Content-Type", "text/html")
+		fmt.Fprintf(w, `<html><body>OK<script>window.close()</script></body></html>`)
+
+	case m == "GET" && p == "/":
+		http.Redirect(w, r, h.authCodeURL, 302)
+
 	default:
 		http.Error(w, "Not Found", 404)
 	}

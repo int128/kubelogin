@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 
 	oidc "github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
@@ -12,50 +14,56 @@ import (
 type TokenSet struct {
 	IDToken      string
 	RefreshToken string
-	Claims       *Claims
 }
 
-// Claims represents properties in the ID token.
-type Claims struct {
-	Email string `json:"email"`
+// Config represents OIDC configuration.
+type Config struct {
+	Issuer          string
+	ClientID        string
+	ClientSecret    string
+	ExtraScopes     []string     // Additional scopes
+	Client          *http.Client // HTTP client for oidc and oauth2
+	ServerPort      int          // HTTP server port
+	SkipOpenBrowser bool         // skip opening browser if true
 }
 
-// GetTokenSet retrieves a token from the OIDC provider.
-func GetTokenSet(ctx context.Context, issuer string, clientID string, clientSecret string, skipOpenBrowser bool) (*TokenSet, error) {
-	provider, err := oidc.NewProvider(ctx, issuer)
+// GetTokenSet retrives a token from the OIDC provider and returns a TokenSet.
+func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
+	if c.Client != nil {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.Client)
+	}
+	provider, err := oidc.NewProvider(ctx, c.Issuer)
 	if err != nil {
-		return nil, fmt.Errorf("Could not access OIDC issuer: %s", err)
+		return nil, fmt.Errorf("Could not discovery the OIDC issuer: %s", err)
 	}
-	flow := BrowserAuthCodeFlow{
-		Port:            8000,
-		SkipOpenBrowser: skipOpenBrowser,
-		Config: oauth2.Config{
-			Endpoint:     provider.Endpoint(),
-			ClientID:     clientID,
-			ClientSecret: clientSecret,
-			Scopes:       []string{oidc.ScopeOpenID, "email"},
-		},
+	oauth2Config := &oauth2.Config{
+		Endpoint:     provider.Endpoint(),
+		ClientID:     c.ClientID,
+		ClientSecret: c.ClientSecret,
+		Scopes:       append(c.ExtraScopes, oidc.ScopeOpenID),
+		RedirectURL:  fmt.Sprintf("http://localhost:%d/", c.ServerPort),
 	}
-	token, err := flow.GetToken(ctx)
+	flow := &authCodeFlow{
+		ServerPort:      c.ServerPort,
+		SkipOpenBrowser: c.SkipOpenBrowser,
+		Config:          oauth2Config,
+	}
+	token, err := flow.getToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Could not get a token: %s", err)
 	}
-	rawIDToken, ok := token.Extra("id_token").(string)
+	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		return nil, fmt.Errorf("id_token is missing in the token response: %s", token)
 	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: clientID})
-	idToken, err := verifier.Verify(ctx, rawIDToken)
+	verifier := provider.Verifier(&oidc.Config{ClientID: c.ClientID})
+	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, fmt.Errorf("Could not verify the id_token: %s", err)
 	}
-	var claims Claims
-	if err := idToken.Claims(&claims); err != nil {
-		return nil, fmt.Errorf("Could not extract claims from the token response: %s", err)
-	}
+	log.Printf("Got token for subject=%s", verifiedIDToken.Subject)
 	return &TokenSet{
-		IDToken:      rawIDToken,
+		IDToken:      idToken,
 		RefreshToken: token.RefreshToken,
-		Claims:       &claims,
 	}, nil
 }
