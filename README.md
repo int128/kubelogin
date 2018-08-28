@@ -208,6 +208,7 @@ Key | Direction | Value
 `client-secret`                   | IN (Required) | Client Secret of the provider.
 `idp-certificate-authority`       | IN (Optional) | CA certificate path of the provider.
 `idp-certificate-authority-data`  | IN (Optional) | Base64 encoded CA certificate of the provider.
+`extra-scopes`                    | IN (Optional) | Scopes to request to the provider (comma separated).
 `id-token`                        | OUT | ID token got from the provider.
 `refresh-token`                   | OUT | Refresh token got from the provider.
 
