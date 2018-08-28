@@ -10,7 +10,7 @@ jobs:
       - run: go get github.com/golang/lint/golint
       - run: golint
       - run: go build -v
-      - run: make -C integration-test/testdata
+      - run: make -C e2e/testdata
       - run: go test -v ./...
 
   release:
