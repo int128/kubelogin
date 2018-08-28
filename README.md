@@ -1,15 +1,16 @@
 # kubelogin [![CircleCI](https://circleci.com/gh/int128/kubelogin.svg?style=shield)](https://circleci.com/gh/int128/kubelogin)
 
 This is a helper command for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
-It gets a token from the OIDC provider (e.g. Google or Keycloak) and writes it to the kubeconfig.
+It gets a token from the OIDC provider and writes it to the kubeconfig.
+
+This may work with various OIDC providers such as Keycloak, Google Identity Platform and Azure AD.
 
 
 ## TL;DR
 
-You need to setup Kubernetes OIDC authentication.
-See the later section for details.
+You need to setup the OIDC provider and [Kubernetes OIDC authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
 
-To update the kubeconfig, just run the command.
+After setup or when the token has been expired, just run `kubelogin`:
 
 ```
 % kubelogin
@@ -18,8 +19,10 @@ To update the kubeconfig, just run the command.
 2018/08/27 15:03:07 Open http://localhost:8000 for authorization
 ```
 
-It automatically opens the browser and you can log in to the provider.
-Then it updates the access token and refresh token in the kubeconfig.
+It opens the browser and you can log in to the provider.
+After you logged in to the provider, it closes the browser automatically.
+
+Then it writes the ID token and refresh token to the kubeconfig.
 
 ```
 2018/08/27 15:03:07 GET /
@@ -28,7 +31,7 @@ Then it updates the access token and refresh token in the kubeconfig.
 2018/08/27 15:03:09 Updated /home/user/.kube/config
 ```
 
-Now `kubectl` is ready.
+Please see the later section for details.
 
 
 ## Usage
@@ -207,37 +210,50 @@ Default to `~/.kube/config`.
 export KUBECONFIG="$PWD/.kubeconfig"
 ```
 
-## OIDC provider CA certificate
+### OIDC provider CA certificate
 
-You can specify the CA certificate of your OpenID Connect provider by [`idp-certificate-authority` or `idp-certificate-authority-data` in the kubeconfig](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
+You can set the CA certificate of your OIDC provider by [`idp-certificate-authority` or `idp-certificate-authority-data` in the kubeconfig](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
 
 ```sh
 kubectl config set-credentials CLUSTER_NAME \
   --auth-provider-arg idp-certificate-authority=$PWD/ca.crt
 ```
 
-### Setup by script
+### Team onboarding
 
-In actual team operation, you can share the following script to your team members for easy setup.
+You can share the kubeconfig to your team members for easy setup.
+
+```yaml
+apiVersion: v1
+kind: Config
+clusters:
+  - cluster:
+      certificate-authority-data: LS...
+      server: https://api.hello.k8s.example.com
+      name: hello.k8s.local
+contexts:
+- context:
+    cluster: hello.k8s.local
+    user: hello.k8s.local
+  name: hello.k8s.local
+current-context: hello.k8s.local
+preferences: {}
+users:
+- name: hello.k8s.local
+  user:
+    auth-provider:
+      name: oidc
+      config:
+        client-id: YOUR_CLIEND_ID
+        client-secret: YOUR_CLIENT_SECRET
+        idp-issuer-url: YOUR_ISSUER
+```
+
+If you are using kops, export the kubeconfig and edit it.
 
 ```sh
-#!/bin/sh -xe
-CLUSTER_NAME="hello.k8s.local"
-
-export KUBECONFIG="$PWD/.kubeconfig"
-
-kubectl config set-cluster "$CLUSTER_NAME" \
-  --server https://api-xxx.xxx.elb.amazonaws.com \
-  --certificate-authority "$PWD/cluster.crt"
-
-kubectl config set-credentials "$CLUSTER_NAME" \
-  --auth-provider oidc \
-  --auth-provider-arg idp-issuer-url=https://accounts.google.com \
-  --auth-provider-arg client-id=YOUR_CLIENT_ID.apps.googleusercontent.com \
-  --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
-
-kubectl config set-context "$CLUSTER_NAME" --cluster "$CLUSTER_NAME" --user "$CLUSTER_NAME"
-kubectl config use-context "$CLUSTER_NAME"
+KUBECONFIG=.kubeconfig kops export kubecfg hello.k8s.local
+vim .kubeconfig
 ```
 
 
@@ -246,10 +262,16 @@ kubectl config use-context "$CLUSTER_NAME"
 This is an open source software licensed under Apache License 2.0.
 Feel free to open issues and pull requests.
 
-### Build
+### Build and Test
 
 ```sh
 go get github.com/int128/kubelogin
+```
+
+```sh
+cd $GOPATH/src/github.com/int128/kubelogin
+make -C e2e/testdata
+go test -v ./...
 ```
 
 ### Release
