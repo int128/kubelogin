@@ -34,22 +34,6 @@ Then it writes the ID token and refresh token to the kubeconfig.
 Please see the later section for details.
 
 
-## Usage
-
-```
-  kubelogin [OPTIONS]
-
-Application Options:
-      --kubeconfig=               Path to the kubeconfig file (default: ~/.kube/config) [$KUBECONFIG]
-      --insecure-skip-tls-verify  If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-                                  [$KUBELOGIN_INSECURE_SKIP_TLS_VERIFY]
-      --skip-open-browser         If set, it does not open the browser on authentication. [$KUBELOGIN_SKIP_OPEN_BROWSER]
-
-Help Options:
-  -h, --help        Show this help message
-```
-
-
 ## Getting Started with Google Account
 
 ### 1. Setup Google API
@@ -201,6 +185,33 @@ See the previous section for details.
 
 ## Configuration
 
+```
+  kubelogin [OPTIONS]
+
+Application Options:
+      --kubeconfig=               Path to the kubeconfig file (default: ~/.kube/config) [$KUBECONFIG]
+      --insecure-skip-tls-verify  If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+                                  [$KUBELOGIN_INSECURE_SKIP_TLS_VERIFY]
+      --skip-open-browser         If set, it does not open the browser on authentication. [$KUBELOGIN_SKIP_OPEN_BROWSER]
+
+Help Options:
+  -h, --help        Show this help message
+```
+
+This supports the following `auth-provider` keys in kubeconfig.
+See also [kubectl authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
+
+Key | Direction | Value
+----|-----------|------
+`idp-issuer-url`                  | IN (Required) | Issuer URL of the provider.
+`client-id`                       | IN (Required) | Client ID of the provider.
+`client-secret`                   | IN (Required) | Client Secret of the provider.
+`idp-certificate-authority`       | IN (Optional) | CA certificate path of the provider.
+`idp-certificate-authority-data`  | IN (Optional) | Base64 encoded CA certificate of the provider.
+`id-token`                        | OUT | ID token got from the provider.
+`refresh-token`                   | OUT | Refresh token got from the provider.
+
+
 ### Kubeconfig path
 
 You can set the environment variable `KUBECONFIG` to point the config file.
@@ -208,15 +219,6 @@ Default to `~/.kube/config`.
 
 ```sh
 export KUBECONFIG="$PWD/.kubeconfig"
-```
-
-### OIDC provider CA certificate
-
-You can set the CA certificate of your OIDC provider by [`idp-certificate-authority` or `idp-certificate-authority-data` in the kubeconfig](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
-
-```sh
-kubectl config set-credentials CLUSTER_NAME \
-  --auth-provider-arg idp-certificate-authority=$PWD/ca.crt
 ```
 
 ### Team onboarding
