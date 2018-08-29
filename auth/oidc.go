@@ -40,7 +40,7 @@ func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
 		Endpoint:     provider.Endpoint(),
 		ClientID:     c.ClientID,
 		ClientSecret: c.ClientSecret,
-		Scopes:       append(c.ExtraScopes, oidc.ScopeOpenID),
+		Scopes:       append(c.ExtraScopes, oidc.ScopeOpenID, oidc.ScopeOfflineAccess),
 		RedirectURL:  fmt.Sprintf("http://localhost:%d/", c.ServerPort),
 	}
 	flow := &authCodeFlow{
