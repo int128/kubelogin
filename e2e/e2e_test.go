@@ -12,153 +12,134 @@ import (
 	"time"
 
 	"github.com/int128/kubelogin/cli"
+	"golang.org/x/sync/errgroup"
 )
 
-const caCert = "testdata/authserver-ca.crt"
-const tlsCert = "testdata/authserver.crt"
-const tlsKey = "testdata/authserver.key"
+const tlsCACert = "testdata/authserver-ca.crt"
+const tlsServerCert = "testdata/authserver.crt"
+const tlsServerKey = "testdata/authserver.key"
 
-func Test(t *testing.T) {
-	ctx := context.Background()
-	authServer := &http.Server{
-		Addr:    "localhost:9000",
-		Handler: NewAuthHandler(t, "http://localhost:9000"),
+// End-to-end test.
+//
+// 1. Start the auth server at port 9000.
+// 2. Run the CLI.
+// 3. Open a request for port 8000.
+// 4. Wait for the CLI.
+// 5. Shutdown the auth server.
+func TestE2E(t *testing.T) {
+	data := map[string]struct {
+		kubeconfigValues kubeconfigValues
+		cli              cli.CLI
+		startServer      func(*testing.T, http.Handler) *http.Server
+		authClientTLS    *tls.Config
+	}{
+		"NoTLS": {
+			kubeconfigValues{Issuer: "http://localhost:9000"},
+			cli.CLI{},
+			startServer,
+			&tls.Config{},
+		},
+		"SkipTLSVerify": {
+			kubeconfigValues{Issuer: "https://localhost:9000"},
+			cli.CLI{SkipTLSVerify: true},
+			startServerTLS,
+			&tls.Config{InsecureSkipVerify: true},
+		},
+		"CACert": {
+			kubeconfigValues{
+				Issuer:                  "https://localhost:9000",
+				IDPCertificateAuthority: tlsCACert,
+			},
+			cli.CLI{},
+			startServerTLS,
+			&tls.Config{RootCAs: readCert(t, tlsCACert)},
+		},
+		"CACertData": {
+			kubeconfigValues{
+				Issuer: "https://localhost:9000",
+				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString(read(t, tlsCACert)),
+			},
+			cli.CLI{},
+			startServerTLS,
+			&tls.Config{RootCAs: readCert(t, tlsCACert)},
+		},
 	}
-	defer authServer.Shutdown(ctx)
-	kubeconfig := createKubeconfig(t, &kubeconfigValues{
-		Issuer: "http://localhost:9000",
-	})
-	defer os.Remove(kubeconfig)
 
-	go listenAndServe(t, authServer)
-	go authenticate(t, &tls.Config{})
+	for name, c := range data {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			authServer := c.startServer(t, NewAuthHandler(t, c.kubeconfigValues.Issuer))
+			defer authServer.Shutdown(ctx)
+			kubeconfig := createKubeconfig(t, &c.kubeconfigValues)
+			defer os.Remove(kubeconfig)
+			c.cli.KubeConfig = kubeconfig
+			c.cli.SkipOpenBrowser = true
 
-	c := cli.CLI{
-		KubeConfig:      kubeconfig,
-		SkipOpenBrowser: true,
+			var eg errgroup.Group
+			eg.Go(func() error {
+				return c.cli.Run(ctx)
+			})
+
+			time.Sleep(50 * time.Millisecond)
+			client := http.Client{Transport: &http.Transport{TLSClientConfig: c.authClientTLS}}
+			res, err := client.Get("http://localhost:8000/")
+			if err != nil {
+				t.Fatalf("Could not send a request: %s", err)
+			}
+			if res.StatusCode != 200 {
+				t.Fatalf("StatusCode wants 200 but %d", res.StatusCode)
+			}
+
+			if err := eg.Wait(); err != nil {
+				t.Fatalf("CLI returned error: %s", err)
+			}
+			verifyKubeconfig(t, kubeconfig)
+		})
 	}
-	if err := c.Run(ctx); err != nil {
-		t.Fatal(err)
-	}
-	verifyKubeconfig(t, kubeconfig)
 }
 
-func TestWithSkipTLSVerify(t *testing.T) {
-	ctx := context.Background()
-	authServer := &http.Server{
+func startServer(t *testing.T, h http.Handler) *http.Server {
+	s := &http.Server{
 		Addr:    "localhost:9000",
-		Handler: NewAuthHandler(t, "https://localhost:9000"),
+		Handler: h,
 	}
-	defer authServer.Shutdown(ctx)
-	kubeconfig := createKubeconfig(t, &kubeconfigValues{
-		Issuer: "https://localhost:9000",
-	})
-	defer os.Remove(kubeconfig)
-
-	go listenAndServeTLS(t, authServer)
-	go authenticate(t, &tls.Config{InsecureSkipVerify: true})
-
-	c := cli.CLI{
-		KubeConfig:      kubeconfig,
-		SkipTLSVerify:   true,
-		SkipOpenBrowser: true,
-	}
-	if err := c.Run(ctx); err != nil {
-		t.Fatal(err)
-	}
-	verifyKubeconfig(t, kubeconfig)
+	go func() {
+		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			t.Error(err)
+		}
+	}()
+	return s
 }
 
-func TestWithCACert(t *testing.T) {
-	ctx := context.Background()
-	authServer := &http.Server{
+func startServerTLS(t *testing.T, h http.Handler) *http.Server {
+	s := &http.Server{
 		Addr:    "localhost:9000",
-		Handler: NewAuthHandler(t, "https://localhost:9000"),
+		Handler: h,
 	}
-	defer authServer.Shutdown(ctx)
-	kubeconfig := createKubeconfig(t, &kubeconfigValues{
-		Issuer:                  "https://localhost:9000",
-		IDPCertificateAuthority: caCert,
-	})
-	defer os.Remove(kubeconfig)
-
-	go listenAndServeTLS(t, authServer)
-	go authenticate(t, &tls.Config{RootCAs: loadCACert(t)})
-
-	c := cli.CLI{
-		KubeConfig:      kubeconfig,
-		SkipOpenBrowser: true,
-	}
-	if err := c.Run(ctx); err != nil {
-		t.Fatal(err)
-	}
-	verifyKubeconfig(t, kubeconfig)
+	go func() {
+		if err := s.ListenAndServeTLS(tlsServerCert, tlsServerKey); err != nil && err != http.ErrServerClosed {
+			t.Error(err)
+		}
+	}()
+	return s
 }
 
-func TestWithCACertData(t *testing.T) {
-	ctx := context.Background()
-	authServer := &http.Server{
-		Addr:    "localhost:9000",
-		Handler: NewAuthHandler(t, "https://localhost:9000"),
-	}
-	defer authServer.Shutdown(ctx)
-	b, err := ioutil.ReadFile(caCert)
-	if err != nil {
-		t.Fatal(err)
-	}
-	kubeconfig := createKubeconfig(t, &kubeconfigValues{
-		Issuer: "https://localhost:9000",
-		IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString(b),
-	})
-	defer os.Remove(kubeconfig)
-
-	go listenAndServeTLS(t, authServer)
-	go authenticate(t, &tls.Config{RootCAs: loadCACert(t)})
-
-	c := cli.CLI{
-		KubeConfig:      kubeconfig,
-		SkipOpenBrowser: true,
-	}
-	if err := c.Run(ctx); err != nil {
-		t.Fatal(err)
-	}
-	verifyKubeconfig(t, kubeconfig)
-}
-
-func authenticate(t *testing.T, tlsConfig *tls.Config) {
+func read(t *testing.T, name string) []byte {
 	t.Helper()
-	time.Sleep(100 * time.Millisecond)
-	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
-	res, err := client.Get("http://localhost:8000/")
+	b, err := ioutil.ReadFile(name)
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatalf("Could not read %s: %s", name, err)
 	}
-	if res.StatusCode != 200 {
-		t.Errorf("StatusCode wants 200 but %d: res=%+v", res.StatusCode, res)
-	}
+	return b
 }
 
-func loadCACert(t *testing.T) *x509.CertPool {
+func readCert(t *testing.T, name string) *x509.CertPool {
+	t.Helper()
 	p := x509.NewCertPool()
-	b, err := ioutil.ReadFile(caCert)
-	if err != nil {
-		t.Fatal(err)
-	}
+	b := read(t, name)
 	if !p.AppendCertsFromPEM(b) {
-		t.Fatalf("Could not AppendCertsFromPEM")
+		t.Fatalf("Could not append cert from %s", name)
 	}
 	return p
-}
-
-func listenAndServe(t *testing.T, s *http.Server) {
-	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		t.Fatal(err)
-	}
-}
-
-func listenAndServeTLS(t *testing.T, s *http.Server) {
-	if err := s.ListenAndServeTLS(tlsCert, tlsKey); err != nil && err != http.ErrServerClosed {
-		t.Fatal(err)
-	}
 }
