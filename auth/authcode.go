@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/pkg/browser"
 	"golang.org/x/oauth2"
@@ -61,6 +62,7 @@ func (f *authCodeFlow) getAuthCode(ctx context.Context) (string, error) {
 	go func() {
 		log.Printf("Open http://localhost:%d for authorization", f.ServerPort)
 		if !f.SkipOpenBrowser {
+			time.Sleep(500 * time.Millisecond)
 			browser.OpenURL(fmt.Sprintf("http://localhost:%d/", f.ServerPort))
 		}
 	}()
