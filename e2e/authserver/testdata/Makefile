@@ -1,40 +1,40 @@
 .PHONY: clean
 
-all: authserver.crt authserver-ca.crt
+all: server.crt ca.crt
 
 clean:
-	rm -v authserver*
+	rm -v ca.* server.*
 
-authserver-ca.key:
+ca.key:
 	openssl genrsa -out $@ 1024
 
-authserver-ca.csr: openssl.cnf authserver-ca.key
+ca.csr: openssl.cnf ca.key
 	openssl req -config openssl.cnf \
 		-new \
-		-key authserver-ca.key \
+		-key ca.key \
 		-subj "/CN=Hello CA" \
 		-out $@
 	openssl req -noout -text -in $@
 
-authserver-ca.crt: authserver-ca.csr authserver-ca.key
+ca.crt: ca.csr ca.key
 	openssl x509 -req \
-		-signkey authserver-ca.key \
-		-in authserver-ca.csr \
+		-signkey ca.key \
+		-in ca.csr \
 		-out $@
 	openssl x509 -text -in $@
 
-authserver.key:
+server.key:
 	openssl genrsa -out $@ 1024
 
-authserver.csr: openssl.cnf authserver.key
+server.csr: openssl.cnf server.key
 	openssl req -config openssl.cnf \
 		-new \
-		-key authserver.key \
+		-key server.key \
 		-subj "/CN=localhost" \
 		-out $@
 	openssl req -noout -text -in $@
 
-authserver.crt: openssl.cnf authserver.csr authserver-ca.key authserver-ca.crt
+server.crt: openssl.cnf server.csr ca.key ca.crt
 	rm -fr ./CA
 	mkdir -p ./CA
 	touch CA/index.txt
@@ -43,8 +43,8 @@ authserver.crt: openssl.cnf authserver.csr authserver-ca.key authserver-ca.crt
 	openssl ca -config openssl.cnf \
 		-extensions v3_req \
 		-batch \
-		-cert authserver-ca.crt \
-		-keyfile authserver-ca.key \
-		-in authserver.csr \
+		-cert ca.crt \
+		-keyfile ca.key \
+		-in server.csr \
 		-out $@
 	openssl x509 -text -in $@

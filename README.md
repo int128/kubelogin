@@ -272,7 +272,7 @@ go get github.com/int128/kubelogin
 
 ```sh
 cd $GOPATH/src/github.com/int128/kubelogin
-make -C e2e/testdata
+make -C e2e/authserver/testdata
 go test -v ./...
 ```
 
