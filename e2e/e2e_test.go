@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -89,23 +90,29 @@ func TestE2E(t *testing.T) {
 			eg.Go(func() error {
 				return c.cli.Run(ctx)
 			})
-
-			time.Sleep(50 * time.Millisecond)
-			client := http.Client{Transport: &http.Transport{TLSClientConfig: c.clientTLS}}
-			res, err := client.Get("http://localhost:8000/")
-			if err != nil {
-				t.Fatalf("Could not send a request: %s", err)
+			if err := openBrowserRequest(c.clientTLS); err != nil {
+				cancel()
+				t.Error(err)
 			}
-			if res.StatusCode != 200 {
-				t.Fatalf("StatusCode wants 200 but %d", res.StatusCode)
-			}
-
 			if err := eg.Wait(); err != nil {
 				t.Fatalf("CLI returned error: %s", err)
 			}
 			verifyKubeconfig(t, kubeconfig)
 		})
 	}
+}
+
+func openBrowserRequest(tlsConfig *tls.Config) error {
+	time.Sleep(50 * time.Millisecond)
+	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
+	res, err := client.Get("http://localhost:8000/")
+	if err != nil {
+		return fmt.Errorf("Could not send a request: %s", err)
+	}
+	if res.StatusCode != 200 {
+		return fmt.Errorf("StatusCode wants 200 but %d", res.StatusCode)
+	}
+	return nil
 }
 
 func read(t *testing.T, name string) []byte {
