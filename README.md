@@ -1,6 +1,6 @@
 # kubelogin [![CircleCI](https://circleci.com/gh/int128/kubelogin.svg?style=shield)](https://circleci.com/gh/int128/kubelogin)
 
-This is a helper command for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
+This is a command for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
 It gets a token from the OIDC provider and writes it to the kubeconfig.
 
 This may work with various OIDC providers such as Keycloak, Google Identity Platform and Azure AD.
@@ -10,7 +10,7 @@ This may work with various OIDC providers such as Keycloak, Google Identity Plat
 
 You need to setup the OIDC provider and [Kubernetes OIDC authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
 
-After setup or when the token has been expired, just run `kubelogin`:
+After initial setup or when the token has been expired, just run `kubelogin`:
 
 ```
 % kubelogin
@@ -198,7 +198,7 @@ Help Options:
   -h, --help        Show this help message
 ```
 
-This supports the following `auth-provider` keys in kubeconfig.
+This supports the following keys of `auth-provider` in kubeconfig.
 See also [kubectl authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
 
 Key | Direction | Value
@@ -278,4 +278,5 @@ go test -v ./...
 
 ### Release
 
-CircleCI publishes the build to GitHub. See [.circleci/config.yml](.circleci/config.yml).
+CircleCI publishes the build to GitHub.
+See [.circleci/config.yml](.circleci/config.yml).
