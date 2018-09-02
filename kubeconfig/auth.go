@@ -2,6 +2,7 @@ package kubeconfig
 
 import (
 	"fmt"
+	"strings"
 
 	"k8s.io/client-go/tools/clientcmd/api"
 )
@@ -53,6 +54,14 @@ func (c *OIDCAuthProvider) IDPCertificateAuthority() string {
 // IDPCertificateAuthorityData returns the idp-certificate-authority-data.
 func (c *OIDCAuthProvider) IDPCertificateAuthorityData() string {
 	return c.Config["idp-certificate-authority-data"]
+}
+
+// ExtraScopes returns the extra-scopes.
+func (c *OIDCAuthProvider) ExtraScopes() []string {
+	if c.Config["extra-scopes"] == "" {
+		return []string{}
+	}
+	return strings.Split(c.Config["extra-scopes"], ",")
 }
 
 // SetIDToken replaces the id-token.

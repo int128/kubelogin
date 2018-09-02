@@ -22,6 +22,7 @@ type handler struct {
 	authCode  string
 
 	Issuer     string
+	Scope      string // Default to openid
 	IDToken    string
 	PrivateKey struct{ N, E string }
 }
@@ -33,6 +34,10 @@ func newHandler(t *testing.T, c *Config) *handler {
 		jwks:      readTemplate(t, "oidc-jwks.json"),
 		authCode:  "3d24a8bd-35e6-457d-999e-e04bb1dfcec7",
 		Issuer:    c.Issuer,
+		Scope:     c.Scope,
+	}
+	if h.Scope == "" {
+		h.Scope = "openid"
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.StandardClaims{
@@ -83,6 +88,9 @@ func (h *handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		// Authentication Response
 		// http://openid.net/specs/openid-connect-core-1_0.html#AuthResponse
 		q := r.URL.Query()
+		if h.Scope != q.Get("scope") {
+			return fmt.Errorf("scope wants %s but %s", h.Scope, q.Get("scope"))
+		}
 		to := fmt.Sprintf("%s?state=%s&code=%s", q.Get("redirect_uri"), q.Get("state"), h.authCode)
 		http.Redirect(w, r, to, 302)
 	case m == "POST" && p == "/protocol/openid-connect/token":

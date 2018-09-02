@@ -23,6 +23,7 @@ const ServerKey = "authserver/testdata/server.key"
 // Config represents server configuration.
 type Config struct {
 	Issuer string
+	Scope  string
 	Cert   string
 	Key    string
 }

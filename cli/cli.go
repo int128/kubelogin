@@ -70,6 +70,7 @@ func (c *CLI) Run(ctx context.Context) error {
 		Issuer:          authProvider.IDPIssuerURL(),
 		ClientID:        authProvider.ClientID(),
 		ClientSecret:    authProvider.ClientSecret(),
+		ExtraScopes:     authProvider.ExtraScopes(),
 		Client:          &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}},
 		ServerPort:      8000,
 		SkipOpenBrowser: c.SkipOpenBrowser,

@@ -9,6 +9,7 @@ import (
 
 type kubeconfigValues struct {
 	Issuer                      string
+	ExtraScopes                 string
 	IDPCertificateAuthority     string
 	IDPCertificateAuthorityData string
 }

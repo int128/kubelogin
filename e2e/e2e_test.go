@@ -37,6 +37,18 @@ func TestE2E(t *testing.T) {
 			authserver.Config{Issuer: "http://localhost:9000"},
 			&tls.Config{},
 		},
+		"ExtraScope": {
+			kubeconfigValues{
+				Issuer:      "http://localhost:9000",
+				ExtraScopes: "profile groups",
+			},
+			cli.CLI{},
+			authserver.Config{
+				Issuer: "http://localhost:9000",
+				Scope:  "profile groups openid",
+			},
+			&tls.Config{},
+		},
 		"SkipTLSVerify": {
 			kubeconfigValues{Issuer: "https://localhost:9000"},
 			cli.CLI{SkipTLSVerify: true},
