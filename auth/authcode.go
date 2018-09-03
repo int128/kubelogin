@@ -13,6 +13,7 @@ import (
 
 type authCodeFlow struct {
 	Config          *oauth2.Config
+	AuthCodeOptions []oauth2.AuthCodeOption
 	ServerPort      int  // HTTP server port
 	SkipOpenBrowser bool // skip opening browser if true
 }
@@ -41,7 +42,7 @@ func (f *authCodeFlow) getAuthCode(ctx context.Context) (string, error) {
 	server := http.Server{
 		Addr: fmt.Sprintf("localhost:%d", f.ServerPort),
 		Handler: &authCodeHandler{
-			authCodeURL: f.Config.AuthCodeURL(state),
+			authCodeURL: f.Config.AuthCodeURL(state, f.AuthCodeOptions...),
 			gotCode: func(code string, gotState string) {
 				if gotState == state {
 					codeCh <- code

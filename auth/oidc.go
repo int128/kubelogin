@@ -47,6 +47,7 @@ func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
 		ServerPort:      c.ServerPort,
 		SkipOpenBrowser: c.SkipOpenBrowser,
 		Config:          oauth2Config,
+		AuthCodeOptions: []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
 	}
 	token, err := flow.getToken(ctx)
 	if err != nil {
