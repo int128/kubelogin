@@ -15,6 +15,6 @@ func main() {
 	}
 	ctx := context.Background()
 	if err := c.Run(ctx); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error: %s", err)
 	}
 }
