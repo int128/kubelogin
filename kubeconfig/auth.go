@@ -7,23 +7,23 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-// FindCurrentAuthInfo returns the authInfo of current context.
-// If the current context does not exist, this returns nil.
-func FindCurrentAuthInfo(config *api.Config) *api.AuthInfo {
+// FindOIDCAuthProvider returns the current OIDC authProvider.
+// If the context, auth-info or auth-provider does not exist, this returns an error.
+// If auth-provider is not "oidc", this returns an error.
+func FindOIDCAuthProvider(config *api.Config) (*OIDCAuthProvider, error) {
 	context := config.Contexts[config.CurrentContext]
 	if context == nil {
-		return nil
+		return nil, fmt.Errorf("context %s does not exist", config.CurrentContext)
 	}
-	return config.AuthInfos[context.AuthInfo]
-}
-
-// FindOIDCAuthProvider returns the OIDC authProvider.
-func FindOIDCAuthProvider(authInfo *api.AuthInfo) (*OIDCAuthProvider, error) {
+	authInfo := config.AuthInfos[context.AuthInfo]
+	if authInfo == nil {
+		return nil, fmt.Errorf("auth-info %s does not exist", context.AuthInfo)
+	}
 	if authInfo.AuthProvider == nil {
-		return nil, fmt.Errorf("auth-provider is not set, did you setup kubectl as listed here: https://github.com/int128/kubelogin")
+		return nil, fmt.Errorf("auth-provider is not set")
 	}
 	if authInfo.AuthProvider.Name != "oidc" {
-		return nil, fmt.Errorf("auth-provider `%s` is not supported", authInfo.AuthProvider.Name)
+		return nil, fmt.Errorf("auth-provider name is %s but must be oidc", authInfo.AuthProvider.Name)
 	}
 	return (*OIDCAuthProvider)(authInfo.AuthProvider), nil
 }

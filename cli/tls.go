@@ -13,25 +13,25 @@ import (
 
 func (c *CLI) tlsConfig(authProvider *kubeconfig.OIDCAuthProvider) (*tls.Config, error) {
 	p := x509.NewCertPool()
-	if authProvider.IDPCertificateAuthority() != "" {
-		b, err := ioutil.ReadFile(authProvider.IDPCertificateAuthority())
+	if ca := authProvider.IDPCertificateAuthority(); ca != "" {
+		b, err := ioutil.ReadFile(ca)
 		if err != nil {
-			return nil, fmt.Errorf("Could not read idp-certificate-authority: %s", err)
+			return nil, fmt.Errorf("Could not read %s: %s", ca, err)
 		}
 		if p.AppendCertsFromPEM(b) != true {
-			return nil, fmt.Errorf("Could not load CA certificate from idp-certificate-authority: %s", err)
+			return nil, fmt.Errorf("Could not append CA certificate from %s", ca)
 		}
-		log.Printf("Using CA certificate: %s", authProvider.IDPCertificateAuthority())
+		log.Printf("Using CA certificate: %s", ca)
 	}
-	if authProvider.IDPCertificateAuthorityData() != "" {
-		b, err := base64.StdEncoding.DecodeString(authProvider.IDPCertificateAuthorityData())
+	if ca := authProvider.IDPCertificateAuthorityData(); ca != "" {
+		b, err := base64.StdEncoding.DecodeString(ca)
 		if err != nil {
 			return nil, fmt.Errorf("Could not decode idp-certificate-authority-data: %s", err)
 		}
 		if p.AppendCertsFromPEM(b) != true {
-			return nil, fmt.Errorf("Could not load CA certificate from idp-certificate-authority-data: %s", err)
+			return nil, fmt.Errorf("Could not append CA certificate from idp-certificate-authority-data")
 		}
-		log.Printf("Using CA certificate of idp-certificate-authority-data")
+		log.Printf("Using CA certificate: idp-certificate-authority-data")
 	}
 
 	cfg := &tls.Config{InsecureSkipVerify: c.SkipTLSVerify}

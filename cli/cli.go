@@ -37,30 +37,33 @@ type CLI struct {
 func (c *CLI) ExpandKubeConfig() (string, error) {
 	d, err := homedir.Expand(c.KubeConfig)
 	if err != nil {
-		return "", fmt.Errorf("Could not expand %s", c.KubeConfig)
+		return "", fmt.Errorf("Could not expand %s: %s", c.KubeConfig, err)
 	}
 	return d, nil
 }
 
 // Run performs this command.
 func (c *CLI) Run(ctx context.Context) error {
+	log.Printf("Reading %s", c.KubeConfig)
 	path, err := c.ExpandKubeConfig()
 	if err != nil {
 		return err
 	}
-	log.Printf("Reading %s", path)
 	cfg, err := kubeconfig.Read(path)
 	if err != nil {
-		return fmt.Errorf("Could not load kubeconfig: %s", err)
+		return fmt.Errorf("Could not read kubeconfig: %s", err)
 	}
-	log.Printf("Using current context: %s", cfg.CurrentContext)
-	authInfo := kubeconfig.FindCurrentAuthInfo(cfg)
-	if authInfo == nil {
-		return fmt.Errorf("Could not find current context: %s", cfg.CurrentContext)
-	}
-	authProvider, err := kubeconfig.FindOIDCAuthProvider(authInfo)
+	log.Printf("Using current-context: %s", cfg.CurrentContext)
+	authProvider, err := kubeconfig.FindOIDCAuthProvider(cfg)
 	if err != nil {
-		return fmt.Errorf("Could not find auth-provider: %s", err)
+		return fmt.Errorf(`Could not find OIDC configuration in kubeconfig: %s
+			Did you setup kubectl for OIDC authentication?
+				kubectl config set-credentials %s \
+					--auth-provider oidc \
+					--auth-provider-arg idp-issuer-url=https://issuer.example.com \
+					--auth-provider-arg client-id=YOUR_CLIENT_ID \
+					--auth-provider-arg client-secret=YOUR_CLIENT_SECRET`,
+			err, cfg.CurrentContext)
 	}
 	tlsConfig, err := c.tlsConfig(authProvider)
 	if err != nil {
@@ -77,12 +80,12 @@ func (c *CLI) Run(ctx context.Context) error {
 	}
 	token, err := authConfig.GetTokenSet(ctx)
 	if err != nil {
-		return fmt.Errorf("Authentication error: %s", err)
+		return fmt.Errorf("Could not get token from OIDC provider: %s", err)
 	}
 
 	authProvider.SetIDToken(token.IDToken)
 	authProvider.SetRefreshToken(token.RefreshToken)
 	kubeconfig.Write(cfg, path)
-	log.Printf("Updated %s", path)
+	log.Printf("Updated %s", c.KubeConfig)
 	return nil
 }

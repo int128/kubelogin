@@ -76,7 +76,7 @@ subjects:
 Setup `kubectl` to authenticate with your identity provider.
 
 ```sh
-kubectl config set-credentials CLUSTER_NAME \
+kubectl config set-credentials NAME \
   --auth-provider oidc \
   --auth-provider-arg idp-issuer-url=https://accounts.google.com \
   --auth-provider-arg client-id=YOUR_CLIENT_ID.apps.googleusercontent.com \
@@ -170,7 +170,7 @@ subjects:
 Setup `kubectl` to authenticate with your identity provider.
 
 ```sh
-kubectl config set-credentials CLUSTER_NAME \
+kubectl config set-credentials NAME \
   --auth-provider oidc \
   --auth-provider-arg idp-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM \
   --auth-provider-arg client-id=kubernetes \
