@@ -13,10 +13,10 @@ import (
 )
 
 // Parse parses command line arguments and returns a CLI instance.
-func Parse(args []string) (*CLI, error) {
+func Parse(osArgs []string) (*CLI, error) {
 	var cli CLI
 	parser := flags.NewParser(&cli, flags.HelpFlag)
-	args, err := parser.Parse()
+	args, err := parser.ParseArgs(osArgs[1:])
 	if err != nil {
 		return nil, err
 	}
