@@ -5,7 +5,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	c, err := Parse([]string{"kubelogin"})
+	c, err := Parse([]string{"kubelogin"}, "version")
 	if err != nil {
 		t.Errorf("Parse returned error: %s", err)
 	}
@@ -15,7 +15,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestParse_TooManyArgs(t *testing.T) {
-	c, err := Parse([]string{"kubelogin", "some"})
+	c, err := Parse([]string{"kubelogin", "some"}, "version")
 	if err == nil {
 		t.Errorf("Parse should return error but nil")
 	}
@@ -25,7 +25,7 @@ func TestParse_TooManyArgs(t *testing.T) {
 }
 
 func TestParse_Help(t *testing.T) {
-	c, err := Parse([]string{"kubelogin", "--help"})
+	c, err := Parse([]string{"kubelogin", "--help"}, "version")
 	if err == nil {
 		t.Errorf("Parse should return error but nil")
 	}

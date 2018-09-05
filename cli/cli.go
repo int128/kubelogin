@@ -13,9 +13,12 @@ import (
 )
 
 // Parse parses command line arguments and returns a CLI instance.
-func Parse(osArgs []string) (*CLI, error) {
+func Parse(osArgs []string, version string) (*CLI, error) {
 	var cli CLI
 	parser := flags.NewParser(&cli, flags.HelpFlag)
+	parser.LongDescription = fmt.Sprintf(`Version %s
+		This updates the kubeconfig for Kubernetes OpenID Connect (OIDC) authentication.`,
+		version)
 	args, err := parser.ParseArgs(osArgs[1:])
 	if err != nil {
 		return nil, err
