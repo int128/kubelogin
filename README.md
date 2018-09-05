@@ -10,6 +10,13 @@ This may work with various OIDC providers such as Keycloak, Google Identity Plat
 
 You need to setup the OIDC provider and [Kubernetes OIDC authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
 
+You can install this from brew tap or [releases](https://github.com/int128/kubelogin/releases).
+
+```sh
+brew tap int128/kubelogin
+brew install kubelogin
+```
+
 After initial setup or when the token has been expired, just run `kubelogin`:
 
 ```
@@ -82,8 +89,6 @@ kubectl config set-credentials NAME \
   --auth-provider-arg client-id=YOUR_CLIENT_ID.apps.googleusercontent.com \
   --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
 ```
-
-Download [the latest release](https://github.com/int128/kubelogin/releases) and save it.
 
 Run `kubelogin` and open http://localhost:8000 in your browser.
 
@@ -176,8 +181,6 @@ kubectl config set-credentials NAME \
   --auth-provider-arg client-id=kubernetes \
   --auth-provider-arg client-secret=YOUR_CLIENT_SECRET
 ```
-
-Download [the latest release](https://github.com/int128/kubelogin/releases) and save it.
 
 Run `kubelogin` and make sure you can access to the cluster.
 See the previous section for details.
