@@ -3,21 +3,21 @@
 This is a command for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
 It gets a token from the OIDC provider and writes it to the kubeconfig.
 
-This may work with various OIDC providers such as Keycloak, Google Identity Platform and Azure AD.
+This should work with all OIDC providers, e.g. Keycloak, Google Identity Platform and Azure AD.
 
 
 ## TL;DR
 
-You need to setup the OIDC provider and [Kubernetes OIDC authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
+You need to setup the OIDC provider, Kubernetes API server and kubectl.
 
-You can install this from brew tap or [releases](https://github.com/int128/kubelogin/releases).
+You can install this from the brew tap or [releases](https://github.com/int128/kubelogin/releases).
 
 ```sh
 brew tap int128/kubelogin
 brew install kubelogin
 ```
 
-After initial setup or when the token has been expired, just run `kubelogin`:
+After initial setup or when the token has been expired, just run `kubelogin`.
 
 ```
 % kubelogin
@@ -27,9 +27,8 @@ After initial setup or when the token has been expired, just run `kubelogin`:
 ```
 
 It opens the browser and you can log in to the provider.
-After you logged in to the provider, it closes the browser automatically.
 
-Then it writes the ID token and refresh token to the kubeconfig.
+And then it writes the ID token and refresh token to the kubeconfig.
 
 ```
 2018/08/27 15:03:07 GET /
@@ -78,9 +77,9 @@ subjects:
   name: https://accounts.google.com#1234567890
 ```
 
-### 3. Setup kubectl and kubelogin
+### 3. Setup kubectl and Run kubelogin
 
-Setup `kubectl` to authenticate with your identity provider.
+Configure `kubectl` for the OIDC authentication.
 
 ```sh
 kubectl config set-credentials NAME \
@@ -170,9 +169,9 @@ subjects:
   name: /kubernetes:admin
 ```
 
-### 3. Setup kubectl and kubelogin
+### 3. Setup kubectl and Run kubelogin
 
-Setup `kubectl` to authenticate with your identity provider.
+Configure `kubectl` for the OIDC authentication.
 
 ```sh
 kubectl config set-credentials NAME \
