@@ -192,6 +192,7 @@ See the previous section for details.
 
 Application Options:
       --kubeconfig=               Path to the kubeconfig file (default: ~/.kube/config) [$KUBECONFIG]
+      --listen-port=              Port used by kubelogin to bind its webserver (default: 8000) [$KUBELOGIN_LISTEN_PORT]
       --insecure-skip-tls-verify  If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
                                   [$KUBELOGIN_INSECURE_SKIP_TLS_VERIFY]
       --skip-open-browser         If set, it does not open the browser on authentication. [$KUBELOGIN_SKIP_OPEN_BROWSER]

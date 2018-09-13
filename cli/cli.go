@@ -32,6 +32,7 @@ func Parse(osArgs []string, version string) (*CLI, error) {
 // CLI represents an interface of this command.
 type CLI struct {
 	KubeConfig      string `long:"kubeconfig" default:"~/.kube/config" env:"KUBECONFIG" description:"Path to the kubeconfig file"`
+	ListenPort      int    `long:"listen-port" default:"8000" env:"KUBELOGIN_LISTEN_PORT" description:"Port used by kubelogin to bind its webserver"`
 	SkipTLSVerify   bool   `long:"insecure-skip-tls-verify" env:"KUBELOGIN_INSECURE_SKIP_TLS_VERIFY" description:"If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure"`
 	SkipOpenBrowser bool   `long:"skip-open-browser" env:"KUBELOGIN_SKIP_OPEN_BROWSER" description:"If set, it does not open the browser on authentication."`
 }
@@ -78,7 +79,7 @@ func (c *CLI) Run(ctx context.Context) error {
 		ClientSecret:    authProvider.ClientSecret(),
 		ExtraScopes:     authProvider.ExtraScopes(),
 		Client:          &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}},
-		ServerPort:      8000,
+		ServerPort:      c.ListenPort,
 		SkipOpenBrowser: c.SkipOpenBrowser,
 	}
 	token, err := authConfig.GetTokenSet(ctx)
