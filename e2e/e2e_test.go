@@ -97,6 +97,7 @@ func TestE2E(t *testing.T) {
 			defer os.Remove(kubeconfig)
 			c.cli.KubeConfig = kubeconfig
 			c.cli.SkipOpenBrowser = true
+			c.cli.ListenPort = 8000
 
 			var eg errgroup.Group
 			eg.Go(func() error {
