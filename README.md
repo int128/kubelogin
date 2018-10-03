@@ -44,10 +44,9 @@ Please see the later section for details.
 
 ### 1. Setup Google API
 
-Open [Google APIs Console](https://console.developers.google.com/apis/credentials) and create an OAuth client as follows:
+Open [Google APIs Console](https://console.developers.google.com/apis/credentials) and create an OAuth client with the following setting:
 
-- Application Type: Web application
-- Redirect URL: `http://localhost:8000/`
+- Application Type: Other
 
 ### 2. Setup Kubernetes cluster
 
