@@ -186,6 +186,8 @@ See the previous section for details.
 
 ## Configuration
 
+This supports the following options.
+
 ```
   kubelogin [OPTIONS]
 
@@ -200,8 +202,8 @@ Help Options:
   -h, --help        Show this help message
 ```
 
-This supports the following keys of `auth-provider` in kubeconfig.
-See also [kubectl authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
+This also supports the following keys of `auth-provider` in kubeconfig.
+See [kubectl authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
 
 Key | Direction | Value
 ----|-----------|------
@@ -223,6 +225,23 @@ Default to `~/.kube/config`.
 ```sh
 export KUBECONFIG="$PWD/.kubeconfig"
 ```
+
+
+### Extra scopes
+
+You can set extra scopes to request to the provider by `extra-scopes` in the kubeconfig.
+
+```sh
+kubectl config set-credentials keycloak --auth-provider-arg extra-scopes=email
+```
+
+Note that kubectl does not accept multiple scopes and you need to edit the kubeconfig.
+
+```sh
+kubectl config set-credentials keycloak --auth-provider-arg extra-scopes=SCOPES
+sed -i '' -e s/SCOPES/email,profile/ $KUBECONFIG
+```
+
 
 ### Team onboarding
 
