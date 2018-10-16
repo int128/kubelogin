@@ -10,8 +10,8 @@ You need to setup the following components:
 
 - OIDC provider
 - Kubernetes API server
-- Kubernetes cluster (RBAC)
-- kubectl
+- Role for your group or user
+- kubectl authentication
 
 You can install this by brew tap or from the [releases](https://github.com/int128/kubelogin/releases).
 
@@ -33,8 +33,8 @@ After initial setup or when the token has been expired, just run `kubelogin`.
 2018/08/27 15:03:09 Updated /home/user/.kube/config
 ```
 
-It will open the browser and you can log in to the provider.
-And then it gets the ID token and refresh token and writes them to the kubeconfig.
+It opens the browser and you can log in to the provider.
+After authentication, it gets an ID token and refresh token and writes them to the kubeconfig.
 
 For more, see the following documents:
 
@@ -94,7 +94,7 @@ You can set extra scopes to request to the provider by `extra-scopes` in the kub
 kubectl config set-credentials keycloak --auth-provider-arg extra-scopes=email
 ```
 
-Note that kubectl does not accept multiple scopes and you need to edit the kubeconfig.
+Note that kubectl does not accept multiple scopes and you need to edit the kubeconfig as like:
 
 ```sh
 kubectl config set-credentials keycloak --auth-provider-arg extra-scopes=SCOPES
@@ -105,7 +105,9 @@ sed -i '' -e s/SCOPES/email,profile/ $KUBECONFIG
 ## Contributions
 
 This is an open source software licensed under Apache License 2.0.
-Feel free to open issues and pull requests.
+
+Feel free to open issues and pull requests for improving code and documents.
+
 
 ### Build and Test
 
@@ -118,8 +120,3 @@ cd $GOPATH/src/github.com/int128/kubelogin
 make -C e2e/authserver/testdata
 go test -v ./...
 ```
-
-### Release
-
-CircleCI publishes the build to GitHub.
-See [.circleci/config.yml](.circleci/config.yml).
