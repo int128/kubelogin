@@ -11,7 +11,7 @@ jobs:
       - run: go get -v k8s.io/client-go
       - run: go vet
       - run: go build -v
-      - run: make -C e2e/authserver/testdata
+      - run: make -C cli_test/authserver/testdata
       - run: go test -v ./...
 
   release:

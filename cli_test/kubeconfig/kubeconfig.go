@@ -1,4 +1,4 @@
-package e2e
+package kubeconfig
 
 import (
 	"html/template"
@@ -7,21 +7,23 @@ import (
 	"testing"
 )
 
-type kubeconfigValues struct {
+// Values represents values in .kubeconfig template.
+type Values struct {
 	Issuer                      string
 	ExtraScopes                 string
 	IDPCertificateAuthority     string
 	IDPCertificateAuthorityData string
 }
 
-func createKubeconfig(t *testing.T, v *kubeconfigValues) string {
+// Create creates a kubeconfig file and returns path to it.
+func Create(t *testing.T, v *Values) string {
 	t.Helper()
 	f, err := ioutil.TempFile("", "kubeconfig")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	tpl, err := template.ParseFiles("testdata/kubeconfig.yaml")
+	tpl, err := template.ParseFiles("kubeconfig/testdata/kubeconfig.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +33,8 @@ func createKubeconfig(t *testing.T, v *kubeconfigValues) string {
 	return f.Name()
 }
 
-func verifyKubeconfig(t *testing.T, kubeconfig string) {
+// Verify returns true if the kubeconfig has valid values.
+func Verify(t *testing.T, kubeconfig string) {
 	b, err := ioutil.ReadFile(kubeconfig)
 	if err != nil {
 		t.Fatal(err)

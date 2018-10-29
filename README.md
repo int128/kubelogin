@@ -107,16 +107,3 @@ sed -i '' -e s/SCOPES/email,profile/ $KUBECONFIG
 This is an open source software licensed under Apache License 2.0.
 
 Feel free to open issues and pull requests for improving code and documents.
-
-
-### Build and Test
-
-```sh
-go get github.com/int128/kubelogin
-```
-
-```sh
-cd $GOPATH/src/github.com/int128/kubelogin
-make -C e2e/authserver/testdata
-go test -v ./...
-```

@@ -1,4 +1,4 @@
-package e2e
+package cli_test
 
 import (
 	"context"
@@ -13,7 +13,8 @@ import (
 	"time"
 
 	"github.com/int128/kubelogin/cli"
-	"github.com/int128/kubelogin/e2e/authserver"
+	"github.com/int128/kubelogin/cli_test/authserver"
+	"github.com/int128/kubelogin/cli_test/kubeconfig"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -26,19 +27,19 @@ import (
 // 5. Shutdown the auth server.
 func TestE2E(t *testing.T) {
 	data := map[string]struct {
-		kubeconfigValues kubeconfigValues
+		kubeconfigValues kubeconfig.Values
 		cli              cli.CLI
 		serverConfig     authserver.Config
 		clientTLS        *tls.Config
 	}{
 		"NoTLS": {
-			kubeconfigValues{Issuer: "http://localhost:9000"},
+			kubeconfig.Values{Issuer: "http://localhost:9000"},
 			cli.CLI{},
 			authserver.Config{Issuer: "http://localhost:9000"},
 			&tls.Config{},
 		},
 		"ExtraScope": {
-			kubeconfigValues{
+			kubeconfig.Values{
 				Issuer:      "http://localhost:9000",
 				ExtraScopes: "profile groups",
 			},
@@ -50,7 +51,7 @@ func TestE2E(t *testing.T) {
 			&tls.Config{},
 		},
 		"SkipTLSVerify": {
-			kubeconfigValues{Issuer: "https://localhost:9000"},
+			kubeconfig.Values{Issuer: "https://localhost:9000"},
 			cli.CLI{SkipTLSVerify: true},
 			authserver.Config{
 				Issuer: "https://localhost:9000",
@@ -60,7 +61,7 @@ func TestE2E(t *testing.T) {
 			&tls.Config{InsecureSkipVerify: true},
 		},
 		"CACert": {
-			kubeconfigValues{
+			kubeconfig.Values{
 				Issuer:                  "https://localhost:9000",
 				IDPCertificateAuthority: authserver.CACert,
 			},
@@ -73,7 +74,7 @@ func TestE2E(t *testing.T) {
 			&tls.Config{RootCAs: readCert(t, authserver.CACert)},
 		},
 		"CACertData": {
-			kubeconfigValues{
+			kubeconfig.Values{
 				Issuer: "https://localhost:9000",
 				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString(read(t, authserver.CACert)),
 			},
@@ -93,9 +94,9 @@ func TestE2E(t *testing.T) {
 			defer cancel()
 			server := c.serverConfig.Start(t)
 			defer server.Shutdown(ctx)
-			kubeconfig := createKubeconfig(t, &c.kubeconfigValues)
-			defer os.Remove(kubeconfig)
-			c.cli.KubeConfig = kubeconfig
+			kcfg := kubeconfig.Create(t, &c.kubeconfigValues)
+			defer os.Remove(kcfg)
+			c.cli.KubeConfig = kcfg
 			c.cli.SkipOpenBrowser = true
 			c.cli.ListenPort = 8000
 
@@ -110,7 +111,7 @@ func TestE2E(t *testing.T) {
 			if err := eg.Wait(); err != nil {
 				t.Fatalf("CLI returned error: %s", err)
 			}
-			verifyKubeconfig(t, kubeconfig)
+			kubeconfig.Verify(t, kcfg)
 		})
 	}
 }
