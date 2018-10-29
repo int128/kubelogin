@@ -2,24 +2,24 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.10
-    working_directory: /go/src/github.com/int128/kubelogin
+      - image: circleci/golang:1.11.1
     steps:
       - checkout
-      - run: go get -v -t -d ./...
       - run: go get -u golang.org/x/lint/golint
       - run: golint
+      # Workaround for https://github.com/golang/go/issues/27925
+      - run: go get -v k8s.io/client-go
+      - run: go vet
       - run: go build -v
       - run: make -C e2e/authserver/testdata
       - run: go test -v ./...
 
   release:
     docker:
-      - image: circleci/golang:1.10
-    working_directory: /go/src/github.com/int128/kubelogin
+      - image: circleci/golang:1.11.1
     steps:
       - checkout
-      - run: go get -v -t -d ./...
+      - run: go vet
       - run: curl -sL https://git.io/goreleaser | bash
 
 workflows:
