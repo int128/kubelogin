@@ -102,6 +102,18 @@ sed -i '' -e s/SCOPES/email,profile/ $KUBECONFIG
 ```
 
 
+## CA Certificates
+
+You can set your self-signed certificates for the OIDC provider (not Kubernetes API server) by `idp-certificate-authority` and `idp-certificate-authority-data` in the kubeconfig.
+
+```sh
+kubectl config set-credentials keycloak \
+  --auth-provider-arg idp-certificate-authority=$HOME/.kube/keycloak-ca.pem
+```
+
+If kubelogin could not parse the certificate, it shows a warning and skips it.
+
+
 ## Contributions
 
 This is an open source software licensed under Apache License 2.0.

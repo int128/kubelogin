@@ -69,10 +69,7 @@ func (c *CLI) Run(ctx context.Context) error {
 					--auth-provider-arg client-secret=YOUR_CLIENT_SECRET`,
 			err, cfg.CurrentContext)
 	}
-	tlsConfig, err := c.tlsConfig(authProvider)
-	if err != nil {
-		return fmt.Errorf("Could not configure TLS: %s", err)
-	}
+	tlsConfig := c.tlsConfig(authProvider)
 	authConfig := &auth.Config{
 		Issuer:          authProvider.IDPIssuerURL(),
 		ClientID:        authProvider.ClientID(),

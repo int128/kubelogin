@@ -86,6 +86,24 @@ func TestE2E(t *testing.T) {
 			},
 			&tls.Config{RootCAs: readCert(t, authserver.CACert)},
 		},
+		"InvalidCACertShouldBeSkipped": {
+			kubeconfig.Values{
+				Issuer: "http://localhost:9000",
+				IDPCertificateAuthority: "e2e_test.go",
+			},
+			cli.CLI{},
+			authserver.Config{Issuer: "http://localhost:9000"},
+			&tls.Config{},
+		},
+		"InvalidCACertDataShouldBeSkipped": {
+			kubeconfig.Values{
+				Issuer: "http://localhost:9000",
+				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString([]byte("foo")),
+			},
+			cli.CLI{},
+			authserver.Config{Issuer: "http://localhost:9000"},
+			&tls.Config{},
+		},
 	}
 
 	for name, c := range data {
