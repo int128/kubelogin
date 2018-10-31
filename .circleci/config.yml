@@ -12,7 +12,7 @@ jobs:
       - run: go vet
       - run: go build -v
       - run: make -C cli_test/authserver/testdata
-      - run: go test -v ./...
+      - run: go test -v -race ./...
 
   release:
     docker:

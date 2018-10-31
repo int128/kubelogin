@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	oidc "github.com/coreos/go-oidc"
+	"github.com/int128/oauth2cli"
 	"golang.org/x/oauth2"
 )
 
@@ -23,7 +24,7 @@ type Config struct {
 	ClientSecret    string
 	ExtraScopes     []string     // Additional scopes
 	Client          *http.Client // HTTP client for oidc and oauth2
-	ServerPort      int          // HTTP server port
+	LocalServerPort int          // HTTP server port
 	SkipOpenBrowser bool         // skip opening browser if true
 }
 
@@ -36,20 +37,18 @@ func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Could not discovery the OIDC issuer: %s", err)
 	}
-	oauth2Config := &oauth2.Config{
-		Endpoint:     provider.Endpoint(),
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		Scopes:       append(c.ExtraScopes, oidc.ScopeOpenID),
-		RedirectURL:  fmt.Sprintf("http://localhost:%d/", c.ServerPort),
-	}
-	flow := &authCodeFlow{
-		ServerPort:      c.ServerPort,
+	flow := oauth2cli.AuthCodeFlow{
+		Config: oauth2.Config{
+			Endpoint:     provider.Endpoint(),
+			ClientID:     c.ClientID,
+			ClientSecret: c.ClientSecret,
+			Scopes:       append(c.ExtraScopes, oidc.ScopeOpenID),
+		},
+		LocalServerPort: c.LocalServerPort,
 		SkipOpenBrowser: c.SkipOpenBrowser,
-		Config:          oauth2Config,
 		AuthCodeOptions: []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
 	}
-	token, err := flow.getToken(ctx)
+	token, err := flow.GetToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Could not get a token: %s", err)
 	}
