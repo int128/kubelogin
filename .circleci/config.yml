@@ -19,6 +19,8 @@ jobs:
       - image: circleci/golang:1.11.1
     steps:
       - checkout
+      # Workaround for https://github.com/golang/go/issues/27925
+      - run: go get -v k8s.io/client-go
       - run: go vet
       - run: curl -sL https://git.io/goreleaser | bash
 
