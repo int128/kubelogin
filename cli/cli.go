@@ -76,7 +76,7 @@ func (c *CLI) Run(ctx context.Context) error {
 		ClientSecret:    authProvider.ClientSecret(),
 		ExtraScopes:     authProvider.ExtraScopes(),
 		Client:          &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}},
-		ServerPort:      c.ListenPort,
+		LocalServerPort: c.ListenPort,
 		SkipOpenBrowser: c.SkipOpenBrowser,
 	}
 	token, err := authConfig.GetTokenSet(ctx)
