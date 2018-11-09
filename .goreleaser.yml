@@ -15,5 +15,9 @@ brew:
     name: homebrew-kubelogin
   homepage: https://github.com/int128/kubelogin
   description: "kubectl with OpenID Connect (OIDC) authentication"
-  test: system "#{bin}/kubelogin --help"
-  install: bin.install "kubelogin"
+  test: |
+    system "#{bin}/kubelogin --help"
+    system "#{bin}/kubectl-login --help"
+  install: |
+    bin.install "kubelogin"
+    ln_s bin/"kubelogin" bin/"kubectl-login"
