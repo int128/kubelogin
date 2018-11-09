@@ -20,7 +20,7 @@ brew tap int128/kubelogin
 brew install kubelogin
 ```
 
-After initial setup or when the token has been expired, just run `kubelogin`.
+After initial setup or when the token has been expired, just run `kubelogin` or `kubectl login`.
 
 ```
 % kubelogin
