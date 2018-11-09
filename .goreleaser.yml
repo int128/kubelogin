@@ -20,4 +20,4 @@ brew:
     system "#{bin}/kubectl-login --help"
   install: |
     bin.install "kubelogin"
-    ln_s bin/"kubelogin" bin/"kubectl-login"
+    ln_s bin/"kubelogin", bin/"kubectl-login"
