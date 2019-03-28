@@ -31,10 +31,10 @@ After initial setup or when the token has been expired, just run:
 2018/08/27 15:03:09 Updated /home/user/.kube/config
 ```
 
-or
+or run as a kubectl plugin:
 
 ```
-% kubectl login
+% kubectl oidc-login
 ```
 
 It opens the browser and you can log in to the provider.
@@ -52,17 +52,26 @@ For more, see the following documents:
 This supports the following options.
 
 ```
-  kubelogin [OPTIONS]
+Usage: kubelogin [options]
 
-Application Options:
-      --kubeconfig=               Path to the kubeconfig file (default: ~/.kube/config) [$KUBECONFIG]
-      --listen-port=              Port used by kubelogin to bind its webserver (default: 8000) [$KUBELOGIN_LISTEN_PORT]
-      --insecure-skip-tls-verify  If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-                                  [$KUBELOGIN_INSECURE_SKIP_TLS_VERIFY]
-      --skip-open-browser         If set, it does not open the browser on authentication. [$KUBELOGIN_SKIP_OPEN_BROWSER]
-
-Help Options:
-  -h, --help        Show this help message
+Options:
+      --listen-port int                Port used by kubelogin to bind its server [$KUBELOGIN_LISTEN_PORT] (default 8000)
+      --skip-open-browser              If true, it does not open the browser on authentication [$KUBELOGIN_SKIP_OPEN_BROWSER]
+      --kubeconfig string              Path to the kubeconfig file to use for CLI requests. [$KUBECONFIG]
+      --cache-dir string               Default HTTP cache directory (default "~/.kube/http-cache")
+      --client-certificate string      Path to a client certificate file for TLS
+      --client-key string              Path to a client key file for TLS
+      --token string                   Bearer token for authentication to the API server
+      --as string                      Username to impersonate for the operation
+      --as-group stringArray           Group to impersonate for the operation, this flag can be repeated to specify multiple groups.
+      --cluster string                 The name of the kubeconfig cluster to use
+      --user string                    The name of the kubeconfig user to use
+  -n, --namespace string               If present, the namespace scope for this CLI request
+      --context string                 The name of the kubeconfig context to use
+  -s, --server string                  The address and port of the Kubernetes API server
+      --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure [$KUBELOGIN_INSECURE_SKIP_TLS_VERIFY]
+      --certificate-authority string   Path to a cert file for the certificate authority
+      --request-timeout string         The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don't timeout requests. (default "0")
 ```
 
 This also supports the following keys of `auth-provider` in kubeconfig.

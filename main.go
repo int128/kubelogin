@@ -2,22 +2,16 @@ package main
 
 import (
 	"context"
-	"log"
+	"github.com/int128/kubelogin/adaptors"
+	"github.com/int128/kubelogin/usecases"
 	"os"
-
-	"github.com/int128/kubelogin/cli"
 )
 
-// Set by goreleaser, see https://goreleaser.com/environment/
-var version = "1.x"
+//TODO: inject version
 
 func main() {
-	c, err := cli.Parse(os.Args, version)
-	if err != nil {
-		log.Fatal(err)
+	cmd := adaptors.Cmd{
+		Login: &usecases.Login{},
 	}
-	ctx := context.Background()
-	if err := c.Run(ctx); err != nil {
-		log.Fatalf("Error: %s", err)
-	}
+	os.Exit(cmd.Run(context.Background(), os.Args))
 }

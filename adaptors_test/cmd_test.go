@@ -1,4 +1,4 @@
-package cli_test
+package adaptors_test
 
 import (
 	"context"
@@ -9,104 +9,96 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
-	"github.com/int128/kubelogin/cli"
-	"github.com/int128/kubelogin/cli_test/authserver"
-	"github.com/int128/kubelogin/cli_test/kubeconfig"
-	"golang.org/x/sync/errgroup"
+	"github.com/int128/kubelogin/adaptors"
+	"github.com/int128/kubelogin/adaptors_test/authserver"
+	"github.com/int128/kubelogin/adaptors_test/kubeconfig"
+	"github.com/int128/kubelogin/usecases"
 )
 
-// End-to-end test.
+// Run end-to-end tests with a stub server.
 //
 // 1. Start the auth server at port 9000.
 // 2. Run the CLI.
 // 3. Open a request for port 8000.
 // 4. Wait for the CLI.
 // 5. Shutdown the auth server.
-func TestE2E(t *testing.T) {
-	data := map[string]struct {
+//
+func TestCmd_Run(t *testing.T) {
+	testCases := map[string]struct {
 		kubeconfigValues kubeconfig.Values
-		cli              cli.CLI
 		serverConfig     authserver.Config
-		clientTLS        *tls.Config
+		clientConfig     *tls.Config
+		extraArgs        []string
 	}{
 		"NoTLS": {
-			kubeconfig.Values{Issuer: "http://localhost:9000"},
-			cli.CLI{},
-			authserver.Config{Issuer: "http://localhost:9000"},
-			&tls.Config{},
+			kubeconfigValues: kubeconfig.Values{Issuer: "http://localhost:9000"},
+			serverConfig:     authserver.Config{Issuer: "http://localhost:9000"},
 		},
 		"ExtraScope": {
-			kubeconfig.Values{
+			kubeconfigValues: kubeconfig.Values{
 				Issuer:      "http://localhost:9000",
 				ExtraScopes: "profile groups",
 			},
-			cli.CLI{},
-			authserver.Config{
+			serverConfig: authserver.Config{
 				Issuer: "http://localhost:9000",
 				Scope:  "profile groups openid",
 			},
-			&tls.Config{},
 		},
 		"SkipTLSVerify": {
-			kubeconfig.Values{Issuer: "https://localhost:9000"},
-			cli.CLI{SkipTLSVerify: true},
-			authserver.Config{
+			kubeconfigValues: kubeconfig.Values{Issuer: "https://localhost:9000"},
+			serverConfig: authserver.Config{
 				Issuer: "https://localhost:9000",
 				Cert:   authserver.ServerCert,
 				Key:    authserver.ServerKey,
 			},
-			&tls.Config{InsecureSkipVerify: true},
+			clientConfig: &tls.Config{InsecureSkipVerify: true},
+			extraArgs:    []string{"--insecure-skip-tls-verify"},
 		},
 		"CACert": {
-			kubeconfig.Values{
+			kubeconfigValues: kubeconfig.Values{
 				Issuer:                  "https://localhost:9000",
 				IDPCertificateAuthority: authserver.CACert,
 			},
-			cli.CLI{},
-			authserver.Config{
+			serverConfig: authserver.Config{
 				Issuer: "https://localhost:9000",
 				Cert:   authserver.ServerCert,
 				Key:    authserver.ServerKey,
 			},
-			&tls.Config{RootCAs: readCert(t, authserver.CACert)},
+			clientConfig: &tls.Config{RootCAs: readCert(t, authserver.CACert)},
 		},
 		"CACertData": {
-			kubeconfig.Values{
-				Issuer: "https://localhost:9000",
+			kubeconfigValues: kubeconfig.Values{
+				Issuer:                      "https://localhost:9000",
 				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString(read(t, authserver.CACert)),
 			},
-			cli.CLI{},
-			authserver.Config{
+			serverConfig: authserver.Config{
 				Issuer: "https://localhost:9000",
 				Cert:   authserver.ServerCert,
 				Key:    authserver.ServerKey,
 			},
-			&tls.Config{RootCAs: readCert(t, authserver.CACert)},
+			clientConfig: &tls.Config{RootCAs: readCert(t, authserver.CACert)},
 		},
 		"InvalidCACertShouldBeSkipped": {
-			kubeconfig.Values{
-				Issuer: "http://localhost:9000",
-				IDPCertificateAuthority: "e2e_test.go",
+			kubeconfigValues: kubeconfig.Values{
+				Issuer:                  "http://localhost:9000",
+				IDPCertificateAuthority: "cmd_test.go",
 			},
-			cli.CLI{},
-			authserver.Config{Issuer: "http://localhost:9000"},
-			&tls.Config{},
+			serverConfig: authserver.Config{Issuer: "http://localhost:9000"},
 		},
 		"InvalidCACertDataShouldBeSkipped": {
-			kubeconfig.Values{
-				Issuer: "http://localhost:9000",
-				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString([]byte("foo")),
+			kubeconfigValues: kubeconfig.Values{
+				Issuer:                      "http://localhost:9000",
+				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString([]byte("INVALID")),
 			},
-			cli.CLI{},
-			authserver.Config{Issuer: "http://localhost:9000"},
-			&tls.Config{},
+			serverConfig: authserver.Config{Issuer: "http://localhost:9000"},
 		},
 	}
 
-	for name, c := range data {
+	for name, c := range testCases {
 		t.Run(name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -114,21 +106,31 @@ func TestE2E(t *testing.T) {
 			defer server.Shutdown(ctx)
 			kcfg := kubeconfig.Create(t, &c.kubeconfigValues)
 			defer os.Remove(kcfg)
-			c.cli.KubeConfig = kcfg
-			c.cli.SkipOpenBrowser = true
-			c.cli.ListenPort = 8000
 
-			var eg errgroup.Group
-			eg.Go(func() error {
-				return c.cli.Run(ctx)
-			})
-			if err := openBrowserRequest(c.clientTLS); err != nil {
-				cancel()
-				t.Error(err)
-			}
-			if err := eg.Wait(); err != nil {
-				t.Fatalf("CLI returned error: %s", err)
-			}
+			var wg sync.WaitGroup
+			wg.Add(2)
+			go func() {
+				defer wg.Done()
+				cmd := adaptors.Cmd{
+					Login: &usecases.Login{},
+				}
+				args := append([]string{
+					"kubelogin",
+					"--kubeconfig", kcfg,
+					"--skip-open-browser",
+				}, c.extraArgs...)
+				if exitCode := cmd.Run(ctx, args); exitCode != 0 {
+					t.Errorf("exitCode wants 0 but %d", exitCode)
+				}
+			}()
+			go func() {
+				defer wg.Done()
+				if err := openBrowserRequest(c.clientConfig); err != nil {
+					cancel()
+					t.Error(err)
+				}
+			}()
+			wg.Wait()
 			kubeconfig.Verify(t, kcfg)
 		})
 	}
@@ -139,7 +141,7 @@ func openBrowserRequest(tlsConfig *tls.Config) error {
 	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
 	res, err := client.Get("http://localhost:8000/")
 	if err != nil {
-		return fmt.Errorf("Could not send a request: %s", err)
+		return fmt.Errorf("error while sending a request: %s", err)
 	}
 	if res.StatusCode != 200 {
 		return fmt.Errorf("StatusCode wants 200 but %d", res.StatusCode)
