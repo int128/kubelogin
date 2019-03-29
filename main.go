@@ -8,8 +8,7 @@ import (
 	"github.com/int128/kubelogin/cli"
 )
 
-// Set by goreleaser, see https://goreleaser.com/environment/
-var version = "1.x"
+var version = "snapshot"
 
 func main() {
 	c, err := cli.Parse(os.Args, version)

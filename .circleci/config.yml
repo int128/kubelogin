@@ -4,25 +4,20 @@ jobs:
     docker:
       - image: circleci/golang:1.11.1
     steps:
+      - run: go get golang.org/x/lint/golint
+      - run: go get github.com/mitchellh/gox
+      - run: go get github.com/tcnksm/ghr
+      - run: go get github.com/Songmu/ghch/cmd/ghch
+      - run: go get github.com/int128/ghcp
       - checkout
-      - run: go get -u golang.org/x/lint/golint
-      - run: golint
-      # Workaround for https://github.com/golang/go/issues/27925
-      - run: go get -v k8s.io/client-go
-      - run: go vet
-      - run: go build -v
-      - run: make -C cli_test/authserver/testdata
-      - run: go test -v -race ./...
-
-  release:
-    docker:
-      - image: circleci/golang:1.11.1
-    steps:
-      - checkout
-      # Workaround for https://github.com/golang/go/issues/27925
-      - run: go get -v k8s.io/client-go
-      - run: go vet
-      - run: curl -sL https://git.io/goreleaser | bash
+      # workaround for https://github.com/golang/go/issues/27925
+      - run: sed -e '/^k8s.io\/client-go /d' -i go.sum
+      - run: make check
+      - run: make
+      - run: |
+          if [ "$CIRCLE_TAG" ]; then
+            make release
+          fi
 
 workflows:
   version: 2
@@ -32,11 +27,3 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - release:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
-          requires:
-            - build
