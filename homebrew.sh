@@ -12,11 +12,11 @@ class Kubelogin < Formula
   sha256 "${dist_sha256}"
   def install
     bin.install "kubelogin_darwin_amd64" => "kubelogin"
-    ln_s bin/"kubelogin", bin/"kubectl-login"
+    ln_s bin/"kubelogin", bin/"kubectl-oidc_login"
   end
   test do
     system "#{bin}/kubelogin -h"
-    system "#{bin}/kubectl-login -h"
+    system "#{bin}/kubectl-oidc_login -h"
   end
 end
 EOF

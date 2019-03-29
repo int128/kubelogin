@@ -31,10 +31,10 @@ After initial setup or when the token has been expired, just run:
 2018/08/27 15:03:09 Updated /home/user/.kube/config
 ```
 
-or
+or run as a plugin:
 
 ```
-% kubectl login
+% kubectl oidc-login
 ```
 
 It opens the browser and you can log in to the provider.
