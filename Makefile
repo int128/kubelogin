@@ -1,8 +1,9 @@
 TARGET := kubelogin
+TARGET_PLUGIN := kubectl-oidc_login
 OSARCH := darwin/amd64 linux/amd64 windows/amd64
 CIRCLE_TAG ?= snapshot
 
-.PHONY: check release_bin release_homebrew release clean
+.PHONY: check run release_bin release_homebrew release clean
 
 all: dist/$(TARGET)
 
@@ -14,6 +15,12 @@ check:
 
 dist/$(TARGET): $(wildcard *.go)
 	go build -o $@ -ldflags '-X main.version=$(CIRCLE_TAG)'
+
+dist/$(TARGET_PLUGIN): dist/$(TARGET)
+	ln -s $(TARGET) $@
+
+run: dist/$(TARGET_PLUGIN)
+	-PATH=dist:$(PATH) kubectl oidc-login --help
 
 dist/bin:
 	gox --osarch '$(OSARCH)' -output 'dist/bin/$(TARGET)_{{.OS}}_{{.Arch}}'

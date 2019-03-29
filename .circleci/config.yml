@@ -4,6 +4,12 @@ jobs:
     docker:
       - image: circleci/golang:1.11.1
     steps:
+      - run: |
+          mkdir -p ~/bin
+          echo 'export PATH="$HOME/bin:$PATH"' >> $BASH_ENV
+      - run: |
+          curl -L -o ~/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.14.0/bin/linux/amd64/kubectl
+          chmod +x ~/bin/kubectl
       - run: go get golang.org/x/lint/golint
       - run: go get github.com/mitchellh/gox
       - run: go get github.com/tcnksm/ghr
@@ -13,7 +19,7 @@ jobs:
       # workaround for https://github.com/golang/go/issues/27925
       - run: sed -e '/^k8s.io\/client-go /d' -i go.sum
       - run: make check
-      - run: make
+      - run: make run
       - run: |
           if [ "$CIRCLE_TAG" ]; then
             make release
