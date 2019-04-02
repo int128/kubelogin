@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-  "net/url"
-  "os"
+	"net/url"
+	"os"
 
 	oidc "github.com/coreos/go-oidc"
 	"github.com/int128/oauth2cli"
@@ -33,22 +33,22 @@ type Config struct {
 // GetTokenSet retrives a token from the OIDC provider and returns a TokenSet.
 func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
 	if c.Client != nil {
-    // https://github.com/int128/kubelogin/issues/31
-    val, ok := os.LookupEnv("HTTPS_PROXY")
-    if ok {
-      proxyURL, err := url.Parse(val)
-      if err != nil {
-        log.Printf("HTTPS_PROXY %s cannot be parsed into a URL\n", val)
-      } else {
-        transport := &http.Transport{
-          Proxy: http.ProxyURL(proxyURL),
-        }
-        c.Client = &http.Client{
-          Transport: transport,
-        }
-      }
-    }
-    //
+		// https://github.com/int128/kubelogin/issues/31
+		val, ok := os.LookupEnv("HTTPS_PROXY")
+		if ok {
+			proxyURL, err := url.Parse(val)
+			if err != nil {
+				log.Printf("HTTPS_PROXY %s cannot be parsed into a URL\n", val)
+			} else {
+				transport := &http.Transport{
+					Proxy: http.ProxyURL(proxyURL),
+				}
+				c.Client = &http.Client{
+					Transport: transport,
+				}
+			}
+		}
+		//
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.Client)
 	}
 	provider, err := oidc.NewProvider(ctx, c.Issuer)
