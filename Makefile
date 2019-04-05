@@ -23,7 +23,7 @@ run: $(TARGET_PLUGIN)
 	-PATH=.:$(PATH) kubectl oidc-login --help
 
 dist:
-	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kubelogin.rb" -- -ldflags "$(LDFLAGS)"
+	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kubelogin.rb oidc-login.yaml" -- -ldflags "$(LDFLAGS)"
 	mv dist/gh/kubelogin.rb dist/
 
 release: dist
