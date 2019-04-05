@@ -1,3 +1,5 @@
 /.idea
 /dist
+/kubelogin
+/kubectl-oidc_login
 /.kubeconfig

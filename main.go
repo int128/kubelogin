@@ -8,7 +8,7 @@ import (
 	"github.com/int128/kubelogin/cli"
 )
 
-var version = "snapshot"
+var version = "HEAD"
 
 func main() {
 	c, err := cli.Parse(os.Args, version)

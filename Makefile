@@ -1,11 +1,11 @@
 TARGET := kubelogin
 TARGET_PLUGIN := kubectl-oidc_login
-OSARCH := darwin/amd64 linux/amd64 windows/amd64
-CIRCLE_TAG ?= snapshot
+CIRCLE_TAG ?= HEAD
+LDFLAGS := -X main.version=$(CIRCLE_TAG)
 
-.PHONY: check run release_bin release_homebrew release clean
+.PHONY: check run release clean
 
-all: dist/$(TARGET)
+all: $(TARGET)
 
 check:
 	golint
@@ -13,29 +13,24 @@ check:
 	$(MAKE) -C cli_test/authserver/testdata
 	go test -v ./...
 
-dist/$(TARGET): $(wildcard *.go)
-	go build -o $@ -ldflags '-X main.version=$(CIRCLE_TAG)'
+$(TARGET): $(wildcard *.go)
+	go build -o $@ -ldflags "$(LDFLAGS)"
 
-dist/$(TARGET_PLUGIN): dist/$(TARGET)
-	ln -s $(TARGET) $@
+$(TARGET_PLUGIN): $(TARGET)
+	ln -sf $(TARGET) $@
 
-run: dist/$(TARGET_PLUGIN)
-	-PATH=dist:$(PATH) kubectl oidc-login --help
+run: $(TARGET_PLUGIN)
+	-PATH=.:$(PATH) kubectl oidc-login --help
 
-dist/bin:
-	gox --osarch '$(OSARCH)' -output 'dist/bin/$(TARGET)_{{.OS}}_{{.Arch}}'
-	cd dist/bin && shasum -a 256 -b * > $(TARGET)_checksums.txt
+dist:
+	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kubelogin.rb" -- -ldflags "$(LDFLAGS)"
+	mv dist/gh/kubelogin.rb dist/
 
-release_bin: dist/bin
-	ghr -u "$(CIRCLE_PROJECT_USERNAME)" -r "$(CIRCLE_PROJECT_REPONAME)" -b "$$(ghch -F markdown --latest)" "$(CIRCLE_TAG)" dist/bin
-
-dist/kubelogin.rb: dist/bin
-	./homebrew.sh dist/bin/$(TARGET)_darwin_amd64 > dist/kubelogin.rb
-
-release_homebrew: dist/kubelogin.rb
+release: dist
+	ghr -u "$(CIRCLE_PROJECT_USERNAME)" -r "$(CIRCLE_PROJECT_REPONAME)" -b "$$(ghch -F markdown --latest)" "$(CIRCLE_TAG)" dist/gh/
 	ghcp -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -m "$(CIRCLE_TAG)" -C dist/ kubelogin.rb
 
-release: release_bin release_homebrew
-
 clean:
+	-rm $(TARGET)
+	-rm $(TARGET_PLUGIN)
 	-rm -r dist/
