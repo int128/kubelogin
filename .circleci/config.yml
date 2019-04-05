@@ -29,6 +29,7 @@ workflows:
   all:
     jobs:
       - build:
+          context: open-source
           filters:
             tags:
               only: /.*/
