@@ -4,7 +4,7 @@ This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](h
 It gets a token from the OIDC provider and writes it to the kubeconfig.
 
 
-## TL;DR
+## Getting Started
 
 You need to setup the following components:
 
@@ -13,11 +13,21 @@ You need to setup the following components:
 - Role for your group or user
 - kubectl authentication
 
-You can install this by brew tap or from the [releases](https://github.com/int128/kubelogin/releases).
+You can install [the latest release](https://github.com/int128/kubelogin/releases) by the following ways:
 
 ```sh
+# Homebrew
 brew tap int128/kubelogin
 brew install kubelogin
+
+# Krew (experimental)
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.9.0/oidc-login.yaml
+kubectl krew install --manifest oidc-login.yaml
+
+# GitHub Releases
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.9.0/kubelogin_linux_amd64.zip
+unzip kubelogin_linux_amd64.zip
+ln -s kubelogin kubectl-oidc_login
 ```
 
 After initial setup or when the token has been expired, just run:
@@ -31,7 +41,7 @@ After initial setup or when the token has been expired, just run:
 2018/08/27 15:03:09 Updated /home/user/.kube/config
 ```
 
-or run as a plugin:
+or run as a kubectl plugin:
 
 ```
 % kubectl oidc-login
