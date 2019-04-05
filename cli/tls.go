@@ -4,11 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 	"log"
 
 	"github.com/int128/kubelogin/kubeconfig"
+	"github.com/pkg/errors"
 )
 
 func (c *CLI) tlsConfig(authProvider *kubeconfig.OIDCAuthProvider) *tls.Config {
@@ -37,10 +37,10 @@ func (c *CLI) tlsConfig(authProvider *kubeconfig.OIDCAuthProvider) *tls.Config {
 func appendCertFile(p *x509.CertPool, name string) error {
 	b, err := ioutil.ReadFile(name)
 	if err != nil {
-		return fmt.Errorf("Could not read %s: %s", name, err)
+		return errors.Wrapf(err, "could not read %s", name)
 	}
 	if p.AppendCertsFromPEM(b) != true {
-		return fmt.Errorf("Could not append certificate from %s", name)
+		return errors.Errorf("could not append certificate from %s", name)
 	}
 	return nil
 }
@@ -48,10 +48,10 @@ func appendCertFile(p *x509.CertPool, name string) error {
 func appendCertData(p *x509.CertPool, data string) error {
 	b, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		return fmt.Errorf("Could not decode base64: %s", err)
+		return errors.Wrapf(err, "could not decode base64")
 	}
 	if p.AppendCertsFromPEM(b) != true {
-		return fmt.Errorf("Could not append certificate")
+		return errors.Errorf("could not append certificate")
 	}
 	return nil
 }

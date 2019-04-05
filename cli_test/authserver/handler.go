@@ -13,6 +13,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
 )
 
 type handler struct {
@@ -89,7 +90,7 @@ func (h *handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		// http://openid.net/specs/openid-connect-core-1_0.html#AuthResponse
 		q := r.URL.Query()
 		if h.Scope != q.Get("scope") {
-			return fmt.Errorf("scope wants %s but %s", h.Scope, q.Get("scope"))
+			return errors.Errorf("scope wants %s but %s", h.Scope, q.Get("scope"))
 		}
 		to := fmt.Sprintf("%s?state=%s&code=%s", q.Get("redirect_uri"), q.Get("state"), h.authCode)
 		http.Redirect(w, r, to, 302)
@@ -100,7 +101,7 @@ func (h *handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 		if h.authCode != r.Form.Get("code") {
-			return fmt.Errorf("code wants %s but %s", h.authCode, r.Form.Get("code"))
+			return errors.Errorf("code wants %s but %s", h.authCode, r.Form.Get("code"))
 		}
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.token.Execute(w, h); err != nil {
