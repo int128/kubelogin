@@ -10,6 +10,7 @@ import (
 	"github.com/int128/kubelogin/kubeconfig"
 	flags "github.com/jessevdk/go-flags"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
 )
 
 // Parse parses command line arguments and returns a CLI instance.
@@ -24,7 +25,7 @@ func Parse(osArgs []string, version string) (*CLI, error) {
 		return nil, err
 	}
 	if len(args) > 0 {
-		return nil, fmt.Errorf("Too many argument")
+		return nil, errors.Errorf("too many argument")
 	}
 	return &cli, nil
 }
@@ -41,7 +42,7 @@ type CLI struct {
 func (c *CLI) ExpandKubeConfig() (string, error) {
 	d, err := homedir.Expand(c.KubeConfig)
 	if err != nil {
-		return "", fmt.Errorf("Could not expand %s: %s", c.KubeConfig, err)
+		return "", errors.Wrapf(err, "could not expand %s", c.KubeConfig)
 	}
 	return d, nil
 }
@@ -55,19 +56,19 @@ func (c *CLI) Run(ctx context.Context) error {
 	}
 	cfg, err := kubeconfig.Read(path)
 	if err != nil {
-		return fmt.Errorf("Could not read kubeconfig: %s", err)
+		return errors.Wrapf(err, "could not read kubeconfig")
 	}
 	log.Printf("Using current-context: %s", cfg.CurrentContext)
 	authProvider, err := kubeconfig.FindOIDCAuthProvider(cfg)
 	if err != nil {
-		return fmt.Errorf(`Could not find OIDC configuration in kubeconfig: %s
-			Did you setup kubectl for OIDC authentication?
+		return errors.Wrapf(err, `could not find OIDC configuration in kubeconfig,
+			did you setup kubectl for OIDC authentication?
 				kubectl config set-credentials %s \
 					--auth-provider oidc \
 					--auth-provider-arg idp-issuer-url=https://issuer.example.com \
 					--auth-provider-arg client-id=YOUR_CLIENT_ID \
 					--auth-provider-arg client-secret=YOUR_CLIENT_SECRET`,
-			err, cfg.CurrentContext)
+			cfg.CurrentContext)
 	}
 	tlsConfig := c.tlsConfig(authProvider)
 	authConfig := &auth.Config{
@@ -81,7 +82,7 @@ func (c *CLI) Run(ctx context.Context) error {
 	}
 	token, err := authConfig.GetTokenSet(ctx)
 	if err != nil {
-		return fmt.Errorf("Could not get token from OIDC provider: %s", err)
+		return errors.Wrapf(err, "could not get token from OIDC provider")
 	}
 
 	authProvider.SetIDToken(token.IDToken)

@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -15,6 +14,7 @@ import (
 	"github.com/int128/kubelogin/cli"
 	"github.com/int128/kubelogin/cli_test/authserver"
 	"github.com/int128/kubelogin/cli_test/kubeconfig"
+	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -75,7 +75,7 @@ func TestE2E(t *testing.T) {
 		},
 		"CACertData": {
 			kubeconfig.Values{
-				Issuer: "https://localhost:9000",
+				Issuer:                      "https://localhost:9000",
 				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString(read(t, authserver.CACert)),
 			},
 			cli.CLI{},
@@ -88,7 +88,7 @@ func TestE2E(t *testing.T) {
 		},
 		"InvalidCACertShouldBeSkipped": {
 			kubeconfig.Values{
-				Issuer: "http://localhost:9000",
+				Issuer:                  "http://localhost:9000",
 				IDPCertificateAuthority: "e2e_test.go",
 			},
 			cli.CLI{},
@@ -97,7 +97,7 @@ func TestE2E(t *testing.T) {
 		},
 		"InvalidCACertDataShouldBeSkipped": {
 			kubeconfig.Values{
-				Issuer: "http://localhost:9000",
+				Issuer:                      "http://localhost:9000",
 				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString([]byte("foo")),
 			},
 			cli.CLI{},
@@ -139,10 +139,10 @@ func openBrowserRequest(tlsConfig *tls.Config) error {
 	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
 	res, err := client.Get("http://localhost:8000/")
 	if err != nil {
-		return fmt.Errorf("Could not send a request: %s", err)
+		return errors.Wrapf(err, "could not send a request")
 	}
 	if res.StatusCode != 200 {
-		return fmt.Errorf("StatusCode wants 200 but %d", res.StatusCode)
+		return errors.Errorf("StatusCode wants 200 but %d", res.StatusCode)
 	}
 	return nil
 }

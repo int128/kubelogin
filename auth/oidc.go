@@ -2,14 +2,14 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 
-	oidc "github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc"
 	"github.com/int128/oauth2cli"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
@@ -53,7 +53,7 @@ func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
 	}
 	provider, err := oidc.NewProvider(ctx, c.Issuer)
 	if err != nil {
-		return nil, fmt.Errorf("Could not discovery the OIDC issuer: %s", err)
+		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
 	}
 	flow := oauth2cli.AuthCodeFlow{
 		Config: oauth2.Config{
@@ -68,16 +68,16 @@ func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
 	}
 	token, err := flow.GetToken(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Could not get a token: %s", err)
+		return nil, errors.Wrapf(err, "could not get a token")
 	}
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		return nil, fmt.Errorf("id_token is missing in the token response: %s", token)
+		return nil, errors.Errorf("id_token is missing in the token response: %s", token)
 	}
 	verifier := provider.Verifier(&oidc.Config{ClientID: c.ClientID})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
-		return nil, fmt.Errorf("Could not verify the id_token: %s", err)
+		return nil, errors.Wrapf(err, "could not verify the id_token")
 	}
 	log.Printf("Got token for subject=%s", verifiedIDToken.Subject)
 	return &TokenSet{
