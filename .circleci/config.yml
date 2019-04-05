@@ -13,7 +13,6 @@ jobs:
       - run: go get golang.org/x/lint/golint
       - run: go get github.com/int128/goxzst
       - run: go get github.com/tcnksm/ghr
-      - run: go get github.com/Songmu/ghch/cmd/ghch
       - run: go get github.com/int128/ghcp
       - checkout
       # workaround for https://github.com/golang/go/issues/27925
