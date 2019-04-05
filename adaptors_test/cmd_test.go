@@ -1,4 +1,4 @@
-package cli_test
+package adaptors_test
 
 import (
 	"context"
@@ -11,9 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/int128/kubelogin/cli"
-	"github.com/int128/kubelogin/cli_test/authserver"
-	"github.com/int128/kubelogin/cli_test/kubeconfig"
+	"github.com/int128/kubelogin/adaptors"
+	"github.com/int128/kubelogin/adaptors_test/authserver"
+	"github.com/int128/kubelogin/adaptors_test/kubeconfig"
+	"github.com/int128/kubelogin/usecases"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 )
@@ -25,16 +26,17 @@ import (
 // 3. Open a request for port 8000.
 // 4. Wait for the CLI.
 // 5. Shutdown the auth server.
-func TestE2E(t *testing.T) {
+//
+func TestCmd_Run(t *testing.T) {
 	data := map[string]struct {
 		kubeconfigValues kubeconfig.Values
-		cli              cli.CLI
+		args             []string
 		serverConfig     authserver.Config
 		clientTLS        *tls.Config
 	}{
 		"NoTLS": {
 			kubeconfig.Values{Issuer: "http://localhost:9000"},
-			cli.CLI{},
+			[]string{"kubelogin"},
 			authserver.Config{Issuer: "http://localhost:9000"},
 			&tls.Config{},
 		},
@@ -43,7 +45,7 @@ func TestE2E(t *testing.T) {
 				Issuer:      "http://localhost:9000",
 				ExtraScopes: "profile groups",
 			},
-			cli.CLI{},
+			[]string{"kubelogin"},
 			authserver.Config{
 				Issuer: "http://localhost:9000",
 				Scope:  "profile groups openid",
@@ -52,7 +54,7 @@ func TestE2E(t *testing.T) {
 		},
 		"SkipTLSVerify": {
 			kubeconfig.Values{Issuer: "https://localhost:9000"},
-			cli.CLI{SkipTLSVerify: true},
+			[]string{"kubelogin", "--insecure-skip-tls-verify"},
 			authserver.Config{
 				Issuer: "https://localhost:9000",
 				Cert:   authserver.ServerCert,
@@ -65,7 +67,7 @@ func TestE2E(t *testing.T) {
 				Issuer:                  "https://localhost:9000",
 				IDPCertificateAuthority: authserver.CACert,
 			},
-			cli.CLI{},
+			[]string{"kubelogin"},
 			authserver.Config{
 				Issuer: "https://localhost:9000",
 				Cert:   authserver.ServerCert,
@@ -78,7 +80,7 @@ func TestE2E(t *testing.T) {
 				Issuer:                      "https://localhost:9000",
 				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString(read(t, authserver.CACert)),
 			},
-			cli.CLI{},
+			[]string{"kubelogin"},
 			authserver.Config{
 				Issuer: "https://localhost:9000",
 				Cert:   authserver.ServerCert,
@@ -89,9 +91,9 @@ func TestE2E(t *testing.T) {
 		"InvalidCACertShouldBeSkipped": {
 			kubeconfig.Values{
 				Issuer:                  "http://localhost:9000",
-				IDPCertificateAuthority: "e2e_test.go",
+				IDPCertificateAuthority: "cmd_test.go",
 			},
-			cli.CLI{},
+			[]string{"kubelogin"},
 			authserver.Config{Issuer: "http://localhost:9000"},
 			&tls.Config{},
 		},
@@ -100,7 +102,7 @@ func TestE2E(t *testing.T) {
 				Issuer:                      "http://localhost:9000",
 				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString([]byte("foo")),
 			},
-			cli.CLI{},
+			[]string{"kubelogin"},
 			authserver.Config{Issuer: "http://localhost:9000"},
 			&tls.Config{},
 		},
@@ -114,13 +116,18 @@ func TestE2E(t *testing.T) {
 			defer server.Shutdown(ctx)
 			kcfg := kubeconfig.Create(t, &c.kubeconfigValues)
 			defer os.Remove(kcfg)
-			c.cli.KubeConfig = kcfg
-			c.cli.SkipOpenBrowser = true
-			c.cli.ListenPort = 8000
 
+			args := append(c.args, "--kubeconfig", kcfg, "--skip-open-browser")
+			cmd := adaptors.Cmd{
+				Login: &usecases.Login{},
+			}
 			var eg errgroup.Group
 			eg.Go(func() error {
-				return c.cli.Run(ctx)
+				exitCode := cmd.Run(ctx, args, "HEAD")
+				if exitCode != 0 {
+					return errors.Errorf("exit status %d", exitCode)
+				}
+				return nil
 			})
 			if err := openBrowserRequest(c.clientTLS); err != nil {
 				cancel()

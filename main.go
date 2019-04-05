@@ -2,21 +2,17 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 
-	"github.com/int128/kubelogin/cli"
+	"github.com/int128/kubelogin/adaptors"
+	"github.com/int128/kubelogin/usecases"
 )
 
 var version = "HEAD"
 
 func main() {
-	c, err := cli.Parse(os.Args, version)
-	if err != nil {
-		log.Fatal(err)
+	cmd := adaptors.Cmd{
+		Login: &usecases.Login{},
 	}
-	ctx := context.Background()
-	if err := c.Run(ctx); err != nil {
-		log.Fatalf("Error: %s", err)
-	}
+	os.Exit(cmd.Run(context.Background(), os.Args, version))
 }

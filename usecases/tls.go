@@ -1,4 +1,4 @@
-package cli
+package usecases
 
 import (
 	"crypto/tls"
@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (c *CLI) tlsConfig(authProvider *kubeconfig.OIDCAuthProvider) *tls.Config {
+func tlsConfig(authProvider *kubeconfig.OIDCAuthProvider, skipTLSVerify bool) *tls.Config {
 	p := x509.NewCertPool()
 	if ca := authProvider.IDPCertificateAuthority(); ca != "" {
 		if err := appendCertFile(p, ca); err != nil {
@@ -27,7 +27,7 @@ func (c *CLI) tlsConfig(authProvider *kubeconfig.OIDCAuthProvider) *tls.Config {
 			log.Printf("Using CA certificate of idp-certificate-authority-data")
 		}
 	}
-	cfg := &tls.Config{InsecureSkipVerify: c.SkipTLSVerify}
+	cfg := &tls.Config{InsecureSkipVerify: skipTLSVerify}
 	if len(p.Subjects()) > 0 {
 		cfg.RootCAs = p
 	}
