@@ -5,16 +5,19 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/auth"
 	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/pkg/errors"
 )
 
-type Login struct{}
+type Login struct {
+	KubeConfig adaptors.KubeConfig
+}
 
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
-	cfg, err := kubeconfig.Read(in.KubeConfig)
+	cfg, err := u.KubeConfig.LoadFromFile(in.KubeConfig)
 	if err != nil {
 		return errors.Wrapf(err, "could not read kubeconfig")
 	}
@@ -47,7 +50,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 
 	authProvider.SetIDToken(token.IDToken)
 	authProvider.SetRefreshToken(token.RefreshToken)
-	if err := kubeconfig.Write(cfg, in.KubeConfig); err != nil {
+	if err := u.KubeConfig.WriteToFile(cfg, in.KubeConfig); err != nil {
 		return errors.Wrapf(err, "could not update the kubeconfig")
 	}
 	log.Printf("Updated %s", in.KubeConfig)
