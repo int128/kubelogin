@@ -2,7 +2,6 @@ package adaptors
 
 import (
 	"context"
-	"log"
 
 	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/adaptors/interfaces"
@@ -45,9 +44,9 @@ func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn) (
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not verify the id_token")
 	}
-	log.Printf("Got token for subject=%s", verifiedIDToken.Subject)
 	return &adaptors.OIDCAuthenticateOut{
-		IDToken:      idToken,
-		RefreshToken: token.RefreshToken,
+		VerifiedIDToken: verifiedIDToken,
+		IDToken:         idToken,
+		RefreshToken:    token.RefreshToken,
 	}, nil
 }
