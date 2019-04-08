@@ -3,8 +3,8 @@ package adaptors
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/jessevdk/go-flags"
 	"github.com/mitchellh/go-homedir"
@@ -12,7 +12,8 @@ import (
 )
 
 type Cmd struct {
-	Login usecases.Login
+	Login  usecases.Login
+	Logger adaptors.Logger
 }
 
 func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
@@ -23,16 +24,16 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		version)
 	args, err := parser.ParseArgs(args[1:])
 	if err != nil {
-		log.Printf("Error: %s", err)
+		cmd.Logger.Logf("Error: %s", err)
 		return 1
 	}
 	if len(args) > 0 {
-		log.Printf("Error: too many arguments")
+		cmd.Logger.Logf("Error: too many arguments")
 		return 1
 	}
 	kubeConfig, err := o.ExpandKubeConfig()
 	if err != nil {
-		log.Printf("Error: invalid option: %s", err)
+		cmd.Logger.Logf("Error: invalid option: %s", err)
 		return 1
 	}
 
@@ -43,7 +44,7 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		SkipOpenBrowser: o.SkipOpenBrowser,
 	}
 	if err := cmd.Login.Do(ctx, in); err != nil {
-		log.Printf("Error: %s", err)
+		cmd.Logger.Logf("Error: %s", err)
 		return 1
 	}
 	return 0

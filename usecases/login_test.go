@@ -102,6 +102,7 @@ func TestLogin_Do(t *testing.T) {
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
 			OIDC:       mockOIDC,
+			Logger:     t,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -143,6 +144,7 @@ func TestLogin_Do(t *testing.T) {
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
 			OIDC:       mockOIDC,
+			Logger:     t,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig:    "/path/to/kubeconfig",
@@ -186,6 +188,7 @@ func TestLogin_Do(t *testing.T) {
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
 			OIDC:       mockOIDC,
+			Logger:     t,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig:      "/path/to/kubeconfig",
@@ -229,6 +232,7 @@ func TestLogin_Do(t *testing.T) {
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
 			OIDC:       mockOIDC,
+			Logger:     t,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -273,6 +277,7 @@ func TestLogin_Do(t *testing.T) {
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
 			OIDC:       mockOIDC,
+			Logger:     t,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -318,6 +323,7 @@ func TestLogin_Do(t *testing.T) {
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
 			OIDC:       mockOIDC,
+			Logger:     t,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -362,6 +368,7 @@ func TestLogin_Do(t *testing.T) {
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
 			OIDC:       mockOIDC,
+			Logger:     t,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -407,6 +414,7 @@ func TestLogin_Do(t *testing.T) {
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
 			OIDC:       mockOIDC,
+			Logger:     t,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
