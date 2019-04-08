@@ -27,7 +27,8 @@ func TestCmd_Run(t *testing.T) {
 			})
 
 		cmd := Cmd{
-			Login: login,
+			Login:  login,
+			Logger: t,
 		}
 		exitCode := cmd.Run(ctx, []string{executable}, version)
 		if exitCode != 0 {
@@ -50,7 +51,8 @@ func TestCmd_Run(t *testing.T) {
 			})
 
 		cmd := Cmd{
-			Login: login,
+			Login:  login,
+			Logger: t,
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
 			"--listen-port", "10080",
@@ -66,7 +68,8 @@ func TestCmd_Run(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		cmd := Cmd{
-			Login: mock_usecases.NewMockLogin(ctrl),
+			Login:  mock_usecases.NewMockLogin(ctrl),
+			Logger: t,
 		}
 		exitCode := cmd.Run(context.TODO(), []string{executable, "some"}, version)
 		if exitCode != 1 {

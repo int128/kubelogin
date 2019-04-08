@@ -14,6 +14,7 @@ func Invoke(f func(cmd adaptorsInterfaces.Cmd)) error {
 			KubeConfig: &adaptors.KubeConfig{},
 			HTTP:       &adaptors.HTTP{},
 			OIDC:       &adaptors.OIDC{},
+			Logger:     &adaptors.Logger{},
 		},
 	})
 	return nil

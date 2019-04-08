@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"context"
-	"log"
 
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/kubeconfig"
@@ -21,6 +20,7 @@ type Login struct {
 	KubeConfig adaptors.KubeConfig
 	HTTP       adaptors.HTTP
 	OIDC       adaptors.OIDC
+	Logger     adaptors.Logger
 }
 
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
@@ -29,10 +29,10 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return errors.Wrapf(err, "could not read the kubeconfig")
 	}
 
-	log.Printf("Using current-context: %s", cfg.CurrentContext)
+	u.Logger.Logf("Using current-context: %s", cfg.CurrentContext)
 	authProvider, err := kubeconfig.FindOIDCAuthProvider(cfg)
 	if err != nil {
-		log.Printf(oidcConfigErrorMessage, cfg.CurrentContext)
+		u.Logger.Logf(oidcConfigErrorMessage, cfg.CurrentContext)
 		return errors.Wrapf(err, "could not find an oidc auth-provider in the kubeconfig")
 	}
 
@@ -40,16 +40,16 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	clientConfig.SetSkipTLSVerify(in.SkipTLSVerify)
 	if authProvider.IDPCertificateAuthority() != "" {
 		filename := authProvider.IDPCertificateAuthority()
-		log.Printf("Using the certificate %s", filename)
+		u.Logger.Logf("Using the certificate %s", filename)
 		if err := clientConfig.AddCertificateFromFile(filename); err != nil {
-			log.Printf("Skip the certificate %s: %s", filename, err)
+			u.Logger.Logf("Skip the certificate %s: %s", filename, err)
 		}
 	}
 	if authProvider.IDPCertificateAuthorityData() != "" {
 		encoded := authProvider.IDPCertificateAuthorityData()
-		log.Printf("Using certificate of idp-certificate-authority-data")
+		u.Logger.Logf("Using certificate of idp-certificate-authority-data")
 		if err := clientConfig.AddEncodedCertificate(encoded); err != nil {
-			log.Printf("Skip the certificate of idp-certificate-authority-data: %s", err)
+			u.Logger.Logf("Skip the certificate of idp-certificate-authority-data: %s", err)
 		}
 	}
 	hc, err := u.HTTP.NewClient(clientConfig)
@@ -70,12 +70,12 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return errors.Wrapf(err, "could not get token from OIDC provider")
 	}
 
-	log.Printf("Got a token for subject=%s", out.VerifiedIDToken.Subject)
+	u.Logger.Logf("Got a token for subject=%s", out.VerifiedIDToken.Subject)
 	authProvider.SetIDToken(out.IDToken)
 	authProvider.SetRefreshToken(out.RefreshToken)
 	if err := u.KubeConfig.WriteToFile(cfg, in.KubeConfig); err != nil {
 		return errors.Wrapf(err, "could not update the kubeconfig")
 	}
-	log.Printf("Updated %s", in.KubeConfig)
+	u.Logger.Logf("Updated %s", in.KubeConfig)
 	return nil
 }

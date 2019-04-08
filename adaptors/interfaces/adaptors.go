@@ -52,3 +52,7 @@ type OIDCAuthenticateOut struct {
 	IDToken         string
 	RefreshToken    string
 }
+
+type Logger interface {
+	Logf(format string, v ...interface{})
+}
