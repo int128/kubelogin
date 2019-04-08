@@ -1,4 +1,4 @@
-package auth
+package adaptors
 
 import (
 	"context"
@@ -8,31 +8,16 @@ import (
 	"os"
 
 	"github.com/coreos/go-oidc"
+	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/oauth2cli"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
-// TokenSet is a set of tokens and claims.
-type TokenSet struct {
-	IDToken      string
-	RefreshToken string
-}
+type OIDC struct{}
 
-// Config represents OIDC configuration.
-type Config struct {
-	Issuer          string
-	ClientID        string
-	ClientSecret    string
-	ExtraScopes     []string     // Additional scopes
-	Client          *http.Client // HTTP client for oidc and oauth2
-	LocalServerPort int          // HTTP server port
-	SkipOpenBrowser bool         // skip opening browser if true
-}
-
-// GetTokenSet retrives a token from the OIDC provider and returns a TokenSet.
-func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
-	if c.Client != nil {
+func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn) (*adaptors.OIDCAuthenticateOut, error) {
+	if in.Client != nil {
 		// https://github.com/int128/kubelogin/issues/31
 		val, ok := os.LookupEnv("HTTPS_PROXY")
 		if ok {
@@ -43,27 +28,27 @@ func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
 				transport := &http.Transport{
 					Proxy: http.ProxyURL(proxyURL),
 				}
-				c.Client = &http.Client{
+				in.Client = &http.Client{
 					Transport: transport,
 				}
 			}
 		}
 		//
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.Client)
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
 	}
-	provider, err := oidc.NewProvider(ctx, c.Issuer)
+	provider, err := oidc.NewProvider(ctx, in.Issuer)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
 	}
 	flow := oauth2cli.AuthCodeFlow{
 		Config: oauth2.Config{
 			Endpoint:     provider.Endpoint(),
-			ClientID:     c.ClientID,
-			ClientSecret: c.ClientSecret,
-			Scopes:       append(c.ExtraScopes, oidc.ScopeOpenID),
+			ClientID:     in.ClientID,
+			ClientSecret: in.ClientSecret,
+			Scopes:       append(in.ExtraScopes, oidc.ScopeOpenID),
 		},
-		LocalServerPort: c.LocalServerPort,
-		SkipOpenBrowser: c.SkipOpenBrowser,
+		LocalServerPort: in.LocalServerPort,
+		SkipOpenBrowser: in.SkipOpenBrowser,
 		AuthCodeOptions: []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
 	}
 	token, err := flow.GetToken(ctx)
@@ -74,13 +59,13 @@ func (c *Config) GetTokenSet(ctx context.Context) (*TokenSet, error) {
 	if !ok {
 		return nil, errors.Errorf("id_token is missing in the token response: %s", token)
 	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: c.ClientID})
+	verifier := provider.Verifier(&oidc.Config{ClientID: in.ClientID})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not verify the id_token")
 	}
 	log.Printf("Got token for subject=%s", verifiedIDToken.Subject)
-	return &TokenSet{
+	return &adaptors.OIDCAuthenticateOut{
 		IDToken:      idToken,
 		RefreshToken: token.RefreshToken,
 	}, nil
