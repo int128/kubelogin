@@ -2,6 +2,7 @@ package adaptors
 
 import (
 	"context"
+	"net/http"
 
 	"k8s.io/client-go/tools/clientcmd/api"
 )
@@ -13,4 +14,23 @@ type Cmd interface {
 type KubeConfig interface {
 	LoadFromFile(filename string) (*api.Config, error)
 	WriteToFile(config *api.Config, filename string) error
+}
+
+type OIDC interface {
+	Authenticate(ctx context.Context, in OIDCAuthenticateIn) (*OIDCAuthenticateOut, error)
+}
+
+type OIDCAuthenticateIn struct {
+	Issuer          string
+	ClientID        string
+	ClientSecret    string
+	ExtraScopes     []string     // Additional scopes
+	Client          *http.Client // HTTP client for oidc and oauth2
+	LocalServerPort int          // HTTP server port
+	SkipOpenBrowser bool         // skip opening browser if true
+}
+
+type OIDCAuthenticateOut struct {
+	IDToken      string
+	RefreshToken string
 }

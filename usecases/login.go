@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/int128/kubelogin/adaptors/interfaces"
-	"github.com/int128/kubelogin/auth"
 	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/pkg/errors"
@@ -14,6 +13,7 @@ import (
 
 type Login struct {
 	KubeConfig adaptors.KubeConfig
+	OIDC       adaptors.OIDC
 }
 
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
@@ -34,7 +34,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 			cfg.CurrentContext)
 	}
 	tlsConfig := tlsConfig(authProvider, in.SkipTLSVerify)
-	authConfig := &auth.Config{
+	token, err := u.OIDC.Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 		Issuer:          authProvider.IDPIssuerURL(),
 		ClientID:        authProvider.ClientID(),
 		ClientSecret:    authProvider.ClientSecret(),
@@ -42,8 +42,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		Client:          &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}},
 		LocalServerPort: in.ListenPort,
 		SkipOpenBrowser: in.SkipOpenBrowser,
-	}
-	token, err := authConfig.GetTokenSet(ctx)
+	})
 	if err != nil {
 		return errors.Wrapf(err, "could not get token from OIDC provider")
 	}
