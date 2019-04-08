@@ -8,6 +8,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
+//go:generate mockgen -package mock_adaptors -destination ../mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors/interfaces KubeConfig,HTTP,HTTPClientConfig,OIDC
+
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
 }
