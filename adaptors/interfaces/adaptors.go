@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"net/http"
 
+	"github.com/coreos/go-oidc"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
@@ -47,6 +48,7 @@ type OIDCAuthenticateIn struct {
 }
 
 type OIDCAuthenticateOut struct {
-	IDToken      string
-	RefreshToken string
+	VerifiedIDToken *oidc.IDToken
+	IDToken         string
+	RefreshToken    string
 }

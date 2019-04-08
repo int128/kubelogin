@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/coreos/go-oidc"
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/adaptors/mock_adaptors"
@@ -81,8 +82,8 @@ func TestLogin_Do(t *testing.T) {
 		httpClientConfig.EXPECT().
 			SetSkipTLSVerify(false)
 
-		oidc := mock_adaptors.NewMockOIDC(ctrl)
-		oidc.EXPECT().
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
 			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 				Issuer:          "https://accounts.google.com",
 				ClientID:        "YOUR_CLIENT_ID",
@@ -92,14 +93,15 @@ func TestLogin_Do(t *testing.T) {
 				Client:          httpClient,
 			}).
 			Return(&adaptors.OIDCAuthenticateOut{
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
 			}, nil)
 
 		u := Login{
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
-			OIDC:       oidc,
+			OIDC:       mockOIDC,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -121,8 +123,8 @@ func TestLogin_Do(t *testing.T) {
 		httpClientConfig.EXPECT().
 			SetSkipTLSVerify(true)
 
-		oidc := mock_adaptors.NewMockOIDC(ctrl)
-		oidc.EXPECT().
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
 			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 				Issuer:          "https://accounts.google.com",
 				ClientID:        "YOUR_CLIENT_ID",
@@ -132,14 +134,15 @@ func TestLogin_Do(t *testing.T) {
 				Client:          httpClient,
 			}).
 			Return(&adaptors.OIDCAuthenticateOut{
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
 			}, nil)
 
 		u := Login{
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
-			OIDC:       oidc,
+			OIDC:       mockOIDC,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig:    "/path/to/kubeconfig",
@@ -162,8 +165,8 @@ func TestLogin_Do(t *testing.T) {
 		httpClientConfig.EXPECT().
 			SetSkipTLSVerify(false)
 
-		oidc := mock_adaptors.NewMockOIDC(ctrl)
-		oidc.EXPECT().
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
 			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 				Issuer:          "https://accounts.google.com",
 				ClientID:        "YOUR_CLIENT_ID",
@@ -174,14 +177,15 @@ func TestLogin_Do(t *testing.T) {
 				SkipOpenBrowser: true,
 			}).
 			Return(&adaptors.OIDCAuthenticateOut{
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
 			}, nil)
 
 		u := Login{
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
-			OIDC:       oidc,
+			OIDC:       mockOIDC,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig:      "/path/to/kubeconfig",
@@ -205,8 +209,8 @@ func TestLogin_Do(t *testing.T) {
 		httpClientConfig.EXPECT().
 			SetSkipTLSVerify(false)
 
-		oidc := mock_adaptors.NewMockOIDC(ctrl)
-		oidc.EXPECT().
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
 			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 				Issuer:          "https://accounts.google.com",
 				ClientID:        "YOUR_CLIENT_ID",
@@ -216,14 +220,15 @@ func TestLogin_Do(t *testing.T) {
 				Client:          httpClient,
 			}).
 			Return(&adaptors.OIDCAuthenticateOut{
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
 			}, nil)
 
 		u := Login{
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
-			OIDC:       oidc,
+			OIDC:       mockOIDC,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -248,8 +253,8 @@ func TestLogin_Do(t *testing.T) {
 		httpClientConfig.EXPECT().
 			AddCertificateFromFile("/path/to/cert")
 
-		oidc := mock_adaptors.NewMockOIDC(ctrl)
-		oidc.EXPECT().
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
 			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 				Issuer:          "https://accounts.google.com",
 				ClientID:        "YOUR_CLIENT_ID",
@@ -259,14 +264,15 @@ func TestLogin_Do(t *testing.T) {
 				Client:          httpClient,
 			}).
 			Return(&adaptors.OIDCAuthenticateOut{
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
 			}, nil)
 
 		u := Login{
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
-			OIDC:       oidc,
+			OIDC:       mockOIDC,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -292,8 +298,8 @@ func TestLogin_Do(t *testing.T) {
 			AddCertificateFromFile("/path/to/cert").
 			Return(errors.New("not found"))
 
-		oidc := mock_adaptors.NewMockOIDC(ctrl)
-		oidc.EXPECT().
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
 			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 				Issuer:          "https://accounts.google.com",
 				ClientID:        "YOUR_CLIENT_ID",
@@ -303,14 +309,15 @@ func TestLogin_Do(t *testing.T) {
 				Client:          httpClient,
 			}).
 			Return(&adaptors.OIDCAuthenticateOut{
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
 			}, nil)
 
 		u := Login{
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
-			OIDC:       oidc,
+			OIDC:       mockOIDC,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -335,8 +342,8 @@ func TestLogin_Do(t *testing.T) {
 		httpClientConfig.EXPECT().
 			AddEncodedCertificate("base64encoded")
 
-		oidc := mock_adaptors.NewMockOIDC(ctrl)
-		oidc.EXPECT().
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
 			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 				Issuer:          "https://accounts.google.com",
 				ClientID:        "YOUR_CLIENT_ID",
@@ -346,14 +353,15 @@ func TestLogin_Do(t *testing.T) {
 				Client:          httpClient,
 			}).
 			Return(&adaptors.OIDCAuthenticateOut{
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
 			}, nil)
 
 		u := Login{
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
-			OIDC:       oidc,
+			OIDC:       mockOIDC,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
@@ -379,8 +387,8 @@ func TestLogin_Do(t *testing.T) {
 			AddEncodedCertificate("base64encoded").
 			Return(errors.New("invalid"))
 
-		oidc := mock_adaptors.NewMockOIDC(ctrl)
-		oidc.EXPECT().
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
 			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 				Issuer:          "https://accounts.google.com",
 				ClientID:        "YOUR_CLIENT_ID",
@@ -390,14 +398,15 @@ func TestLogin_Do(t *testing.T) {
 				Client:          httpClient,
 			}).
 			Return(&adaptors.OIDCAuthenticateOut{
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
 			}, nil)
 
 		u := Login{
 			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
 			HTTP:       newMockHTTP(ctrl, httpClientConfig),
-			OIDC:       oidc,
+			OIDC:       mockOIDC,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfig: "/path/to/kubeconfig",
