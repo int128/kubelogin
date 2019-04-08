@@ -10,7 +10,9 @@ import (
 // Invoke runs the function with an adaptors.Cmd instance.
 func Invoke(f func(cmd adaptorsInterfaces.Cmd)) error {
 	f(&adaptors.Cmd{
-		Login: &usecases.Login{},
+		Login: &usecases.Login{
+			KubeConfig: &adaptors.KubeConfig{},
+		},
 	})
 	return nil
 }
