@@ -3,7 +3,6 @@ package usecases
 import (
 	"context"
 	"log"
-	"net/http"
 
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/kubeconfig"
@@ -13,6 +12,7 @@ import (
 
 type Login struct {
 	KubeConfig adaptors.KubeConfig
+	HTTP       adaptors.HTTP
 	OIDC       adaptors.OIDC
 }
 
@@ -34,12 +34,18 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 			cfg.CurrentContext)
 	}
 	tlsConfig := tlsConfig(authProvider, in.SkipTLSVerify)
+	hc, err := u.HTTP.NewClient(adaptors.HTTPClientIn{
+		TLSClientConfig: tlsConfig,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "could not create a HTTP client")
+	}
 	token, err := u.OIDC.Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 		Issuer:          authProvider.IDPIssuerURL(),
 		ClientID:        authProvider.ClientID(),
 		ClientSecret:    authProvider.ClientSecret(),
 		ExtraScopes:     authProvider.ExtraScopes(),
-		Client:          &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}},
+		Client:          hc,
 		LocalServerPort: in.ListenPort,
 		SkipOpenBrowser: in.SkipOpenBrowser,
 	})

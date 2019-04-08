@@ -3,9 +3,6 @@ package adaptors
 import (
 	"context"
 	"log"
-	"net/http"
-	"net/url"
-	"os"
 
 	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/adaptors/interfaces"
@@ -18,22 +15,6 @@ type OIDC struct{}
 
 func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn) (*adaptors.OIDCAuthenticateOut, error) {
 	if in.Client != nil {
-		// https://github.com/int128/kubelogin/issues/31
-		val, ok := os.LookupEnv("HTTPS_PROXY")
-		if ok {
-			proxyURL, err := url.Parse(val)
-			if err != nil {
-				log.Printf("HTTPS_PROXY %s cannot be parsed into a URL\n", val)
-			} else {
-				transport := &http.Transport{
-					Proxy: http.ProxyURL(proxyURL),
-				}
-				in.Client = &http.Client{
-					Transport: transport,
-				}
-			}
-		}
-		//
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
 	}
 	provider, err := oidc.NewProvider(ctx, in.Issuer)
