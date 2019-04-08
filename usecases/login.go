@@ -33,13 +33,26 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 					--auth-provider-arg client-secret=YOUR_CLIENT_SECRET`,
 			cfg.CurrentContext)
 	}
-	tlsConfig := tlsConfig(authProvider, in.SkipTLSVerify)
-	hc, err := u.HTTP.NewClient(adaptors.HTTPClientIn{
-		TLSClientConfig: tlsConfig,
-	})
+
+	clientConfig := u.HTTP.NewClientConfig()
+	clientConfig.SetSkipTLSVerify(in.SkipTLSVerify)
+	if authProvider.IDPCertificateAuthority() != "" {
+		filename := authProvider.IDPCertificateAuthority()
+		if err := clientConfig.AddCertificateFromFile(filename); err != nil {
+			log.Printf("Skip CA certificate of idp-certificate-authority: %s", err)
+		}
+	}
+	if authProvider.IDPCertificateAuthorityData() != "" {
+		encoded := authProvider.IDPCertificateAuthorityData()
+		if err := clientConfig.AddEncodedCertificate(encoded); err != nil {
+			log.Printf("Skip CA certificate of idp-certificate-authority: %s", err)
+		}
+	}
+	hc, err := u.HTTP.NewClient(clientConfig)
 	if err != nil {
 		return errors.Wrapf(err, "could not create a HTTP client")
 	}
+
 	token, err := u.OIDC.Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 		Issuer:          authProvider.IDPIssuerURL(),
 		ClientID:        authProvider.ClientID(),

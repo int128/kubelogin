@@ -18,11 +18,16 @@ type KubeConfig interface {
 }
 
 type HTTP interface {
-	NewClient(in HTTPClientIn) (*http.Client, error)
+	NewClientConfig() HTTPClientConfig
+	NewClient(config HTTPClientConfig) (*http.Client, error)
 }
 
-type HTTPClientIn struct {
-	TLSClientConfig *tls.Config
+type HTTPClientConfig interface {
+	AddCertificateFromFile(filename string) error
+	AddEncodedCertificate(base64String string) error
+	SetSkipTLSVerify(b bool)
+
+	TLSConfig() *tls.Config
 }
 
 type OIDC interface {
