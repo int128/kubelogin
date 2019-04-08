@@ -12,6 +12,7 @@ func Invoke(f func(cmd adaptorsInterfaces.Cmd)) error {
 	f(&adaptors.Cmd{
 		Login: &usecases.Login{
 			KubeConfig: &adaptors.KubeConfig{},
+			HTTP:       &adaptors.HTTP{},
 			OIDC:       &adaptors.OIDC{},
 		},
 	})

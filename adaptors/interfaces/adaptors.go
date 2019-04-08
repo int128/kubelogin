@@ -2,6 +2,7 @@ package adaptors
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -14,6 +15,14 @@ type Cmd interface {
 type KubeConfig interface {
 	LoadFromFile(filename string) (*api.Config, error)
 	WriteToFile(config *api.Config, filename string) error
+}
+
+type HTTP interface {
+	NewClient(in HTTPClientIn) (*http.Client, error)
+}
+
+type HTTPClientIn struct {
+	TLSClientConfig *tls.Config
 }
 
 type OIDC interface {
