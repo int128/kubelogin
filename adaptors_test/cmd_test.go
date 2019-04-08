@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/int128/kubelogin/adaptors"
+	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/adaptors_test/authserver"
 	"github.com/int128/kubelogin/adaptors_test/kubeconfig"
-	"github.com/int128/kubelogin/usecases"
+	"github.com/int128/kubelogin/di"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 )
@@ -118,16 +118,14 @@ func TestCmd_Run(t *testing.T) {
 			defer os.Remove(kcfg)
 
 			args := append(c.args, "--kubeconfig", kcfg, "--skip-open-browser")
-			cmd := adaptors.Cmd{
-				Login: &usecases.Login{},
-			}
 			var eg errgroup.Group
 			eg.Go(func() error {
-				exitCode := cmd.Run(ctx, args, "HEAD")
-				if exitCode != 0 {
-					return errors.Errorf("exit status %d", exitCode)
-				}
-				return nil
+				return di.Invoke(func(cmd adaptors.Cmd) {
+					exitCode := cmd.Run(ctx, args, "HEAD")
+					if exitCode != 0 {
+						t.Errorf("exit status wants 0 but %d", exitCode)
+					}
+				})
 			})
 			if err := openBrowserRequest(c.clientTLS); err != nil {
 				cancel()
