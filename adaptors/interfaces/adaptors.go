@@ -35,6 +35,7 @@ type HTTPClientConfig interface {
 
 type OIDC interface {
 	Authenticate(ctx context.Context, in OIDCAuthenticateIn) (*OIDCAuthenticateOut, error)
+	VerifyIDToken(ctx context.Context, in OIDCVerifyTokenIn) (*oidc.IDToken, error)
 }
 
 type OIDCAuthenticateIn struct {
@@ -51,6 +52,13 @@ type OIDCAuthenticateOut struct {
 	VerifiedIDToken *oidc.IDToken
 	IDToken         string
 	RefreshToken    string
+}
+
+type OIDCVerifyTokenIn struct {
+	IDToken  string
+	Issuer   string
+	ClientID string
+	Client   *http.Client
 }
 
 type Logger interface {

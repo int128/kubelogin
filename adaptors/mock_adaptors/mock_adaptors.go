@@ -7,6 +7,7 @@ package mock_adaptors
 import (
 	context "context"
 	tls "crypto/tls"
+	go_oidc "github.com/coreos/go-oidc"
 	gomock "github.com/golang/mock/gomock"
 	interfaces "github.com/int128/kubelogin/adaptors/interfaces"
 	api "k8s.io/client-go/tools/clientcmd/api"
@@ -213,4 +214,17 @@ func (m *MockOIDC) Authenticate(arg0 context.Context, arg1 interfaces.OIDCAuthen
 // Authenticate indicates an expected call of Authenticate
 func (mr *MockOIDCMockRecorder) Authenticate(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockOIDC)(nil).Authenticate), arg0, arg1)
+}
+
+// VerifyIDToken mocks base method
+func (m *MockOIDC) VerifyIDToken(arg0 context.Context, arg1 interfaces.OIDCVerifyTokenIn) (*go_oidc.IDToken, error) {
+	ret := m.ctrl.Call(m, "VerifyIDToken", arg0, arg1)
+	ret0, _ := ret[0].(*go_oidc.IDToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyIDToken indicates an expected call of VerifyIDToken
+func (mr *MockOIDCMockRecorder) VerifyIDToken(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyIDToken", reflect.TypeOf((*MockOIDC)(nil).VerifyIDToken), arg0, arg1)
 }

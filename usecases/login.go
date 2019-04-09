@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 
+	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases/interfaces"
@@ -63,6 +64,16 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return errors.Wrapf(err, "could not create a HTTP client")
 	}
 
+	if token := u.verifyIDToken(ctx, adaptors.OIDCVerifyTokenIn{
+		IDToken:  authProvider.IDToken(),
+		Issuer:   authProvider.IDPIssuerURL(),
+		ClientID: authProvider.ClientID(),
+		Client:   hc,
+	}); token != nil {
+		u.Logger.Logf("You already have a valid token (until %s)", token.Expiry)
+		return nil
+	}
+
 	out, err := u.OIDC.Authenticate(ctx, adaptors.OIDCAuthenticateIn{
 		Issuer:          authProvider.IDPIssuerURL(),
 		ClientID:        authProvider.ClientID(),
@@ -84,4 +95,16 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	}
 	u.Logger.Logf("Updated %s", in.KubeConfig)
 	return nil
+}
+
+func (u *Login) verifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn) *oidc.IDToken {
+	if in.IDToken == "" {
+		return nil
+	}
+	token, err := u.OIDC.VerifyIDToken(ctx, in)
+	if err != nil {
+		//TODO: u.Logger.Debugf("Current ID token is invalid: %s", err)
+		return nil
+	}
+	return token
 }
