@@ -5,10 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"net/url"
-	"os"
 
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/pkg/errors"
@@ -27,21 +24,12 @@ func (*HTTP) NewClientConfig() adaptors.HTTPClientConfig {
 }
 
 func (*HTTP) NewClient(config adaptors.HTTPClientConfig) (*http.Client, error) {
-	transport := &http.Transport{}
-	//TODO: replace with http.ProxyFromEnvironmentURL or go-ieproxy
-	// https://github.com/int128/kubelogin/issues/31
-	val, ok := os.LookupEnv("HTTPS_PROXY")
-	if ok {
-		proxyURL, err := url.Parse(val)
-		if err != nil {
-			log.Printf("HTTPS_PROXY %s cannot be parsed into a URL\n", val)
-		} else {
-			transport.Proxy = http.ProxyURL(proxyURL)
-		}
-	}
-	//
-	transport.TLSClientConfig = config.TLSConfig()
-	return &http.Client{Transport: transport}, nil
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: config.TLSConfig(),
+			Proxy:           http.ProxyFromEnvironment,
+		},
+	}, nil
 }
 
 type httpClientConfig struct {

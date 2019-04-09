@@ -128,6 +128,12 @@ kubectl config set-credentials keycloak \
 If kubelogin could not parse the certificate, it shows a warning and skips it.
 
 
+### HTTP Proxy
+
+You can set the following environment variables if you are behind a proxy: `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
+See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyFromEnvironment).
+
+
 ## Contributions
 
 This is an open source software licensed under Apache License 2.0.
