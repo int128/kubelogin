@@ -14,6 +14,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+func NewHTTP() adaptors.HTTP {
+	return &HTTP{}
+}
+
 type HTTP struct{}
 
 func (*HTTP) NewClientConfig() adaptors.HTTPClientConfig {

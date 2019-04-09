@@ -1,10 +1,15 @@
 package adaptors
 
 import (
+	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
+
+func NewKubeConfig() adaptors.KubeConfig {
+	return &KubeConfig{}
+}
 
 type KubeConfig struct{}
 

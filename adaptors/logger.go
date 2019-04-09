@@ -1,6 +1,14 @@
 package adaptors
 
-import "log"
+import (
+	"log"
+
+	"github.com/int128/kubelogin/adaptors/interfaces"
+)
+
+func NewLogger() adaptors.Logger {
+	return &Logger{}
+}
 
 type Logger struct{}
 
