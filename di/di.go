@@ -16,6 +16,7 @@ func Invoke(f func(cmd adaptorsInterfaces.Cmd)) error {
 			OIDC:       &adaptors.OIDC{},
 			Logger:     &adaptors.Logger{},
 		},
+		Logger: &adaptors.Logger{},
 	})
 	return nil
 }
