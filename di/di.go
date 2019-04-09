@@ -5,18 +5,30 @@ import (
 	"github.com/int128/kubelogin/adaptors"
 	adaptorsInterfaces "github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/usecases"
+	"github.com/pkg/errors"
+	"go.uber.org/dig"
 )
+
+var constructors = []interface{}{
+	usecases.NewLogin,
+
+	adaptors.NewCmd,
+	adaptors.NewKubeConfig,
+	adaptors.NewOIDC,
+	adaptors.NewHTTP,
+	adaptors.NewLogger,
+}
 
 // Invoke runs the function with an adaptors.Cmd instance.
 func Invoke(f func(cmd adaptorsInterfaces.Cmd)) error {
-	f(&adaptors.Cmd{
-		Login: &usecases.Login{
-			KubeConfig: &adaptors.KubeConfig{},
-			HTTP:       &adaptors.HTTP{},
-			OIDC:       &adaptors.OIDC{},
-			Logger:     &adaptors.Logger{},
-		},
-		Logger: &adaptors.Logger{},
-	})
+	c := dig.New()
+	for _, constructor := range constructors {
+		if err := c.Provide(constructor); err != nil {
+			return errors.Wrapf(err, "could not provide the constructor")
+		}
+	}
+	if err := c.Invoke(f); err != nil {
+		return errors.Wrapf(err, "could not invoke")
+	}
 	return nil
 }

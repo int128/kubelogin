@@ -18,6 +18,7 @@ require (
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
+	go.uber.org/dig v1.7.0
 	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c // indirect
 	golang.org/x/net v0.0.0-20190328230028-74de082e2cca // indirect
 	golang.org/x/oauth2 v0.0.0-20190319182350-c85d3e98c914

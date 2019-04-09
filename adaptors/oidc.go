@@ -10,6 +10,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func NewOIDC() adaptors.OIDC {
+	return &OIDC{}
+}
+
 type OIDC struct{}
 
 func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn) (*adaptors.OIDCAuthenticateOut, error) {

@@ -9,9 +9,15 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	"go.uber.org/dig"
 )
 
+func NewCmd(i Cmd) adaptors.Cmd {
+	return &i
+}
+
 type Cmd struct {
+	dig.In
 	Login  usecases.Login
 	Logger adaptors.Logger
 }
