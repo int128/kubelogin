@@ -3,9 +3,6 @@ package adaptors_test
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/base64"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -29,7 +26,7 @@ import (
 //
 func TestCmd_Run(t *testing.T) {
 	k := keys.New(t)
-	timeout := 500 * time.Millisecond
+	timeout := 1 * time.Second
 
 	t.Run("NoTLS", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -109,19 +106,19 @@ func TestCmd_Run(t *testing.T) {
 			IDToken:        idToken,
 			IDTokenKeyPair: k.IDTokenKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
-			Cert:           authserver.ServerCert,
-			Key:            authserver.ServerKey,
+			TLSServerCert:  keys.TLSServerCert,
+			TLSServerKey:   keys.TLSServerKey,
 		}
 		server := authserver.Start(t, serverConfig)
 		defer server.Shutdown(ctx)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  "https://localhost:9000",
-			IDPCertificateAuthority: authserver.CACert,
+			IDPCertificateAuthority: keys.TLSCACert,
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, &tls.Config{RootCAs: readCert(t, authserver.CACert)})
+		startBrowserRequest(t, keys.TLSConfig(t))
 		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
@@ -143,19 +140,19 @@ func TestCmd_Run(t *testing.T) {
 			IDToken:        idToken,
 			IDTokenKeyPair: k.IDTokenKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
-			Cert:           authserver.ServerCert,
-			Key:            authserver.ServerKey,
+			TLSServerCert:  keys.TLSServerCert,
+			TLSServerKey:   keys.TLSServerKey,
 		}
 		server := authserver.Start(t, serverConfig)
 		defer server.Shutdown(ctx)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                      "https://localhost:9000",
-			IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString(read(t, authserver.CACert)),
+			IDPCertificateAuthorityData: keys.Base64TLSCACert(t),
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, &tls.Config{RootCAs: readCert(t, authserver.CACert)})
+		startBrowserRequest(t, keys.TLSConfig(t))
 		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
@@ -219,23 +216,4 @@ func startBrowserRequest(t *testing.T, tlsConfig *tls.Config) {
 			t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
 		}
 	}()
-}
-
-func read(t *testing.T, name string) []byte {
-	t.Helper()
-	b, err := ioutil.ReadFile(name)
-	if err != nil {
-		t.Fatalf("Could not read %s: %s", name, err)
-	}
-	return b
-}
-
-func readCert(t *testing.T, name string) *x509.CertPool {
-	t.Helper()
-	p := x509.NewCertPool()
-	b := read(t, name)
-	if !p.AppendCertsFromPEM(b) {
-		t.Fatalf("Could not append cert from %s", name)
-	}
-	return p
 }
