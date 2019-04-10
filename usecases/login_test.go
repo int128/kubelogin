@@ -199,6 +199,98 @@ func TestLogin_Do(t *testing.T) {
 		}
 	})
 
+	t.Run("KubeConfig/ValidToken", func(t *testing.T) {
+		inConfig := newInConfig()
+		inConfig.AuthInfos["google"].AuthProvider.Config["id-token"] = "VALID"
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+
+		kubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
+		kubeConfig.EXPECT().
+			LoadFromFile("/path/to/kubeconfig").
+			Return(inConfig, nil)
+
+		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
+		httpClientConfig.EXPECT().
+			SetSkipTLSVerify(false)
+
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
+			VerifyIDToken(ctx, adaptors.OIDCVerifyTokenIn{
+				IDToken:  "VALID",
+				Issuer:   "https://accounts.google.com",
+				ClientID: "YOUR_CLIENT_ID",
+				Client:   httpClient,
+			}).
+			Return(&oidc.IDToken{}, nil)
+
+		u := Login{
+			KubeConfig: kubeConfig,
+			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			OIDC:       mockOIDC,
+			Logger:     t,
+		}
+		if err := u.Do(ctx, usecases.LoginIn{
+			KubeConfig: "/path/to/kubeconfig",
+			ListenPort: 10000,
+		}); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
+	t.Run("KubeConfig/InvalidToken", func(t *testing.T) {
+		inConfig := newInConfig()
+		inConfig.AuthInfos["google"].AuthProvider.Config["id-token"] = "EXPIRED"
+		outConfig := newOutConfig(inConfig)
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+
+		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
+		httpClientConfig.EXPECT().
+			SetSkipTLSVerify(false)
+
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
+			VerifyIDToken(ctx, adaptors.OIDCVerifyTokenIn{
+				IDToken:  "EXPIRED",
+				Issuer:   "https://accounts.google.com",
+				ClientID: "YOUR_CLIENT_ID",
+				Client:   httpClient,
+			}).
+			Return(nil, errors.New("token is expired"))
+		mockOIDC.EXPECT().
+			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
+				Issuer:          "https://accounts.google.com",
+				ClientID:        "YOUR_CLIENT_ID",
+				ClientSecret:    "YOUR_CLIENT_SECRET",
+				ExtraScopes:     []string{},
+				LocalServerPort: 10000,
+				Client:          httpClient,
+			}).
+			Return(&adaptors.OIDCAuthenticateOut{
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
+			}, nil)
+
+		u := Login{
+			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
+			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			OIDC:       mockOIDC,
+			Logger:     t,
+		}
+		if err := u.Do(ctx, usecases.LoginIn{
+			KubeConfig: "/path/to/kubeconfig",
+			ListenPort: 10000,
+		}); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
 	t.Run("KubeConfig/extra-scopes", func(t *testing.T) {
 		inConfig := newInConfig()
 		inConfig.AuthInfos["google"].AuthProvider.Config["extra-scopes"] = "email,profile"

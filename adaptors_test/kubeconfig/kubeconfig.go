@@ -3,8 +3,10 @@ package kubeconfig
 import (
 	"html/template"
 	"io/ioutil"
-	"strings"
+	"os"
 	"testing"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Values represents values in .kubeconfig template.
@@ -13,6 +15,7 @@ type Values struct {
 	ExtraScopes                 string
 	IDPCertificateAuthority     string
 	IDPCertificateAuthorityData string
+	IDToken                     string
 }
 
 // Create creates a kubeconfig file and returns path to it.
@@ -33,16 +36,44 @@ func Create(t *testing.T, v *Values) string {
 	return f.Name()
 }
 
+type AuthProviderConfig struct {
+	IDToken      string `yaml:"id-token"`
+	RefreshToken string `yaml:"refresh-token"`
+}
+
 // Verify returns true if the kubeconfig has valid values.
-func Verify(t *testing.T, kubeconfig string) {
-	b, err := ioutil.ReadFile(kubeconfig)
+func Verify(t *testing.T, kubeconfig string, want AuthProviderConfig) {
+	t.Helper()
+	f, err := os.Open(kubeconfig)
 	if err != nil {
-		t.Fatal(err)
+		t.Errorf("could not open kubeconfig: %s", err)
+		return
 	}
-	if strings.Index(string(b), "id-token: ey") == -1 {
-		t.Errorf("kubeconfig wants id-token but %s", string(b))
+	defer f.Close()
+
+	var y struct {
+		Users []struct {
+			User struct {
+				AuthProvider struct {
+					Config AuthProviderConfig `yaml:"config"`
+				} `yaml:"auth-provider"`
+			} `yaml:"user"`
+		} `yaml:"users"`
 	}
-	if strings.Index(string(b), "refresh-token: 44df4c82-5ce7-4260-b54d-1da0d396ef2a") == -1 {
-		t.Errorf("kubeconfig wants refresh-token but %s", string(b))
+	d := yaml.NewDecoder(f)
+	if err := d.Decode(&y); err != nil {
+		t.Errorf("could not decode YAML: %s", err)
+		return
+	}
+	if len(y.Users) != 1 {
+		t.Errorf("len(users) wants 1 but %d", len(y.Users))
+		return
+	}
+	currentConfig := y.Users[0].User.AuthProvider.Config
+	if currentConfig.IDToken != want.IDToken {
+		t.Errorf("id-token wants %s but %s", want.IDToken, currentConfig.IDToken)
+	}
+	if currentConfig.RefreshToken != want.RefreshToken {
+		t.Errorf("refresh-token wants %s but %s", want.RefreshToken, currentConfig.RefreshToken)
 	}
 }

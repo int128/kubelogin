@@ -64,6 +64,11 @@ func (c *OIDCAuthProvider) ExtraScopes() []string {
 	return strings.Split(c.Config["extra-scopes"], ",")
 }
 
+// IDToken returns the id-token.
+func (c *OIDCAuthProvider) IDToken() string {
+	return c.Config["id-token"]
+}
+
 // SetIDToken replaces the id-token.
 func (c *OIDCAuthProvider) SetIDToken(idToken string) {
 	c.Config["id-token"] = idToken

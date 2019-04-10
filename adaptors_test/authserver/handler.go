@@ -1,8 +1,6 @@
 package authserver
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"encoding/base64"
 	"fmt"
 	"log"
@@ -10,9 +8,7 @@ import (
 	"net/http"
 	"testing"
 	"text/template"
-	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
@@ -28,7 +24,7 @@ type handler struct {
 	PrivateKey struct{ N, E string }
 }
 
-func newHandler(t *testing.T, c *Config) *handler {
+func newHandler(t *testing.T, c Config) *handler {
 	h := handler{
 		discovery: readTemplate(t, "oidc-discovery.json"),
 		token:     readTemplate(t, "oidc-token.json"),
@@ -40,22 +36,11 @@ func newHandler(t *testing.T, c *Config) *handler {
 	if h.Scope == "" {
 		h.Scope = "openid"
 	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.StandardClaims{
-		Issuer:    c.Issuer,
-		Audience:  "kubernetes",
-		ExpiresAt: time.Now().Add(time.Hour).Unix(),
-	})
-	k, err := rsa.GenerateKey(rand.Reader, 1024)
-	if err != nil {
-		t.Fatalf("Could not generate a key pair: %s", err)
+	h.IDToken = c.IDToken
+	if c.IDTokenKeyPair != nil {
+		h.PrivateKey.E = base64.RawURLEncoding.EncodeToString(big.NewInt(int64(c.IDTokenKeyPair.E)).Bytes())
+		h.PrivateKey.N = base64.RawURLEncoding.EncodeToString(c.IDTokenKeyPair.N.Bytes())
 	}
-	h.IDToken, err = token.SignedString(k)
-	if err != nil {
-		t.Fatalf("Could not generate an ID token: %s", err)
-	}
-	h.PrivateKey.E = base64.RawURLEncoding.EncodeToString(big.NewInt(int64(k.E)).Bytes())
-	h.PrivateKey.N = base64.RawURLEncoding.EncodeToString(k.N.Bytes())
 	return &h
 }
 

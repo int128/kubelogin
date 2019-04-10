@@ -54,3 +54,19 @@ func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn) (
 		RefreshToken:    token.RefreshToken,
 	}, nil
 }
+
+func (*OIDC) VerifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn) (*oidc.IDToken, error) {
+	if in.Client != nil {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
+	}
+	provider, err := oidc.NewProvider(ctx, in.Issuer)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
+	}
+	verifier := provider.Verifier(&oidc.Config{ClientID: in.ClientID})
+	verifiedIDToken, err := verifier.Verify(ctx, in.IDToken)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not verify the id_token")
+	}
+	return verifiedIDToken, nil
+}

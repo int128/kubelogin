@@ -26,7 +26,7 @@ require (
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.0 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
+	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20190222213804-5cb15d344471 // indirect
 	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628 // indirect
 	k8s.io/client-go v10.0.0+incompatible
