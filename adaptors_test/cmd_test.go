@@ -46,7 +46,7 @@ func TestCmd_Run(t *testing.T) {
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, nil)
+		startBrowserRequest(t, ctx, nil)
 		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
@@ -75,7 +75,7 @@ func TestCmd_Run(t *testing.T) {
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, nil)
+		startBrowserRequest(t, ctx, nil)
 		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
@@ -105,7 +105,7 @@ func TestCmd_Run(t *testing.T) {
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, keys.TLSCACertAsConfig)
+		startBrowserRequest(t, ctx, keys.TLSCACertAsConfig)
 		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
@@ -135,7 +135,7 @@ func TestCmd_Run(t *testing.T) {
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, keys.TLSCACertAsConfig)
+		startBrowserRequest(t, ctx, keys.TLSCACertAsConfig)
 		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
@@ -194,12 +194,18 @@ func runCmd(t *testing.T, ctx context.Context, args ...string) {
 	}
 }
 
-func startBrowserRequest(t *testing.T, tlsConfig *tls.Config) {
+func startBrowserRequest(t *testing.T, ctx context.Context, tlsConfig *tls.Config) {
 	t.Helper()
+	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
+	req, err := http.NewRequest("GET", "http://localhost:8000/", nil)
+	if err != nil {
+		t.Errorf("could not create a request: %s", err)
+		return
+	}
+	req = req.WithContext(ctx)
 	go func() {
 		time.Sleep(50 * time.Millisecond)
-		client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
-		resp, err := client.Get("http://localhost:8000/")
+		resp, err := client.Do(req)
 		if err != nil {
 			t.Errorf("could not send a request: %s", err)
 			return
