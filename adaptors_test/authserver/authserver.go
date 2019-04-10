@@ -6,9 +6,6 @@ import (
 	"testing"
 )
 
-// Addr is address to listen.
-const Addr = "localhost:9000"
-
 // Config represents server configuration.
 type Config struct {
 	Issuer         string
@@ -23,7 +20,7 @@ type Config struct {
 // Start starts a HTTP server.
 func Start(t *testing.T, c Config) *http.Server {
 	s := &http.Server{
-		Addr:    Addr,
+		Addr:    "localhost:9000",
 		Handler: newHandler(t, c),
 	}
 	go func() {
