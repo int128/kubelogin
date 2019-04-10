@@ -1,6 +1,7 @@
 package authserver
 
 import (
+	"crypto/rsa"
 	"net/http"
 	"testing"
 )
@@ -22,14 +23,16 @@ const ServerKey = "authserver/testdata/server.key"
 
 // Config represents server configuration.
 type Config struct {
-	Issuer string
-	Scope  string
-	Cert   string
-	Key    string
+	Issuer         string
+	Scope          string
+	Cert           string
+	Key            string
+	IDToken        string
+	IDTokenKeyPair *rsa.PrivateKey
 }
 
 // Start starts a HTTP server.
-func (c *Config) Start(t *testing.T) *http.Server {
+func Start(t *testing.T, c Config) *http.Server {
 	s := &http.Server{
 		Addr:    Addr,
 		Handler: newHandler(t, c),

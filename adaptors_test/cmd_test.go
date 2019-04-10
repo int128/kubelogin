@@ -11,8 +11,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/adaptors_test/authserver"
+	"github.com/int128/kubelogin/adaptors_test/keys"
 	"github.com/int128/kubelogin/adaptors_test/kubeconfig"
 	"github.com/int128/kubelogin/di"
 	"github.com/pkg/errors"
@@ -28,6 +30,8 @@ import (
 // 5. Shutdown the auth server.
 //
 func TestCmd_Run(t *testing.T) {
+	k := keys.New(t)
+
 	data := map[string]struct {
 		kubeconfigValues kubeconfig.Values
 		args             []string
@@ -37,7 +41,11 @@ func TestCmd_Run(t *testing.T) {
 		"NoTLS": {
 			kubeconfig.Values{Issuer: "http://localhost:9000"},
 			[]string{"kubelogin"},
-			authserver.Config{Issuer: "http://localhost:9000"},
+			authserver.Config{
+				Issuer:         "http://localhost:9000",
+				IDToken:        issueIDToken(t, k, "http://localhost:9000"),
+				IDTokenKeyPair: k.IDTokenKeyPair,
+			},
 			&tls.Config{},
 		},
 		"ExtraScope": {
@@ -47,8 +55,10 @@ func TestCmd_Run(t *testing.T) {
 			},
 			[]string{"kubelogin"},
 			authserver.Config{
-				Issuer: "http://localhost:9000",
-				Scope:  "profile groups openid",
+				Issuer:         "http://localhost:9000",
+				Scope:          "profile groups openid",
+				IDToken:        issueIDToken(t, k, "http://localhost:9000"),
+				IDTokenKeyPair: k.IDTokenKeyPair,
 			},
 			&tls.Config{},
 		},
@@ -56,9 +66,11 @@ func TestCmd_Run(t *testing.T) {
 			kubeconfig.Values{Issuer: "https://localhost:9000"},
 			[]string{"kubelogin", "--insecure-skip-tls-verify"},
 			authserver.Config{
-				Issuer: "https://localhost:9000",
-				Cert:   authserver.ServerCert,
-				Key:    authserver.ServerKey,
+				Issuer:         "https://localhost:9000",
+				Cert:           authserver.ServerCert,
+				Key:            authserver.ServerKey,
+				IDToken:        issueIDToken(t, k, "https://localhost:9000"),
+				IDTokenKeyPair: k.IDTokenKeyPair,
 			},
 			&tls.Config{InsecureSkipVerify: true},
 		},
@@ -69,9 +81,11 @@ func TestCmd_Run(t *testing.T) {
 			},
 			[]string{"kubelogin"},
 			authserver.Config{
-				Issuer: "https://localhost:9000",
-				Cert:   authserver.ServerCert,
-				Key:    authserver.ServerKey,
+				Issuer:         "https://localhost:9000",
+				Cert:           authserver.ServerCert,
+				Key:            authserver.ServerKey,
+				IDToken:        issueIDToken(t, k, "https://localhost:9000"),
+				IDTokenKeyPair: k.IDTokenKeyPair,
 			},
 			&tls.Config{RootCAs: readCert(t, authserver.CACert)},
 		},
@@ -82,9 +96,11 @@ func TestCmd_Run(t *testing.T) {
 			},
 			[]string{"kubelogin"},
 			authserver.Config{
-				Issuer: "https://localhost:9000",
-				Cert:   authserver.ServerCert,
-				Key:    authserver.ServerKey,
+				Issuer:         "https://localhost:9000",
+				Cert:           authserver.ServerCert,
+				Key:            authserver.ServerKey,
+				IDToken:        issueIDToken(t, k, "https://localhost:9000"),
+				IDTokenKeyPair: k.IDTokenKeyPair,
 			},
 			&tls.Config{RootCAs: readCert(t, authserver.CACert)},
 		},
@@ -94,7 +110,11 @@ func TestCmd_Run(t *testing.T) {
 				IDPCertificateAuthority: "cmd_test.go",
 			},
 			[]string{"kubelogin"},
-			authserver.Config{Issuer: "http://localhost:9000"},
+			authserver.Config{
+				Issuer:         "http://localhost:9000",
+				IDToken:        issueIDToken(t, k, "http://localhost:9000"),
+				IDTokenKeyPair: k.IDTokenKeyPair,
+			},
 			&tls.Config{},
 		},
 		"InvalidCACertDataShouldBeSkipped": {
@@ -103,7 +123,11 @@ func TestCmd_Run(t *testing.T) {
 				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString([]byte("foo")),
 			},
 			[]string{"kubelogin"},
-			authserver.Config{Issuer: "http://localhost:9000"},
+			authserver.Config{
+				Issuer:         "http://localhost:9000",
+				IDToken:        issueIDToken(t, k, "http://localhost:9000"),
+				IDTokenKeyPair: k.IDTokenKeyPair,
+			},
 			&tls.Config{},
 		},
 	}
@@ -112,11 +136,12 @@ func TestCmd_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			server := c.serverConfig.Start(t)
+			server := authserver.Start(t, c.serverConfig)
 			defer server.Shutdown(ctx)
 			kcfg := kubeconfig.Create(t, &c.kubeconfigValues)
 			defer os.Remove(kcfg)
 
+			//TODO: replace with runCmd()
 			args := append(c.args, "--kubeconfig", kcfg, "--skip-open-browser")
 			var eg errgroup.Group
 			eg.Go(func() error {
@@ -134,8 +159,57 @@ func TestCmd_Run(t *testing.T) {
 			if err := eg.Wait(); err != nil {
 				t.Fatalf("CLI returned error: %s", err)
 			}
-			kubeconfig.Verify(t, kcfg)
+			kubeconfig.Verify(t, kcfg, kubeconfig.AuthProviderConfig{
+				IDToken:      c.serverConfig.IDToken,
+				RefreshToken: "44df4c82-5ce7-4260-b54d-1da0d396ef2a",
+			})
 		})
+	}
+
+	t.Run("AlreadyHaveValidToken", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		defer cancel()
+
+		serverConfig := authserver.Config{
+			Issuer:         "http://localhost:9000",
+			IDTokenKeyPair: k.IDTokenKeyPair,
+		}
+		server := authserver.Start(t, serverConfig)
+		defer server.Shutdown(ctx)
+
+		idToken := issueIDToken(t, k, "http://localhost:9000")
+		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+			Issuer:  "http://localhost:9000",
+			IDToken: idToken,
+		})
+		defer os.Remove(kubeConfigFilename)
+
+		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+
+		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+			IDToken: idToken,
+		})
+	})
+}
+
+func issueIDToken(t *testing.T, k keys.Keys, issuer string) string {
+	t.Helper()
+	return k.SignClaims(t, jwt.StandardClaims{
+		Issuer:    issuer,
+		Audience:  "kubernetes",
+		ExpiresAt: time.Now().Add(time.Hour).Unix(),
+	})
+}
+
+func runCmd(t *testing.T, ctx context.Context, args ...string) {
+	t.Helper()
+	if err := di.Invoke(func(cmd adaptors.Cmd) {
+		exitCode := cmd.Run(ctx, append([]string{"kubelogin"}, args...), "HEAD")
+		if exitCode != 0 {
+			t.Errorf("exit status wants 0 but %d", exitCode)
+		}
+	}); err != nil {
+		t.Errorf("Invoke returned error: %+v", err)
 	}
 }
 
