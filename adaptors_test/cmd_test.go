@@ -105,7 +105,7 @@ func TestCmd_Run(t *testing.T) {
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, keys.TLSConfig(t))
+		startBrowserRequest(t, keys.TLSCACertAsConfig)
 		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
@@ -131,11 +131,11 @@ func TestCmd_Run(t *testing.T) {
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                      "https://localhost:9000",
-			IDPCertificateAuthorityData: keys.Base64TLSCACert(t),
+			IDPCertificateAuthorityData: keys.TLSCACertAsBase64,
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, keys.TLSConfig(t))
+		startBrowserRequest(t, keys.TLSCACertAsConfig)
 		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
