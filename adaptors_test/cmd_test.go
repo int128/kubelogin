@@ -25,22 +25,17 @@ import (
 // 5. Shutdown the auth server.
 //
 func TestCmd_Run(t *testing.T) {
-	k := keys.New(t)
 	timeout := 1 * time.Second
 
 	t.Run("NoTLS", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		idToken := k.SignClaims(t, jwt.StandardClaims{
-			Issuer:    "http://localhost:9000",
-			Audience:  "kubernetes",
-			ExpiresAt: time.Now().Add(time.Hour).Unix(),
-		})
+		idToken := newIDToken(t, "http://localhost:9000")
 		serverConfig := authserver.Config{
 			Issuer:         "http://localhost:9000",
 			IDToken:        idToken,
-			IDTokenKeyPair: k.IDTokenKeyPair,
+			IDTokenKeyPair: keys.JWSKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
 		}
 		server := authserver.Start(t, serverConfig)
@@ -63,15 +58,11 @@ func TestCmd_Run(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		idToken := k.SignClaims(t, jwt.StandardClaims{
-			Issuer:    "http://localhost:9000",
-			Audience:  "kubernetes",
-			ExpiresAt: time.Now().Add(time.Hour).Unix(),
-		})
+		idToken := newIDToken(t, "http://localhost:9000")
 		serverConfig := authserver.Config{
 			Issuer:         "http://localhost:9000",
 			IDToken:        idToken,
-			IDTokenKeyPair: k.IDTokenKeyPair,
+			IDTokenKeyPair: keys.JWSKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
 			Scope:          "profile groups openid",
 		}
@@ -96,15 +87,11 @@ func TestCmd_Run(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		idToken := k.SignClaims(t, jwt.StandardClaims{
-			Issuer:    "https://localhost:9000",
-			Audience:  "kubernetes",
-			ExpiresAt: time.Now().Add(time.Hour).Unix(),
-		})
+		idToken := newIDToken(t, "https://localhost:9000")
 		serverConfig := authserver.Config{
 			Issuer:         "https://localhost:9000",
 			IDToken:        idToken,
-			IDTokenKeyPair: k.IDTokenKeyPair,
+			IDTokenKeyPair: keys.JWSKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
 			TLSServerCert:  keys.TLSServerCert,
 			TLSServerKey:   keys.TLSServerKey,
@@ -130,15 +117,11 @@ func TestCmd_Run(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		idToken := k.SignClaims(t, jwt.StandardClaims{
-			Issuer:    "https://localhost:9000",
-			Audience:  "kubernetes",
-			ExpiresAt: time.Now().Add(time.Hour).Unix(),
-		})
+		idToken := newIDToken(t, "https://localhost:9000")
 		serverConfig := authserver.Config{
 			Issuer:         "https://localhost:9000",
 			IDToken:        idToken,
-			IDTokenKeyPair: k.IDTokenKeyPair,
+			IDTokenKeyPair: keys.JWSKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
 			TLSServerCert:  keys.TLSServerCert,
 			TLSServerKey:   keys.TLSServerKey,
@@ -166,16 +149,12 @@ func TestCmd_Run(t *testing.T) {
 
 		serverConfig := authserver.Config{
 			Issuer:         "http://localhost:9000",
-			IDTokenKeyPair: k.IDTokenKeyPair,
+			IDTokenKeyPair: keys.JWSKeyPair,
 		}
 		server := authserver.Start(t, serverConfig)
 		defer server.Shutdown(ctx)
 
-		idToken := k.SignClaims(t, jwt.StandardClaims{
-			Issuer:    "http://localhost:9000",
-			Audience:  "kubernetes",
-			ExpiresAt: time.Now().Add(time.Hour).Unix(),
-		})
+		idToken := newIDToken(t, "http://localhost:9000")
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:  "http://localhost:9000",
 			IDToken: idToken,
@@ -187,6 +166,20 @@ func TestCmd_Run(t *testing.T) {
 			IDToken: idToken,
 		})
 	})
+}
+
+func newIDToken(t *testing.T, issuer string) string {
+	t.Helper()
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.StandardClaims{
+		Issuer:    issuer,
+		Audience:  "kubernetes",
+		ExpiresAt: time.Now().Add(time.Hour).Unix(),
+	})
+	s, err := token.SignedString(keys.JWSKeyPair)
+	if err != nil {
+		t.Fatalf("Could not sign the claims: %s", err)
+	}
+	return s
 }
 
 func runCmd(t *testing.T, ctx context.Context, args ...string) {
