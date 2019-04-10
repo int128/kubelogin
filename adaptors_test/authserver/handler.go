@@ -18,25 +18,28 @@ type handler struct {
 	jwks      *template.Template
 	authCode  string
 
-	Issuer     string
-	Scope      string // Default to openid
-	IDToken    string
-	PrivateKey struct{ N, E string }
+	// Template values
+	Issuer       string
+	Scope        string // Default to openid
+	IDToken      string
+	RefreshToken string
+	PrivateKey   struct{ N, E string }
 }
 
 func newHandler(t *testing.T, c Config) *handler {
 	h := handler{
-		discovery: readTemplate(t, "oidc-discovery.json"),
-		token:     readTemplate(t, "oidc-token.json"),
-		jwks:      readTemplate(t, "oidc-jwks.json"),
-		authCode:  "3d24a8bd-35e6-457d-999e-e04bb1dfcec7",
-		Issuer:    c.Issuer,
-		Scope:     c.Scope,
+		discovery:    readTemplate(t, "oidc-discovery.json"),
+		token:        readTemplate(t, "oidc-token.json"),
+		jwks:         readTemplate(t, "oidc-jwks.json"),
+		authCode:     "3d24a8bd-35e6-457d-999e-e04bb1dfcec7",
+		Issuer:       c.Issuer,
+		Scope:        c.Scope,
+		IDToken:      c.IDToken,
+		RefreshToken: c.RefreshToken,
 	}
 	if h.Scope == "" {
 		h.Scope = "openid"
 	}
-	h.IDToken = c.IDToken
 	if c.IDTokenKeyPair != nil {
 		h.PrivateKey.E = base64.RawURLEncoding.EncodeToString(big.NewInt(int64(c.IDTokenKeyPair.E)).Bytes())
 		h.PrivateKey.N = base64.RawURLEncoding.EncodeToString(c.IDTokenKeyPair.N.Bytes())

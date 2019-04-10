@@ -28,6 +28,7 @@ type Config struct {
 	Cert           string
 	Key            string
 	IDToken        string
+	RefreshToken   string
 	IDTokenKeyPair *rsa.PrivateKey
 }
 

@@ -17,157 +17,154 @@ import (
 	"github.com/int128/kubelogin/adaptors_test/keys"
 	"github.com/int128/kubelogin/adaptors_test/kubeconfig"
 	"github.com/int128/kubelogin/di"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
 )
 
-// End-to-end test.
+// Run the integration tests.
 //
 // 1. Start the auth server at port 9000.
-// 2. Run the CLI.
+// 2. Run the Cmd.
 // 3. Open a request for port 8000.
-// 4. Wait for the CLI.
+// 4. Wait for the Cmd.
 // 5. Shutdown the auth server.
 //
 func TestCmd_Run(t *testing.T) {
 	k := keys.New(t)
+	timeout := 500 * time.Millisecond
 
-	data := map[string]struct {
-		kubeconfigValues kubeconfig.Values
-		args             []string
-		serverConfig     authserver.Config
-		clientTLS        *tls.Config
-	}{
-		"NoTLS": {
-			kubeconfig.Values{Issuer: "http://localhost:9000"},
-			[]string{"kubelogin"},
-			authserver.Config{
-				Issuer:         "http://localhost:9000",
-				IDToken:        issueIDToken(t, k, "http://localhost:9000"),
-				IDTokenKeyPair: k.IDTokenKeyPair,
-			},
-			&tls.Config{},
-		},
-		"ExtraScope": {
-			kubeconfig.Values{
-				Issuer:      "http://localhost:9000",
-				ExtraScopes: "profile groups",
-			},
-			[]string{"kubelogin"},
-			authserver.Config{
-				Issuer:         "http://localhost:9000",
-				Scope:          "profile groups openid",
-				IDToken:        issueIDToken(t, k, "http://localhost:9000"),
-				IDTokenKeyPair: k.IDTokenKeyPair,
-			},
-			&tls.Config{},
-		},
-		"SkipTLSVerify": {
-			kubeconfig.Values{Issuer: "https://localhost:9000"},
-			[]string{"kubelogin", "--insecure-skip-tls-verify"},
-			authserver.Config{
-				Issuer:         "https://localhost:9000",
-				Cert:           authserver.ServerCert,
-				Key:            authserver.ServerKey,
-				IDToken:        issueIDToken(t, k, "https://localhost:9000"),
-				IDTokenKeyPair: k.IDTokenKeyPair,
-			},
-			&tls.Config{InsecureSkipVerify: true},
-		},
-		"CACert": {
-			kubeconfig.Values{
-				Issuer:                  "https://localhost:9000",
-				IDPCertificateAuthority: authserver.CACert,
-			},
-			[]string{"kubelogin"},
-			authserver.Config{
-				Issuer:         "https://localhost:9000",
-				Cert:           authserver.ServerCert,
-				Key:            authserver.ServerKey,
-				IDToken:        issueIDToken(t, k, "https://localhost:9000"),
-				IDTokenKeyPair: k.IDTokenKeyPair,
-			},
-			&tls.Config{RootCAs: readCert(t, authserver.CACert)},
-		},
-		"CACertData": {
-			kubeconfig.Values{
-				Issuer:                      "https://localhost:9000",
-				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString(read(t, authserver.CACert)),
-			},
-			[]string{"kubelogin"},
-			authserver.Config{
-				Issuer:         "https://localhost:9000",
-				Cert:           authserver.ServerCert,
-				Key:            authserver.ServerKey,
-				IDToken:        issueIDToken(t, k, "https://localhost:9000"),
-				IDTokenKeyPair: k.IDTokenKeyPair,
-			},
-			&tls.Config{RootCAs: readCert(t, authserver.CACert)},
-		},
-		"InvalidCACertShouldBeSkipped": {
-			kubeconfig.Values{
-				Issuer:                  "http://localhost:9000",
-				IDPCertificateAuthority: "cmd_test.go",
-			},
-			[]string{"kubelogin"},
-			authserver.Config{
-				Issuer:         "http://localhost:9000",
-				IDToken:        issueIDToken(t, k, "http://localhost:9000"),
-				IDTokenKeyPair: k.IDTokenKeyPair,
-			},
-			&tls.Config{},
-		},
-		"InvalidCACertDataShouldBeSkipped": {
-			kubeconfig.Values{
-				Issuer:                      "http://localhost:9000",
-				IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString([]byte("foo")),
-			},
-			[]string{"kubelogin"},
-			authserver.Config{
-				Issuer:         "http://localhost:9000",
-				IDToken:        issueIDToken(t, k, "http://localhost:9000"),
-				IDTokenKeyPair: k.IDTokenKeyPair,
-			},
-			&tls.Config{},
-		},
-	}
+	t.Run("NoTLS", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
 
-	for name, c := range data {
-		t.Run(name, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			server := authserver.Start(t, c.serverConfig)
-			defer server.Shutdown(ctx)
-			kcfg := kubeconfig.Create(t, &c.kubeconfigValues)
-			defer os.Remove(kcfg)
-
-			//TODO: replace with runCmd()
-			args := append(c.args, "--kubeconfig", kcfg, "--skip-open-browser")
-			var eg errgroup.Group
-			eg.Go(func() error {
-				return di.Invoke(func(cmd adaptors.Cmd) {
-					exitCode := cmd.Run(ctx, args, "HEAD")
-					if exitCode != 0 {
-						t.Errorf("exit status wants 0 but %d", exitCode)
-					}
-				})
-			})
-			if err := openBrowserRequest(c.clientTLS); err != nil {
-				cancel()
-				t.Error(err)
-			}
-			if err := eg.Wait(); err != nil {
-				t.Fatalf("CLI returned error: %s", err)
-			}
-			kubeconfig.Verify(t, kcfg, kubeconfig.AuthProviderConfig{
-				IDToken:      c.serverConfig.IDToken,
-				RefreshToken: "44df4c82-5ce7-4260-b54d-1da0d396ef2a",
-			})
+		idToken := k.SignClaims(t, jwt.StandardClaims{
+			Issuer:    "http://localhost:9000",
+			Audience:  "kubernetes",
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
 		})
-	}
+		serverConfig := authserver.Config{
+			Issuer:         "http://localhost:9000",
+			IDToken:        idToken,
+			IDTokenKeyPair: k.IDTokenKeyPair,
+			RefreshToken:   "REFRESH_TOKEN",
+		}
+		server := authserver.Start(t, serverConfig)
+		defer server.Shutdown(ctx)
+
+		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+			Issuer: "http://localhost:9000",
+		})
+		defer os.Remove(kubeConfigFilename)
+
+		startBrowserRequest(t, nil)
+		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+			IDToken:      idToken,
+			RefreshToken: "REFRESH_TOKEN",
+		})
+	})
+
+	t.Run("ExtraScopes", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		idToken := k.SignClaims(t, jwt.StandardClaims{
+			Issuer:    "http://localhost:9000",
+			Audience:  "kubernetes",
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
+		})
+		serverConfig := authserver.Config{
+			Issuer:         "http://localhost:9000",
+			IDToken:        idToken,
+			IDTokenKeyPair: k.IDTokenKeyPair,
+			RefreshToken:   "REFRESH_TOKEN",
+			Scope:          "profile groups openid",
+		}
+		server := authserver.Start(t, serverConfig)
+		defer server.Shutdown(ctx)
+
+		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+			Issuer:      "http://localhost:9000",
+			ExtraScopes: "profile,groups",
+		})
+		defer os.Remove(kubeConfigFilename)
+
+		startBrowserRequest(t, nil)
+		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+			IDToken:      idToken,
+			RefreshToken: "REFRESH_TOKEN",
+		})
+	})
+
+	t.Run("CACert", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		idToken := k.SignClaims(t, jwt.StandardClaims{
+			Issuer:    "https://localhost:9000",
+			Audience:  "kubernetes",
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
+		})
+		serverConfig := authserver.Config{
+			Issuer:         "https://localhost:9000",
+			IDToken:        idToken,
+			IDTokenKeyPair: k.IDTokenKeyPair,
+			RefreshToken:   "REFRESH_TOKEN",
+			Cert:           authserver.ServerCert,
+			Key:            authserver.ServerKey,
+		}
+		server := authserver.Start(t, serverConfig)
+		defer server.Shutdown(ctx)
+
+		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+			Issuer:                  "https://localhost:9000",
+			IDPCertificateAuthority: authserver.CACert,
+		})
+		defer os.Remove(kubeConfigFilename)
+
+		startBrowserRequest(t, &tls.Config{RootCAs: readCert(t, authserver.CACert)})
+		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+			IDToken:      idToken,
+			RefreshToken: "REFRESH_TOKEN",
+		})
+	})
+
+	t.Run("CACertData", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		idToken := k.SignClaims(t, jwt.StandardClaims{
+			Issuer:    "https://localhost:9000",
+			Audience:  "kubernetes",
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
+		})
+		serverConfig := authserver.Config{
+			Issuer:         "https://localhost:9000",
+			IDToken:        idToken,
+			IDTokenKeyPair: k.IDTokenKeyPair,
+			RefreshToken:   "REFRESH_TOKEN",
+			Cert:           authserver.ServerCert,
+			Key:            authserver.ServerKey,
+		}
+		server := authserver.Start(t, serverConfig)
+		defer server.Shutdown(ctx)
+
+		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+			Issuer:                      "https://localhost:9000",
+			IDPCertificateAuthorityData: base64.StdEncoding.EncodeToString(read(t, authserver.CACert)),
+		})
+		defer os.Remove(kubeConfigFilename)
+
+		startBrowserRequest(t, &tls.Config{RootCAs: readCert(t, authserver.CACert)})
+		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+			IDToken:      idToken,
+			RefreshToken: "REFRESH_TOKEN",
+		})
+	})
 
 	t.Run("AlreadyHaveValidToken", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		serverConfig := authserver.Config{
@@ -177,7 +174,11 @@ func TestCmd_Run(t *testing.T) {
 		server := authserver.Start(t, serverConfig)
 		defer server.Shutdown(ctx)
 
-		idToken := issueIDToken(t, k, "http://localhost:9000")
+		idToken := k.SignClaims(t, jwt.StandardClaims{
+			Issuer:    "http://localhost:9000",
+			Audience:  "kubernetes",
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
+		})
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:  "http://localhost:9000",
 			IDToken: idToken,
@@ -185,19 +186,9 @@ func TestCmd_Run(t *testing.T) {
 		defer os.Remove(kubeConfigFilename)
 
 		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
-
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken: idToken,
 		})
-	})
-}
-
-func issueIDToken(t *testing.T, k keys.Keys, issuer string) string {
-	t.Helper()
-	return k.SignClaims(t, jwt.StandardClaims{
-		Issuer:    issuer,
-		Audience:  "kubernetes",
-		ExpiresAt: time.Now().Add(time.Hour).Unix(),
 	})
 }
 
@@ -213,17 +204,21 @@ func runCmd(t *testing.T, ctx context.Context, args ...string) {
 	}
 }
 
-func openBrowserRequest(tlsConfig *tls.Config) error {
-	time.Sleep(50 * time.Millisecond)
-	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
-	res, err := client.Get("http://localhost:8000/")
-	if err != nil {
-		return errors.Wrapf(err, "could not send a request")
-	}
-	if res.StatusCode != 200 {
-		return errors.Errorf("StatusCode wants 200 but %d", res.StatusCode)
-	}
-	return nil
+func startBrowserRequest(t *testing.T, tlsConfig *tls.Config) {
+	t.Helper()
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
+		resp, err := client.Get("http://localhost:8000/")
+		if err != nil {
+			t.Errorf("could not send a request: %s", err)
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
+		}
+	}()
 }
 
 func read(t *testing.T, name string) []byte {
