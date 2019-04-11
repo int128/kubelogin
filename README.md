@@ -13,16 +13,15 @@ You need to setup the following components:
 - Role for your group or user
 - kubectl authentication
 
-You can install [the latest release](https://github.com/int128/kubelogin/releases) by the following ways:
+You can install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases) as follows:
 
 ```sh
 # Homebrew
 brew tap int128/kubelogin
 brew install kubelogin
 
-# Krew (experimental)
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.9.1/oidc-login.yaml
-kubectl krew install --manifest oidc-login.yaml
+# Krew
+kubectl krew install oidc-login
 
 # GitHub Releases
 curl -LO https://github.com/int128/kubelogin/releases/download/v1.9.1/kubelogin_linux_amd64.zip
