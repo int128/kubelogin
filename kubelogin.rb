@@ -5,7 +5,7 @@ class Kubelogin < Formula
   version "{{ env "VERSION" }}"
   sha256 "{{ .darwin_amd64_zip_sha256 }}"
   def install
-    bin.install "kubelogin_darwin_amd64" => "kubelogin"
+    bin.install "kubelogin" => "kubelogin"
     ln_s bin/"kubelogin", bin/"kubectl-oidc_login"
   end
   test do
