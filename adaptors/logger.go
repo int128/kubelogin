@@ -2,16 +2,48 @@ package adaptors
 
 import (
 	"log"
+	"os"
 
 	"github.com/int128/kubelogin/adaptors/interfaces"
 )
 
+// NewLogger returns a Logger with the standard log.Logger for messages and debug.
 func NewLogger() adaptors.Logger {
-	return &Logger{}
+	return &Logger{
+		stdLogger:   log.New(os.Stderr, "", 0),
+		debugLogger: log.New(os.Stderr, "", log.Ltime|log.Lmicroseconds),
+	}
 }
 
-type Logger struct{}
+// NewLoggerWith returns a Logger with the given standard log.Logger.
+func NewLoggerWith(l stdLogger) *Logger {
+	return &Logger{
+		stdLogger:   l,
+		debugLogger: l,
+	}
+}
 
-func (*Logger) Logf(format string, v ...interface{}) {
-	log.Printf(format, v...)
+type stdLogger interface {
+	Printf(format string, v ...interface{})
+}
+
+// Logger wraps the standard log.Logger and just provides debug level.
+type Logger struct {
+	stdLogger
+	debugLogger stdLogger
+	level       adaptors.LogLevel
+}
+
+func (l *Logger) Debugf(level adaptors.LogLevel, format string, v ...interface{}) {
+	if l.IsEnabled(level) {
+		l.debugLogger.Printf(format, v...)
+	}
+}
+
+func (l *Logger) SetLevel(level adaptors.LogLevel) {
+	l.level = level
+}
+
+func (l *Logger) IsEnabled(level adaptors.LogLevel) bool {
+	return level <= l.level
 }

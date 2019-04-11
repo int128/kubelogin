@@ -33,10 +33,10 @@ After initial setup or when the token has been expired, just run:
 
 ```
 % kubelogin
-2019/04/09 13:33:37 Using current-context: hello.k8s.local
-2019/04/09 13:33:38 Open http://localhost:8000 for authorization
-2019/04/09 13:33:44 Got a token for subject=1234567890
-2019/04/09 13:33:44 Updated .kubeconfig
+Using current-context: hello.k8s.local
+Open http://localhost:8000 for authorization
+Got a token for subject 0123456789 (valid until 2019-04-12 11:00:49 +0900 JST)
+Updated ~/.kube/config
 ```
 
 or run as a kubectl plugin:
@@ -68,6 +68,7 @@ Application Options:
       --insecure-skip-tls-verify  If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
                                   [$KUBELOGIN_INSECURE_SKIP_TLS_VERIFY]
       --skip-open-browser         If set, it does not open the browser on authentication. [$KUBELOGIN_SKIP_OPEN_BROWSER]
+  -v, --v=                        If set to 1 or greater, show debug log (default: 0)
 
 Help Options:
   -h, --help        Show this help message

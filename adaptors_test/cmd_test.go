@@ -13,6 +13,7 @@ import (
 	"github.com/int128/kubelogin/adaptors_test/authserver"
 	"github.com/int128/kubelogin/adaptors_test/keys"
 	"github.com/int128/kubelogin/adaptors_test/kubeconfig"
+	"github.com/int128/kubelogin/adaptors_test/logger"
 	"github.com/int128/kubelogin/di"
 )
 
@@ -184,9 +185,11 @@ func newIDToken(t *testing.T, issuer string) string {
 
 func runCmd(t *testing.T, ctx context.Context, args ...string) {
 	t.Helper()
-	newLogger := func() adaptors.Logger { return t }
+	newLogger := func() adaptors.Logger {
+		return logger.New(t)
+	}
 	if err := di.InvokeWithExtra(func(cmd adaptors.Cmd) {
-		exitCode := cmd.Run(ctx, append([]string{"kubelogin"}, args...), "HEAD")
+		exitCode := cmd.Run(ctx, append([]string{"kubelogin", "--v=1"}, args...), "HEAD")
 		if exitCode != 0 {
 			t.Errorf("exit status wants 0 but %d", exitCode)
 		}
