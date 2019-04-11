@@ -184,12 +184,13 @@ func newIDToken(t *testing.T, issuer string) string {
 
 func runCmd(t *testing.T, ctx context.Context, args ...string) {
 	t.Helper()
-	if err := di.Invoke(func(cmd adaptors.Cmd) {
+	newLogger := func() adaptors.Logger { return t }
+	if err := di.InvokeWithExtra(func(cmd adaptors.Cmd) {
 		exitCode := cmd.Run(ctx, append([]string{"kubelogin"}, args...), "HEAD")
 		if exitCode != 0 {
 			t.Errorf("exit status wants 0 but %d", exitCode)
 		}
-	}); err != nil {
+	}, newLogger); err != nil {
 		t.Errorf("Invoke returned error: %+v", err)
 	}
 }
