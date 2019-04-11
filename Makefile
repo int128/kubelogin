@@ -10,7 +10,7 @@ all: $(TARGET)
 check:
 	golint
 	go vet
-	$(MAKE) -C adaptors_test/authserver/testdata
+	$(MAKE) -C adaptors_test/keys/testdata
 	go test -v ./...
 
 $(TARGET): $(wildcard *.go)

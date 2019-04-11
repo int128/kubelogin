@@ -3,7 +3,6 @@ package authserver
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
 	"math/big"
 	"net/http"
 	"testing"
@@ -13,30 +12,44 @@ import (
 )
 
 type handler struct {
+	t *testing.T
+
 	discovery *template.Template
 	token     *template.Template
 	jwks      *template.Template
 	authCode  string
 
-	Issuer     string
-	Scope      string // Default to openid
-	IDToken    string
-	PrivateKey struct{ N, E string }
+	// Template values
+	Issuer       string
+	Scope        string // Default to openid
+	IDToken      string
+	RefreshToken string
+	PrivateKey   struct{ N, E string }
 }
 
 func newHandler(t *testing.T, c Config) *handler {
+	tpl, err := template.ParseFiles(
+		"authserver/testdata/oidc-discovery.json",
+		"authserver/testdata/oidc-token.json",
+		"authserver/testdata/oidc-jwks.json",
+	)
+	if err != nil {
+		t.Fatalf("could not read the templates: %s", err)
+	}
 	h := handler{
-		discovery: readTemplate(t, "oidc-discovery.json"),
-		token:     readTemplate(t, "oidc-token.json"),
-		jwks:      readTemplate(t, "oidc-jwks.json"),
-		authCode:  "3d24a8bd-35e6-457d-999e-e04bb1dfcec7",
-		Issuer:    c.Issuer,
-		Scope:     c.Scope,
+		t:            t,
+		discovery:    tpl.Lookup("oidc-discovery.json"),
+		token:        tpl.Lookup("oidc-token.json"),
+		jwks:         tpl.Lookup("oidc-jwks.json"),
+		authCode:     "3d24a8bd-35e6-457d-999e-e04bb1dfcec7",
+		Issuer:       c.Issuer,
+		Scope:        c.Scope,
+		IDToken:      c.IDToken,
+		RefreshToken: c.RefreshToken,
 	}
 	if h.Scope == "" {
 		h.Scope = "openid"
 	}
-	h.IDToken = c.IDToken
 	if c.IDTokenKeyPair != nil {
 		h.PrivateKey.E = base64.RawURLEncoding.EncodeToString(big.NewInt(int64(c.IDTokenKeyPair.E)).Bytes())
 		h.PrivateKey.N = base64.RawURLEncoding.EncodeToString(c.IDTokenKeyPair.N.Bytes())
@@ -44,18 +57,9 @@ func newHandler(t *testing.T, c Config) *handler {
 	return &h
 }
 
-func readTemplate(t *testing.T, name string) *template.Template {
-	t.Helper()
-	tpl, err := template.ParseFiles("authserver/testdata/" + name)
-	if err != nil {
-		t.Fatalf("Could not read template %s: %s", name, err)
-	}
-	return tpl
-}
-
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := h.serveHTTP(w, r); err != nil {
-		log.Printf("[auth-server] Error: %s", err)
+		h.t.Logf("[auth-server] Error: %s", err)
 		w.WriteHeader(500)
 	}
 }
@@ -63,12 +67,12 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 	m := r.Method
 	p := r.URL.Path
-	log.Printf("[auth-server] %s %s", m, r.RequestURI)
+	h.t.Logf("[auth-server] %s %s", m, r.RequestURI)
 	switch {
 	case m == "GET" && p == "/.well-known/openid-configuration":
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.discovery.Execute(w, h); err != nil {
-			return err
+			return errors.Wrapf(err, "could not execute the template")
 		}
 	case m == "GET" && p == "/protocol/openid-connect/auth":
 		// Authentication Response
@@ -83,19 +87,19 @@ func (h *handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		// Token Response
 		// http://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
 		if err := r.ParseForm(); err != nil {
-			return err
+			return errors.Wrapf(err, "could not parse the form")
 		}
 		if h.authCode != r.Form.Get("code") {
 			return errors.Errorf("code wants %s but %s", h.authCode, r.Form.Get("code"))
 		}
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.token.Execute(w, h); err != nil {
-			return err
+			return errors.Wrapf(err, "could not execute the template")
 		}
 	case m == "GET" && p == "/protocol/openid-connect/certs":
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.jwks.Execute(w, h); err != nil {
-			return err
+			return errors.Wrapf(err, "could not execute the template")
 		}
 	default:
 		http.Error(w, "Not Found", 404)

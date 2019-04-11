@@ -1,6 +1,6 @@
 .PHONY: clean
 
-all: server.crt ca.crt
+all: server.crt ca.crt jws.key
 
 clean:
 	rm -v ca.* server.*
@@ -48,3 +48,6 @@ server.crt: openssl.cnf server.csr ca.key ca.crt
 		-in server.csr \
 		-out $@
 	openssl x509 -text -in $@
+
+jws.key:
+	openssl genrsa -out $@ 1024
