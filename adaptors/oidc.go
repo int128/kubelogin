@@ -16,7 +16,7 @@ func NewOIDC() adaptors.OIDC {
 
 type OIDC struct{}
 
-func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn) (*adaptors.OIDCAuthenticateOut, error) {
+func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn, cb adaptors.OIDCAuthenticateCallback) (*adaptors.OIDCAuthenticateOut, error) {
 	if in.Client != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
 	}
@@ -31,9 +31,10 @@ func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn) (
 			ClientSecret: in.ClientSecret,
 			Scopes:       append(in.ExtraScopes, oidc.ScopeOpenID),
 		},
-		LocalServerPort: in.LocalServerPort,
-		SkipOpenBrowser: in.SkipOpenBrowser,
-		AuthCodeOptions: []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
+		LocalServerPort:    in.LocalServerPort,
+		SkipOpenBrowser:    in.SkipOpenBrowser,
+		AuthCodeOptions:    []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
+		ShowLocalServerURL: cb.ShowLocalServerURL,
 	}
 	token, err := flow.GetToken(ctx)
 	if err != nil {
