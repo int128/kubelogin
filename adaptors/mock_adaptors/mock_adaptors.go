@@ -204,16 +204,16 @@ func (m *MockOIDC) EXPECT() *MockOIDCMockRecorder {
 }
 
 // Authenticate mocks base method
-func (m *MockOIDC) Authenticate(arg0 context.Context, arg1 interfaces.OIDCAuthenticateIn) (*interfaces.OIDCAuthenticateOut, error) {
-	ret := m.ctrl.Call(m, "Authenticate", arg0, arg1)
+func (m *MockOIDC) Authenticate(arg0 context.Context, arg1 interfaces.OIDCAuthenticateIn, arg2 interfaces.OIDCAuthenticateCallback) (*interfaces.OIDCAuthenticateOut, error) {
+	ret := m.ctrl.Call(m, "Authenticate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*interfaces.OIDCAuthenticateOut)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Authenticate indicates an expected call of Authenticate
-func (mr *MockOIDCMockRecorder) Authenticate(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockOIDC)(nil).Authenticate), arg0, arg1)
+func (mr *MockOIDCMockRecorder) Authenticate(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockOIDC)(nil).Authenticate), arg0, arg1, arg2)
 }
 
 // VerifyIDToken mocks base method

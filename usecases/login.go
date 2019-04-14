@@ -74,15 +74,21 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return nil
 	}
 
-	out, err := u.OIDC.Authenticate(ctx, adaptors.OIDCAuthenticateIn{
-		Issuer:          authProvider.IDPIssuerURL(),
-		ClientID:        authProvider.ClientID(),
-		ClientSecret:    authProvider.ClientSecret(),
-		ExtraScopes:     authProvider.ExtraScopes(),
-		Client:          hc,
-		LocalServerPort: in.ListenPort,
-		SkipOpenBrowser: in.SkipOpenBrowser,
-	})
+	out, err := u.OIDC.Authenticate(ctx,
+		adaptors.OIDCAuthenticateIn{
+			Issuer:          authProvider.IDPIssuerURL(),
+			ClientID:        authProvider.ClientID(),
+			ClientSecret:    authProvider.ClientSecret(),
+			ExtraScopes:     authProvider.ExtraScopes(),
+			Client:          hc,
+			LocalServerPort: in.ListenPort,
+			SkipOpenBrowser: in.SkipOpenBrowser,
+		},
+		adaptors.OIDCAuthenticateCallback{
+			ShowLocalServerURL: func(url string) {
+				u.Logger.Logf("Open %s for authentication", url)
+			},
+		})
 	if err != nil {
 		return errors.Wrapf(err, "could not get token from OIDC provider")
 	}

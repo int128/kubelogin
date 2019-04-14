@@ -91,6 +91,9 @@ func TestLogin_Do(t *testing.T) {
 				ExtraScopes:     []string{},
 				LocalServerPort: 10000,
 				Client:          httpClient,
+			}, gomock.Any()).
+			Do(func(_ context.Context, _ adaptors.OIDCAuthenticateIn, cb adaptors.OIDCAuthenticateCallback) {
+				cb.ShowLocalServerURL("http://localhost:10000")
 			}).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
@@ -133,7 +136,7 @@ func TestLogin_Do(t *testing.T) {
 				ExtraScopes:     []string{},
 				LocalServerPort: 10000,
 				Client:          httpClient,
-			}).
+			}, gomock.Any()).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",
@@ -177,7 +180,7 @@ func TestLogin_Do(t *testing.T) {
 				LocalServerPort: 10000,
 				Client:          httpClient,
 				SkipOpenBrowser: true,
-			}).
+			}, gomock.Any()).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",
@@ -270,7 +273,7 @@ func TestLogin_Do(t *testing.T) {
 				ExtraScopes:     []string{},
 				LocalServerPort: 10000,
 				Client:          httpClient,
-			}).
+			}, gomock.Any()).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",
@@ -313,7 +316,7 @@ func TestLogin_Do(t *testing.T) {
 				ExtraScopes:     []string{"email", "profile"},
 				LocalServerPort: 10000,
 				Client:          httpClient,
-			}).
+			}, gomock.Any()).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",
@@ -358,7 +361,7 @@ func TestLogin_Do(t *testing.T) {
 				ExtraScopes:     []string{},
 				LocalServerPort: 10000,
 				Client:          httpClient,
-			}).
+			}, gomock.Any()).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",
@@ -404,7 +407,7 @@ func TestLogin_Do(t *testing.T) {
 				ExtraScopes:     []string{},
 				LocalServerPort: 10000,
 				Client:          httpClient,
-			}).
+			}, gomock.Any()).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",
@@ -449,7 +452,7 @@ func TestLogin_Do(t *testing.T) {
 				ExtraScopes:     []string{},
 				LocalServerPort: 10000,
 				Client:          httpClient,
-			}).
+			}, gomock.Any()).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",
@@ -495,7 +498,7 @@ func TestLogin_Do(t *testing.T) {
 				ExtraScopes:     []string{},
 				LocalServerPort: 10000,
 				Client:          httpClient,
-			}).
+			}, gomock.Any()).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",

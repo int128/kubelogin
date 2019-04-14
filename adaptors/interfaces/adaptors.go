@@ -34,7 +34,7 @@ type HTTPClientConfig interface {
 }
 
 type OIDC interface {
-	Authenticate(ctx context.Context, in OIDCAuthenticateIn) (*OIDCAuthenticateOut, error)
+	Authenticate(ctx context.Context, in OIDCAuthenticateIn, cb OIDCAuthenticateCallback) (*OIDCAuthenticateOut, error)
 	VerifyIDToken(ctx context.Context, in OIDCVerifyTokenIn) (*oidc.IDToken, error)
 }
 
@@ -46,6 +46,10 @@ type OIDCAuthenticateIn struct {
 	Client          *http.Client // HTTP client for oidc and oauth2
 	LocalServerPort int          // HTTP server port
 	SkipOpenBrowser bool         // skip opening browser if true
+}
+
+type OIDCAuthenticateCallback struct {
+	ShowLocalServerURL func(url string)
 }
 
 type OIDCAuthenticateOut struct {
