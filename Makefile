@@ -11,7 +11,7 @@ check:
 	golint
 	go vet
 	$(MAKE) -C adaptors_test/keys/testdata
-	go test -v ./...
+	go test -v -race ./...
 
 $(TARGET): $(wildcard *.go)
 	go build -o $@ -ldflags "$(LDFLAGS)"
