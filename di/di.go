@@ -16,6 +16,7 @@ var constructors = []interface{}{
 	adaptors.NewKubeConfig,
 	adaptors.NewOIDC,
 	adaptors.NewHTTP,
+	adaptors.NewEnv,
 }
 
 var extraConstructors = []interface{}{

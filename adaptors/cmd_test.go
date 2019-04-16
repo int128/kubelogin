@@ -28,12 +28,16 @@ func TestCmd_Run(t *testing.T) {
 				ListenPort: 8000,
 			})
 
+		env := mock_adaptors.NewMockEnv(ctrl)
+		env.EXPECT().Getenv(gomock.Any()).AnyTimes()
+
 		logger := mock_adaptors.NewLogger(t, ctrl)
 		logger.EXPECT().
 			SetLevel(adaptors.LogLevel(0))
 
 		cmd := Cmd{
 			Login:  login,
+			Env:    env,
 			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable}, version)
@@ -50,11 +54,14 @@ func TestCmd_Run(t *testing.T) {
 		login := mock_usecases.NewMockLogin(ctrl)
 		login.EXPECT().
 			Do(ctx, usecases.LoginIn{
-				KubeConfig:      expand(t, "~/.kube/config"),
+				KubeConfig:      "/path/to/kubeconfig",
 				ListenPort:      10080,
 				SkipTLSVerify:   true,
 				SkipOpenBrowser: true,
 			})
+
+		env := mock_adaptors.NewMockEnv(ctrl)
+		env.EXPECT().Getenv(gomock.Any()).AnyTimes()
 
 		logger := mock_adaptors.NewLogger(t, ctrl)
 		logger.EXPECT().
@@ -62,9 +69,11 @@ func TestCmd_Run(t *testing.T) {
 
 		cmd := Cmd{
 			Login:  login,
+			Env:    env,
 			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
+			"--kubeconfig", "/path/to/kubeconfig",
 			"--listen-port", "10080",
 			"--insecure-skip-tls-verify",
 			"--skip-open-browser",
@@ -75,11 +84,55 @@ func TestCmd_Run(t *testing.T) {
 		}
 	})
 
+	t.Run("FullEnvVars", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+
+		login := mock_usecases.NewMockLogin(ctrl)
+		login.EXPECT().
+			Do(ctx, usecases.LoginIn{
+				KubeConfig: "/path/to/kubeconfig",
+				ListenPort: 10080,
+			})
+
+		env := mock_adaptors.NewMockEnv(ctrl)
+		env.EXPECT().
+			Getenv(gomock.Any()).
+			DoAndReturn(func(key string) string {
+				switch key {
+				case envKubeConfig:
+					return "/path/to/kubeconfig"
+				case envListenPort:
+					return "10080"
+				}
+				return ""
+			}).
+			AnyTimes()
+
+		logger := mock_adaptors.NewLogger(t, ctrl)
+		logger.EXPECT().
+			SetLevel(adaptors.LogLevel(0))
+
+		cmd := Cmd{
+			Login:  login,
+			Env:    env,
+			Logger: logger,
+		}
+		exitCode := cmd.Run(ctx, []string{executable}, version)
+		if exitCode != 0 {
+			t.Errorf("exitCode wants 0 but %d", exitCode)
+		}
+	})
+
 	t.Run("TooManyArgs", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
+		env := mock_adaptors.NewMockEnv(ctrl)
+		env.EXPECT().Getenv(gomock.Any()).AnyTimes()
 		cmd := Cmd{
 			Login:  mock_usecases.NewMockLogin(ctrl),
+			Env:    env,
 			Logger: mock_adaptors.NewLogger(t, ctrl),
 		}
 		exitCode := cmd.Run(context.TODO(), []string{executable, "some"}, version)
@@ -95,4 +148,19 @@ func expand(t *testing.T, path string) string {
 		t.Fatalf("could not expand: %s", err)
 	}
 	return d
+}
+
+func TestCmd_executableName(t *testing.T) {
+	t.Run("kubelogin", func(t *testing.T) {
+		e := executableName("kubelogin")
+		if e != "kubelogin" {
+			t.Errorf("executableName wants kubelogin but %s", e)
+		}
+	})
+	t.Run("kubectl-oidc_login", func(t *testing.T) {
+		e := executableName("kubectl-oidc_login")
+		if e != "kubectl oidc-login" {
+			t.Errorf("executableName wants kubectl oidc-login but %s", e)
+		}
+	})
 }
