@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/int128/kubelogin/usecases/mock_usecases"
 	"github.com/mitchellh/go-homedir"
@@ -26,9 +28,13 @@ func TestCmd_Run(t *testing.T) {
 				ListenPort: 8000,
 			})
 
+		logger := mock_adaptors.NewLogger(t, ctrl)
+		logger.EXPECT().
+			SetLevel(adaptors.LogLevel(0))
+
 		cmd := Cmd{
 			Login:  login,
-			Logger: t,
+			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable}, version)
 		if exitCode != 0 {
@@ -50,14 +56,19 @@ func TestCmd_Run(t *testing.T) {
 				SkipOpenBrowser: true,
 			})
 
+		logger := mock_adaptors.NewLogger(t, ctrl)
+		logger.EXPECT().
+			SetLevel(adaptors.LogLevel(1))
+
 		cmd := Cmd{
 			Login:  login,
-			Logger: t,
+			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
 			"--listen-port", "10080",
 			"--insecure-skip-tls-verify",
 			"--skip-open-browser",
+			"-v1",
 		}, version)
 		if exitCode != 0 {
 			t.Errorf("exitCode wants 0 but %d", exitCode)
@@ -69,7 +80,7 @@ func TestCmd_Run(t *testing.T) {
 		defer ctrl.Finish()
 		cmd := Cmd{
 			Login:  mock_usecases.NewMockLogin(ctrl),
-			Logger: t,
+			Logger: mock_adaptors.NewLogger(t, ctrl),
 		}
 		exitCode := cmd.Run(context.TODO(), []string{executable, "some"}, version)
 		if exitCode != 1 {

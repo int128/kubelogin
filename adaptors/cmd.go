@@ -30,16 +30,17 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		version)
 	args, err := parser.ParseArgs(args[1:])
 	if err != nil {
-		cmd.Logger.Logf("Error: %s", err)
+		cmd.Logger.Printf("Error: %s", err)
 		return 1
 	}
 	if len(args) > 0 {
-		cmd.Logger.Logf("Error: too many arguments")
+		cmd.Logger.Printf("Error: too many arguments")
 		return 1
 	}
+	cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 	kubeConfig, err := o.ExpandKubeConfig()
 	if err != nil {
-		cmd.Logger.Logf("Error: invalid option: %s", err)
+		cmd.Logger.Printf("Error: invalid option: %s", err)
 		return 1
 	}
 
@@ -50,7 +51,7 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		SkipOpenBrowser: o.SkipOpenBrowser,
 	}
 	if err := cmd.Login.Do(ctx, in); err != nil {
-		cmd.Logger.Logf("Error: %s", err)
+		cmd.Logger.Printf("Error: %s", err)
 		return 1
 	}
 	return 0
@@ -61,6 +62,7 @@ type cmdOptions struct {
 	ListenPort      int    `long:"listen-port" default:"8000" env:"KUBELOGIN_LISTEN_PORT" description:"Port used by kubelogin to bind its webserver"`
 	SkipTLSVerify   bool   `long:"insecure-skip-tls-verify" env:"KUBELOGIN_INSECURE_SKIP_TLS_VERIFY" description:"If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure"`
 	SkipOpenBrowser bool   `long:"skip-open-browser" env:"KUBELOGIN_SKIP_OPEN_BROWSER" description:"If set, it does not open the browser on authentication."`
+	Verbose         int    `long:"v" short:"v" default:"0" description:"If set to 1 or greater, show debug log"`
 }
 
 // ExpandKubeConfig returns an expanded KubeConfig path.

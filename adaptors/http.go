@@ -8,14 +8,19 @@ import (
 	"net/http"
 
 	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/infrastructure"
 	"github.com/pkg/errors"
+	"go.uber.org/dig"
 )
 
-func NewHTTP() adaptors.HTTP {
-	return &HTTP{}
+func NewHTTP(i HTTP) adaptors.HTTP {
+	return &i
 }
 
-type HTTP struct{}
+type HTTP struct {
+	dig.In
+	Logger adaptors.Logger
+}
 
 func (*HTTP) NewClientConfig() adaptors.HTTPClientConfig {
 	return &httpClientConfig{
@@ -23,11 +28,14 @@ func (*HTTP) NewClientConfig() adaptors.HTTPClientConfig {
 	}
 }
 
-func (*HTTP) NewClient(config adaptors.HTTPClientConfig) (*http.Client, error) {
+func (h *HTTP) NewClient(config adaptors.HTTPClientConfig) (*http.Client, error) {
 	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: config.TLSConfig(),
-			Proxy:           http.ProxyFromEnvironment,
+		Transport: &infrastructure.LoggingTransport{
+			Base: &http.Transport{
+				TLSClientConfig: config.TLSConfig(),
+				Proxy:           http.ProxyFromEnvironment,
+			},
+			Logger: h.Logger,
 		},
 	}, nil
 }

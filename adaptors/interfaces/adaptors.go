@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-//go:generate mockgen -package mock_adaptors -destination ../mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors/interfaces KubeConfig,HTTP,HTTPClientConfig,OIDC
+//go:generate mockgen -package mock_adaptors -destination ../mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors/interfaces KubeConfig,HTTP,HTTPClientConfig,OIDC,Logger
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -66,5 +66,17 @@ type OIDCVerifyTokenIn struct {
 }
 
 type Logger interface {
-	Logf(format string, v ...interface{})
+	Printf(format string, v ...interface{})
+	Debugf(level LogLevel, format string, v ...interface{})
+	SetLevel(level LogLevel)
+	IsEnabled(level LogLevel) bool
 }
+
+// LogLevel represents a log level for debug.
+//
+// 0 = None
+// 1 = Including in/out
+// 2 = Including transport headers
+// 3 = Including transport body
+//
+type LogLevel int
