@@ -1,7 +1,7 @@
 # kubelogin [![CircleCI](https://circleci.com/gh/int128/kubelogin.svg?style=shield)](https://circleci.com/gh/int128/kubelogin)
 
 This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
-It gets a token from the OIDC provider and writes it to the kubeconfig.
+It updates the kubeconfig file with an ID token and refresh token got from the OIDC provider.
 
 
 ## Getting Started
@@ -24,7 +24,7 @@ brew install kubelogin
 kubectl krew install oidc-login
 
 # GitHub Releases
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.9.1/kubelogin_linux_amd64.zip
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.10.0/kubelogin_linux_amd64.zip
 unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
@@ -54,10 +54,15 @@ For more, see the following documents:
 - [Getting Started with Google Identity Platform](docs/google.md)
 - [Team Operation](docs/team_ops.md)
 
+If you are using other platforms, please contribute documents via pull requests.
+
 
 ## Configuration
 
-This supports the following options.
+This document is for the development version.
+If you are looking for a specific version, see [the release tags](https://github.com/int128/kubelogin/tags).
+
+Kubelogin supports the following options.
 
 ```
   kubelogin [OPTIONS]
@@ -74,8 +79,8 @@ Help Options:
   -h, --help        Show this help message
 ```
 
-This also supports the following keys of `auth-provider` in kubeconfig.
-See [kubectl authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl).
+It supports the following keys of `auth-provider` in a kubeconfig.
+See [kubectl authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-kubectl) for more.
 
 Key | Direction | Value
 ----|-----------|------
