@@ -65,18 +65,16 @@ If you are looking for a specific version, see [the release tags](https://github
 Kubelogin supports the following options.
 
 ```
-  kubelogin [OPTIONS]
+Options:
+      --kubeconfig string          Path to the kubeconfig file (default "~/.kube/config")
+      --listen-port int            Port used by kubelogin to bind its local server (default 8000)
+      --skip-open-browser          If true, it does not open the browser on authentication
+      --insecure-skip-tls-verify   If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+  -v, --v int                      If set to 1 or greater, it shows debug log
 
-Application Options:
-      --kubeconfig=               Path to the kubeconfig file (default: ~/.kube/config) [$KUBECONFIG]
-      --listen-port=              Port used by kubelogin to bind its webserver (default: 8000) [$KUBELOGIN_LISTEN_PORT]
-      --insecure-skip-tls-verify  If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-                                  [$KUBELOGIN_INSECURE_SKIP_TLS_VERIFY]
-      --skip-open-browser         If set, it does not open the browser on authentication. [$KUBELOGIN_SKIP_OPEN_BROWSER]
-  -v, --v=                        If set to 1 or greater, show debug log (default: 0)
-
-Help Options:
-  -h, --help        Show this help message
+  As well as you can set the following environment variables:
+      $KUBECONFIG
+      $KUBELOGIN_LISTEN_PORT
 ```
 
 It supports the following keys of `auth-provider` in a kubeconfig.
