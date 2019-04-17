@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc"
-	"k8s.io/client-go/tools/clientcmd/api"
+	"github.com/int128/kubelogin/kubeconfig"
 )
 
 //go:generate mockgen -package mock_adaptors -destination ../mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors/interfaces KubeConfig,HTTP,HTTPClientConfig,OIDC,Env,Logger
@@ -16,8 +16,8 @@ type Cmd interface {
 }
 
 type KubeConfig interface {
-	LoadFromFile(filename string) (*api.Config, error)
-	WriteToFile(config *api.Config, filename string) error
+	LoadFromFile(filename string) (*kubeconfig.KubeConfig, error)
+	WriteToFile(config *kubeconfig.KubeConfig, filename string) error
 }
 
 type HTTP interface {

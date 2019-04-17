@@ -5,7 +5,6 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/adaptors/interfaces"
-	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
@@ -33,18 +32,26 @@ type Login struct {
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	u.Logger.Debugf(1, "WARNING: Log may contain your secrets, e.g. token or password")
 
-	u.Logger.Debugf(1, "Loading %s", in.KubeConfig)
-	cfg, err := u.KubeConfig.LoadFromFile(in.KubeConfig)
+	u.Logger.Debugf(1, "Loading %s", in.KubeConfigFilename)
+	kubeConfig, err := u.KubeConfig.LoadFromFile(in.KubeConfigFilename)
 	if err != nil {
 		return errors.Wrapf(err, "could not read the kubeconfig")
 	}
 
-	u.Logger.Printf("Using current-context: %s", cfg.CurrentContext)
-	authProvider, err := kubeconfig.FindOIDCAuthProvider(cfg)
-	if err != nil {
-		u.Logger.Printf(oidcConfigErrorMessage, cfg.CurrentContext)
-		return errors.Wrapf(err, "could not find an oidc auth-provider in the kubeconfig")
+	kubeContextName := in.KubeContextName
+	if kubeContextName == "" {
+		kubeContextName = kubeConfig.CurrentContext
 	}
+	kubeContext, err := kubeConfig.FindContext(kubeContextName)
+	if err != nil {
+		return errors.Wrapf(err, "could not find the context %s", kubeContextName)
+	}
+	authProvider, err := kubeConfig.FindOIDCAuthProvider(kubeContext.AuthInfo)
+	if err != nil {
+		u.Logger.Printf(oidcConfigErrorMessage, kubeContextName)
+		return errors.Wrapf(err, "could not find the oidc auth-provider")
+	}
+	u.Logger.Printf("Using user %s of context %s", kubeContext.AuthInfo, kubeContextName)
 
 	clientConfig := u.HTTP.NewClientConfig()
 	clientConfig.SetSkipTLSVerify(in.SkipTLSVerify)
@@ -101,11 +108,11 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	authProvider.SetIDToken(out.IDToken)
 	authProvider.SetRefreshToken(out.RefreshToken)
 
-	u.Logger.Debugf(1, "Writing the ID token and refresh token to %s", in.KubeConfig)
-	if err := u.KubeConfig.WriteToFile(cfg, in.KubeConfig); err != nil {
+	u.Logger.Debugf(1, "Writing the ID token and refresh token to %s", in.KubeConfigFilename)
+	if err := u.KubeConfig.WriteToFile(kubeConfig, in.KubeConfigFilename); err != nil {
 		return errors.Wrapf(err, "could not update the kubeconfig")
 	}
-	u.Logger.Printf("Updated %s", in.KubeConfig)
+	u.Logger.Printf("Updated %s", in.KubeConfigFilename)
 	return nil
 }
 

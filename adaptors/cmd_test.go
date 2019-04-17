@@ -24,8 +24,8 @@ func TestCmd_Run(t *testing.T) {
 		login := mock_usecases.NewMockLogin(ctrl)
 		login.EXPECT().
 			Do(ctx, usecases.LoginIn{
-				KubeConfig: expand(t, "~/.kube/config"),
-				ListenPort: 8000,
+				KubeConfigFilename: expand(t, "~/.kube/config"),
+				ListenPort:         8000,
 			})
 
 		env := mock_adaptors.NewMockEnv(ctrl)
@@ -54,10 +54,11 @@ func TestCmd_Run(t *testing.T) {
 		login := mock_usecases.NewMockLogin(ctrl)
 		login.EXPECT().
 			Do(ctx, usecases.LoginIn{
-				KubeConfig:      "/path/to/kubeconfig",
-				ListenPort:      10080,
-				SkipTLSVerify:   true,
-				SkipOpenBrowser: true,
+				KubeConfigFilename: "/path/to/kubeconfig",
+				KubeContextName:    "hello.k8s.local",
+				ListenPort:         10080,
+				SkipTLSVerify:      true,
+				SkipOpenBrowser:    true,
 			})
 
 		env := mock_adaptors.NewMockEnv(ctrl)
@@ -74,6 +75,7 @@ func TestCmd_Run(t *testing.T) {
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
 			"--kubeconfig", "/path/to/kubeconfig",
+			"--context", "hello.k8s.local",
 			"--listen-port", "10080",
 			"--insecure-skip-tls-verify",
 			"--skip-open-browser",
@@ -92,8 +94,8 @@ func TestCmd_Run(t *testing.T) {
 		login := mock_usecases.NewMockLogin(ctrl)
 		login.EXPECT().
 			Do(ctx, usecases.LoginIn{
-				KubeConfig: "/path/to/kubeconfig",
-				ListenPort: 10080,
+				KubeConfigFilename: "/path/to/kubeconfig",
+				ListenPort:         10080,
 			})
 
 		env := mock_adaptors.NewMockEnv(ctrl)

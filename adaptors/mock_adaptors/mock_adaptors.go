@@ -10,7 +10,7 @@ import (
 	go_oidc "github.com/coreos/go-oidc"
 	gomock "github.com/golang/mock/gomock"
 	interfaces "github.com/int128/kubelogin/adaptors/interfaces"
-	api "k8s.io/client-go/tools/clientcmd/api"
+	kubeconfig "github.com/int128/kubelogin/kubeconfig"
 	http "net/http"
 	reflect "reflect"
 )
@@ -39,9 +39,9 @@ func (m *MockKubeConfig) EXPECT() *MockKubeConfigMockRecorder {
 }
 
 // LoadFromFile mocks base method
-func (m *MockKubeConfig) LoadFromFile(arg0 string) (*api.Config, error) {
+func (m *MockKubeConfig) LoadFromFile(arg0 string) (*kubeconfig.KubeConfig, error) {
 	ret := m.ctrl.Call(m, "LoadFromFile", arg0)
-	ret0, _ := ret[0].(*api.Config)
+	ret0, _ := ret[0].(*kubeconfig.KubeConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -52,7 +52,7 @@ func (mr *MockKubeConfigMockRecorder) LoadFromFile(arg0 interface{}) *gomock.Cal
 }
 
 // WriteToFile mocks base method
-func (m *MockKubeConfig) WriteToFile(arg0 *api.Config, arg1 string) error {
+func (m *MockKubeConfig) WriteToFile(arg0 *kubeconfig.KubeConfig, arg1 string) error {
 	ret := m.ctrl.Call(m, "WriteToFile", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0

@@ -3,32 +3,10 @@ package kubeconfig
 import (
 	"strings"
 
-	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-// FindOIDCAuthProvider returns the current OIDC authProvider.
-// If the context, auth-info or auth-provider does not exist, this returns an error.
-// If auth-provider is not "oidc", this returns an error.
-func FindOIDCAuthProvider(config *api.Config) (*OIDCAuthProvider, error) {
-	context := config.Contexts[config.CurrentContext]
-	if context == nil {
-		return nil, errors.Errorf("context %s does not exist", config.CurrentContext)
-	}
-	authInfo := config.AuthInfos[context.AuthInfo]
-	if authInfo == nil {
-		return nil, errors.Errorf("auth-info %s does not exist", context.AuthInfo)
-	}
-	if authInfo.AuthProvider == nil {
-		return nil, errors.Errorf("auth-provider is not set")
-	}
-	if authInfo.AuthProvider.Name != "oidc" {
-		return nil, errors.Errorf("auth-provider name is %s but must be oidc", authInfo.AuthProvider.Name)
-	}
-	return (*OIDCAuthProvider)(authInfo.AuthProvider), nil
-}
-
-// OIDCAuthProvider represents OIDC configuration in the kubeconfig.
+// OIDCAuthProvider represents an OIDC auth-provider.
 type OIDCAuthProvider api.AuthProviderConfig
 
 // IDPIssuerURL returns the idp-issuer-url.
