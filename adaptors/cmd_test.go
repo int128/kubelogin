@@ -54,12 +54,13 @@ func TestCmd_Run(t *testing.T) {
 		login := mock_usecases.NewMockLogin(ctrl)
 		login.EXPECT().
 			Do(ctx, usecases.LoginIn{
-				KubeConfigFilename: "/path/to/kubeconfig",
-				KubeContextName:    "hello.k8s.local",
-				KubeUserName:       "google",
-				ListenPort:         10080,
-				SkipTLSVerify:      true,
-				SkipOpenBrowser:    true,
+				KubeConfigFilename:           "/path/to/kubeconfig",
+				KubeContextName:              "hello.k8s.local",
+				KubeUserName:                 "google",
+				CertificateAuthorityFilename: "/path/to/cacert",
+				SkipTLSVerify:                true,
+				ListenPort:                   10080,
+				SkipOpenBrowser:              true,
 			})
 
 		env := mock_adaptors.NewMockEnv(ctrl)
@@ -79,8 +80,9 @@ func TestCmd_Run(t *testing.T) {
 			"--context", "hello.k8s.local",
 			"--user", "google",
 			"--listen-port", "10080",
-			"--insecure-skip-tls-verify",
 			"--skip-open-browser",
+			"--certificate-authority", "/path/to/cacert",
+			"--insecure-skip-tls-verify",
 			"-v1",
 		}, version)
 		if exitCode != 0 {

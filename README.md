@@ -66,13 +66,14 @@ Kubelogin supports the following options.
 
 ```
 Options:
-      --kubeconfig string          Path to the kubeconfig file (default "~/.kube/config")
-      --context string             The name of the kubeconfig context to use
-      --user string                The name of the kubeconfig user to use. Prior to --context
-      --listen-port int            Port used by kubelogin to bind its local server (default 8000)
-      --skip-open-browser          If true, it does not open the browser on authentication
-      --insecure-skip-tls-verify   If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-  -v, --v int                      If set to 1 or greater, it shows debug log
+      --kubeconfig string              Path to the kubeconfig file (default "~/.kube/config")
+      --context string                 The name of the kubeconfig context to use
+      --user string                    The name of the kubeconfig user to use. Prior to --context
+      --listen-port int                Port used by kubelogin to bind its local server (default 8000)
+      --skip-open-browser              If true, it does not open the browser on authentication
+      --certificate-authority string   Path to a cert file for the certificate authority
+      --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+  -v, --v int                          If set to 1 or greater, it shows debug log
 
   As well as you can set the following environment variables:
       $KUBECONFIG
