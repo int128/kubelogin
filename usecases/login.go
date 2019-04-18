@@ -101,7 +101,13 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	}
 
 	u.Logger.Printf("Got a token for subject %s (valid until %s)", out.VerifiedIDToken.Subject, out.VerifiedIDToken.Expiry)
-	u.Logger.Debugf(1, "Got an ID token %+v", out.VerifiedIDToken)
+	var claims map[string]interface{}
+	if err := out.VerifiedIDToken.Claims(&claims); err != nil {
+		u.Logger.Debugf(1, "Skip inspection of the ID token: %s", err)
+	}
+	for k, v := range claims {
+		u.Logger.Debugf(1, "ID token has the claim: %s=%v", k, v)
+	}
 	authProvider.SetIDToken(out.IDToken)
 	authProvider.SetRefreshToken(out.RefreshToken)
 
