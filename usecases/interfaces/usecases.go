@@ -9,8 +9,9 @@ type Login interface {
 }
 
 type LoginIn struct {
-	KubeConfig      string
-	SkipTLSVerify   bool
-	SkipOpenBrowser bool
-	ListenPort      int
+	KubeConfigFilename string
+	KubeContextName    string // default to the current context
+	SkipTLSVerify      bool
+	SkipOpenBrowser    bool
+	ListenPort         int
 }

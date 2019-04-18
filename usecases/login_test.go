@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/adaptors/mock_adaptors"
+	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -17,7 +18,7 @@ import (
 func TestLogin_Do(t *testing.T) {
 	httpClient := &http.Client{}
 
-	newMockKubeConfig := func(ctrl *gomock.Controller, in *api.Config, out *api.Config) adaptors.KubeConfig {
+	newMockKubeConfig := func(ctrl *gomock.Controller, in *kubeconfig.KubeConfig, out *kubeconfig.KubeConfig) adaptors.KubeConfig {
 		kubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		kubeConfig.EXPECT().
 			LoadFromFile("/path/to/kubeconfig").
@@ -38,13 +39,17 @@ func TestLogin_Do(t *testing.T) {
 		return mockHTTP
 	}
 
-	newInConfig := func() *api.Config {
-		return &api.Config{
+	newInConfig := func() *kubeconfig.KubeConfig {
+		return &kubeconfig.KubeConfig{
 			APIVersion:     "v1",
 			CurrentContext: "default",
 			Contexts: map[string]*api.Context{
 				"default": {
 					AuthInfo: "google",
+					Cluster:  "example.k8s.local",
+				},
+				"another": {
+					AuthInfo: "keycloak",
 					Cluster:  "example.k8s.local",
 				},
 			},
@@ -59,20 +64,30 @@ func TestLogin_Do(t *testing.T) {
 						},
 					},
 				},
+				"keycloak": {
+					AuthProvider: &api.AuthProviderConfig{
+						Name: "oidc",
+						Config: map[string]string{
+							"client-id":      "KEYCLOAK_CLIENT_ID",
+							"client-secret":  "KEYCLOAK_CLIENT_SECRET",
+							"idp-issuer-url": "https://keycloak.example.com",
+						},
+					},
+				},
 			},
 		}
 	}
 
-	newOutConfig := func(in *api.Config) *api.Config {
+	newOutConfig := func(in *kubeconfig.KubeConfig, user string) *kubeconfig.KubeConfig {
 		config := in.DeepCopy()
-		config.AuthInfos["google"].AuthProvider.Config["id-token"] = "YOUR_ID_TOKEN"
-		config.AuthInfos["google"].AuthProvider.Config["refresh-token"] = "YOUR_REFRESH_TOKEN"
+		config.AuthInfos[user].AuthProvider.Config["id-token"] = "YOUR_ID_TOKEN"
+		config.AuthInfos[user].AuthProvider.Config["refresh-token"] = "YOUR_REFRESH_TOKEN"
 		return config
 	}
 
 	t.Run("Defaults", func(t *testing.T) {
 		inConfig := newInConfig()
-		outConfig := newOutConfig(inConfig)
+		outConfig := newOutConfig(inConfig, "google")
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -108,8 +123,51 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig: "/path/to/kubeconfig",
-			ListenPort: 10000,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
+		}); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
+	t.Run("KubeContextName", func(t *testing.T) {
+		inConfig := newInConfig()
+		outConfig := newOutConfig(inConfig, "keycloak")
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+
+		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
+		httpClientConfig.EXPECT().
+			SetSkipTLSVerify(false)
+
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
+			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
+				Issuer:          "https://keycloak.example.com",
+				ClientID:        "KEYCLOAK_CLIENT_ID",
+				ClientSecret:    "KEYCLOAK_CLIENT_SECRET",
+				ExtraScopes:     []string{},
+				LocalServerPort: 10000,
+				Client:          httpClient,
+			}, gomock.Any()).
+			Return(&adaptors.OIDCAuthenticateOut{
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
+			}, nil)
+
+		u := Login{
+			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
+			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			OIDC:       mockOIDC,
+			Logger:     mock_adaptors.NewLogger(t, ctrl),
+		}
+		if err := u.Do(ctx, usecases.LoginIn{
+			KubeConfigFilename: "/path/to/kubeconfig",
+			KubeContextName:    "another",
+			ListenPort:         10000,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -117,7 +175,7 @@ func TestLogin_Do(t *testing.T) {
 
 	t.Run("SkipTLSVerify", func(t *testing.T) {
 		inConfig := newInConfig()
-		outConfig := newOutConfig(inConfig)
+		outConfig := newOutConfig(inConfig, "google")
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -150,9 +208,9 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig:    "/path/to/kubeconfig",
-			ListenPort:    10000,
-			SkipTLSVerify: true,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
+			SkipTLSVerify:      true,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -160,7 +218,7 @@ func TestLogin_Do(t *testing.T) {
 
 	t.Run("SkipOpenBrowser", func(t *testing.T) {
 		inConfig := newInConfig()
-		outConfig := newOutConfig(inConfig)
+		outConfig := newOutConfig(inConfig, "google")
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -194,9 +252,9 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig:      "/path/to/kubeconfig",
-			ListenPort:      10000,
-			SkipOpenBrowser: true,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
+			SkipOpenBrowser:    true,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -236,8 +294,8 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig: "/path/to/kubeconfig",
-			ListenPort: 10000,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -246,7 +304,7 @@ func TestLogin_Do(t *testing.T) {
 	t.Run("KubeConfig/InvalidToken", func(t *testing.T) {
 		inConfig := newInConfig()
 		inConfig.AuthInfos["google"].AuthProvider.Config["id-token"] = "EXPIRED"
-		outConfig := newOutConfig(inConfig)
+		outConfig := newOutConfig(inConfig, "google")
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -287,8 +345,8 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig: "/path/to/kubeconfig",
-			ListenPort: 10000,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -297,7 +355,7 @@ func TestLogin_Do(t *testing.T) {
 	t.Run("KubeConfig/extra-scopes", func(t *testing.T) {
 		inConfig := newInConfig()
 		inConfig.AuthInfos["google"].AuthProvider.Config["extra-scopes"] = "email,profile"
-		outConfig := newOutConfig(inConfig)
+		outConfig := newOutConfig(inConfig, "google")
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -330,8 +388,8 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig: "/path/to/kubeconfig",
-			ListenPort: 10000,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -340,7 +398,7 @@ func TestLogin_Do(t *testing.T) {
 	t.Run("KubeConfig/idp-certificate-authority", func(t *testing.T) {
 		inConfig := newInConfig()
 		inConfig.AuthInfos["google"].AuthProvider.Config["idp-certificate-authority"] = "/path/to/cert"
-		outConfig := newOutConfig(inConfig)
+		outConfig := newOutConfig(inConfig, "google")
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -375,8 +433,8 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig: "/path/to/kubeconfig",
-			ListenPort: 10000,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -385,7 +443,7 @@ func TestLogin_Do(t *testing.T) {
 	t.Run("KubeConfig/idp-certificate-authority/error", func(t *testing.T) {
 		inConfig := newInConfig()
 		inConfig.AuthInfos["google"].AuthProvider.Config["idp-certificate-authority"] = "/path/to/cert"
-		outConfig := newOutConfig(inConfig)
+		outConfig := newOutConfig(inConfig, "google")
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -421,8 +479,8 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig: "/path/to/kubeconfig",
-			ListenPort: 10000,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -431,7 +489,7 @@ func TestLogin_Do(t *testing.T) {
 	t.Run("KubeConfig/idp-certificate-authority-data", func(t *testing.T) {
 		inConfig := newInConfig()
 		inConfig.AuthInfos["google"].AuthProvider.Config["idp-certificate-authority-data"] = "base64encoded"
-		outConfig := newOutConfig(inConfig)
+		outConfig := newOutConfig(inConfig, "google")
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -466,8 +524,8 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig: "/path/to/kubeconfig",
-			ListenPort: 10000,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -476,7 +534,7 @@ func TestLogin_Do(t *testing.T) {
 	t.Run("KubeConfig/idp-certificate-authority-data/error", func(t *testing.T) {
 		inConfig := newInConfig()
 		inConfig.AuthInfos["google"].AuthProvider.Config["idp-certificate-authority-data"] = "base64encoded"
-		outConfig := newOutConfig(inConfig)
+		outConfig := newOutConfig(inConfig, "google")
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -512,8 +570,8 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfig: "/path/to/kubeconfig",
-			ListenPort: 10000,
+			KubeConfigFilename: "/path/to/kubeconfig",
+			ListenPort:         10000,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}

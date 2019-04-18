@@ -53,6 +53,7 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 	}
 	var o cmdOptions
 	f.StringVar(&o.KubeConfig, "kubeconfig", cmd.defaultKubeConfig(), "Path to the kubeconfig file")
+	f.StringVar(&o.KubeContext, "context", "", "The name of the kubeconfig context to use")
 	f.IntVar(&o.ListenPort, "listen-port", cmd.defaultListenPort(), "Port used by kubelogin to bind its local server")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
@@ -72,10 +73,11 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 
 	cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 	in := usecases.LoginIn{
-		KubeConfig:      o.KubeConfig,
-		ListenPort:      o.ListenPort,
-		SkipTLSVerify:   o.SkipTLSVerify,
-		SkipOpenBrowser: o.SkipOpenBrowser,
+		KubeConfigFilename: o.KubeConfig,
+		KubeContextName:    o.KubeContext,
+		ListenPort:         o.ListenPort,
+		SkipTLSVerify:      o.SkipTLSVerify,
+		SkipOpenBrowser:    o.SkipOpenBrowser,
 	}
 	if err := cmd.Login.Do(ctx, in); err != nil {
 		cmd.Logger.Printf("Error: %s", err)
@@ -110,6 +112,7 @@ func (cmd *Cmd) defaultListenPort() int {
 
 type cmdOptions struct {
 	KubeConfig      string
+	KubeContext     string
 	SkipTLSVerify   bool
 	ListenPort      int
 	SkipOpenBrowser bool
