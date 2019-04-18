@@ -10,7 +10,8 @@ type Login interface {
 
 type LoginIn struct {
 	KubeConfigFilename string
-	KubeContextName    string // default to the current context
+	KubeContextName    string // Default to the current context but ignored if KubeUserName is set
+	KubeUserName       string // Default to the user of the context
 	SkipTLSVerify      bool
 	SkipOpenBrowser    bool
 	ListenPort         int

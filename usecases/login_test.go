@@ -173,6 +173,49 @@ func TestLogin_Do(t *testing.T) {
 		}
 	})
 
+	t.Run("KubeUserName", func(t *testing.T) {
+		inConfig := newInConfig()
+		outConfig := newOutConfig(inConfig, "keycloak")
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+
+		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
+		httpClientConfig.EXPECT().
+			SetSkipTLSVerify(false)
+
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
+			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
+				Issuer:          "https://keycloak.example.com",
+				ClientID:        "KEYCLOAK_CLIENT_ID",
+				ClientSecret:    "KEYCLOAK_CLIENT_SECRET",
+				ExtraScopes:     []string{},
+				LocalServerPort: 10000,
+				Client:          httpClient,
+			}, gomock.Any()).
+			Return(&adaptors.OIDCAuthenticateOut{
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
+			}, nil)
+
+		u := Login{
+			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
+			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			OIDC:       mockOIDC,
+			Logger:     mock_adaptors.NewLogger(t, ctrl),
+		}
+		if err := u.Do(ctx, usecases.LoginIn{
+			KubeConfigFilename: "/path/to/kubeconfig",
+			KubeUserName:       "keycloak",
+			ListenPort:         10000,
+		}); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
 	t.Run("SkipTLSVerify", func(t *testing.T) {
 		inConfig := newInConfig()
 		outConfig := newOutConfig(inConfig, "google")
