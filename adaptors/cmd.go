@@ -57,6 +57,7 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 	f.StringVar(&o.KubeUser, "user", "", "The name of the kubeconfig user to use. Prior to --context")
 	f.IntVar(&o.ListenPort, "listen-port", cmd.defaultListenPort(), "Port used by kubelogin to bind its local server")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
+	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	f.IntVarP(&o.Verbose, "v", "v", 0, "If set to 1 or greater, it shows debug log")
 
@@ -74,12 +75,13 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 
 	cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 	in := usecases.LoginIn{
-		KubeConfigFilename: o.KubeConfig,
-		KubeContextName:    o.KubeContext,
-		KubeUserName:       o.KubeUser,
-		ListenPort:         o.ListenPort,
-		SkipTLSVerify:      o.SkipTLSVerify,
-		SkipOpenBrowser:    o.SkipOpenBrowser,
+		KubeConfigFilename:           o.KubeConfig,
+		KubeContextName:              o.KubeContext,
+		KubeUserName:                 o.KubeUser,
+		CertificateAuthorityFilename: o.CertificateAuthority,
+		SkipTLSVerify:                o.SkipTLSVerify,
+		ListenPort:                   o.ListenPort,
+		SkipOpenBrowser:              o.SkipOpenBrowser,
 	}
 	if err := cmd.Login.Do(ctx, in); err != nil {
 		cmd.Logger.Printf("Error: %s", err)
@@ -113,13 +115,14 @@ func (cmd *Cmd) defaultListenPort() int {
 }
 
 type cmdOptions struct {
-	KubeConfig      string
-	KubeContext     string
-	KubeUser        string
-	SkipTLSVerify   bool
-	ListenPort      int
-	SkipOpenBrowser bool
-	Verbose         int
+	KubeConfig           string
+	KubeContext          string
+	KubeUser             string
+	CertificateAuthority string
+	SkipTLSVerify        bool
+	ListenPort           int
+	SkipOpenBrowser      bool
+	Verbose              int
 }
 
 func executableName(arg0 string) string {

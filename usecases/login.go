@@ -60,6 +60,12 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 			u.Logger.Printf("Skip the certificate of idp-certificate-authority-data: %s", err)
 		}
 	}
+	if in.CertificateAuthorityFilename != "" {
+		u.Logger.Printf("Using the certificate %s", in.CertificateAuthorityFilename)
+		if err := clientConfig.AddCertificateFromFile(in.CertificateAuthorityFilename); err != nil {
+			u.Logger.Printf("Skip the certificate %s: %s", in.CertificateAuthorityFilename, err)
+		}
+	}
 	hc, err := u.HTTP.NewClient(clientConfig)
 	if err != nil {
 		return errors.Wrapf(err, "could not create a HTTP client")

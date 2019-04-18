@@ -438,6 +438,97 @@ func TestLogin_Do(t *testing.T) {
 		}
 	})
 
+	t.Run("CertificateAuthorityFilename", func(t *testing.T) {
+		inConfig := newInConfig()
+		outConfig := newOutConfig(inConfig, "google")
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+
+		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
+		httpClientConfig.EXPECT().
+			SetSkipTLSVerify(false)
+		httpClientConfig.EXPECT().
+			AddCertificateFromFile("/path/to/cacert")
+
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
+			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
+				Issuer:          "https://accounts.google.com",
+				ClientID:        "YOUR_CLIENT_ID",
+				ClientSecret:    "YOUR_CLIENT_SECRET",
+				ExtraScopes:     []string{},
+				LocalServerPort: 10000,
+				Client:          httpClient,
+			}, gomock.Any()).
+			Return(&adaptors.OIDCAuthenticateOut{
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
+			}, nil)
+
+		u := Login{
+			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
+			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			OIDC:       mockOIDC,
+			Logger:     mock_adaptors.NewLogger(t, ctrl),
+		}
+		if err := u.Do(ctx, usecases.LoginIn{
+			KubeConfigFilename:           "/path/to/kubeconfig",
+			ListenPort:                   10000,
+			CertificateAuthorityFilename: "/path/to/cacert",
+		}); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
+	t.Run("CertificateAuthorityFilename/error", func(t *testing.T) {
+		inConfig := newInConfig()
+		outConfig := newOutConfig(inConfig, "google")
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+
+		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
+		httpClientConfig.EXPECT().
+			SetSkipTLSVerify(false)
+		httpClientConfig.EXPECT().
+			AddCertificateFromFile("/path/to/cacert").
+			Return(errors.New("not found"))
+
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
+			Authenticate(ctx, adaptors.OIDCAuthenticateIn{
+				Issuer:          "https://accounts.google.com",
+				ClientID:        "YOUR_CLIENT_ID",
+				ClientSecret:    "YOUR_CLIENT_SECRET",
+				ExtraScopes:     []string{},
+				LocalServerPort: 10000,
+				Client:          httpClient,
+			}, gomock.Any()).
+			Return(&adaptors.OIDCAuthenticateOut{
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
+			}, nil)
+
+		u := Login{
+			KubeConfig: newMockKubeConfig(ctrl, inConfig, outConfig),
+			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			OIDC:       mockOIDC,
+			Logger:     mock_adaptors.NewLogger(t, ctrl),
+		}
+		if err := u.Do(ctx, usecases.LoginIn{
+			KubeConfigFilename:           "/path/to/kubeconfig",
+			ListenPort:                   10000,
+			CertificateAuthorityFilename: "/path/to/cacert",
+		}); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
 	t.Run("KubeConfig/idp-certificate-authority", func(t *testing.T) {
 		inConfig := newInConfig()
 		inConfig.AuthInfos["google"].AuthProvider.Config["idp-certificate-authority"] = "/path/to/cert"
