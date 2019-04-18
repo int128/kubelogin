@@ -28,10 +28,10 @@ func (c *KubeConfig) DeepCopy() *KubeConfig {
 //
 // If the auth-info or auth-provider does not exist, this returns an error.
 // If auth-provider is not "oidc", this returns an error.
-func (c *KubeConfig) FindOIDCAuthProvider(authInfoName string) (*OIDCAuthProvider, error) {
-	authInfoNode := c.AuthInfos[authInfoName]
+func (c *KubeConfig) FindOIDCAuthProvider(userName string) (*OIDCAuthProvider, error) {
+	authInfoNode := c.AuthInfos[userName]
 	if authInfoNode == nil {
-		return nil, errors.Errorf("user %s does not exist", authInfoName)
+		return nil, errors.Errorf("user %s does not exist", userName)
 	}
 	if authInfoNode.AuthProvider == nil {
 		return nil, errors.Errorf("auth-provider is not set")

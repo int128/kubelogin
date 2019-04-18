@@ -5,6 +5,7 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/pkg/errors"
 	"go.uber.org/dig"
@@ -38,20 +39,10 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return errors.Wrapf(err, "could not read the kubeconfig")
 	}
 
-	kubeContextName := in.KubeContextName
-	if kubeContextName == "" {
-		kubeContextName = kubeConfig.CurrentContext
-	}
-	kubeContext, err := kubeConfig.FindContext(kubeContextName)
+	authProvider, err := u.findAuthProvider(kubeConfig, in.KubeContextName, in.KubeUserName)
 	if err != nil {
-		return errors.Wrapf(err, "could not find the context %s", kubeContextName)
+		return errors.Wrapf(err, "could not find an auth-provider")
 	}
-	authProvider, err := kubeConfig.FindOIDCAuthProvider(kubeContext.AuthInfo)
-	if err != nil {
-		u.Logger.Printf(oidcConfigErrorMessage, kubeContextName)
-		return errors.Wrapf(err, "could not find the oidc auth-provider")
-	}
-	u.Logger.Printf("Using user %s of context %s", kubeContext.AuthInfo, kubeContextName)
 
 	clientConfig := u.HTTP.NewClientConfig()
 	clientConfig.SetSkipTLSVerify(in.SkipTLSVerify)
@@ -114,6 +105,28 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	}
 	u.Logger.Printf("Updated %s", in.KubeConfigFilename)
 	return nil
+}
+
+func (u *Login) findAuthProvider(kubeConfig *kubeconfig.KubeConfig, kubeContextName, kubeUserName string) (*kubeconfig.OIDCAuthProvider, error) {
+	//TODO: should be moved to domain models
+	if kubeUserName == "" {
+		if kubeContextName == "" {
+			kubeContextName = kubeConfig.CurrentContext
+		}
+		kubeContext, err := kubeConfig.FindContext(kubeContextName)
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not find the context %s", kubeContextName)
+		}
+		kubeUserName = kubeContext.AuthInfo
+		u.Logger.Printf("Using context %s", kubeContextName)
+	}
+	authProvider, err := kubeConfig.FindOIDCAuthProvider(kubeUserName)
+	if err != nil {
+		u.Logger.Printf(oidcConfigErrorMessage, kubeContextName)
+		return nil, errors.Wrapf(err, "could not find an oidc auth-provider")
+	}
+	u.Logger.Printf("Using credentials of user %s", kubeUserName)
+	return authProvider, nil
 }
 
 func (u *Login) verifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn) *oidc.IDToken {

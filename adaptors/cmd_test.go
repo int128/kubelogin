@@ -56,6 +56,7 @@ func TestCmd_Run(t *testing.T) {
 			Do(ctx, usecases.LoginIn{
 				KubeConfigFilename: "/path/to/kubeconfig",
 				KubeContextName:    "hello.k8s.local",
+				KubeUserName:       "google",
 				ListenPort:         10080,
 				SkipTLSVerify:      true,
 				SkipOpenBrowser:    true,
@@ -76,6 +77,7 @@ func TestCmd_Run(t *testing.T) {
 		exitCode := cmd.Run(ctx, []string{executable,
 			"--kubeconfig", "/path/to/kubeconfig",
 			"--context", "hello.k8s.local",
+			"--user", "google",
 			"--listen-port", "10080",
 			"--insecure-skip-tls-verify",
 			"--skip-open-browser",
