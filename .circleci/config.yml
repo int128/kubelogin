@@ -11,11 +11,13 @@ jobs:
           curl -L -o ~/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.14.0/bin/linux/amd64/kubectl
           chmod +x ~/bin/kubectl
       - run: |
+          curl -L -o ~/bin/ghcp https://github.com/int128/ghcp/releases/download/v1.3.0/ghcp_linux_amd64
+          chmod +x ~/bin/ghcp
+      - run: |
           go get -v \
             golang.org/x/lint/golint \
             github.com/int128/goxzst \
-            github.com/tcnksm/ghr \
-            github.com/int128/ghcp
+            github.com/tcnksm/ghr
       - checkout
       # workaround for https://github.com/golang/go/issues/27925
       - run: sed -e '/^k8s.io\/client-go /d' -i go.sum
