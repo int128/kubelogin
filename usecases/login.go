@@ -73,7 +73,8 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		ClientID: authProvider.ClientID(),
 		Client:   hc,
 	}); token != nil {
-		u.Logger.Printf("You already have a valid token (until %s)", token.Expiry)
+		u.Logger.Printf("You already have a valid token until %s", token.Expiry)
+		u.dumpIDToken(token)
 		return nil
 	}
 
@@ -96,8 +97,8 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return errors.Wrapf(err, "could not get token from OIDC provider")
 	}
 
-	u.Logger.Printf("Got a token for subject %s (valid until %s)", out.VerifiedIDToken.Subject, out.VerifiedIDToken.Expiry)
-	u.Logger.Debugf(1, "Got an ID token %+v", out.VerifiedIDToken)
+	u.Logger.Printf("You got a valid token until %s", out.VerifiedIDToken.Expiry)
+	u.dumpIDToken(out.VerifiedIDToken)
 	authProvider.SetIDToken(out.IDToken)
 	authProvider.SetRefreshToken(out.RefreshToken)
 
@@ -109,6 +110,16 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	return nil
 }
 
+func (u *Login) dumpIDToken(token *oidc.IDToken) {
+	var claims map[string]interface{}
+	if err := token.Claims(&claims); err != nil {
+		u.Logger.Debugf(1, "Error while inspection of the ID token: %s", err)
+	}
+	for k, v := range claims {
+		u.Logger.Debugf(1, "The ID token has the claim: %s=%v", k, v)
+	}
+}
+
 func (u *Login) verifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn) *oidc.IDToken {
 	if in.IDToken == "" {
 		return nil
@@ -118,6 +129,5 @@ func (u *Login) verifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn
 		u.Logger.Debugf(1, "Could not verify the ID token in the kubeconfig: %s", err)
 		return nil
 	}
-	u.Logger.Debugf(1, "Verified token %+v", token)
 	return token
 }

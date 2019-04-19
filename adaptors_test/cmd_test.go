@@ -171,11 +171,19 @@ func TestCmd_Run(t *testing.T) {
 
 func newIDToken(t *testing.T, issuer string) string {
 	t.Helper()
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.StandardClaims{
+	var claims struct {
+		jwt.StandardClaims
+		Groups []string `json:"groups"`
+	}
+	claims.StandardClaims = jwt.StandardClaims{
 		Issuer:    issuer,
 		Audience:  "kubernetes",
 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
-	})
+		Subject:   "SUBJECT",
+		IssuedAt:  time.Now().Unix(),
+	}
+	claims.Groups = []string{"admin", "users"}
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	s, err := token.SignedString(keys.JWSKeyPair)
 	if err != nil {
 		t.Fatalf("Could not sign the claims: %s", err)
