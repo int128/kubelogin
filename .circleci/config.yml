@@ -15,7 +15,6 @@ jobs:
           chmod +x ~/bin/ghcp
       - run: |
           go get -v \
-            golang.org/x/lint/golint \
             github.com/int128/goxzst \
             github.com/tcnksm/ghr
       - checkout
