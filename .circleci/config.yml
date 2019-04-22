@@ -13,10 +13,8 @@ jobs:
       - run: |
           curl -L -o ~/bin/ghcp https://github.com/int128/ghcp/releases/download/v1.3.0/ghcp_linux_amd64
           chmod +x ~/bin/ghcp
-      - run: |
-          go get -v \
-            github.com/int128/goxzst \
-            github.com/tcnksm/ghr
+      - run: go get github.com/int128/goxzst
+      - run: go get github.com/tcnksm/ghr
       - checkout
       # workaround for https://github.com/golang/go/issues/27925
       - run: sed -e '/^k8s.io\/client-go /d' -i go.sum

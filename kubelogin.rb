@@ -3,7 +3,7 @@ class Kubelogin < Formula
   homepage "https://github.com/int128/kubelogin"
   url "https://github.com/int128/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_darwin_amd64.zip"
   version "{{ env "VERSION" }}"
-  sha256 "{{ .darwin_amd64_zip_sha256 }}"
+  sha256 "{{ sha256 .darwin_amd64_archive }}"
   def install
     bin.install "kubelogin" => "kubelogin"
     ln_s bin/"kubelogin", bin/"kubectl-oidc_login"
