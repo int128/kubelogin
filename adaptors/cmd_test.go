@@ -9,7 +9,6 @@ import (
 	"github.com/int128/kubelogin/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/int128/kubelogin/usecases/mock_usecases"
-	"github.com/mitchellh/go-homedir"
 )
 
 func TestCmd_Run(t *testing.T) {
@@ -24,8 +23,7 @@ func TestCmd_Run(t *testing.T) {
 		login := mock_usecases.NewMockLogin(ctrl)
 		login.EXPECT().
 			Do(ctx, usecases.LoginIn{
-				KubeConfigFilename: expand(t, "~/.kube/config"),
-				ListenPort:         8000,
+				ListenPort: 8000,
 			})
 
 		env := mock_adaptors.NewMockEnv(ctrl)
@@ -98,8 +96,7 @@ func TestCmd_Run(t *testing.T) {
 		login := mock_usecases.NewMockLogin(ctrl)
 		login.EXPECT().
 			Do(ctx, usecases.LoginIn{
-				KubeConfigFilename: "/path/to/kubeconfig",
-				ListenPort:         10080,
+				ListenPort: 10080,
 			})
 
 		env := mock_adaptors.NewMockEnv(ctrl)
@@ -107,8 +104,6 @@ func TestCmd_Run(t *testing.T) {
 			Getenv(gomock.Any()).
 			DoAndReturn(func(key string) string {
 				switch key {
-				case envKubeConfig:
-					return "/path/to/kubeconfig"
 				case envListenPort:
 					return "10080"
 				}
@@ -146,14 +141,6 @@ func TestCmd_Run(t *testing.T) {
 			t.Errorf("exitCode wants 1 but %d", exitCode)
 		}
 	})
-}
-
-func expand(t *testing.T, path string) string {
-	d, err := homedir.Expand(path)
-	if err != nil {
-		t.Fatalf("could not expand: %s", err)
-	}
-	return d
 }
 
 func TestCmd_executableName(t *testing.T) {

@@ -20,16 +20,16 @@ func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn, c
 	if in.Client != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
 	}
-	provider, err := oidc.NewProvider(ctx, in.Issuer)
+	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL())
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
 	}
 	flow := oauth2cli.AuthCodeFlow{
 		Config: oauth2.Config{
 			Endpoint:     provider.Endpoint(),
-			ClientID:     in.ClientID,
-			ClientSecret: in.ClientSecret,
-			Scopes:       append(in.ExtraScopes, oidc.ScopeOpenID),
+			ClientID:     in.Config.ClientID(),
+			ClientSecret: in.Config.ClientSecret(),
+			Scopes:       append(in.Config.ExtraScopes(), oidc.ScopeOpenID),
 		},
 		LocalServerPort:    in.LocalServerPort,
 		SkipOpenBrowser:    in.SkipOpenBrowser,
@@ -44,7 +44,7 @@ func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn, c
 	if !ok {
 		return nil, errors.Errorf("id_token is missing in the token response: %s", token)
 	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: in.ClientID})
+	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID()})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not verify the id_token")
@@ -60,12 +60,12 @@ func (*OIDC) VerifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn) (
 	if in.Client != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
 	}
-	provider, err := oidc.NewProvider(ctx, in.Issuer)
+	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL())
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
 	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: in.ClientID})
-	verifiedIDToken, err := verifier.Verify(ctx, in.IDToken)
+	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID()})
+	verifiedIDToken, err := verifier.Verify(ctx, in.Config.IDToken())
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not verify the id_token")
 	}

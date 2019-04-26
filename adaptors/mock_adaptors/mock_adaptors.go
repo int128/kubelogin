@@ -38,10 +38,23 @@ func (m *MockKubeConfig) EXPECT() *MockKubeConfigMockRecorder {
 	return m.recorder
 }
 
+// LoadByDefaultRules mocks base method
+func (m *MockKubeConfig) LoadByDefaultRules(arg0 string) (*kubeconfig.Config, error) {
+	ret := m.ctrl.Call(m, "LoadByDefaultRules", arg0)
+	ret0, _ := ret[0].(*kubeconfig.Config)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadByDefaultRules indicates an expected call of LoadByDefaultRules
+func (mr *MockKubeConfigMockRecorder) LoadByDefaultRules(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadByDefaultRules", reflect.TypeOf((*MockKubeConfig)(nil).LoadByDefaultRules), arg0)
+}
+
 // LoadFromFile mocks base method
-func (m *MockKubeConfig) LoadFromFile(arg0 string) (*kubeconfig.KubeConfig, error) {
+func (m *MockKubeConfig) LoadFromFile(arg0 string) (*kubeconfig.Config, error) {
 	ret := m.ctrl.Call(m, "LoadFromFile", arg0)
-	ret0, _ := ret[0].(*kubeconfig.KubeConfig)
+	ret0, _ := ret[0].(*kubeconfig.Config)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -52,7 +65,7 @@ func (mr *MockKubeConfigMockRecorder) LoadFromFile(arg0 interface{}) *gomock.Cal
 }
 
 // WriteToFile mocks base method
-func (m *MockKubeConfig) WriteToFile(arg0 *kubeconfig.KubeConfig, arg1 string) error {
+func (m *MockKubeConfig) WriteToFile(arg0 *kubeconfig.Config, arg1 string) error {
 	ret := m.ctrl.Call(m, "WriteToFile", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0

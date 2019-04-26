@@ -16,8 +16,9 @@ type Cmd interface {
 }
 
 type KubeConfig interface {
-	LoadFromFile(filename string) (*kubeconfig.KubeConfig, error)
-	WriteToFile(config *kubeconfig.KubeConfig, filename string) error
+	LoadByDefaultRules(filename string) (*kubeconfig.Config, error)
+	LoadFromFile(filename string) (*kubeconfig.Config, error)
+	WriteToFile(config *kubeconfig.Config, filename string) error
 }
 
 type HTTP interface {
@@ -39,10 +40,7 @@ type OIDC interface {
 }
 
 type OIDCAuthenticateIn struct {
-	Issuer          string
-	ClientID        string
-	ClientSecret    string
-	ExtraScopes     []string     // Additional scopes
+	Config          kubeconfig.OIDCConfig
 	Client          *http.Client // HTTP client for oidc and oauth2
 	LocalServerPort int          // HTTP server port
 	SkipOpenBrowser bool         // skip opening browser if true
@@ -59,10 +57,8 @@ type OIDCAuthenticateOut struct {
 }
 
 type OIDCVerifyTokenIn struct {
-	IDToken  string
-	Issuer   string
-	ClientID string
-	Client   *http.Client
+	Config kubeconfig.OIDCConfig
+	Client *http.Client
 }
 
 type Env interface {

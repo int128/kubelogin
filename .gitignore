@@ -2,4 +2,4 @@
 /dist
 /kubelogin
 /kubectl-oidc_login
-/.kubeconfig
+/.kubeconfig*
