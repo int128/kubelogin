@@ -1,0 +1,4 @@
+apiVersion: v1
+current-context: dummy
+kind: Config
+preferences: {}

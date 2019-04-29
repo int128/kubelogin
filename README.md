@@ -95,14 +95,20 @@ Key | Direction | Value
 `refresh-token`                   | Write | Refresh token got from the provider.
 
 
-### Kubeconfig path
+### Kubeconfig
 
-You can set the environment variable `KUBECONFIG` to point the config file.
-Default to `~/.kube/config`.
+You can set path to the kubeconfig file by the option or the environment variable just like kubectl.
+It defaults to `~/.kube/config`.
 
 ```sh
-export KUBECONFIG="$PWD/.kubeconfig"
+# by the option
+kubelogin --kubeconfig /path/to/kubeconfig
+
+# by the environment variable
+KUBECONFIG="/path/to/kubeconfig1:/path/to/kubeconfig2" kubelogin
 ```
+
+If you set multiple files, kubelogin will find the file which has the current authentication (i.e. `user` and `auth-provider`) and write a token to it.
 
 
 ### Extra scopes

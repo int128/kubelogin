@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases/interfaces"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/pflag"
 	"go.uber.org/dig"
 )
@@ -29,7 +29,6 @@ Usage:
   %[1]s [options]`
 
 const (
-	envKubeConfig = "KUBECONFIG"
 	envListenPort = "KUBELOGIN_LISTEN_PORT"
 )
 
@@ -52,7 +51,7 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		cmd.Logger.Printf(usage, executable, version, f.FlagUsages())
 	}
 	var o cmdOptions
-	f.StringVar(&o.KubeConfig, "kubeconfig", cmd.defaultKubeConfig(), "Path to the kubeconfig file")
+	f.StringVar(&o.KubeConfig, "kubeconfig", "", "Path to the kubeconfig file")
 	f.StringVar(&o.KubeContext, "context", "", "The name of the kubeconfig context to use")
 	f.StringVar(&o.KubeUser, "user", "", "The name of the kubeconfig user to use. Prior to --context")
 	f.IntVar(&o.ListenPort, "listen-port", cmd.defaultListenPort(), "Port used by kubelogin to bind its local server")
@@ -76,8 +75,8 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 	cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 	in := usecases.LoginIn{
 		KubeConfigFilename:           o.KubeConfig,
-		KubeContextName:              o.KubeContext,
-		KubeUserName:                 o.KubeUser,
+		KubeContextName:              kubeconfig.ContextName(o.KubeContext),
+		KubeUserName:                 kubeconfig.UserName(o.KubeUser),
 		CertificateAuthorityFilename: o.CertificateAuthority,
 		SkipTLSVerify:                o.SkipTLSVerify,
 		ListenPort:                   o.ListenPort,
@@ -88,18 +87,6 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		return 1
 	}
 	return 0
-}
-
-func (cmd *Cmd) defaultKubeConfig() string {
-	if v := cmd.Env.Getenv(envKubeConfig); v != "" {
-		return v
-	}
-	c, err := homedir.Expand("~/.kube/config")
-	if err != nil {
-		cmd.Logger.Debugf(1, "Error: could not determine the home directory: %s", err)
-		return ""
-	}
-	return c
 }
 
 func (cmd *Cmd) defaultListenPort() int {

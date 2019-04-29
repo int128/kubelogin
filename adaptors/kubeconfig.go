@@ -14,15 +14,28 @@ func NewKubeConfig() adaptors.KubeConfig {
 
 type KubeConfig struct{}
 
-func (*KubeConfig) LoadFromFile(filename string) (*kubeconfig.KubeConfig, error) {
+// LoadByDefaultRules loads the config by the default rules, that is same as kubectl.
+func (*KubeConfig) LoadByDefaultRules(filename string) (*kubeconfig.Config, error) {
+	rules := clientcmd.NewDefaultClientConfigLoadingRules()
+	rules.ExplicitPath = filename
+	config, err := rules.Load()
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not read the kubeconfig")
+	}
+	return (*kubeconfig.Config)(config), err
+}
+
+// LoadFromFile loads the config from the single file.
+func (*KubeConfig) LoadFromFile(filename string) (*kubeconfig.Config, error) {
 	config, err := clientcmd.LoadFromFile(filename)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read the kubeconfig from %s", filename)
 	}
-	return (*kubeconfig.KubeConfig)(config), err
+	return (*kubeconfig.Config)(config), err
 }
 
-func (*KubeConfig) WriteToFile(config *kubeconfig.KubeConfig, filename string) error {
+// WriteToFile writes the config to the single file.
+func (*KubeConfig) WriteToFile(config *kubeconfig.Config, filename string) error {
 	err := clientcmd.WriteToFile(*(*api.Config)(config), filename)
 	if err != nil {
 		return errors.Wrapf(err, "could not write the kubeconfig to %s", filename)

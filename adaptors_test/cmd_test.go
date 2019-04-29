@@ -55,6 +55,36 @@ func TestCmd_Run(t *testing.T) {
 		})
 	})
 
+	t.Run("env:KUBECONFIG", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		idToken := newIDToken(t, "http://localhost:9000")
+		serverConfig := authserver.Config{
+			Issuer:         "http://localhost:9000",
+			IDToken:        idToken,
+			IDTokenKeyPair: keys.JWSKeyPair,
+			RefreshToken:   "REFRESH_TOKEN",
+		}
+		server := authserver.Start(t, serverConfig)
+		defer server.Shutdown(ctx)
+
+		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+			Issuer: "http://localhost:9000",
+		})
+		defer os.Remove(kubeConfigFilename)
+
+		setenv(t, "KUBECONFIG", kubeConfigFilename+string(os.PathListSeparator)+"kubeconfig/testdata/dummy.yaml")
+		defer unsetenv(t, "KUBECONFIG")
+
+		startBrowserRequest(t, ctx, nil)
+		runCmd(t, ctx, "--skip-open-browser")
+		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+			IDToken:      idToken,
+			RefreshToken: "REFRESH_TOKEN",
+		})
+	})
+
 	t.Run("ExtraScopes", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
@@ -227,4 +257,18 @@ func startBrowserRequest(t *testing.T, ctx context.Context, tlsConfig *tls.Confi
 			t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
 		}
 	}()
+}
+
+func setenv(t *testing.T, key, value string) {
+	t.Helper()
+	if err := os.Setenv(key, value); err != nil {
+		t.Fatalf("Could not set the env var %s=%s: %s", key, value, err)
+	}
+}
+
+func unsetenv(t *testing.T, key string) {
+	t.Helper()
+	if err := os.Unsetenv(key); err != nil {
+		t.Fatalf("Could not unset the env var %s: %s", key, err)
+	}
 }

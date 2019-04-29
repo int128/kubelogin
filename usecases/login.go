@@ -12,7 +12,7 @@ import (
 )
 
 const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubectl for OIDC authentication?
-  kubectl config set-credentials %[1]s \
+  kubectl config set-credentials CONTEXT_NAME \
     --auth-provider oidc \
     --auth-provider-arg idp-issuer-url=https://issuer.example.com \
     --auth-provider-arg client-id=YOUR_CLIENT_ID \
@@ -33,61 +33,36 @@ type Login struct {
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	u.Logger.Debugf(1, "WARNING: Log may contain your secrets, e.g. token or password")
 
-	u.Logger.Debugf(1, "Loading %s", in.KubeConfigFilename)
-	kubeConfig, err := u.KubeConfig.LoadFromFile(in.KubeConfigFilename)
+	mergedKubeConfig, err := u.KubeConfig.LoadByDefaultRules(in.KubeConfigFilename)
 	if err != nil {
-		return errors.Wrapf(err, "could not read the kubeconfig")
+		return errors.Wrapf(err, "could not load the kubeconfig")
 	}
-
-	authProvider, err := u.findAuthProvider(kubeConfig, in.KubeContextName, in.KubeUserName)
+	auth, err := kubeconfig.FindCurrentAuth(mergedKubeConfig, in.KubeContextName, in.KubeUserName)
 	if err != nil {
-		return errors.Wrapf(err, "could not find an auth-provider")
+		u.Logger.Printf(oidcConfigErrorMessage)
+		return errors.Wrapf(err, "could not find the current authentication")
 	}
+	destinationKubeConfigFilename := auth.User.LocationOfOrigin
+	if destinationKubeConfigFilename == "" {
+		return errors.Errorf("could not determine the kubeconfig to write")
+	}
+	u.Logger.Printf("Using the user %s in the file %s", auth.UserName, destinationKubeConfigFilename)
 
-	clientConfig := u.HTTP.NewClientConfig()
-	clientConfig.SetSkipTLSVerify(in.SkipTLSVerify)
-	if authProvider.IDPCertificateAuthority() != "" {
-		filename := authProvider.IDPCertificateAuthority()
-		u.Logger.Printf("Using the certificate %s", filename)
-		if err := clientConfig.AddCertificateFromFile(filename); err != nil {
-			u.Logger.Printf("Skip the certificate %s: %s", filename, err)
-		}
-	}
-	if authProvider.IDPCertificateAuthorityData() != "" {
-		encoded := authProvider.IDPCertificateAuthorityData()
-		u.Logger.Printf("Using the certificate of idp-certificate-authority-data")
-		if err := clientConfig.AddEncodedCertificate(encoded); err != nil {
-			u.Logger.Printf("Skip the certificate of idp-certificate-authority-data: %s", err)
-		}
-	}
-	if in.CertificateAuthorityFilename != "" {
-		u.Logger.Printf("Using the certificate %s", in.CertificateAuthorityFilename)
-		if err := clientConfig.AddCertificateFromFile(in.CertificateAuthorityFilename); err != nil {
-			u.Logger.Printf("Skip the certificate %s: %s", in.CertificateAuthorityFilename, err)
-		}
-	}
-	hc, err := u.HTTP.NewClient(clientConfig)
+	hc, err := u.HTTP.NewClient(u.httpClientConfig(in, auth.OIDCConfig))
 	if err != nil {
 		return errors.Wrapf(err, "could not create a HTTP client")
 	}
-
 	if token := u.verifyIDToken(ctx, adaptors.OIDCVerifyTokenIn{
-		IDToken:  authProvider.IDToken(),
-		Issuer:   authProvider.IDPIssuerURL(),
-		ClientID: authProvider.ClientID(),
-		Client:   hc,
+		Config: auth.OIDCConfig,
+		Client: hc,
 	}); token != nil {
 		u.Logger.Printf("You already have a valid token until %s", token.Expiry)
 		u.dumpIDToken(token)
 		return nil
 	}
-
 	out, err := u.OIDC.Authenticate(ctx,
 		adaptors.OIDCAuthenticateIn{
-			Issuer:          authProvider.IDPIssuerURL(),
-			ClientID:        authProvider.ClientID(),
-			ClientSecret:    authProvider.ClientSecret(),
-			ExtraScopes:     authProvider.ExtraScopes(),
+			Config:          auth.OIDCConfig,
 			Client:          hc,
 			LocalServerPort: in.ListenPort,
 			SkipOpenBrowser: in.SkipOpenBrowser,
@@ -98,20 +73,41 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 			},
 		})
 	if err != nil {
-		return errors.Wrapf(err, "could not get token from OIDC provider")
+		return errors.Wrapf(err, "could not get a token from the OIDC provider")
 	}
-
 	u.Logger.Printf("You got a valid token until %s", out.VerifiedIDToken.Expiry)
 	u.dumpIDToken(out.VerifiedIDToken)
-	authProvider.SetIDToken(out.IDToken)
-	authProvider.SetRefreshToken(out.RefreshToken)
 
-	u.Logger.Debugf(1, "Writing the ID token and refresh token to %s", in.KubeConfigFilename)
-	if err := u.KubeConfig.WriteToFile(kubeConfig, in.KubeConfigFilename); err != nil {
-		return errors.Wrapf(err, "could not update the kubeconfig")
+	if err := u.saveToken(destinationKubeConfigFilename, auth.UserName, out); err != nil {
+		return errors.Wrapf(err, "could not save the token")
 	}
-	u.Logger.Printf("Updated %s", in.KubeConfigFilename)
 	return nil
+}
+
+func (u *Login) httpClientConfig(in usecases.LoginIn, oidcConfig kubeconfig.OIDCConfig) adaptors.HTTPClientConfig {
+	config := u.HTTP.NewClientConfig()
+	config.SetSkipTLSVerify(in.SkipTLSVerify)
+	if oidcConfig.IDPCertificateAuthority() != "" {
+		filename := oidcConfig.IDPCertificateAuthority()
+		u.Logger.Printf("Using the certificate %s", filename)
+		if err := config.AddCertificateFromFile(filename); err != nil {
+			u.Logger.Printf("Skip the certificate %s due to error: %s", filename, err)
+		}
+	}
+	if oidcConfig.IDPCertificateAuthorityData() != "" {
+		encoded := oidcConfig.IDPCertificateAuthorityData()
+		u.Logger.Printf("Using the certificate of idp-certificate-authority-data")
+		if err := config.AddEncodedCertificate(encoded); err != nil {
+			u.Logger.Printf("Skip the certificate of idp-certificate-authority-data due to error: %s", err)
+		}
+	}
+	if in.CertificateAuthorityFilename != "" {
+		u.Logger.Printf("Using the certificate %s", in.CertificateAuthorityFilename)
+		if err := config.AddCertificateFromFile(in.CertificateAuthorityFilename); err != nil {
+			u.Logger.Printf("Skip the certificate %s due to error: %s", in.CertificateAuthorityFilename, err)
+		}
+	}
+	return config
 }
 
 func (u *Login) dumpIDToken(token *oidc.IDToken) {
@@ -124,30 +120,8 @@ func (u *Login) dumpIDToken(token *oidc.IDToken) {
 	}
 }
 
-func (u *Login) findAuthProvider(kubeConfig *kubeconfig.KubeConfig, kubeContextName, kubeUserName string) (*kubeconfig.OIDCAuthProvider, error) {
-	//TODO: should be moved to domain models
-	if kubeUserName == "" {
-		if kubeContextName == "" {
-			kubeContextName = kubeConfig.CurrentContext
-		}
-		kubeContext, err := kubeConfig.FindContext(kubeContextName)
-		if err != nil {
-			return nil, errors.Wrapf(err, "could not find the context %s", kubeContextName)
-		}
-		kubeUserName = kubeContext.AuthInfo
-		u.Logger.Printf("Using context %s", kubeContextName)
-	}
-	authProvider, err := kubeConfig.FindOIDCAuthProvider(kubeUserName)
-	if err != nil {
-		u.Logger.Printf(oidcConfigErrorMessage, kubeContextName)
-		return nil, errors.Wrapf(err, "could not find an oidc auth-provider")
-	}
-	u.Logger.Printf("Using credentials of user %s", kubeUserName)
-	return authProvider, nil
-}
-
 func (u *Login) verifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn) *oidc.IDToken {
-	if in.IDToken == "" {
+	if in.Config.IDToken() == "" {
 		return nil
 	}
 	token, err := u.OIDC.VerifyIDToken(ctx, in)
@@ -156,4 +130,23 @@ func (u *Login) verifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn
 		return nil
 	}
 	return token
+}
+
+func (u *Login) saveToken(filename string, userName kubeconfig.UserName, out *adaptors.OIDCAuthenticateOut) error {
+	config, err := u.KubeConfig.LoadFromFile(filename)
+	if err != nil {
+		return errors.Wrapf(err, "could not load %s", filename)
+	}
+	auth, err := kubeconfig.FindCurrentAuth(config, "", userName)
+	if err != nil {
+		return errors.Wrapf(err, "could not find the user %s in %s", userName, filename)
+	}
+	auth.OIDCConfig.SetIDToken(out.IDToken)
+	auth.OIDCConfig.SetRefreshToken(out.RefreshToken)
+	u.Logger.Debugf(1, "Writing the ID token and refresh token to %s", filename)
+	if err := u.KubeConfig.WriteToFile(config, filename); err != nil {
+		return errors.Wrapf(err, "could not update %s", filename)
+	}
+	u.Logger.Printf("Updated %s", filename)
+	return nil
 }
