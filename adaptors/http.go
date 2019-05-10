@@ -22,17 +22,36 @@ type HTTP struct {
 	Logger adaptors.Logger
 }
 
-func (*HTTP) NewClientConfig() adaptors.HTTPClientConfig {
-	return &httpClientConfig{
-		certPool: x509.NewCertPool(),
-	}
-}
-
 func (h *HTTP) NewClient(config adaptors.HTTPClientConfig) (*http.Client, error) {
+	pool := x509.NewCertPool()
+	if config.OIDCConfig.IDPCertificateAuthority() != "" {
+		err := appendCertificateFromFile(pool, config.OIDCConfig.IDPCertificateAuthority())
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not load the certificate of idp-certificate-authority")
+		}
+	}
+	if config.OIDCConfig.IDPCertificateAuthorityData() != "" {
+		err := appendEncodedCertificate(pool, config.OIDCConfig.IDPCertificateAuthorityData())
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not load the certificate of idp-certificate-authority-data")
+		}
+	}
+	if config.CertificateAuthorityFilename != "" {
+		err := appendCertificateFromFile(pool, config.CertificateAuthorityFilename)
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not load the certificate")
+		}
+	}
+
+	var tlsConfig tls.Config
+	if len(pool.Subjects()) > 0 {
+		tlsConfig.RootCAs = pool
+	}
+	tlsConfig.InsecureSkipVerify = config.SkipTLSVerify
 	return &http.Client{
 		Transport: &infrastructure.LoggingTransport{
 			Base: &http.Transport{
-				TLSClientConfig: config.TLSConfig(),
+				TLSClientConfig: &tlsConfig,
 				Proxy:           http.ProxyFromEnvironment,
 			},
 			Logger: h.Logger,
@@ -40,43 +59,24 @@ func (h *HTTP) NewClient(config adaptors.HTTPClientConfig) (*http.Client, error)
 	}, nil
 }
 
-type httpClientConfig struct {
-	certPool      *x509.CertPool
-	skipTLSVerify bool
-}
-
-func (c *httpClientConfig) AddCertificateFromFile(filename string) error {
+func appendCertificateFromFile(pool *x509.CertPool, filename string) error {
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return errors.Wrapf(err, "could not read %s", filename)
 	}
-	if !c.certPool.AppendCertsFromPEM(b) {
+	if !pool.AppendCertsFromPEM(b) {
 		return errors.Errorf("could not append certificate from %s", filename)
 	}
 	return nil
 }
 
-func (c *httpClientConfig) AddEncodedCertificate(base64String string) error {
+func appendEncodedCertificate(pool *x509.CertPool, base64String string) error {
 	b, err := base64.StdEncoding.DecodeString(base64String)
 	if err != nil {
 		return errors.Wrapf(err, "could not decode base64")
 	}
-	if !c.certPool.AppendCertsFromPEM(b) {
+	if !pool.AppendCertsFromPEM(b) {
 		return errors.Errorf("could not append certificate")
 	}
 	return nil
-}
-
-func (c *httpClientConfig) TLSConfig() *tls.Config {
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: c.skipTLSVerify,
-	}
-	if len(c.certPool.Subjects()) > 0 {
-		tlsConfig.RootCAs = c.certPool
-	}
-	return tlsConfig
-}
-
-func (c *httpClientConfig) SetSkipTLSVerify(b bool) {
-	c.skipTLSVerify = b
 }
