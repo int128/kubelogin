@@ -32,7 +32,7 @@ type HTTPClientConfig struct {
 
 type OIDC interface {
 	Authenticate(ctx context.Context, in OIDCAuthenticateIn, cb OIDCAuthenticateCallback) (*OIDCAuthenticateOut, error)
-	VerifyIDToken(ctx context.Context, in OIDCVerifyTokenIn) (*oidc.IDToken, error)
+	Verify(ctx context.Context, in OIDCVerifyIn) (*oidc.IDToken, error)
 }
 
 type OIDCAuthenticateIn struct {
@@ -52,7 +52,7 @@ type OIDCAuthenticateOut struct {
 	RefreshToken    string
 }
 
-type OIDCVerifyTokenIn struct {
+type OIDCVerifyIn struct {
 	Config kubeconfig.OIDCConfig
 	Client *http.Client
 }

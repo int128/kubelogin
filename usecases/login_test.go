@@ -468,7 +468,7 @@ func TestLogin_Do(t *testing.T) {
 
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			VerifyIDToken(ctx, adaptors.OIDCVerifyTokenIn{
+			Verify(ctx, adaptors.OIDCVerifyIn{
 				Config: f.googleOIDCConfig,
 				Client: httpClient,
 			}).
@@ -517,7 +517,7 @@ func TestLogin_Do(t *testing.T) {
 			Client:          httpClient,
 		})
 		mockOIDC.EXPECT().
-			VerifyIDToken(ctx, adaptors.OIDCVerifyTokenIn{
+			Verify(ctx, adaptors.OIDCVerifyIn{
 				Config: f.googleOIDCConfig,
 				Client: httpClient,
 			}).

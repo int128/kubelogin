@@ -57,14 +57,18 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	if err != nil {
 		return errors.Wrapf(err, "could not set up a HTTP client")
 	}
-	if token := u.verifyIDToken(ctx, adaptors.OIDCVerifyTokenIn{
-		Config: auth.OIDCConfig,
-		Client: hc,
-	}); token != nil {
-		u.Logger.Printf("You already have a valid token until %s", token.Expiry)
-		u.dumpIDToken(token)
-		return nil
+
+	if auth.OIDCConfig.IDToken() != "" {
+		u.Logger.Debugf(1, "Found the ID token in the kubeconfig")
+		token, err := u.OIDC.Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig, Client: hc})
+		if err == nil {
+			u.Logger.Printf("You already have a valid token until %s", token.Expiry)
+			u.dumpIDToken(token)
+			return nil
+		}
+		u.Logger.Debugf(1, "The ID token was invalid: %s", err)
 	}
+
 	out, err := u.OIDC.Authenticate(ctx,
 		adaptors.OIDCAuthenticateIn{
 			Config:          auth.OIDCConfig,
@@ -97,18 +101,6 @@ func (u *Login) dumpIDToken(token *oidc.IDToken) {
 	for k, v := range claims {
 		u.Logger.Debugf(1, "The ID token has the claim: %s=%v", k, v)
 	}
-}
-
-func (u *Login) verifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn) *oidc.IDToken {
-	if in.Config.IDToken() == "" {
-		return nil
-	}
-	token, err := u.OIDC.VerifyIDToken(ctx, in)
-	if err != nil {
-		u.Logger.Debugf(1, "Could not verify the ID token in the kubeconfig: %s", err)
-		return nil
-	}
-	return token
 }
 
 func (u *Login) writeToken(filename string, userName kubeconfig.UserName, out *adaptors.OIDCAuthenticateOut) error {

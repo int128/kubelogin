@@ -147,17 +147,17 @@ func (mr *MockOIDCMockRecorder) Authenticate(arg0, arg1, arg2 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockOIDC)(nil).Authenticate), arg0, arg1, arg2)
 }
 
-// VerifyIDToken mocks base method
-func (m *MockOIDC) VerifyIDToken(arg0 context.Context, arg1 interfaces.OIDCVerifyTokenIn) (*go_oidc.IDToken, error) {
-	ret := m.ctrl.Call(m, "VerifyIDToken", arg0, arg1)
+// Verify mocks base method
+func (m *MockOIDC) Verify(arg0 context.Context, arg1 interfaces.OIDCVerifyIn) (*go_oidc.IDToken, error) {
+	ret := m.ctrl.Call(m, "Verify", arg0, arg1)
 	ret0, _ := ret[0].(*go_oidc.IDToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// VerifyIDToken indicates an expected call of VerifyIDToken
-func (mr *MockOIDCMockRecorder) VerifyIDToken(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyIDToken", reflect.TypeOf((*MockOIDC)(nil).VerifyIDToken), arg0, arg1)
+// Verify indicates an expected call of Verify
+func (mr *MockOIDCMockRecorder) Verify(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockOIDC)(nil).Verify), arg0, arg1)
 }
 
 // MockEnv is a mock of Env interface

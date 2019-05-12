@@ -56,7 +56,7 @@ func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn, c
 	}, nil
 }
 
-func (*OIDC) VerifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn) (*oidc.IDToken, error) {
+func (*OIDC) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*oidc.IDToken, error) {
 	if in.Client != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
 	}
