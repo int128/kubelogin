@@ -13,6 +13,8 @@ jobs:
       - run: |
           curl -L -o ~/bin/ghcp https://github.com/int128/ghcp/releases/download/v1.3.0/ghcp_linux_amd64
           chmod +x ~/bin/ghcp
+      - run: |
+          curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ~/bin v1.16.0
       - run: go get github.com/int128/goxzst
       - run: go get github.com/tcnksm/ghr
       - checkout
