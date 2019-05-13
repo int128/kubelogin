@@ -8,7 +8,7 @@ LDFLAGS := -X main.version=$(CIRCLE_TAG)
 all: $(TARGET)
 
 check:
-	go vet
+	golangci-lint run
 	$(MAKE) -C adaptors_test/keys/testdata
 	go test -v -race ./...
 
