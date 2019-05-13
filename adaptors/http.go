@@ -50,7 +50,7 @@ func (c *httpClientConfig) AddCertificateFromFile(filename string) error {
 	if err != nil {
 		return errors.Wrapf(err, "could not read %s", filename)
 	}
-	if c.certPool.AppendCertsFromPEM(b) != true {
+	if !c.certPool.AppendCertsFromPEM(b) {
 		return errors.Errorf("could not append certificate from %s", filename)
 	}
 	return nil
@@ -61,7 +61,7 @@ func (c *httpClientConfig) AddEncodedCertificate(base64String string) error {
 	if err != nil {
 		return errors.Wrapf(err, "could not decode base64")
 	}
-	if c.certPool.AppendCertsFromPEM(b) != true {
+	if !c.certPool.AppendCertsFromPEM(b) {
 		return errors.Errorf("could not append certificate")
 	}
 	return nil

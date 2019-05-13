@@ -40,7 +40,7 @@ func TestCmd_Run(t *testing.T) {
 			RefreshToken:   "REFRESH_TOKEN",
 		}
 		server := authserver.Start(t, serverConfig)
-		defer server.Shutdown(ctx)
+		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer: "http://localhost:9000",
@@ -67,7 +67,7 @@ func TestCmd_Run(t *testing.T) {
 			RefreshToken:   "REFRESH_TOKEN",
 		}
 		server := authserver.Start(t, serverConfig)
-		defer server.Shutdown(ctx)
+		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer: "http://localhost:9000",
@@ -98,7 +98,7 @@ func TestCmd_Run(t *testing.T) {
 			Scope:          "profile groups openid",
 		}
 		server := authserver.Start(t, serverConfig)
-		defer server.Shutdown(ctx)
+		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:      "http://localhost:9000",
@@ -128,7 +128,7 @@ func TestCmd_Run(t *testing.T) {
 			TLSServerKey:   keys.TLSServerKey,
 		}
 		server := authserver.Start(t, serverConfig)
-		defer server.Shutdown(ctx)
+		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  "https://localhost:9000",
@@ -158,7 +158,7 @@ func TestCmd_Run(t *testing.T) {
 			TLSServerKey:   keys.TLSServerKey,
 		}
 		server := authserver.Start(t, serverConfig)
-		defer server.Shutdown(ctx)
+		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                      "https://localhost:9000",
@@ -183,7 +183,7 @@ func TestCmd_Run(t *testing.T) {
 			IDTokenKeyPair: keys.JWSKeyPair,
 		}
 		server := authserver.Start(t, serverConfig)
-		defer server.Shutdown(ctx)
+		defer shutdown(t, ctx, server)
 
 		idToken := newIDToken(t, "http://localhost:9000")
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
@@ -257,6 +257,12 @@ func startBrowserRequest(t *testing.T, ctx context.Context, tlsConfig *tls.Confi
 			t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
 		}
 	}()
+}
+
+func shutdown(t *testing.T, ctx context.Context, s *http.Server) {
+	if err := s.Shutdown(ctx); err != nil {
+		t.Errorf("Could not shutdown the auth server: %s", err)
+	}
 }
 
 func setenv(t *testing.T, key, value string) {
