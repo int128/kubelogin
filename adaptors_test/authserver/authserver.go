@@ -8,6 +8,7 @@ import (
 
 // Config represents server configuration.
 type Config struct {
+	Addr           string
 	Issuer         string
 	Scope          string
 	TLSServerCert  string
@@ -20,7 +21,7 @@ type Config struct {
 // Start starts a HTTP server.
 func Start(t *testing.T, c Config) *http.Server {
 	s := &http.Server{
-		Addr:    "localhost:9000",
+		Addr:    c.Addr,
 		Handler: newHandler(t, c),
 	}
 	go func() {
