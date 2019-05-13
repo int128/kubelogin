@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -18,10 +19,11 @@ import (
 )
 
 // Run the integration tests.
+// This assumes that port 800x and 900x are available.
 //
-// 1. Start the auth server at port 9000.
+// 1. Start the auth server at port 900x.
 // 2. Run the Cmd.
-// 3. Open a request for port 8000.
+// 3. Open a request for port 800x.
 // 4. Wait for the Cmd.
 // 5. Shutdown the auth server.
 //
@@ -29,12 +31,14 @@ func TestCmd_Run(t *testing.T) {
 	timeout := 1 * time.Second
 
 	t.Run("NoTLS", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		idToken := newIDToken(t, "http://localhost:9000")
+		idToken := newIDToken(t, "http://localhost:9001")
 		serverConfig := authserver.Config{
-			Issuer:         "http://localhost:9000",
+			Addr:           "localhost:9001",
+			Issuer:         "http://localhost:9001",
 			IDToken:        idToken,
 			IDTokenKeyPair: keys.JWSKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
@@ -43,12 +47,14 @@ func TestCmd_Run(t *testing.T) {
 		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer: "http://localhost:9000",
+			Issuer: serverConfig.Issuer,
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, ctx, nil)
-		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		var wg sync.WaitGroup
+		startBrowserRequest(t, ctx, &wg, "http://localhost:8001", nil)
+		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "8001")
+		wg.Wait()
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
 			RefreshToken: "REFRESH_TOKEN",
@@ -56,12 +62,14 @@ func TestCmd_Run(t *testing.T) {
 	})
 
 	t.Run("env:KUBECONFIG", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		idToken := newIDToken(t, "http://localhost:9000")
+		idToken := newIDToken(t, "http://localhost:9002")
 		serverConfig := authserver.Config{
-			Issuer:         "http://localhost:9000",
+			Addr:           "localhost:9002",
+			Issuer:         "http://localhost:9002",
 			IDToken:        idToken,
 			IDTokenKeyPair: keys.JWSKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
@@ -70,15 +78,17 @@ func TestCmd_Run(t *testing.T) {
 		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer: "http://localhost:9000",
+			Issuer: serverConfig.Issuer,
 		})
 		defer os.Remove(kubeConfigFilename)
 
 		setenv(t, "KUBECONFIG", kubeConfigFilename+string(os.PathListSeparator)+"kubeconfig/testdata/dummy.yaml")
 		defer unsetenv(t, "KUBECONFIG")
 
-		startBrowserRequest(t, ctx, nil)
-		runCmd(t, ctx, "--skip-open-browser")
+		var wg sync.WaitGroup
+		startBrowserRequest(t, ctx, &wg, "http://localhost:8002", nil)
+		runCmd(t, ctx, "--skip-open-browser", "--listen-port", "8002")
+		wg.Wait()
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
 			RefreshToken: "REFRESH_TOKEN",
@@ -86,12 +96,14 @@ func TestCmd_Run(t *testing.T) {
 	})
 
 	t.Run("ExtraScopes", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		idToken := newIDToken(t, "http://localhost:9000")
+		idToken := newIDToken(t, "http://localhost:9003")
 		serverConfig := authserver.Config{
-			Issuer:         "http://localhost:9000",
+			Addr:           "localhost:9003",
+			Issuer:         "http://localhost:9003",
 			IDToken:        idToken,
 			IDTokenKeyPair: keys.JWSKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
@@ -101,13 +113,15 @@ func TestCmd_Run(t *testing.T) {
 		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:      "http://localhost:9000",
+			Issuer:      serverConfig.Issuer,
 			ExtraScopes: "profile,groups",
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, ctx, nil)
-		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		var wg sync.WaitGroup
+		startBrowserRequest(t, ctx, &wg, "http://localhost:8003", nil)
+		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "8003")
+		wg.Wait()
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
 			RefreshToken: "REFRESH_TOKEN",
@@ -115,12 +129,14 @@ func TestCmd_Run(t *testing.T) {
 	})
 
 	t.Run("CACert", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		idToken := newIDToken(t, "https://localhost:9000")
+		idToken := newIDToken(t, "https://localhost:9004")
 		serverConfig := authserver.Config{
-			Issuer:         "https://localhost:9000",
+			Addr:           "localhost:9004",
+			Issuer:         "https://localhost:9004",
 			IDToken:        idToken,
 			IDTokenKeyPair: keys.JWSKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
@@ -131,13 +147,15 @@ func TestCmd_Run(t *testing.T) {
 		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                  "https://localhost:9000",
+			Issuer:                  serverConfig.Issuer,
 			IDPCertificateAuthority: keys.TLSCACert,
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, ctx, keys.TLSCACertAsConfig)
-		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		var wg sync.WaitGroup
+		startBrowserRequest(t, ctx, &wg, "http://localhost:8004", keys.TLSCACertAsConfig)
+		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "8004")
+		wg.Wait()
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
 			RefreshToken: "REFRESH_TOKEN",
@@ -145,12 +163,14 @@ func TestCmd_Run(t *testing.T) {
 	})
 
 	t.Run("CACertData", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		idToken := newIDToken(t, "https://localhost:9000")
+		idToken := newIDToken(t, "https://localhost:9005")
 		serverConfig := authserver.Config{
-			Issuer:         "https://localhost:9000",
+			Addr:           "localhost:9005",
+			Issuer:         "https://localhost:9005",
 			IDToken:        idToken,
 			IDTokenKeyPair: keys.JWSKeyPair,
 			RefreshToken:   "REFRESH_TOKEN",
@@ -161,13 +181,15 @@ func TestCmd_Run(t *testing.T) {
 		defer shutdown(t, ctx, server)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                      "https://localhost:9000",
+			Issuer:                      serverConfig.Issuer,
 			IDPCertificateAuthorityData: keys.TLSCACertAsBase64,
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		startBrowserRequest(t, ctx, keys.TLSCACertAsConfig)
-		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		var wg sync.WaitGroup
+		startBrowserRequest(t, ctx, &wg, "http://localhost:8005", keys.TLSCACertAsConfig)
+		runCmd(t, ctx, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "8005")
+		wg.Wait()
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
 			RefreshToken: "REFRESH_TOKEN",
@@ -175,19 +197,21 @@ func TestCmd_Run(t *testing.T) {
 	})
 
 	t.Run("AlreadyHaveValidToken", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		serverConfig := authserver.Config{
-			Issuer:         "http://localhost:9000",
+			Addr:           "localhost:9006",
+			Issuer:         "http://localhost:9006",
 			IDTokenKeyPair: keys.JWSKeyPair,
 		}
 		server := authserver.Start(t, serverConfig)
 		defer shutdown(t, ctx, server)
 
-		idToken := newIDToken(t, "http://localhost:9000")
+		idToken := newIDToken(t, serverConfig.Issuer)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:  "http://localhost:9000",
+			Issuer:  serverConfig.Issuer,
 			IDToken: idToken,
 		})
 		defer os.Remove(kubeConfigFilename)
@@ -236,16 +260,17 @@ func runCmd(t *testing.T, ctx context.Context, args ...string) {
 	}
 }
 
-func startBrowserRequest(t *testing.T, ctx context.Context, tlsConfig *tls.Config) {
+func startBrowserRequest(t *testing.T, ctx context.Context, wg *sync.WaitGroup, url string, tlsConfig *tls.Config) {
 	t.Helper()
 	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
-	req, err := http.NewRequest("GET", "http://localhost:8000/", nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		t.Errorf("could not create a request: %s", err)
 		return
 	}
 	req = req.WithContext(ctx)
 	go func() {
+		defer wg.Done()
 		time.Sleep(50 * time.Millisecond)
 		resp, err := client.Do(req)
 		if err != nil {
@@ -257,6 +282,7 @@ func startBrowserRequest(t *testing.T, ctx context.Context, tlsConfig *tls.Confi
 			t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
 		}
 	}()
+	wg.Add(1)
 }
 
 func shutdown(t *testing.T, ctx context.Context, s *http.Server) {
