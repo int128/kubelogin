@@ -173,17 +173,6 @@ func newLoginTestFixture() loginTestFixture {
 func TestLogin_Do(t *testing.T) {
 	httpClient := &http.Client{}
 
-	newMockHTTP := func(ctrl *gomock.Controller, config adaptors.HTTPClientConfig) *mock_adaptors.MockHTTP {
-		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
-		mockHTTP.EXPECT().
-			NewClientConfig().
-			Return(config)
-		mockHTTP.EXPECT().
-			NewClient(config).
-			Return(httpClient, nil)
-		return mockHTTP
-	}
-
 	newMockOIDC := func(ctrl *gomock.Controller, ctx context.Context, in adaptors.OIDCAuthenticateIn) *mock_adaptors.MockOIDC {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
@@ -205,9 +194,12 @@ func TestLogin_Do(t *testing.T) {
 		ctx := context.TODO()
 		f := newLoginTestFixture()
 
-		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
-		httpClientConfig.EXPECT().
-			SetSkipTLSVerify(false)
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig: f.googleOIDCConfig,
+			}).
+			Return(httpClient, nil)
 
 		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		mockKubeConfig.EXPECT().
@@ -227,7 +219,7 @@ func TestLogin_Do(t *testing.T) {
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
-			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			HTTP:       mockHTTP,
 			OIDC:       newMockOIDC(ctrl, ctx, oidcIn),
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
@@ -244,9 +236,12 @@ func TestLogin_Do(t *testing.T) {
 		ctx := context.TODO()
 		f := newLoginTestFixture()
 
-		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
-		httpClientConfig.EXPECT().
-			SetSkipTLSVerify(false)
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig: f.googleOIDCConfig,
+			}).
+			Return(httpClient, nil)
 
 		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		mockKubeConfig.EXPECT().
@@ -266,7 +261,7 @@ func TestLogin_Do(t *testing.T) {
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
-			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			HTTP:       mockHTTP,
 			OIDC:       newMockOIDC(ctrl, ctx, oidcIn),
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
@@ -284,9 +279,12 @@ func TestLogin_Do(t *testing.T) {
 		ctx := context.TODO()
 		f := newLoginTestFixture()
 
-		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
-		httpClientConfig.EXPECT().
-			SetSkipTLSVerify(false)
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig: f.keycloakOIDCConfig,
+			}).
+			Return(httpClient, nil)
 
 		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		mockKubeConfig.EXPECT().
@@ -306,7 +304,7 @@ func TestLogin_Do(t *testing.T) {
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
-			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			HTTP:       mockHTTP,
 			OIDC:       newMockOIDC(ctrl, ctx, oidcIn),
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
@@ -324,9 +322,12 @@ func TestLogin_Do(t *testing.T) {
 		ctx := context.TODO()
 		f := newLoginTestFixture()
 
-		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
-		httpClientConfig.EXPECT().
-			SetSkipTLSVerify(false)
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig: f.keycloakOIDCConfig,
+			}).
+			Return(httpClient, nil)
 
 		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		mockKubeConfig.EXPECT().
@@ -346,7 +347,7 @@ func TestLogin_Do(t *testing.T) {
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
-			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			HTTP:       mockHTTP,
 			OIDC:       newMockOIDC(ctrl, ctx, oidcIn),
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
@@ -364,9 +365,13 @@ func TestLogin_Do(t *testing.T) {
 		ctx := context.TODO()
 		f := newLoginTestFixture()
 
-		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
-		httpClientConfig.EXPECT().
-			SetSkipTLSVerify(true)
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig:    f.googleOIDCConfig,
+				SkipTLSVerify: true,
+			}).
+			Return(httpClient, nil)
 
 		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		mockKubeConfig.EXPECT().
@@ -386,7 +391,7 @@ func TestLogin_Do(t *testing.T) {
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
-			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			HTTP:       mockHTTP,
 			OIDC:       newMockOIDC(ctrl, ctx, oidcIn),
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
@@ -404,9 +409,12 @@ func TestLogin_Do(t *testing.T) {
 		ctx := context.TODO()
 		f := newLoginTestFixture()
 
-		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
-		httpClientConfig.EXPECT().
-			SetSkipTLSVerify(false)
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig: f.googleOIDCConfig,
+			}).
+			Return(httpClient, nil)
 
 		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		mockKubeConfig.EXPECT().
@@ -427,7 +435,7 @@ func TestLogin_Do(t *testing.T) {
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
-			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			HTTP:       mockHTTP,
 			OIDC:       newMockOIDC(ctrl, ctx, oidcIn),
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
@@ -446,9 +454,12 @@ func TestLogin_Do(t *testing.T) {
 		f := newLoginTestFixture()
 		f.googleOIDCConfig.SetIDToken("VALID_TOKEN")
 
-		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
-		httpClientConfig.EXPECT().
-			SetSkipTLSVerify(false)
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig: f.googleOIDCConfig,
+			}).
+			Return(httpClient, nil)
 
 		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		mockKubeConfig.EXPECT().
@@ -465,7 +476,7 @@ func TestLogin_Do(t *testing.T) {
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
-			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			HTTP:       mockHTTP,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
@@ -483,9 +494,12 @@ func TestLogin_Do(t *testing.T) {
 		f := newLoginTestFixture()
 		f.googleOIDCConfig.SetIDToken("EXPIRED_TOKEN")
 
-		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
-		httpClientConfig.EXPECT().
-			SetSkipTLSVerify(false)
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig: f.googleOIDCConfig,
+			}).
+			Return(httpClient, nil)
 
 		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		mockKubeConfig.EXPECT().
@@ -511,7 +525,7 @@ func TestLogin_Do(t *testing.T) {
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
-			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			HTTP:       mockHTTP,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
@@ -532,20 +546,13 @@ func TestLogin_Do(t *testing.T) {
 		f.googleOIDCConfigWithToken["idp-certificate-authority"] = "/path/to/cert2"
 		f.googleOIDCConfigWithToken["idp-certificate-authority-data"] = "base64encoded"
 
-		httpClientConfig := mock_adaptors.NewMockHTTPClientConfig(ctrl)
-		httpClientConfig.EXPECT().
-			SetSkipTLSVerify(false)
-		httpClientConfig.EXPECT().
-			AddCertificateFromFile(gomock.Any()).
-			Do(func(name string) error {
-				if name == "/path/to/cert1" || name == "/path/to/cert2" {
-					return nil
-				}
-				return errors.Errorf("no such file: %s", name)
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig:                   f.googleOIDCConfig,
+				CertificateAuthorityFilename: "/path/to/cert1",
 			}).
-			Times(2)
-		httpClientConfig.EXPECT().
-			AddEncodedCertificate("base64encoded")
+			Return(httpClient, nil)
 
 		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
 		mockKubeConfig.EXPECT().
@@ -565,7 +572,7 @@ func TestLogin_Do(t *testing.T) {
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
-			HTTP:       newMockHTTP(ctrl, httpClientConfig),
+			HTTP:       mockHTTP,
 			OIDC:       newMockOIDC(ctrl, ctx, oidcIn),
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}

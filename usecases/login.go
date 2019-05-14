@@ -48,7 +48,11 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	}
 	u.Logger.Printf("Using the user %s in the file %s", auth.UserName, destinationKubeConfigFilename)
 
-	hc, err := u.HTTP.NewClient(u.httpClientConfig(in, auth.OIDCConfig))
+	hc, err := u.HTTP.NewClient(adaptors.HTTPClientConfig{
+		OIDCConfig:                   auth.OIDCConfig,
+		CertificateAuthorityFilename: in.CertificateAuthorityFilename,
+		SkipTLSVerify:                in.SkipTLSVerify,
+	})
 	if err != nil {
 		return errors.Wrapf(err, "could not create a HTTP client")
 	}
@@ -82,32 +86,6 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return errors.Wrapf(err, "could not save the token")
 	}
 	return nil
-}
-
-func (u *Login) httpClientConfig(in usecases.LoginIn, oidcConfig kubeconfig.OIDCConfig) adaptors.HTTPClientConfig {
-	config := u.HTTP.NewClientConfig()
-	config.SetSkipTLSVerify(in.SkipTLSVerify)
-	if oidcConfig.IDPCertificateAuthority() != "" {
-		filename := oidcConfig.IDPCertificateAuthority()
-		u.Logger.Printf("Using the certificate %s", filename)
-		if err := config.AddCertificateFromFile(filename); err != nil {
-			u.Logger.Printf("Skip the certificate %s due to error: %s", filename, err)
-		}
-	}
-	if oidcConfig.IDPCertificateAuthorityData() != "" {
-		encoded := oidcConfig.IDPCertificateAuthorityData()
-		u.Logger.Printf("Using the certificate of idp-certificate-authority-data")
-		if err := config.AddEncodedCertificate(encoded); err != nil {
-			u.Logger.Printf("Skip the certificate of idp-certificate-authority-data due to error: %s", err)
-		}
-	}
-	if in.CertificateAuthorityFilename != "" {
-		u.Logger.Printf("Using the certificate %s", in.CertificateAuthorityFilename)
-		if err := config.AddCertificateFromFile(in.CertificateAuthorityFilename); err != nil {
-			u.Logger.Printf("Skip the certificate %s due to error: %s", in.CertificateAuthorityFilename, err)
-		}
-	}
-	return config
 }
 
 func (u *Login) dumpIDToken(token *oidc.IDToken) {
