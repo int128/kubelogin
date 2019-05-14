@@ -2,30 +2,35 @@
 
 ## Prerequisite
 
-- You have administrator access to the Keycloak.
-- You have the Cluster Admin role of the Kubernetes cluster.
+- You have an administrator role of the Keycloak realm.
+- You have an administrator role of the Kubernetes cluster.
 - You can configure the Kubernetes API server.
-- `kubectl` and `kubelogin` are installed to your computer.
+- `kubectl` and `kubelogin` are installed.
 
 ## 1. Setup Keycloak
 
 Open the Keycloak and create an OIDC client as follows:
 
-- Redirect URL: `http://localhost:8000/`
-- Issuer URL: `https://keycloak.example.com/auth/realms/YOUR_REALM`
 - Client ID: `kubernetes`
-- Groups claim: `groups`
+- Valid Redirect URL: `http://localhost:8000/`
+- Issuer URL: `https://keycloak.example.com/auth/realms/YOUR_REALM`
 
-Create a group `kubernetes:admin` and join to it.
-This is used for group based access control.
+You can associate client roles by adding the following mapper:
+
+- Name: `groups`
+- Mapper Type: `User Client Role`
+- Client ID: `kubernetes`
+- Client Role prefix: `kubernetes:`
+- Token Claim Name: `groups`
+- Add to ID token: on
+
+For example, if you have the `admin` role of the client, you will get a JWT with the claim `{"groups": ["kubernetes:admin"]}`.
 
 ## 2. Setup Kubernetes API server
 
 Configure your Kubernetes API server accepts [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
 
-### kops
-
-If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and append the following settings:
+If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and add the following spec:
 
 ```yaml
 spec:
@@ -50,7 +55,7 @@ roleRef:
   name: cluster-admin
 subjects:
 - kind: Group
-  name: /kubernetes:admin
+  name: kubernetes:admin
 ```
 
 You can create a custom role and assign it as well.
