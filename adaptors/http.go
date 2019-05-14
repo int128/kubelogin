@@ -24,19 +24,22 @@ type HTTP struct {
 
 func (h *HTTP) NewClient(config adaptors.HTTPClientConfig) (*http.Client, error) {
 	pool := x509.NewCertPool()
-	if config.OIDCConfig.IDPCertificateAuthority() != "" {
-		err := appendCertificateFromFile(pool, config.OIDCConfig.IDPCertificateAuthority())
+	if filename := config.OIDCConfig.IDPCertificateAuthority(); filename != "" {
+		h.Logger.Debugf(1, "Loading the certificate %s", filename)
+		err := appendCertificateFromFile(pool, filename)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not load the certificate of idp-certificate-authority")
 		}
 	}
-	if config.OIDCConfig.IDPCertificateAuthorityData() != "" {
-		err := appendEncodedCertificate(pool, config.OIDCConfig.IDPCertificateAuthorityData())
+	if data := config.OIDCConfig.IDPCertificateAuthorityData(); data != "" {
+		h.Logger.Debugf(1, "Loading the certificate of idp-certificate-authority-data")
+		err := appendEncodedCertificate(pool, data)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not load the certificate of idp-certificate-authority-data")
 		}
 	}
 	if config.CertificateAuthorityFilename != "" {
+		h.Logger.Debugf(1, "Loading the certificate %s", config.CertificateAuthorityFilename)
 		err := appendCertificateFromFile(pool, config.CertificateAuthorityFilename)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not load the certificate")

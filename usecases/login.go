@@ -31,7 +31,7 @@ type Login struct {
 }
 
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
-	u.Logger.Debugf(1, "WARNING: Log may contain your secrets, e.g. token or password")
+	u.Logger.Debugf(1, "WARNING: log may contain your secrets such as token or password")
 
 	mergedKubeConfig, err := u.KubeConfig.LoadByDefaultRules(in.KubeConfigFilename)
 	if err != nil {
@@ -40,13 +40,14 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	auth, err := kubeconfig.FindCurrentAuth(mergedKubeConfig, in.KubeContextName, in.KubeUserName)
 	if err != nil {
 		u.Logger.Printf(oidcConfigErrorMessage)
-		return errors.Wrapf(err, "could not find the current authentication")
+		return errors.Wrapf(err, "could not find the current authentication provider")
 	}
+	u.Logger.Debugf(1, "Using the authentication provider of the user %s", auth.UserName)
 	destinationKubeConfigFilename := auth.User.LocationOfOrigin
 	if destinationKubeConfigFilename == "" {
 		return errors.Errorf("could not determine the kubeconfig to write")
 	}
-	u.Logger.Printf("Using the user %s in the file %s", auth.UserName, destinationKubeConfigFilename)
+	u.Logger.Debugf(1, "A token will be written to %s", destinationKubeConfigFilename)
 
 	hc, err := u.HTTP.NewClient(adaptors.HTTPClientConfig{
 		OIDCConfig:                   auth.OIDCConfig,
@@ -54,16 +55,20 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		SkipTLSVerify:                in.SkipTLSVerify,
 	})
 	if err != nil {
-		return errors.Wrapf(err, "could not create a HTTP client")
+		return errors.Wrapf(err, "could not set up a HTTP client")
 	}
-	if token := u.verifyIDToken(ctx, adaptors.OIDCVerifyTokenIn{
-		Config: auth.OIDCConfig,
-		Client: hc,
-	}); token != nil {
-		u.Logger.Printf("You already have a valid token until %s", token.Expiry)
-		u.dumpIDToken(token)
-		return nil
+
+	if auth.OIDCConfig.IDToken() != "" {
+		u.Logger.Debugf(1, "Found the ID token in the kubeconfig")
+		token, err := u.OIDC.Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig, Client: hc})
+		if err == nil {
+			u.Logger.Printf("You already have a valid token until %s", token.Expiry)
+			u.dumpIDToken(token)
+			return nil
+		}
+		u.Logger.Debugf(1, "The ID token was invalid: %s", err)
 	}
+
 	out, err := u.OIDC.Authenticate(ctx,
 		adaptors.OIDCAuthenticateIn{
 			Config:          auth.OIDCConfig,
@@ -82,8 +87,8 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	u.Logger.Printf("You got a valid token until %s", out.VerifiedIDToken.Expiry)
 	u.dumpIDToken(out.VerifiedIDToken)
 
-	if err := u.saveToken(destinationKubeConfigFilename, auth.UserName, out); err != nil {
-		return errors.Wrapf(err, "could not save the token")
+	if err := u.writeToken(destinationKubeConfigFilename, auth.UserName, out); err != nil {
+		return errors.Wrapf(err, "could not write the token to the kubeconfig")
 	}
 	return nil
 }
@@ -98,19 +103,7 @@ func (u *Login) dumpIDToken(token *oidc.IDToken) {
 	}
 }
 
-func (u *Login) verifyIDToken(ctx context.Context, in adaptors.OIDCVerifyTokenIn) *oidc.IDToken {
-	if in.Config.IDToken() == "" {
-		return nil
-	}
-	token, err := u.OIDC.VerifyIDToken(ctx, in)
-	if err != nil {
-		u.Logger.Debugf(1, "Could not verify the ID token in the kubeconfig: %s", err)
-		return nil
-	}
-	return token
-}
-
-func (u *Login) saveToken(filename string, userName kubeconfig.UserName, out *adaptors.OIDCAuthenticateOut) error {
+func (u *Login) writeToken(filename string, userName kubeconfig.UserName, out *adaptors.OIDCAuthenticateOut) error {
 	config, err := u.KubeConfig.LoadFromFile(filename)
 	if err != nil {
 		return errors.Wrapf(err, "could not load %s", filename)
