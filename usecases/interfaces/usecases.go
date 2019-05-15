@@ -19,5 +19,5 @@ type LoginIn struct {
 	CertificateAuthorityFilename string                 // Optional
 	SkipTLSVerify                bool
 	SkipOpenBrowser              bool
-	ListenPort                   int
+	ListenPort                   []int
 }
