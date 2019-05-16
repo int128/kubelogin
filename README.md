@@ -66,18 +66,14 @@ Kubelogin supports the following options.
 
 ```
 Options:
-      --kubeconfig string              Path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string              Path to the kubeconfig file
       --context string                 The name of the kubeconfig context to use
       --user string                    The name of the kubeconfig user to use. Prior to --context
-      --listen-port int                Port used by kubelogin to bind its local server (default 8000)
+      --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
       --skip-open-browser              If true, it does not open the browser on authentication
       --certificate-authority string   Path to a cert file for the certificate authority
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
   -v, --v int                          If set to 1 or greater, it shows debug log
-
-  As well as you can set the following environment variables:
-      $KUBECONFIG
-      $KUBELOGIN_LISTEN_PORT
 ```
 
 It supports the following keys of `auth-provider` in a kubeconfig.
@@ -124,6 +120,21 @@ Note that kubectl does not accept multiple scopes and you need to edit the kubec
 ```sh
 kubectl config set-credentials keycloak --auth-provider-arg extra-scopes=SCOPES
 sed -i '' -e s/SCOPES/email,profile/ $KUBECONFIG
+```
+
+
+### Redirect URIs
+
+By default kubelogin starts the local server at port 8000 or 18000.
+You need to register the following redirect URIs to the OIDC provider:
+
+- `http://localhost:8000`
+- `http://localhost:18000` (used if port 8000 is already in use)
+
+You can change the ports by the option:
+
+```sh
+kubelogin --listen-port 12345 --listen-port 23456
 ```
 
 

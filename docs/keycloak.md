@@ -12,7 +12,9 @@
 Open the Keycloak and create an OIDC client as follows:
 
 - Client ID: `kubernetes`
-- Valid Redirect URL: `http://localhost:8000/`
+- Valid Redirect URLs:
+    - `http://localhost:8000`
+    - `http://localhost:18000` (used if the port 8000 is already in use)
 - Issuer URL: `https://keycloak.example.com/auth/realms/YOUR_REALM`
 
 You can associate client roles by adding the following mapper:

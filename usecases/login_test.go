@@ -213,7 +213,7 @@ func TestLogin_Do(t *testing.T) {
 
 		oidcIn := adaptors.OIDCAuthenticateIn{
 			Config:          f.googleOIDCConfig,
-			LocalServerPort: 10000,
+			LocalServerPort: []int{10000},
 			Client:          httpClient,
 		}
 
@@ -224,7 +224,7 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			ListenPort: 10000,
+			ListenPort: []int{10000},
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -255,7 +255,7 @@ func TestLogin_Do(t *testing.T) {
 
 		oidcIn := adaptors.OIDCAuthenticateIn{
 			Config:          f.googleOIDCConfig,
-			LocalServerPort: 10000,
+			LocalServerPort: []int{10000},
 			Client:          httpClient,
 		}
 
@@ -267,7 +267,7 @@ func TestLogin_Do(t *testing.T) {
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfigFilename: "/path/to/kubeconfig",
-			ListenPort:         10000,
+			ListenPort:         []int{10000},
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -298,7 +298,7 @@ func TestLogin_Do(t *testing.T) {
 
 		oidcIn := adaptors.OIDCAuthenticateIn{
 			Config:          f.keycloakOIDCConfig,
-			LocalServerPort: 10000,
+			LocalServerPort: []int{10000},
 			Client:          httpClient,
 		}
 
@@ -310,7 +310,7 @@ func TestLogin_Do(t *testing.T) {
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeContextName: "keycloakContext",
-			ListenPort:      10000,
+			ListenPort:      []int{10000},
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -341,7 +341,7 @@ func TestLogin_Do(t *testing.T) {
 
 		oidcIn := adaptors.OIDCAuthenticateIn{
 			Config:          f.keycloakOIDCConfig,
-			LocalServerPort: 10000,
+			LocalServerPort: []int{10000},
 			Client:          httpClient,
 		}
 
@@ -353,7 +353,7 @@ func TestLogin_Do(t *testing.T) {
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeUserName: "keycloak",
-			ListenPort:   10000,
+			ListenPort:   []int{10000},
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -385,7 +385,7 @@ func TestLogin_Do(t *testing.T) {
 
 		oidcIn := adaptors.OIDCAuthenticateIn{
 			Config:          f.googleOIDCConfig,
-			LocalServerPort: 10000,
+			LocalServerPort: []int{10000},
 			Client:          httpClient,
 		}
 
@@ -396,7 +396,7 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			ListenPort:    10000,
+			ListenPort:    []int{10000},
 			SkipTLSVerify: true,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -428,7 +428,7 @@ func TestLogin_Do(t *testing.T) {
 
 		oidcIn := adaptors.OIDCAuthenticateIn{
 			Config:          f.googleOIDCConfig,
-			LocalServerPort: 10000,
+			LocalServerPort: []int{10000},
 			Client:          httpClient,
 			SkipOpenBrowser: true,
 		}
@@ -440,7 +440,7 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			ListenPort:      10000,
+			ListenPort:      []int{10000},
 			SkipOpenBrowser: true,
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -481,7 +481,7 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			ListenPort: 10000,
+			ListenPort: []int{10000},
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -513,7 +513,7 @@ func TestLogin_Do(t *testing.T) {
 
 		mockOIDC := newMockOIDC(ctrl, ctx, adaptors.OIDCAuthenticateIn{
 			Config:          f.googleOIDCConfig,
-			LocalServerPort: 10000,
+			LocalServerPort: []int{10000},
 			Client:          httpClient,
 		})
 		mockOIDC.EXPECT().
@@ -530,7 +530,7 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			ListenPort: 10000,
+			ListenPort: []int{10000},
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -566,7 +566,7 @@ func TestLogin_Do(t *testing.T) {
 
 		oidcIn := adaptors.OIDCAuthenticateIn{
 			Config:          f.googleOIDCConfig,
-			LocalServerPort: 10000,
+			LocalServerPort: []int{10000},
 			Client:          httpClient,
 		}
 
@@ -577,7 +577,7 @@ func TestLogin_Do(t *testing.T) {
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			ListenPort:                   10000,
+			ListenPort:                   []int{10000},
 			CertificateAuthorityFilename: "/path/to/cert1",
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)

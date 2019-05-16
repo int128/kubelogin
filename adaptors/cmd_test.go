@@ -23,11 +23,8 @@ func TestCmd_Run(t *testing.T) {
 		login := mock_usecases.NewMockLogin(ctrl)
 		login.EXPECT().
 			Do(ctx, usecases.LoginIn{
-				ListenPort: 8000,
+				ListenPort: defaultListenPort,
 			})
-
-		env := mock_adaptors.NewMockEnv(ctrl)
-		env.EXPECT().Getenv(gomock.Any()).AnyTimes()
 
 		logger := mock_adaptors.NewLogger(t, ctrl)
 		logger.EXPECT().
@@ -35,7 +32,6 @@ func TestCmd_Run(t *testing.T) {
 
 		cmd := Cmd{
 			Login:  login,
-			Env:    env,
 			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable}, version)
@@ -57,12 +53,9 @@ func TestCmd_Run(t *testing.T) {
 				KubeUserName:                 "google",
 				CertificateAuthorityFilename: "/path/to/cacert",
 				SkipTLSVerify:                true,
-				ListenPort:                   10080,
+				ListenPort:                   []int{10080, 20080},
 				SkipOpenBrowser:              true,
 			})
-
-		env := mock_adaptors.NewMockEnv(ctrl)
-		env.EXPECT().Getenv(gomock.Any()).AnyTimes()
 
 		logger := mock_adaptors.NewLogger(t, ctrl)
 		logger.EXPECT().
@@ -70,7 +63,6 @@ func TestCmd_Run(t *testing.T) {
 
 		cmd := Cmd{
 			Login:  login,
-			Env:    env,
 			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
@@ -78,6 +70,7 @@ func TestCmd_Run(t *testing.T) {
 			"--context", "hello.k8s.local",
 			"--user", "google",
 			"--listen-port", "10080",
+			"--listen-port", "20080",
 			"--skip-open-browser",
 			"--certificate-authority", "/path/to/cacert",
 			"--insecure-skip-tls-verify",
@@ -88,52 +81,11 @@ func TestCmd_Run(t *testing.T) {
 		}
 	})
 
-	t.Run("FullEnvVars", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		ctx := context.TODO()
-
-		login := mock_usecases.NewMockLogin(ctrl)
-		login.EXPECT().
-			Do(ctx, usecases.LoginIn{
-				ListenPort: 10080,
-			})
-
-		env := mock_adaptors.NewMockEnv(ctrl)
-		env.EXPECT().
-			Getenv(gomock.Any()).
-			DoAndReturn(func(key string) string {
-				switch key {
-				case envListenPort:
-					return "10080"
-				}
-				return ""
-			}).
-			AnyTimes()
-
-		logger := mock_adaptors.NewLogger(t, ctrl)
-		logger.EXPECT().
-			SetLevel(adaptors.LogLevel(0))
-
-		cmd := Cmd{
-			Login:  login,
-			Env:    env,
-			Logger: logger,
-		}
-		exitCode := cmd.Run(ctx, []string{executable}, version)
-		if exitCode != 0 {
-			t.Errorf("exitCode wants 0 but %d", exitCode)
-		}
-	})
-
 	t.Run("TooManyArgs", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		env := mock_adaptors.NewMockEnv(ctrl)
-		env.EXPECT().Getenv(gomock.Any()).AnyTimes()
 		cmd := Cmd{
 			Login:  mock_usecases.NewMockLogin(ctrl),
-			Env:    env,
 			Logger: mock_adaptors.NewLogger(t, ctrl),
 		}
 		exitCode := cmd.Run(context.TODO(), []string{executable, "some"}, version)

@@ -8,7 +8,7 @@ import (
 	"github.com/int128/kubelogin/kubeconfig"
 )
 
-//go:generate mockgen -package mock_adaptors -destination ../mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors/interfaces KubeConfig,HTTP,OIDC,Env,Logger
+//go:generate mockgen -package mock_adaptors -destination ../mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors/interfaces KubeConfig,HTTP,OIDC,Logger
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -38,7 +38,7 @@ type OIDC interface {
 type OIDCAuthenticateIn struct {
 	Config          kubeconfig.OIDCConfig
 	Client          *http.Client // HTTP client for oidc and oauth2
-	LocalServerPort int          // HTTP server port
+	LocalServerPort []int        // HTTP server port candidates
 	SkipOpenBrowser bool         // skip opening browser if true
 }
 
@@ -55,10 +55,6 @@ type OIDCAuthenticateOut struct {
 type OIDCVerifyIn struct {
 	Config kubeconfig.OIDCConfig
 	Client *http.Client
-}
-
-type Env interface {
-	Getenv(key string) string
 }
 
 type Logger interface {
