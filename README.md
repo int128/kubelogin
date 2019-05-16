@@ -24,7 +24,7 @@ brew install kubelogin
 kubectl krew install oidc-login
 
 # GitHub Releases
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.10.0/kubelogin_linux_amd64.zip
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.11.0/kubelogin_linux_amd64.zip
 unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
@@ -33,10 +33,9 @@ After initial setup or when the token has been expired, just run:
 
 ```
 % kubelogin
-Using current-context: hello.k8s.local
-Open http://localhost:8000 for authorization
-Got a token for subject 0123456789 (valid until 2019-04-12 11:00:49 +0900 JST)
-Updated ~/.kube/config
+Open http://localhost:8000 for authentication
+You got a valid token until 2019-05-16 22:03:13 +0900 JST
+Updated ~/.kubeconfig
 ```
 
 or run as a kubectl plugin:
