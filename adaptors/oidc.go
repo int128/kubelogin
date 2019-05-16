@@ -24,8 +24,8 @@ func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn, c
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
 	}
-	flow := oauth2cli.AuthCodeFlow{
-		Config: oauth2.Config{
+	config := oauth2cli.Config{
+		OAuth2Config: oauth2.Config{
 			Endpoint:     provider.Endpoint(),
 			ClientID:     in.Config.ClientID(),
 			ClientSecret: in.Config.ClientSecret(),
@@ -36,7 +36,7 @@ func (*OIDC) Authenticate(ctx context.Context, in adaptors.OIDCAuthenticateIn, c
 		AuthCodeOptions:    []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
 		ShowLocalServerURL: cb.ShowLocalServerURL,
 	}
-	token, err := flow.GetToken(ctx)
+	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not get a token")
 	}
