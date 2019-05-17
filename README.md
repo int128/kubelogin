@@ -1,7 +1,7 @@
-# kubelogin [![CircleCI](https://circleci.com/gh/int128/kubelogin.svg?style=shield)](https://circleci.com/gh/int128/kubelogin)
+# kubelogin [![CircleCI](https://circleci.com/gh/int128/kubelogin.svg?style=shield)](https://circleci.com/gh/int128/kubelogin) [![Go Report Card](https://goreportcard.com/badge/github.com/int128/kubelogin)](https://goreportcard.com/report/github.com/int128/kubelogin)
 
-This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
-It updates the kubeconfig file with an ID token and refresh token got from the OIDC provider.
+This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens), also known as `kubectl oidc-login`.
+It gets a token from the OIDC provider and writes it to the kubeconfig.
 
 
 ## Getting Started
@@ -52,8 +52,6 @@ For more, see the following documents:
 - [Getting Started with Keycloak](docs/keycloak.md)
 - [Getting Started with Google Identity Platform](docs/google.md)
 - [Team Operation](docs/team_ops.md)
-
-If you are using other platforms, please contribute documents via pull requests.
 
 
 ## Configuration
