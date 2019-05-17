@@ -21,6 +21,7 @@ jobs:
       # workaround for https://github.com/golang/go/issues/27925
       - run: sed -e '/^k8s.io\/client-go /d' -i go.sum
       - run: make check
+      - run: bash <(curl -s https://codecov.io/bash)
       - run: make run
       - run: |
           if [ "$CIRCLE_TAG" ]; then

@@ -10,7 +10,7 @@ all: $(TARGET)
 check:
 	golangci-lint run
 	$(MAKE) -C adaptors_test/keys/testdata
-	go test -v -race ./...
+	go test -v -race -cover -coverprofile=coverage.out ./...
 
 $(TARGET): $(wildcard *.go)
 	go build -o $@ -ldflags "$(LDFLAGS)"

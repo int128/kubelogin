@@ -1,5 +1,9 @@
 /.idea
+
+/.kubeconfig*
+
 /dist
+/coverage.out
+
 /kubelogin
 /kubectl-oidc_login
-/.kubeconfig*
