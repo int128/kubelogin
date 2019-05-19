@@ -6,13 +6,6 @@ It gets a token from the OIDC provider and writes it to the kubeconfig.
 
 ## Getting Started
 
-You need to setup the following components:
-
-- OIDC provider
-- Kubernetes API server
-- Role for your group or user
-- kubectl authentication
-
 You can install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases) as follows:
 
 ```sh
@@ -29,23 +22,37 @@ unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
 
-After initial setup or when the token has been expired, just run:
+Just run:
+
+```sh
+kubelogin
+```
+
+It automatically opens the browser and you can log in to the provider.
+
+<img src="docs/keycloak-login.png" alt="keycloak-login" width="455" height="329">
+
+After authentication, an ID token and refresh token will be written to the kubeconfig.
 
 ```
 % kubelogin
 Open http://localhost:8000 for authentication
-You got a valid token until 2019-05-16 22:03:13 +0900 JST
+You got a valid token until 2019-05-18 10:28:51 +0900 JST
 Updated ~/.kubeconfig
 ```
 
-or run as a kubectl plugin:
+If the token is valid, kubelogin does nothing.
 
 ```
-% kubectl oidc-login
+% kubelogin
+You already have a valid token until 2019-05-18 10:28:51 +0900 JST
 ```
 
-It opens the browser and you can log in to the provider.
-After authentication, it gets an ID token and refresh token and writes them to the kubeconfig.
+As well as you can run it as a kubectl plugin:
+
+```sh
+kubectl oidc-plugin
+```
 
 For more, see the following documents:
 
