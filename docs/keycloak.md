@@ -67,7 +67,7 @@ You can create a custom role and assign it as well.
 Configure `kubectl` for the OIDC authentication.
 
 ```sh
-kubectl config set-credentials NAME \
+kubectl config set-credentials KUBECONTEXT \
   --auth-provider oidc \
   --auth-provider-arg idp-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM \
   --auth-provider-arg client-id=kubernetes \
@@ -80,12 +80,9 @@ Run `kubelogin`.
 
 ```
 % kubelogin
-2018/08/10 10:36:38 Reading .kubeconfig
-2018/08/10 10:36:38 Using current context: hello.k8s.local
-2018/08/10 10:36:41 Open http://localhost:8000 for authorization
-2018/08/10 10:36:45 GET /
-2018/08/10 10:37:07 GET /?state=...&session_state=...&code=ey...
-2018/08/10 10:37:08 Updated .kubeconfig
+Open http://localhost:8000 for authentication
+You got a valid token until 2019-05-16 22:03:13 +0900 JST
+Updated ~/.kubeconfig
 ```
 
 Now your `~/.kube/config` should be like:
