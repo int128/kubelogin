@@ -8,7 +8,6 @@ import (
 	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/pkg/errors"
-	"go.uber.org/dig"
 )
 
 const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubectl for OIDC authentication?
@@ -18,12 +17,7 @@ const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubec
     --auth-provider-arg client-id=YOUR_CLIENT_ID \
     --auth-provider-arg client-secret=YOUR_CLIENT_SECRET`
 
-func NewLogin(i Login) usecases.Login {
-	return &i
-}
-
 type Login struct {
-	dig.In
 	KubeConfig adaptors.KubeConfig
 	HTTP       adaptors.HTTP
 	OIDC       adaptors.OIDC

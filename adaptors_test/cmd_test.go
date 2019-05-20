@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/adaptors_test/authserver"
 	"github.com/int128/kubelogin/adaptors_test/keys"
 	"github.com/int128/kubelogin/adaptors_test/kubeconfig"
@@ -247,16 +246,10 @@ func newIDToken(t *testing.T, issuer string) string {
 
 func runCmd(t *testing.T, ctx context.Context, args ...string) {
 	t.Helper()
-	newLogger := func() adaptors.Logger {
-		return logger.New(t)
-	}
-	if err := di.InvokeWithExtra(func(cmd adaptors.Cmd) {
-		exitCode := cmd.Run(ctx, append([]string{"kubelogin", "--v=1"}, args...), "HEAD")
-		if exitCode != 0 {
-			t.Errorf("exit status wants 0 but %d", exitCode)
-		}
-	}, newLogger); err != nil {
-		t.Errorf("Invoke returned error: %+v", err)
+	cmd := di.NewCmd(logger.New(t))
+	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "--v=1"}, args...), "HEAD")
+	if exitCode != 0 {
+		t.Errorf("exit status wants 0 but %d", exitCode)
 	}
 }
 

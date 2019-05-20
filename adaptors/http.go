@@ -10,15 +10,9 @@ import (
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/infrastructure"
 	"github.com/pkg/errors"
-	"go.uber.org/dig"
 )
 
-func NewHTTP(i HTTP) adaptors.HTTP {
-	return &i
-}
-
 type HTTP struct {
-	dig.In
 	Logger adaptors.Logger
 }
 
