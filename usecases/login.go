@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/adaptors/interfaces"
@@ -63,18 +64,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		u.Logger.Debugf(1, "The ID token was invalid: %s", err)
 	}
 
-	out, err := u.OIDC.Authenticate(ctx,
-		adaptors.OIDCAuthenticateIn{
-			Config:          auth.OIDCConfig,
-			Client:          hc,
-			LocalServerPort: in.ListenPort,
-			SkipOpenBrowser: in.SkipOpenBrowser,
-		},
-		adaptors.OIDCAuthenticateCallback{
-			ShowLocalServerURL: func(url string) {
-				u.Logger.Printf("Open %s for authentication", url)
-			},
-		})
+	out, err := u.authenticate(ctx, hc, auth, in)
 	if err != nil {
 		return errors.Wrapf(err, "could not get a token from the OIDC provider")
 	}
@@ -85,6 +75,29 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return errors.Wrapf(err, "could not write the token to the kubeconfig")
 	}
 	return nil
+}
+
+func (u *Login) authenticate(ctx context.Context, hc *http.Client, auth *kubeconfig.CurrentAuth, in usecases.LoginIn) (*adaptors.OIDCAuthenticateOut, error) {
+	if in.Username != "" {
+		return u.OIDC.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
+			Config:   auth.OIDCConfig,
+			Client:   hc,
+			Username: in.Username,
+			Password: in.Password,
+		})
+	}
+	return u.OIDC.AuthenticateByCode(ctx,
+		adaptors.OIDCAuthenticateByCodeIn{
+			Config:          auth.OIDCConfig,
+			Client:          hc,
+			LocalServerPort: in.ListenPort,
+			SkipOpenBrowser: in.SkipOpenBrowser,
+		},
+		adaptors.OIDCAuthenticateCallback{
+			ShowLocalServerURL: func(url string) {
+				u.Logger.Printf("Open %s for authentication", url)
+			},
+		})
 }
 
 func (u *Login) dumpIDToken(token *oidc.IDToken) {

@@ -134,17 +134,30 @@ func (m *MockOIDC) EXPECT() *MockOIDCMockRecorder {
 	return m.recorder
 }
 
-// Authenticate mocks base method
-func (m *MockOIDC) Authenticate(arg0 context.Context, arg1 interfaces.OIDCAuthenticateIn, arg2 interfaces.OIDCAuthenticateCallback) (*interfaces.OIDCAuthenticateOut, error) {
-	ret := m.ctrl.Call(m, "Authenticate", arg0, arg1, arg2)
+// AuthenticateByCode mocks base method
+func (m *MockOIDC) AuthenticateByCode(arg0 context.Context, arg1 interfaces.OIDCAuthenticateByCodeIn, arg2 interfaces.OIDCAuthenticateCallback) (*interfaces.OIDCAuthenticateOut, error) {
+	ret := m.ctrl.Call(m, "AuthenticateByCode", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*interfaces.OIDCAuthenticateOut)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Authenticate indicates an expected call of Authenticate
-func (mr *MockOIDCMockRecorder) Authenticate(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockOIDC)(nil).Authenticate), arg0, arg1, arg2)
+// AuthenticateByCode indicates an expected call of AuthenticateByCode
+func (mr *MockOIDCMockRecorder) AuthenticateByCode(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByCode", reflect.TypeOf((*MockOIDC)(nil).AuthenticateByCode), arg0, arg1, arg2)
+}
+
+// AuthenticateByPassword mocks base method
+func (m *MockOIDC) AuthenticateByPassword(arg0 context.Context, arg1 interfaces.OIDCAuthenticateByPasswordIn) (*interfaces.OIDCAuthenticateOut, error) {
+	ret := m.ctrl.Call(m, "AuthenticateByPassword", arg0, arg1)
+	ret0, _ := ret[0].(*interfaces.OIDCAuthenticateOut)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AuthenticateByPassword indicates an expected call of AuthenticateByPassword
+func (mr *MockOIDCMockRecorder) AuthenticateByPassword(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByPassword", reflect.TypeOf((*MockOIDC)(nil).AuthenticateByPassword), arg0, arg1)
 }
 
 // Verify mocks base method

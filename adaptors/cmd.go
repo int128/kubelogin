@@ -14,8 +14,11 @@ const usage = `Login to the OpenID Connect provider and update the kubeconfig.
 kubelogin %[2]s
 
 Examples:
-  # Login to the current provider and update ~/.kube/config
+  # Login to the provider using authorization code grant.
   %[1]s
+
+  # Login to the provider using resource owner password credentials grant.
+  %[1]s --username USERNAME --password PASSWORD
 
 Options:
 %[3]s
@@ -42,6 +45,8 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 	f.StringVar(&o.KubeUser, "user", "", "The name of the kubeconfig user to use. Prior to --context")
 	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
+	f.StringVar(&o.Username, "username", "", "Username for the resource owner password credentials grant")
+	f.StringVar(&o.Password, "password", "", "Password for the resource owner password credentials grant")
 	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	f.IntVarP(&o.Verbose, "v", "v", 0, "If set to 1 or greater, it shows debug log")
@@ -67,6 +72,8 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		SkipTLSVerify:                o.SkipTLSVerify,
 		ListenPort:                   o.ListenPort,
 		SkipOpenBrowser:              o.SkipOpenBrowser,
+		Username:                     o.Username,
+		Password:                     o.Password,
 	}
 	if err := cmd.Login.Do(ctx, in); err != nil {
 		cmd.Logger.Printf("Error: %s", err)
@@ -79,10 +86,12 @@ type cmdOptions struct {
 	KubeConfig           string
 	KubeContext          string
 	KubeUser             string
-	CertificateAuthority string
-	SkipTLSVerify        bool
 	ListenPort           []int
 	SkipOpenBrowser      bool
+	Username             string
+	Password             string
+	CertificateAuthority string
+	SkipTLSVerify        bool
 	Verbose              int
 }
 

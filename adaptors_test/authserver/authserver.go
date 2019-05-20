@@ -1,28 +1,27 @@
+// Package authserver provides an authentication server which supports
+// Authorization Code Grant and Resource Owner Password Credentials Grant.
+// This is only for testing.
+//
 package authserver
 
 import (
-	"crypto/rsa"
 	"net/http"
 	"testing"
 )
 
-// Config represents server configuration.
+// Config represents an authentication server configuration.
 type Config struct {
-	Addr           string
-	Issuer         string
-	Scope          string
-	TLSServerCert  string
-	TLSServerKey   string
-	IDToken        string
-	RefreshToken   string
-	IDTokenKeyPair *rsa.PrivateKey
+	Addr          string
+	TLSServerCert string
+	TLSServerKey  string
+	Handler       http.Handler
 }
 
-// Start starts a HTTP server.
+// Start starts an authentication server.
 func Start(t *testing.T, c Config) *http.Server {
 	s := &http.Server{
 		Addr:    c.Addr,
-		Handler: newHandler(t, c),
+		Handler: c.Handler,
 	}
 	go func() {
 		var err error

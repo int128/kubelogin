@@ -55,6 +55,8 @@ func TestCmd_Run(t *testing.T) {
 				SkipTLSVerify:                true,
 				ListenPort:                   []int{10080, 20080},
 				SkipOpenBrowser:              true,
+				Username:                     "USER",
+				Password:                     "PASS",
 			})
 
 		logger := mock_adaptors.NewLogger(t, ctrl)
@@ -74,6 +76,8 @@ func TestCmd_Run(t *testing.T) {
 			"--skip-open-browser",
 			"--certificate-authority", "/path/to/cacert",
 			"--insecure-skip-tls-verify",
+			"--username", "USER",
+			"--password", "PASS",
 			"-v1",
 		}, version)
 		if exitCode != 0 {
