@@ -8,7 +8,6 @@ import (
 	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases/interfaces"
 	"github.com/spf13/pflag"
-	"go.uber.org/dig"
 )
 
 const usage = `Login to the OpenID Connect provider and update the kubeconfig.
@@ -25,12 +24,7 @@ Usage:
 
 var defaultListenPort = []int{8000, 18000}
 
-func NewCmd(i Cmd) adaptors.Cmd {
-	return &i
-}
-
 type Cmd struct {
-	dig.In
 	Login  usecases.Login
 	Logger adaptors.Logger
 }
