@@ -173,13 +173,25 @@ func newLoginTestFixture() loginTestFixture {
 func TestLogin_Do(t *testing.T) {
 	httpClient := &http.Client{}
 
-	newMockOIDC := func(ctrl *gomock.Controller, ctx context.Context, in adaptors.OIDCAuthenticateIn) *mock_adaptors.MockOIDC {
+	newMockOIDC := func(ctrl *gomock.Controller, ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) *mock_adaptors.MockOIDC {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			Authenticate(ctx, in, gomock.Any()).
-			Do(func(_ context.Context, _ adaptors.OIDCAuthenticateIn, cb adaptors.OIDCAuthenticateCallback) {
+			AuthenticateByCode(ctx, in, gomock.Any()).
+			Do(func(_ context.Context, _ adaptors.OIDCAuthenticateByCodeIn, cb adaptors.OIDCAuthenticateCallback) {
 				cb.ShowLocalServerURL("http://localhost:10000")
 			}).
+			Return(&adaptors.OIDCAuthenticateOut{
+				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
+				IDToken:         "YOUR_ID_TOKEN",
+				RefreshToken:    "YOUR_REFRESH_TOKEN",
+			}, nil)
+		return mockOIDC
+	}
+
+	newMockPasswordOIDC := func(ctrl *gomock.Controller, ctx context.Context, in adaptors.OIDCAuthenticateByPasswordIn) *mock_adaptors.MockOIDC {
+		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
+		mockOIDC.EXPECT().
+			AuthenticateByPassword(ctx, in).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",
@@ -211,7 +223,7 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		oidcIn := adaptors.OIDCAuthenticateIn{
+		oidcIn := adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
 			Client:          httpClient,
@@ -225,6 +237,51 @@ func TestLogin_Do(t *testing.T) {
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			ListenPort: []int{10000},
+		}); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
+	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+		f := newLoginTestFixture()
+
+		mockHTTP := mock_adaptors.NewMockHTTP(ctrl)
+		mockHTTP.EXPECT().
+			NewClient(adaptors.HTTPClientConfig{
+				OIDCConfig: f.googleOIDCConfig,
+			}).
+			Return(httpClient, nil)
+
+		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
+		mockKubeConfig.EXPECT().
+			LoadByDefaultRules("").
+			Return(f.mergedKubeConfig, nil)
+		mockKubeConfig.EXPECT().
+			LoadFromFile("/path/to/google").
+			Return(f.googleKubeConfig, nil)
+		mockKubeConfig.EXPECT().
+			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
+
+		oidcIn := adaptors.OIDCAuthenticateByPasswordIn{
+			Config:   f.googleOIDCConfig,
+			Client:   httpClient,
+			Username: "USER",
+			Password: "PASS",
+		}
+
+		u := Login{
+			KubeConfig: mockKubeConfig,
+			HTTP:       mockHTTP,
+			OIDC:       newMockPasswordOIDC(ctrl, ctx, oidcIn),
+			Logger:     mock_adaptors.NewLogger(t, ctrl),
+		}
+		if err := u.Do(ctx, usecases.LoginIn{
+			ListenPort: []int{10000},
+			Username:   "USER",
+			Password:   "PASS",
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -253,7 +310,7 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		oidcIn := adaptors.OIDCAuthenticateIn{
+		oidcIn := adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
 			Client:          httpClient,
@@ -296,7 +353,7 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.keycloakKubeConfigWithToken, "/path/to/keycloak")
 
-		oidcIn := adaptors.OIDCAuthenticateIn{
+		oidcIn := adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.keycloakOIDCConfig,
 			LocalServerPort: []int{10000},
 			Client:          httpClient,
@@ -339,7 +396,7 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.keycloakKubeConfigWithToken, "/path/to/keycloak")
 
-		oidcIn := adaptors.OIDCAuthenticateIn{
+		oidcIn := adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.keycloakOIDCConfig,
 			LocalServerPort: []int{10000},
 			Client:          httpClient,
@@ -383,7 +440,7 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		oidcIn := adaptors.OIDCAuthenticateIn{
+		oidcIn := adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
 			Client:          httpClient,
@@ -426,7 +483,7 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		oidcIn := adaptors.OIDCAuthenticateIn{
+		oidcIn := adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
 			Client:          httpClient,
@@ -511,7 +568,7 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		mockOIDC := newMockOIDC(ctrl, ctx, adaptors.OIDCAuthenticateIn{
+		mockOIDC := newMockOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
 			Client:          httpClient,
@@ -564,7 +621,7 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		oidcIn := adaptors.OIDCAuthenticateIn{
+		oidcIn := adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
 			Client:          httpClient,

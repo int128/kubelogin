@@ -75,6 +75,8 @@ Options:
       --user string                    The name of the kubeconfig user to use. Prior to --context
       --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
       --skip-open-browser              If true, it does not open the browser on authentication
+      --username string                Username for the resource owner password credentials grant
+      --password string                Password for the resource owner password credentials grant
       --certificate-authority string   Path to a cert file for the certificate authority
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
   -v, --v int                          If set to 1 or greater, it shows debug log
@@ -140,6 +142,18 @@ You can change the ports by the option:
 ```sh
 kubelogin --listen-port 12345 --listen-port 23456
 ```
+
+
+### Resource owner password credentials grant
+
+By default kubelogin performs the authorization code grant.
+You can choose the resource owner password credentials grant by the options:
+
+```sh
+kubelogin --username USER --password PASS
+```
+
+Note that some providers do not support the resource owner password credentials grant.
 
 
 ### CA Certificates
