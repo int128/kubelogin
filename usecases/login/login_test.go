@@ -1,4 +1,4 @@
-package usecases
+package login
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/kubeconfig"
-	"github.com/int128/kubelogin/usecases/interfaces"
+	"github.com/int128/kubelogin/usecases"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/clientcmd/api"
 )

@@ -6,9 +6,11 @@
 package di
 
 import (
+	"github.com/google/wire"
 	adaptors2 "github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/usecases"
+	"github.com/int128/kubelogin/usecases/login"
 )
 
 // Injectors from di.go:
@@ -19,15 +21,19 @@ func NewCmd(logger adaptors.Logger) adaptors.Cmd {
 		Logger: logger,
 	}
 	oidc := &adaptors2.OIDC{}
-	login := &usecases.Login{
+	loginLogin := &login.Login{
 		KubeConfig: kubeConfig,
 		HTTP:       http,
 		OIDC:       oidc,
 		Logger:     logger,
 	}
 	cmd := &adaptors2.Cmd{
-		Login:  login,
+		Login:  loginLogin,
 		Logger: logger,
 	}
 	return cmd
 }
+
+// di.go:
+
+var usecasesSet = wire.NewSet(login.Login{}, wire.Bind((*usecases.Login)(nil), (*login.Login)(nil)))

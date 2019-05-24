@@ -1,4 +1,4 @@
-package usecases
+package login
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/adaptors/interfaces"
 	"github.com/int128/kubelogin/kubeconfig"
-	"github.com/int128/kubelogin/usecases/interfaces"
+	"github.com/int128/kubelogin/usecases"
 	"github.com/pkg/errors"
 )
 
