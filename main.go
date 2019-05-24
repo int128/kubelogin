@@ -11,5 +11,5 @@ import (
 var version = "HEAD"
 
 func main() {
-	os.Exit(di.NewCmd(logger.NewLogger()).Run(context.Background(), os.Args, version))
+	os.Exit(di.NewCmd(logger.New()).Run(context.Background(), os.Args, version))
 }

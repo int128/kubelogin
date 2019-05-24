@@ -7,16 +7,16 @@ import (
 	"github.com/int128/kubelogin/adaptors"
 )
 
-// NewLogger returns a Logger with the standard log.Logger for messages and debug.
-func NewLogger() adaptors.Logger {
+// New returns a Logger with the standard log.Logger for messages and debug.
+func New() adaptors.Logger {
 	return &Logger{
 		stdLogger:   log.New(os.Stderr, "", 0),
 		debugLogger: log.New(os.Stderr, "", log.Ltime|log.Lmicroseconds),
 	}
 }
 
-// NewLoggerWith returns a Logger with the given standard log.Logger.
-func NewLoggerWith(l stdLogger) *Logger {
+// FromStdLogger returns a Logger with the given standard log.Logger.
+func FromStdLogger(l stdLogger) *Logger {
 	return &Logger{
 		stdLogger:   l,
 		debugLogger: l,

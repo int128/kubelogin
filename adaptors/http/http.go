@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/int128/kubelogin/adaptors"
-	"github.com/int128/kubelogin/infrastructure"
+	"github.com/int128/kubelogin/adaptors/http/logging"
 	"github.com/pkg/errors"
 )
 
@@ -46,7 +46,7 @@ func (h *HTTP) NewClient(config adaptors.HTTPClientConfig) (*http.Client, error)
 	}
 	tlsConfig.InsecureSkipVerify = config.SkipTLSVerify
 	return &http.Client{
-		Transport: &infrastructure.LoggingTransport{
+		Transport: &logging.Transport{
 			Base: &http.Transport{
 				TLSClientConfig: &tlsConfig,
 				Proxy:           http.ProxyFromEnvironment,

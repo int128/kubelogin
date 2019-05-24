@@ -5,7 +5,7 @@ import (
 )
 
 func New(t testingLogger) *logger.Logger {
-	return logger.NewLoggerWith(&bridge{t})
+	return logger.FromStdLogger(&bridge{t})
 }
 
 type testingLogger interface {

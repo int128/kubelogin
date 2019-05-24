@@ -1,4 +1,4 @@
-package infrastructure
+package logging
 
 import (
 	"net/http"
@@ -12,12 +12,12 @@ const (
 	logLevelDumpBody    = 3
 )
 
-type LoggingTransport struct {
+type Transport struct {
 	Base   http.RoundTripper
 	Logger adaptors.Logger
 }
 
-func (t *LoggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if !t.IsDumpEnabled() {
 		return t.Base.RoundTrip(req)
 	}
@@ -41,10 +41,10 @@ func (t *LoggingTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return resp, err
 }
 
-func (t *LoggingTransport) IsDumpEnabled() bool {
+func (t *Transport) IsDumpEnabled() bool {
 	return t.Logger.IsEnabled(logLevelDumpHeaders)
 }
 
-func (t *LoggingTransport) IsDumpBodyEnabled() bool {
+func (t *Transport) IsDumpBodyEnabled() bool {
 	return t.Logger.IsEnabled(logLevelDumpBody)
 }
