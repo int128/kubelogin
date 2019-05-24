@@ -1,11 +1,11 @@
 package logger
 
 import (
-	"github.com/int128/kubelogin/adaptors"
+	"github.com/int128/kubelogin/adaptors/logger"
 )
 
-func New(t testingLogger) *adaptors.Logger {
-	return adaptors.NewLoggerWith(&bridge{t})
+func New(t testingLogger) *logger.Logger {
+	return logger.FromStdLogger(&bridge{t})
 }
 
 type testingLogger interface {

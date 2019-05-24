@@ -1,13 +1,12 @@
-package usecases
+package login
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/coreos/go-oidc"
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/kubeconfig"
-	"github.com/int128/kubelogin/usecases/interfaces"
+	"github.com/int128/kubelogin/usecases"
 	"github.com/pkg/errors"
 )
 
@@ -20,7 +19,6 @@ const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubec
 
 type Login struct {
 	KubeConfig adaptors.KubeConfig
-	HTTP       adaptors.HTTP
 	OIDC       adaptors.OIDC
 	Logger     adaptors.Logger
 }
@@ -44,18 +42,18 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	}
 	u.Logger.Debugf(1, "A token will be written to %s", destinationKubeConfigFilename)
 
-	hc, err := u.HTTP.NewClient(adaptors.HTTPClientConfig{
+	oidcClient, err := u.OIDC.NewClient(adaptors.HTTPClientConfig{
 		OIDCConfig:                   auth.OIDCConfig,
 		CertificateAuthorityFilename: in.CertificateAuthorityFilename,
 		SkipTLSVerify:                in.SkipTLSVerify,
 	})
 	if err != nil {
-		return errors.Wrapf(err, "could not set up a HTTP client")
+		return errors.Wrapf(err, "could not create an OIDC client")
 	}
 
 	if auth.OIDCConfig.IDToken() != "" {
 		u.Logger.Debugf(1, "Found the ID token in the kubeconfig")
-		token, err := u.OIDC.Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig, Client: hc})
+		token, err := oidcClient.Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig})
 		if err == nil {
 			u.Logger.Printf("You already have a valid token until %s", token.Expiry)
 			u.dumpIDToken(token)
@@ -64,7 +62,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		u.Logger.Debugf(1, "The ID token was invalid: %s", err)
 	}
 
-	out, err := u.authenticate(ctx, hc, auth, in)
+	out, err := u.authenticate(ctx, oidcClient, auth, in)
 	if err != nil {
 		return errors.Wrapf(err, "could not get a token from the OIDC provider")
 	}
@@ -77,19 +75,17 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	return nil
 }
 
-func (u *Login) authenticate(ctx context.Context, hc *http.Client, auth *kubeconfig.CurrentAuth, in usecases.LoginIn) (*adaptors.OIDCAuthenticateOut, error) {
+func (u *Login) authenticate(ctx context.Context, oidcClient adaptors.OIDCClient, auth *kubeconfig.CurrentAuth, in usecases.LoginIn) (*adaptors.OIDCAuthenticateOut, error) {
 	if in.Username != "" {
-		return u.OIDC.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
+		return oidcClient.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
 			Config:   auth.OIDCConfig,
-			Client:   hc,
 			Username: in.Username,
 			Password: in.Password,
 		})
 	}
-	return u.OIDC.AuthenticateByCode(ctx,
+	return oidcClient.AuthenticateByCode(ctx,
 		adaptors.OIDCAuthenticateByCodeIn{
 			Config:          auth.OIDCConfig,
-			Client:          hc,
 			LocalServerPort: in.ListenPort,
 			SkipOpenBrowser: in.SkipOpenBrowser,
 		},

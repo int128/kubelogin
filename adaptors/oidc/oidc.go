@@ -1,20 +1,39 @@
-package adaptors
+package oidc
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/coreos/go-oidc"
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/oauth2cli"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
-type OIDC struct{}
+type OIDC struct {
+	HTTP adaptors.HTTP
+}
 
-func (*OIDC) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn, cb adaptors.OIDCAuthenticateCallback) (*adaptors.OIDCAuthenticateOut, error) {
-	if in.Client != nil {
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
+func (o *OIDC) NewClient(config adaptors.HTTPClientConfig) (adaptors.OIDCClient, error) {
+	hc, err := o.HTTP.NewClient(adaptors.HTTPClientConfig{
+		OIDCConfig:                   config.OIDCConfig,
+		CertificateAuthorityFilename: config.CertificateAuthorityFilename,
+		SkipTLSVerify:                config.SkipTLSVerify,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not create a HTTP client")
+	}
+	return &Client{hc}, nil
+}
+
+type Client struct {
+	hc *http.Client
+}
+
+func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn, cb adaptors.OIDCAuthenticateCallback) (*adaptors.OIDCAuthenticateOut, error) {
+	if c.hc != nil {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
 	}
 	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL())
 	if err != nil {
@@ -52,9 +71,9 @@ func (*OIDC) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticat
 	}, nil
 }
 
-func (*OIDC) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAuthenticateByPasswordIn) (*adaptors.OIDCAuthenticateOut, error) {
-	if in.Client != nil {
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
+func (c *Client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAuthenticateByPasswordIn) (*adaptors.OIDCAuthenticateOut, error) {
+	if c.hc != nil {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
 	}
 	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL())
 	if err != nil {
@@ -86,9 +105,9 @@ func (*OIDC) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAuthent
 	}, nil
 }
 
-func (*OIDC) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*oidc.IDToken, error) {
-	if in.Client != nil {
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, in.Client)
+func (c *Client) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*oidc.IDToken, error) {
+	if c.hc != nil {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
 	}
 	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL())
 	if err != nil {

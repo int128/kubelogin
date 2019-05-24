@@ -1,10 +1,10 @@
-package adaptors
+package logger
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 )
 
 type mockStdLogger struct {

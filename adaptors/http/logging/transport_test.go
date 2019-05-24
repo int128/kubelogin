@@ -1,4 +1,4 @@
-package infrastructure
+package logging
 
 import (
 	"bufio"
@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/adaptors/mock_adaptors"
 )
 
@@ -42,7 +42,7 @@ dummy`)), req)
 	}
 	defer resp.Body.Close()
 
-	transport := &LoggingTransport{
+	transport := &Transport{
 		Base:   &mockTransport{resp: resp},
 		Logger: logger,
 	}
@@ -64,7 +64,7 @@ func TestLoggingTransport_IsDumpEnabled(t *testing.T) {
 		IsEnabled(adaptors.LogLevel(logLevelDumpHeaders)).
 		Return(true)
 
-	transport := &LoggingTransport{
+	transport := &Transport{
 		Logger: logger,
 	}
 	if transport.IsDumpEnabled() != true {
@@ -81,7 +81,7 @@ func TestLoggingTransport_IsDumpBodyEnabled(t *testing.T) {
 		IsEnabled(adaptors.LogLevel(logLevelDumpBody)).
 		Return(true)
 
-	transport := &LoggingTransport{
+	transport := &Transport{
 		Logger: logger,
 	}
 	if transport.IsDumpBodyEnabled() != true {

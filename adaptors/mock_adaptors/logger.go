@@ -2,7 +2,7 @@ package mock_adaptors
 
 import (
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 )
 
 func NewLogger(t testingLogger, ctrl *gomock.Controller) *Logger {
