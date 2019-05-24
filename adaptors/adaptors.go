@@ -8,7 +8,7 @@ import (
 	"github.com/int128/kubelogin/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors KubeConfig,HTTP,OIDC,Logger
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors KubeConfig,HTTP,OIDC,OIDCClient,Logger
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -31,6 +31,10 @@ type HTTPClientConfig struct {
 }
 
 type OIDC interface {
+	NewClient(config HTTPClientConfig) (OIDCClient, error)
+}
+
+type OIDCClient interface {
 	AuthenticateByCode(ctx context.Context, in OIDCAuthenticateByCodeIn, cb OIDCAuthenticateCallback) (*OIDCAuthenticateOut, error)
 	AuthenticateByPassword(ctx context.Context, in OIDCAuthenticateByPasswordIn) (*OIDCAuthenticateOut, error)
 	Verify(ctx context.Context, in OIDCVerifyIn) (*oidc.IDToken, error)
@@ -38,14 +42,12 @@ type OIDC interface {
 
 type OIDCAuthenticateByCodeIn struct {
 	Config          kubeconfig.OIDCConfig
-	Client          *http.Client // HTTP client for oidc and oauth2
-	LocalServerPort []int        // HTTP server port candidates
-	SkipOpenBrowser bool         // skip opening browser if true
+	LocalServerPort []int // HTTP server port candidates
+	SkipOpenBrowser bool  // skip opening browser if true
 }
 
 type OIDCAuthenticateByPasswordIn struct {
 	Config   kubeconfig.OIDCConfig
-	Client   *http.Client // HTTP client for oidc and oauth2
 	Username string
 	Password string
 }
@@ -62,7 +64,6 @@ type OIDCAuthenticateOut struct {
 
 type OIDCVerifyIn struct {
 	Config kubeconfig.OIDCConfig
-	Client *http.Client
 }
 
 type Logger interface {

@@ -23,10 +23,11 @@ func NewCmd(logger adaptors.Logger) adaptors.Cmd {
 	httpHTTP := &http.HTTP{
 		Logger: logger,
 	}
-	oidcOIDC := &oidc.OIDC{}
+	oidcOIDC := &oidc.OIDC{
+		HTTP: httpHTTP,
+	}
 	loginLogin := &login.Login{
 		KubeConfig: kubeConfig,
-		HTTP:       httpHTTP,
 		OIDC:       oidcOIDC,
 		Logger:     logger,
 	}
