@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc"
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/pkg/errors"

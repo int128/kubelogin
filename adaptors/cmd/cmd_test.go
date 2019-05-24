@@ -1,11 +1,11 @@
-package adaptors
+package cmd
 
 import (
 	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/int128/kubelogin/usecases/mock_usecases"

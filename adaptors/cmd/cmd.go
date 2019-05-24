@@ -1,10 +1,10 @@
-package adaptors
+package cmd
 
 import (
 	"context"
 	"strings"
 
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/spf13/pflag"

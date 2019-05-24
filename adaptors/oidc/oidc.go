@@ -1,10 +1,10 @@
-package adaptors
+package oidc
 
 import (
 	"context"
 
 	"github.com/coreos/go-oidc"
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/oauth2cli"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"

@@ -1,10 +1,10 @@
-package adaptors
+package logger
 
 import (
 	"log"
 	"os"
 
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 )
 
 // NewLogger returns a Logger with the standard log.Logger for messages and debug.

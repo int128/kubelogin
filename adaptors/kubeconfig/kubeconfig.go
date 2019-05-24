@@ -1,4 +1,4 @@
-package adaptors
+package kubeconfig
 
 import (
 	"github.com/int128/kubelogin/kubeconfig"

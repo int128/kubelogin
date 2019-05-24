@@ -1,4 +1,4 @@
-package adaptors
+package http
 
 import (
 	"crypto/tls"
@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/int128/kubelogin/adaptors/interfaces"
+	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/infrastructure"
 	"github.com/pkg/errors"
 )
