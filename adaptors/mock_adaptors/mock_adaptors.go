@@ -171,16 +171,16 @@ func (m *MockOIDCClient) EXPECT() *MockOIDCClientMockRecorder {
 }
 
 // AuthenticateByCode mocks base method
-func (m *MockOIDCClient) AuthenticateByCode(arg0 context.Context, arg1 adaptors.OIDCAuthenticateByCodeIn, arg2 adaptors.OIDCAuthenticateCallback) (*adaptors.OIDCAuthenticateOut, error) {
-	ret := m.ctrl.Call(m, "AuthenticateByCode", arg0, arg1, arg2)
+func (m *MockOIDCClient) AuthenticateByCode(arg0 context.Context, arg1 adaptors.OIDCAuthenticateByCodeIn) (*adaptors.OIDCAuthenticateOut, error) {
+	ret := m.ctrl.Call(m, "AuthenticateByCode", arg0, arg1)
 	ret0, _ := ret[0].(*adaptors.OIDCAuthenticateOut)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AuthenticateByCode indicates an expected call of AuthenticateByCode
-func (mr *MockOIDCClientMockRecorder) AuthenticateByCode(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByCode", reflect.TypeOf((*MockOIDCClient)(nil).AuthenticateByCode), arg0, arg1, arg2)
+func (mr *MockOIDCClientMockRecorder) AuthenticateByCode(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByCode", reflect.TypeOf((*MockOIDCClient)(nil).AuthenticateByCode), arg0, arg1)
 }
 
 // AuthenticateByPassword mocks base method

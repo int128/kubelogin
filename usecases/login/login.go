@@ -21,6 +21,7 @@ type Login struct {
 	KubeConfig adaptors.KubeConfig
 	OIDC       adaptors.OIDC
 	Logger     adaptors.Logger
+	Prompt     usecases.LoginPrompt
 }
 
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
@@ -75,24 +76,20 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	return nil
 }
 
-func (u *Login) authenticate(ctx context.Context, oidcClient adaptors.OIDCClient, auth *kubeconfig.CurrentAuth, in usecases.LoginIn) (*adaptors.OIDCAuthenticateOut, error) {
+func (u *Login) authenticate(ctx context.Context, client adaptors.OIDCClient, auth *kubeconfig.CurrentAuth, in usecases.LoginIn) (*adaptors.OIDCAuthenticateOut, error) {
 	if in.Username != "" {
-		return oidcClient.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
+		return client.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
 			Config:   auth.OIDCConfig,
 			Username: in.Username,
 			Password: in.Password,
 		})
 	}
-	return oidcClient.AuthenticateByCode(ctx,
+	return client.AuthenticateByCode(ctx,
 		adaptors.OIDCAuthenticateByCodeIn{
 			Config:          auth.OIDCConfig,
 			LocalServerPort: in.ListenPort,
 			SkipOpenBrowser: in.SkipOpenBrowser,
-		},
-		adaptors.OIDCAuthenticateCallback{
-			ShowLocalServerURL: func(url string) {
-				u.Logger.Printf("Open %s for authentication", url)
-			},
+			Prompt:          u.Prompt,
 		})
 }
 
@@ -123,4 +120,12 @@ func (u *Login) writeToken(filename string, userName kubeconfig.UserName, out *a
 	}
 	u.Logger.Printf("Updated %s", filename)
 	return nil
+}
+
+type Prompt struct {
+	Logger adaptors.Logger
+}
+
+func (p *Prompt) ShowLocalServerURL(url string) {
+	p.Logger.Printf("Open %s for authentication", url)
 }

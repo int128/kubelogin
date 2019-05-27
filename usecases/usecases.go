@@ -23,3 +23,7 @@ type LoginIn struct {
 	CertificateAuthorityFilename string // Optional
 	SkipTLSVerify                bool
 }
+
+type LoginPrompt interface {
+	ShowLocalServerURL(url string)
+}
