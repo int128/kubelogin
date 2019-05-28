@@ -31,7 +31,7 @@ type Client struct {
 	hc *http.Client
 }
 
-func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn, cb adaptors.OIDCAuthenticateCallback) (*adaptors.OIDCAuthenticateOut, error) {
+func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) (*adaptors.OIDCAuthenticateOut, error) {
 	if c.hc != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
 	}
@@ -49,7 +49,7 @@ func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 		LocalServerPort:    in.LocalServerPort,
 		SkipOpenBrowser:    in.SkipOpenBrowser,
 		AuthCodeOptions:    []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
-		ShowLocalServerURL: cb.ShowLocalServerURL,
+		ShowLocalServerURL: in.Prompt.ShowLocalServerURL,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {

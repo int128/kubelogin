@@ -169,7 +169,15 @@ func newLoginTestFixture() loginTestFixture {
 	return f
 }
 
+type mockPrompt struct{}
+
+func (*mockPrompt) ShowLocalServerURL(url string) {
+	panic("do not call")
+}
+
 func TestLogin_Do(t *testing.T) {
+	var prompt mockPrompt
+
 	newMockOIDC := func(ctrl *gomock.Controller, config adaptors.HTTPClientConfig, client adaptors.OIDCClient) *mock_adaptors.MockOIDC {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
@@ -181,10 +189,7 @@ func TestLogin_Do(t *testing.T) {
 	newMockCodeOIDC := func(ctrl *gomock.Controller, ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) *mock_adaptors.MockOIDCClient {
 		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(ctx, in, gomock.Any()).
-			Do(func(_ context.Context, _ adaptors.OIDCAuthenticateByCodeIn, cb adaptors.OIDCAuthenticateCallback) {
-				cb.ShowLocalServerURL("http://localhost:10000")
-			}).
+			AuthenticateByCode(ctx, in).
 			Return(&adaptors.OIDCAuthenticateOut{
 				VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
 				IDToken:         "YOUR_ID_TOKEN",
@@ -214,12 +219,14 @@ func TestLogin_Do(t *testing.T) {
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
+			Prompt:          &prompt,
 		}))
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Prompt:     &prompt,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			ListenPort: []int{10000},
@@ -296,12 +303,14 @@ func TestLogin_Do(t *testing.T) {
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
+			Prompt:          &prompt,
 		}))
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Prompt:     &prompt,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeConfigFilename: "/path/to/kubeconfig",
@@ -332,12 +341,14 @@ func TestLogin_Do(t *testing.T) {
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.keycloakOIDCConfig,
 			LocalServerPort: []int{10000},
+			Prompt:          &prompt,
 		}))
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Prompt:     &prompt,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeContextName: "keycloakContext",
@@ -368,12 +379,14 @@ func TestLogin_Do(t *testing.T) {
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.keycloakOIDCConfig,
 			LocalServerPort: []int{10000},
+			Prompt:          &prompt,
 		}))
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Prompt:     &prompt,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			KubeUserName: "keycloak",
@@ -405,12 +418,14 @@ func TestLogin_Do(t *testing.T) {
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
+			Prompt:          &prompt,
 		}))
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Prompt:     &prompt,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			ListenPort:    []int{10000},
@@ -442,12 +457,14 @@ func TestLogin_Do(t *testing.T) {
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
 			SkipOpenBrowser: true,
+			Prompt:          &prompt,
 		}))
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Prompt:     &prompt,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			ListenPort:      []int{10000},
@@ -514,6 +531,7 @@ func TestLogin_Do(t *testing.T) {
 		mockOIDCClient := newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
+			Prompt:          &prompt,
 		})
 		mockOIDCClient.EXPECT().
 			Verify(ctx, adaptors.OIDCVerifyIn{
@@ -528,6 +546,7 @@ func TestLogin_Do(t *testing.T) {
 			KubeConfig: mockKubeConfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Prompt:     &prompt,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			ListenPort: []int{10000},
@@ -562,12 +581,14 @@ func TestLogin_Do(t *testing.T) {
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
+			Prompt:          &prompt,
 		}))
 
 		u := Login{
 			KubeConfig: mockKubeConfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Prompt:     &prompt,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
 			ListenPort:                   []int{10000},

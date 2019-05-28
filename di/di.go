@@ -9,6 +9,7 @@ import (
 	"github.com/int128/kubelogin/adaptors/cmd"
 	"github.com/int128/kubelogin/adaptors/http"
 	"github.com/int128/kubelogin/adaptors/kubeconfig"
+	"github.com/int128/kubelogin/adaptors/logger"
 	"github.com/int128/kubelogin/adaptors/oidc"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/int128/kubelogin/usecases/login"
@@ -30,7 +31,22 @@ var adaptorsSet = wire.NewSet(
 	wire.Bind((*adaptors.OIDC)(nil), (*oidc.OIDC)(nil)),
 )
 
-func NewCmd(logger adaptors.Logger) adaptors.Cmd {
+var extraSet = wire.NewSet(
+	login.Prompt{},
+	wire.Bind((*usecases.LoginPrompt)(nil), (*login.Prompt)(nil)),
+	logger.New,
+)
+
+func NewCmd() adaptors.Cmd {
+	wire.Build(
+		usecasesSet,
+		adaptorsSet,
+		extraSet,
+	)
+	return nil
+}
+
+func NewCmdWith(adaptors.Logger, usecases.LoginPrompt) adaptors.Cmd {
 	wire.Build(
 		usecasesSet,
 		adaptorsSet,

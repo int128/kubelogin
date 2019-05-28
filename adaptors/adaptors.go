@@ -35,7 +35,7 @@ type OIDC interface {
 }
 
 type OIDCClient interface {
-	AuthenticateByCode(ctx context.Context, in OIDCAuthenticateByCodeIn, cb OIDCAuthenticateCallback) (*OIDCAuthenticateOut, error)
+	AuthenticateByCode(ctx context.Context, in OIDCAuthenticateByCodeIn) (*OIDCAuthenticateOut, error)
 	AuthenticateByPassword(ctx context.Context, in OIDCAuthenticateByPasswordIn) (*OIDCAuthenticateOut, error)
 	Verify(ctx context.Context, in OIDCVerifyIn) (*oidc.IDToken, error)
 }
@@ -44,16 +44,17 @@ type OIDCAuthenticateByCodeIn struct {
 	Config          kubeconfig.OIDCConfig
 	LocalServerPort []int // HTTP server port candidates
 	SkipOpenBrowser bool  // skip opening browser if true
+	Prompt          OIDCAuthenticateByCodePrompt
+}
+
+type OIDCAuthenticateByCodePrompt interface {
+	ShowLocalServerURL(url string)
 }
 
 type OIDCAuthenticateByPasswordIn struct {
 	Config   kubeconfig.OIDCConfig
 	Username string
 	Password string
-}
-
-type OIDCAuthenticateCallback struct {
-	ShowLocalServerURL func(url string)
 }
 
 type OIDCAuthenticateOut struct {

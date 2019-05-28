@@ -11,6 +11,7 @@ import (
 	"github.com/int128/kubelogin/adaptors/cmd"
 	"github.com/int128/kubelogin/adaptors/http"
 	"github.com/int128/kubelogin/adaptors/kubeconfig"
+	"github.com/int128/kubelogin/adaptors/logger"
 	"github.com/int128/kubelogin/adaptors/oidc"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/int128/kubelogin/usecases/login"
@@ -18,10 +19,35 @@ import (
 
 // Injectors from di.go:
 
-func NewCmd(logger adaptors.Logger) adaptors.Cmd {
+func NewCmd() adaptors.Cmd {
+	kubeConfig := &kubeconfig.KubeConfig{}
+	adaptorsLogger := logger.New()
+	httpHTTP := &http.HTTP{
+		Logger: adaptorsLogger,
+	}
+	oidcOIDC := &oidc.OIDC{
+		HTTP: httpHTTP,
+	}
+	prompt := &login.Prompt{
+		Logger: adaptorsLogger,
+	}
+	loginLogin := &login.Login{
+		KubeConfig: kubeConfig,
+		OIDC:       oidcOIDC,
+		Logger:     adaptorsLogger,
+		Prompt:     prompt,
+	}
+	cmdCmd := &cmd.Cmd{
+		Login:  loginLogin,
+		Logger: adaptorsLogger,
+	}
+	return cmdCmd
+}
+
+func NewCmdWith(adaptorsLogger adaptors.Logger, loginPrompt usecases.LoginPrompt) adaptors.Cmd {
 	kubeConfig := &kubeconfig.KubeConfig{}
 	httpHTTP := &http.HTTP{
-		Logger: logger,
+		Logger: adaptorsLogger,
 	}
 	oidcOIDC := &oidc.OIDC{
 		HTTP: httpHTTP,
@@ -29,11 +55,12 @@ func NewCmd(logger adaptors.Logger) adaptors.Cmd {
 	loginLogin := &login.Login{
 		KubeConfig: kubeConfig,
 		OIDC:       oidcOIDC,
-		Logger:     logger,
+		Logger:     adaptorsLogger,
+		Prompt:     loginPrompt,
 	}
 	cmdCmd := &cmd.Cmd{
 		Login:  loginLogin,
-		Logger: logger,
+		Logger: adaptorsLogger,
 	}
 	return cmdCmd
 }
@@ -43,3 +70,5 @@ func NewCmd(logger adaptors.Logger) adaptors.Cmd {
 var usecasesSet = wire.NewSet(login.Login{}, wire.Bind((*usecases.Login)(nil), (*login.Login)(nil)))
 
 var adaptorsSet = wire.NewSet(cmd.Cmd{}, http.HTTP{}, kubeconfig.KubeConfig{}, oidc.OIDC{}, wire.Bind((*adaptors.Cmd)(nil), (*cmd.Cmd)(nil)), wire.Bind((*adaptors.HTTP)(nil), (*http.HTTP)(nil)), wire.Bind((*adaptors.KubeConfig)(nil), (*kubeconfig.KubeConfig)(nil)), wire.Bind((*adaptors.OIDC)(nil), (*oidc.OIDC)(nil)))
+
+var extraSet = wire.NewSet(login.Prompt{}, wire.Bind((*usecases.LoginPrompt)(nil), (*login.Prompt)(nil)), logger.New)
