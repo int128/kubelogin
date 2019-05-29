@@ -48,9 +48,9 @@ func TestCmd_Run(t *testing.T) {
 		login := mock_usecases.NewMockLogin(ctrl)
 		login.EXPECT().
 			Do(ctx, usecases.LoginIn{
-				KubeConfigFilename: "/path/to/kubeconfig",
-				KubeContextName:    "hello.k8s.local",
-				KubeUserName:       "google",
+				KubeconfigFilename: "/path/to/kubeconfig",
+				KubeconfigContext:  "hello.k8s.local",
+				KubeconfigUser:     "google",
 				CACertFilename:     "/path/to/cacert",
 				SkipTLSVerify:      true,
 				ListenPort:         []int{10080, 20080},

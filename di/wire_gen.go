@@ -19,7 +19,7 @@ import (
 // Injectors from di.go:
 
 func NewCmd() adaptors.Cmd {
-	kubeConfig := &kubeconfig.KubeConfig{}
+	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	adaptorsLogger := logger.New()
 	factory := &oidc.Factory{
 		Logger: adaptorsLogger,
@@ -28,7 +28,7 @@ func NewCmd() adaptors.Cmd {
 		Logger: adaptorsLogger,
 	}
 	loginLogin := &login.Login{
-		KubeConfig: kubeConfig,
+		Kubeconfig: kubeconfigKubeconfig,
 		OIDC:       factory,
 		Logger:     adaptorsLogger,
 		Prompt:     prompt,
@@ -41,12 +41,12 @@ func NewCmd() adaptors.Cmd {
 }
 
 func NewCmdWith(adaptorsLogger adaptors.Logger, loginPrompt usecases.LoginPrompt) adaptors.Cmd {
-	kubeConfig := &kubeconfig.KubeConfig{}
+	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	factory := &oidc.Factory{
 		Logger: adaptorsLogger,
 	}
 	loginLogin := &login.Login{
-		KubeConfig: kubeConfig,
+		Kubeconfig: kubeconfigKubeconfig,
 		OIDC:       factory,
 		Logger:     adaptorsLogger,
 		Prompt:     loginPrompt,
@@ -62,6 +62,6 @@ func NewCmdWith(adaptorsLogger adaptors.Logger, loginPrompt usecases.LoginPrompt
 
 var usecasesSet = wire.NewSet(login.Login{}, wire.Bind((*usecases.Login)(nil), (*login.Login)(nil)))
 
-var adaptorsSet = wire.NewSet(cmd.Cmd{}, kubeconfig.KubeConfig{}, oidc.Factory{}, wire.Bind((*adaptors.Cmd)(nil), (*cmd.Cmd)(nil)), wire.Bind((*adaptors.KubeConfig)(nil), (*kubeconfig.KubeConfig)(nil)), wire.Bind((*adaptors.OIDC)(nil), (*oidc.Factory)(nil)))
+var adaptorsSet = wire.NewSet(cmd.Cmd{}, kubeconfig.Kubeconfig{}, oidc.Factory{}, wire.Bind((*adaptors.Cmd)(nil), (*cmd.Cmd)(nil)), wire.Bind((*adaptors.Kubeconfig)(nil), (*kubeconfig.Kubeconfig)(nil)), wire.Bind((*adaptors.OIDC)(nil), (*oidc.Factory)(nil)))
 
 var extraSet = wire.NewSet(login.Prompt{}, wire.Bind((*usecases.LoginPrompt)(nil), (*login.Prompt)(nil)), logger.New)

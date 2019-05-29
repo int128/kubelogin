@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-func (*KubeConfig) GetCurrentAuth(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error) {
+func (*Kubeconfig) GetCurrentAuth(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error) {
 	config, err := loadByDefaultRules(explicitFilename)
 	if err != nil {
 		return nil, errors.WithStack(err)

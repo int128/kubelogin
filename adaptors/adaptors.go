@@ -7,13 +7,13 @@ import (
 	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors KubeConfig,OIDC,OIDCClient,Logger
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors Kubeconfig,OIDC,OIDCClient,Logger
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
 }
 
-type KubeConfig interface {
+type Kubeconfig interface {
 	GetCurrentAuth(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error)
 	UpdateAuth(auth *kubeconfig.Auth) error
 }

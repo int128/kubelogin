@@ -18,7 +18,7 @@ const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubec
     --auth-provider-arg client-secret=YOUR_CLIENT_SECRET`
 
 type Login struct {
-	KubeConfig adaptors.KubeConfig
+	Kubeconfig adaptors.Kubeconfig
 	OIDC       adaptors.OIDC
 	Logger     adaptors.Logger
 	Prompt     usecases.LoginPrompt
@@ -27,7 +27,7 @@ type Login struct {
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	u.Logger.Debugf(1, "WARNING: log may contain your secrets such as token or password")
 
-	auth, err := u.KubeConfig.GetCurrentAuth(in.KubeConfigFilename, in.KubeContextName, in.KubeUserName)
+	auth, err := u.Kubeconfig.GetCurrentAuth(in.KubeconfigFilename, in.KubeconfigContext, in.KubeconfigUser)
 	if err != nil {
 		u.Logger.Printf(oidcConfigErrorMessage)
 		return errors.Wrapf(err, "could not find the current authentication provider")
@@ -65,7 +65,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	auth.OIDCConfig.IDToken = out.IDToken
 	auth.OIDCConfig.RefreshToken = out.RefreshToken
 	u.Logger.Debugf(1, "Writing the ID token and refresh token to %s", auth.LocationOfOrigin)
-	if err := u.KubeConfig.UpdateAuth(auth); err != nil {
+	if err := u.Kubeconfig.UpdateAuth(auth); err != nil {
 		return errors.Wrapf(err, "could not write the token to the kubeconfig")
 	}
 	return nil

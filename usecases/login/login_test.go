@@ -46,15 +46,15 @@ func TestLogin_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 
-		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
-		mockKubeConfig.EXPECT().
+		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig.EXPECT().
 			GetCurrentAuth("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(&kubeconfig.Auth{
 				LocationOfOrigin: "theLocation",
 				UserName:         "google",
 				OIDCConfig:       googleConfig,
 			}, nil)
-		mockKubeConfig.EXPECT().
+		mockKubeconfig.EXPECT().
 			UpdateAuth(&kubeconfig.Auth{
 				LocationOfOrigin: "theLocation",
 				UserName:         "google",
@@ -71,7 +71,7 @@ func TestLogin_Do(t *testing.T) {
 			}), nil)
 
 		u := Login{
-			KubeConfig: mockKubeConfig,
+			Kubeconfig: mockKubeconfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 			Prompt:     &prompt,
@@ -88,15 +88,15 @@ func TestLogin_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 
-		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
-		mockKubeConfig.EXPECT().
+		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig.EXPECT().
 			GetCurrentAuth("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
 			Return(&kubeconfig.Auth{
 				LocationOfOrigin: "theLocation",
 				UserName:         "google",
 				OIDCConfig:       googleConfig,
 			}, nil)
-		mockKubeConfig.EXPECT().
+		mockKubeconfig.EXPECT().
 			UpdateAuth(&kubeconfig.Auth{
 				LocationOfOrigin: "theLocation",
 				UserName:         "google",
@@ -125,14 +125,14 @@ func TestLogin_Do(t *testing.T) {
 			Return(mockOIDCClient, nil)
 
 		u := Login{
-			KubeConfig: mockKubeConfig,
+			Kubeconfig: mockKubeconfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			KubeConfigFilename: "/path/to/kubeconfig",
-			KubeContextName:    "theContext",
-			KubeUserName:       "theUser",
+			KubeconfigFilename: "/path/to/kubeconfig",
+			KubeconfigContext:  "theContext",
+			KubeconfigUser:     "theUser",
 			Username:           "USER",
 			Password:           "PASS",
 			CACertFilename:     "/path/to/cert",
@@ -147,8 +147,8 @@ func TestLogin_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 
-		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
-		mockKubeConfig.EXPECT().
+		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig.EXPECT().
 			GetCurrentAuth("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(&kubeconfig.Auth{
 				LocationOfOrigin: "theLocation",
@@ -166,7 +166,7 @@ func TestLogin_Do(t *testing.T) {
 			Return(mockOIDCClient, nil)
 
 		u := Login{
-			KubeConfig: mockKubeConfig,
+			Kubeconfig: mockKubeconfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 			Prompt:     &prompt,
@@ -184,15 +184,15 @@ func TestLogin_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 
-		mockKubeConfig := mock_adaptors.NewMockKubeConfig(ctrl)
-		mockKubeConfig.EXPECT().
+		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig.EXPECT().
 			GetCurrentAuth("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(&kubeconfig.Auth{
 				LocationOfOrigin: "theLocation",
 				UserName:         "google",
 				OIDCConfig:       googleConfigWithExpiredToken,
 			}, nil)
-		mockKubeConfig.EXPECT().
+		mockKubeconfig.EXPECT().
 			UpdateAuth(&kubeconfig.Auth{
 				LocationOfOrigin: "theLocation",
 				UserName:         "google",
@@ -212,7 +212,7 @@ func TestLogin_Do(t *testing.T) {
 			Return(mockOIDCClient, nil)
 
 		u := Login{
-			KubeConfig: mockKubeConfig,
+			Kubeconfig: mockKubeconfig,
 			OIDC:       mockOIDC,
 			Logger:     mock_adaptors.NewLogger(t, ctrl),
 			Prompt:     &prompt,

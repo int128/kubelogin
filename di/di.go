@@ -21,10 +21,10 @@ var usecasesSet = wire.NewSet(
 
 var adaptorsSet = wire.NewSet(
 	cmd.Cmd{},
-	kubeconfig.KubeConfig{},
+	kubeconfig.Kubeconfig{},
 	oidc.Factory{},
 	wire.Bind((*adaptors.Cmd)(nil), (*cmd.Cmd)(nil)),
-	wire.Bind((*adaptors.KubeConfig)(nil), (*kubeconfig.KubeConfig)(nil)),
+	wire.Bind((*adaptors.Kubeconfig)(nil), (*kubeconfig.Kubeconfig)(nil)),
 	wire.Bind((*adaptors.OIDC)(nil), (*oidc.Factory)(nil)),
 )
 

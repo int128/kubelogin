@@ -1,3 +1,3 @@
 package kubeconfig
 
-type KubeConfig struct{}
+type Kubeconfig struct{}

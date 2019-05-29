@@ -8,8 +8,8 @@ import (
 	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
-func TestKubeConfig_UpdateAuth(t *testing.T) {
-	var k KubeConfig
+func TestKubeconfig_UpdateAuth(t *testing.T) {
+	var k Kubeconfig
 
 	t.Run("MinimumKeys", func(t *testing.T) {
 		f := newKubeconfigFile(t)
