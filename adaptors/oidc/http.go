@@ -1,4 +1,4 @@
-package http
+package oidc
 
 import (
 	"crypto/tls"
@@ -8,33 +8,29 @@ import (
 	"net/http"
 
 	"github.com/int128/kubelogin/adaptors"
-	"github.com/int128/kubelogin/adaptors/http/logging"
+	"github.com/int128/kubelogin/adaptors/oidc/logging"
 	"github.com/pkg/errors"
 )
 
-type HTTP struct {
-	Logger adaptors.Logger
-}
-
-func (h *HTTP) NewClient(config adaptors.HTTPClientConfig) (*http.Client, error) {
+func newHTTPClient(config adaptors.OIDCClientConfig, logger adaptors.Logger) (*http.Client, error) {
 	pool := x509.NewCertPool()
-	if filename := config.OIDCConfig.IDPCertificateAuthority(); filename != "" {
-		h.Logger.Debugf(1, "Loading the certificate %s", filename)
-		err := appendCertificateFromFile(pool, filename)
+	if config.Config.IDPCertificateAuthority != "" {
+		logger.Debugf(1, "Loading the certificate %s", config.Config.IDPCertificateAuthority)
+		err := appendCertificateFromFile(pool, config.Config.IDPCertificateAuthority)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not load the certificate of idp-certificate-authority")
 		}
 	}
-	if data := config.OIDCConfig.IDPCertificateAuthorityData(); data != "" {
-		h.Logger.Debugf(1, "Loading the certificate of idp-certificate-authority-data")
-		err := appendEncodedCertificate(pool, data)
+	if config.Config.IDPCertificateAuthorityData != "" {
+		logger.Debugf(1, "Loading the certificate of idp-certificate-authority-data")
+		err := appendEncodedCertificate(pool, config.Config.IDPCertificateAuthorityData)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not load the certificate of idp-certificate-authority-data")
 		}
 	}
-	if config.CertificateAuthorityFilename != "" {
-		h.Logger.Debugf(1, "Loading the certificate %s", config.CertificateAuthorityFilename)
-		err := appendCertificateFromFile(pool, config.CertificateAuthorityFilename)
+	if config.CACertFilename != "" {
+		logger.Debugf(1, "Loading the certificate %s", config.CACertFilename)
+		err := appendCertificateFromFile(pool, config.CACertFilename)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not load the certificate")
 		}
@@ -51,7 +47,7 @@ func (h *HTTP) NewClient(config adaptors.HTTPClientConfig) (*http.Client, error)
 				TLSClientConfig: &tlsConfig,
 				Proxy:           http.ProxyFromEnvironment,
 			},
-			Logger: h.Logger,
+			Logger: logger,
 		},
 	}, nil
 }

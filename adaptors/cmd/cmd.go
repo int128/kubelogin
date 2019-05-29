@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/int128/kubelogin/adaptors"
-	"github.com/int128/kubelogin/kubeconfig"
+	"github.com/int128/kubelogin/models/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/spf13/pflag"
 )
@@ -40,9 +40,9 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		cmd.Logger.Printf(usage, executable, version, f.FlagUsages())
 	}
 	var o cmdOptions
-	f.StringVar(&o.KubeConfig, "kubeconfig", "", "Path to the kubeconfig file")
-	f.StringVar(&o.KubeContext, "context", "", "The name of the kubeconfig context to use")
-	f.StringVar(&o.KubeUser, "user", "", "The name of the kubeconfig user to use. Prior to --context")
+	f.StringVar(&o.Kubeconfig, "kubeconfig", "", "Path to the kubeconfig file")
+	f.StringVar(&o.Context, "context", "", "The name of the kubeconfig context to use")
+	f.StringVar(&o.User, "user", "", "The name of the kubeconfig user to use. Prior to --context")
 	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
 	f.StringVar(&o.Username, "username", "", "Username for the resource owner password credentials grant")
@@ -65,15 +65,15 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 
 	cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 	in := usecases.LoginIn{
-		KubeConfigFilename:           o.KubeConfig,
-		KubeContextName:              kubeconfig.ContextName(o.KubeContext),
-		KubeUserName:                 kubeconfig.UserName(o.KubeUser),
-		CertificateAuthorityFilename: o.CertificateAuthority,
-		SkipTLSVerify:                o.SkipTLSVerify,
-		ListenPort:                   o.ListenPort,
-		SkipOpenBrowser:              o.SkipOpenBrowser,
-		Username:                     o.Username,
-		Password:                     o.Password,
+		KubeconfigFilename: o.Kubeconfig,
+		KubeconfigContext:  kubeconfig.ContextName(o.Context),
+		KubeconfigUser:     kubeconfig.UserName(o.User),
+		CACertFilename:     o.CertificateAuthority,
+		SkipTLSVerify:      o.SkipTLSVerify,
+		ListenPort:         o.ListenPort,
+		SkipOpenBrowser:    o.SkipOpenBrowser,
+		Username:           o.Username,
+		Password:           o.Password,
 	}
 	if err := cmd.Login.Do(ctx, in); err != nil {
 		cmd.Logger.Printf("Error: %s", err)
@@ -83,9 +83,9 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 }
 
 type cmdOptions struct {
-	KubeConfig           string
-	KubeContext          string
-	KubeUser             string
+	Kubeconfig           string
+	Context              string
+	User                 string
 	ListenPort           []int
 	SkipOpenBrowser      bool
 	Username             string

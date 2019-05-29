@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 
-	"github.com/int128/kubelogin/kubeconfig"
+	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
 //go:generate mockgen -destination mock_usecases/mock_usecases.go github.com/int128/kubelogin/usecases Login
@@ -13,15 +13,15 @@ type Login interface {
 }
 
 type LoginIn struct {
-	KubeConfigFilename           string                 // Default to the environment variable or global config as kubectl
-	KubeContextName              kubeconfig.ContextName // Default to the current context but ignored if KubeUserName is set
-	KubeUserName                 kubeconfig.UserName    // Default to the user of the context
-	SkipOpenBrowser              bool
-	ListenPort                   []int
-	Username                     string
-	Password                     string
-	CertificateAuthorityFilename string // Optional
-	SkipTLSVerify                bool
+	KubeconfigFilename string                 // Default to the environment variable or global config as kubectl
+	KubeconfigContext  kubeconfig.ContextName // Default to the current context but ignored if KubeconfigUser is set
+	KubeconfigUser     kubeconfig.UserName    // Default to the user of the context
+	SkipOpenBrowser    bool
+	ListenPort         []int
+	Username           string
+	Password           string
+	CACertFilename     string // Optional
+	SkipTLSVerify      bool
 }
 
 type LoginPrompt interface {

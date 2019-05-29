@@ -2,36 +2,30 @@ package adaptors
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/coreos/go-oidc"
-	"github.com/int128/kubelogin/kubeconfig"
+	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors KubeConfig,HTTP,OIDC,OIDCClient,Logger
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors Kubeconfig,OIDC,OIDCClient,Logger
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
 }
 
-type KubeConfig interface {
-	LoadByDefaultRules(filename string) (*kubeconfig.Config, error)
-	LoadFromFile(filename string) (*kubeconfig.Config, error)
-	WriteToFile(config *kubeconfig.Config, filename string) error
-}
-
-type HTTP interface {
-	NewClient(config HTTPClientConfig) (*http.Client, error)
-}
-
-type HTTPClientConfig struct {
-	OIDCConfig                   kubeconfig.OIDCConfig
-	CertificateAuthorityFilename string
-	SkipTLSVerify                bool
+type Kubeconfig interface {
+	GetCurrentAuth(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error)
+	UpdateAuth(auth *kubeconfig.Auth) error
 }
 
 type OIDC interface {
-	NewClient(config HTTPClientConfig) (OIDCClient, error)
+	New(config OIDCClientConfig) (OIDCClient, error)
+}
+
+type OIDCClientConfig struct {
+	Config         kubeconfig.OIDCConfig
+	CACertFilename string
+	SkipTLSVerify  bool
 }
 
 type OIDCClient interface {
