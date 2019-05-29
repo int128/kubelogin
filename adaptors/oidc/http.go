@@ -14,16 +14,16 @@ import (
 
 func newHTTPClient(config adaptors.OIDCClientConfig, logger adaptors.Logger) (*http.Client, error) {
 	pool := x509.NewCertPool()
-	if filename := config.Config.IDPCertificateAuthority(); filename != "" {
-		logger.Debugf(1, "Loading the certificate %s", filename)
-		err := appendCertificateFromFile(pool, filename)
+	if config.Config.IDPCertificateAuthority != "" {
+		logger.Debugf(1, "Loading the certificate %s", config.Config.IDPCertificateAuthority)
+		err := appendCertificateFromFile(pool, config.Config.IDPCertificateAuthority)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not load the certificate of idp-certificate-authority")
 		}
 	}
-	if data := config.Config.IDPCertificateAuthorityData(); data != "" {
+	if config.Config.IDPCertificateAuthorityData != "" {
 		logger.Debugf(1, "Loading the certificate of idp-certificate-authority-data")
-		err := appendEncodedCertificate(pool, data)
+		err := appendEncodedCertificate(pool, config.Config.IDPCertificateAuthorityData)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not load the certificate of idp-certificate-authority-data")
 		}

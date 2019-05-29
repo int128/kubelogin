@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 
-	"github.com/int128/kubelogin/kubeconfig"
+	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
 //go:generate mockgen -destination mock_usecases/mock_usecases.go github.com/int128/kubelogin/usecases Login

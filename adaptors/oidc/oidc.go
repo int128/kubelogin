@@ -31,16 +31,16 @@ func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	if c.hc != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
 	}
-	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL())
+	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
 	}
 	config := oauth2cli.Config{
 		OAuth2Config: oauth2.Config{
 			Endpoint:     provider.Endpoint(),
-			ClientID:     in.Config.ClientID(),
-			ClientSecret: in.Config.ClientSecret(),
-			Scopes:       append(in.Config.ExtraScopes(), oidc.ScopeOpenID),
+			ClientID:     in.Config.ClientID,
+			ClientSecret: in.Config.ClientSecret,
+			Scopes:       append(in.Config.ExtraScopes, oidc.ScopeOpenID),
 		},
 		LocalServerPort:    in.LocalServerPort,
 		SkipOpenBrowser:    in.SkipOpenBrowser,
@@ -55,7 +55,7 @@ func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	if !ok {
 		return nil, errors.Errorf("id_token is missing in the token response: %s", token)
 	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID()})
+	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not verify the id_token")
@@ -71,15 +71,15 @@ func (c *Client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAut
 	if c.hc != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
 	}
-	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL())
+	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
 	}
 	config := oauth2.Config{
 		Endpoint:     provider.Endpoint(),
-		ClientID:     in.Config.ClientID(),
-		ClientSecret: in.Config.ClientSecret(),
-		Scopes:       append(in.Config.ExtraScopes(), oidc.ScopeOpenID),
+		ClientID:     in.Config.ClientID,
+		ClientSecret: in.Config.ClientSecret,
+		Scopes:       append(in.Config.ExtraScopes, oidc.ScopeOpenID),
 	}
 	token, err := config.PasswordCredentialsToken(ctx, in.Username, in.Password)
 	if err != nil {
@@ -89,7 +89,7 @@ func (c *Client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAut
 	if !ok {
 		return nil, errors.Errorf("id_token is missing in the token response: %s", token)
 	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID()})
+	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not verify the id_token")
@@ -105,12 +105,12 @@ func (c *Client) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*oidc.ID
 	if c.hc != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
 	}
-	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL())
+	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
 	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID()})
-	verifiedIDToken, err := verifier.Verify(ctx, in.Config.IDToken())
+	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID})
+	verifiedIDToken, err := verifier.Verify(ctx, in.Config.IDToken)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not verify the id_token")
 	}

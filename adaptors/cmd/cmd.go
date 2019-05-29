@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/int128/kubelogin/adaptors"
-	"github.com/int128/kubelogin/kubeconfig"
+	"github.com/int128/kubelogin/models/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/spf13/pflag"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/coreos/go-oidc"
-	"github.com/int128/kubelogin/kubeconfig"
+	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
 //go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors KubeConfig,OIDC,OIDCClient,Logger
@@ -14,9 +14,8 @@ type Cmd interface {
 }
 
 type KubeConfig interface {
-	LoadByDefaultRules(filename string) (*kubeconfig.Config, error)
-	LoadFromFile(filename string) (*kubeconfig.Config, error)
-	WriteToFile(config *kubeconfig.Config, filename string) error
+	GetCurrentAuth(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error)
+	UpdateAuth(auth *kubeconfig.Auth) error
 }
 
 type OIDC interface {

@@ -4,6 +4,7 @@ require (
 	github.com/coreos/go-oidc v2.0.0+incompatible
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/go-test/deep v1.0.1
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/mock v1.3.1
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect

@@ -9,7 +9,7 @@ import (
 	go_oidc "github.com/coreos/go-oidc"
 	gomock "github.com/golang/mock/gomock"
 	adaptors "github.com/int128/kubelogin/adaptors"
-	kubeconfig "github.com/int128/kubelogin/kubeconfig"
+	kubeconfig "github.com/int128/kubelogin/models/kubeconfig"
 	reflect "reflect"
 )
 
@@ -36,42 +36,29 @@ func (m *MockKubeConfig) EXPECT() *MockKubeConfigMockRecorder {
 	return m.recorder
 }
 
-// LoadByDefaultRules mocks base method
-func (m *MockKubeConfig) LoadByDefaultRules(arg0 string) (*kubeconfig.Config, error) {
-	ret := m.ctrl.Call(m, "LoadByDefaultRules", arg0)
-	ret0, _ := ret[0].(*kubeconfig.Config)
+// GetCurrentAuth mocks base method
+func (m *MockKubeConfig) GetCurrentAuth(arg0 string, arg1 kubeconfig.ContextName, arg2 kubeconfig.UserName) (*kubeconfig.Auth, error) {
+	ret := m.ctrl.Call(m, "GetCurrentAuth", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*kubeconfig.Auth)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// LoadByDefaultRules indicates an expected call of LoadByDefaultRules
-func (mr *MockKubeConfigMockRecorder) LoadByDefaultRules(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadByDefaultRules", reflect.TypeOf((*MockKubeConfig)(nil).LoadByDefaultRules), arg0)
+// GetCurrentAuth indicates an expected call of GetCurrentAuth
+func (mr *MockKubeConfigMockRecorder) GetCurrentAuth(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentAuth", reflect.TypeOf((*MockKubeConfig)(nil).GetCurrentAuth), arg0, arg1, arg2)
 }
 
-// LoadFromFile mocks base method
-func (m *MockKubeConfig) LoadFromFile(arg0 string) (*kubeconfig.Config, error) {
-	ret := m.ctrl.Call(m, "LoadFromFile", arg0)
-	ret0, _ := ret[0].(*kubeconfig.Config)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// LoadFromFile indicates an expected call of LoadFromFile
-func (mr *MockKubeConfigMockRecorder) LoadFromFile(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadFromFile", reflect.TypeOf((*MockKubeConfig)(nil).LoadFromFile), arg0)
-}
-
-// WriteToFile mocks base method
-func (m *MockKubeConfig) WriteToFile(arg0 *kubeconfig.Config, arg1 string) error {
-	ret := m.ctrl.Call(m, "WriteToFile", arg0, arg1)
+// UpdateAuth mocks base method
+func (m *MockKubeConfig) UpdateAuth(arg0 *kubeconfig.Auth) error {
+	ret := m.ctrl.Call(m, "UpdateAuth", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// WriteToFile indicates an expected call of WriteToFile
-func (mr *MockKubeConfigMockRecorder) WriteToFile(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteToFile", reflect.TypeOf((*MockKubeConfig)(nil).WriteToFile), arg0, arg1)
+// UpdateAuth indicates an expected call of UpdateAuth
+func (mr *MockKubeConfigMockRecorder) UpdateAuth(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuth", reflect.TypeOf((*MockKubeConfig)(nil).UpdateAuth), arg0)
 }
 
 // MockOIDC is a mock of OIDC interface
