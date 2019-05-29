@@ -5,7 +5,6 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/adaptors"
-	"github.com/int128/kubelogin/models/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/pkg/errors"
 )
@@ -49,21 +48,40 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		token, err := client.Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig})
 		if err == nil {
 			u.Logger.Printf("You already have a valid token until %s", token.Expiry)
-			u.dumpIDToken(token)
+			dumpIDToken(u.Logger, token)
 			return nil
 		}
 		u.Logger.Debugf(1, "The ID token was invalid: %s", err)
 	}
 
-	out, err := u.authenticate(ctx, client, auth, in)
-	if err != nil {
-		return errors.Wrapf(err, "could not get a token from the OIDC provider")
+	var tokenSet *adaptors.OIDCAuthenticateOut
+	if in.Username != "" {
+		out, err := client.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
+			Config:   auth.OIDCConfig,
+			Username: in.Username,
+			Password: in.Password,
+		})
+		if err != nil {
+			return errors.Wrapf(err, "error while the resource owner password credentials grant flow")
+		}
+		tokenSet = out
+	} else {
+		out, err := client.AuthenticateByCode(ctx, adaptors.OIDCAuthenticateByCodeIn{
+			Config:          auth.OIDCConfig,
+			LocalServerPort: in.ListenPort,
+			SkipOpenBrowser: in.SkipOpenBrowser,
+			Prompt:          u.Prompt,
+		})
+		if err != nil {
+			return errors.Wrapf(err, "error while the authorization code grant flow")
+		}
+		tokenSet = out
 	}
-	u.Logger.Printf("You got a valid token until %s", out.VerifiedIDToken.Expiry)
-	u.dumpIDToken(out.VerifiedIDToken)
+	u.Logger.Printf("You got a valid token until %s", tokenSet.VerifiedIDToken.Expiry)
+	dumpIDToken(u.Logger, tokenSet.VerifiedIDToken)
+	auth.OIDCConfig.IDToken = tokenSet.IDToken
+	auth.OIDCConfig.RefreshToken = tokenSet.RefreshToken
 
-	auth.OIDCConfig.IDToken = out.IDToken
-	auth.OIDCConfig.RefreshToken = out.RefreshToken
 	u.Logger.Debugf(1, "Writing the ID token and refresh token to %s", auth.LocationOfOrigin)
 	if err := u.Kubeconfig.UpdateAuth(auth); err != nil {
 		return errors.Wrapf(err, "could not write the token to the kubeconfig")
@@ -71,30 +89,13 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	return nil
 }
 
-func (u *Login) authenticate(ctx context.Context, client adaptors.OIDCClient, auth *kubeconfig.Auth, in usecases.LoginIn) (*adaptors.OIDCAuthenticateOut, error) {
-	if in.Username != "" {
-		return client.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
-			Config:   auth.OIDCConfig,
-			Username: in.Username,
-			Password: in.Password,
-		})
-	}
-	return client.AuthenticateByCode(ctx,
-		adaptors.OIDCAuthenticateByCodeIn{
-			Config:          auth.OIDCConfig,
-			LocalServerPort: in.ListenPort,
-			SkipOpenBrowser: in.SkipOpenBrowser,
-			Prompt:          u.Prompt,
-		})
-}
-
-func (u *Login) dumpIDToken(token *oidc.IDToken) {
+func dumpIDToken(logger adaptors.Logger, token *oidc.IDToken) {
 	var claims map[string]interface{}
 	if err := token.Claims(&claims); err != nil {
-		u.Logger.Debugf(1, "Error while inspection of the ID token: %s", err)
+		logger.Debugf(1, "Error while inspection of the ID token: %s", err)
 	}
 	for k, v := range claims {
-		u.Logger.Debugf(1, "The ID token has the claim: %s=%v", k, v)
+		logger.Debugf(1, "The ID token has the claim: %s=%v", k, v)
 	}
 }
 
