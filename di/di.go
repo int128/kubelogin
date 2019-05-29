@@ -7,7 +7,6 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/adaptors/cmd"
-	"github.com/int128/kubelogin/adaptors/http"
 	"github.com/int128/kubelogin/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/adaptors/logger"
 	"github.com/int128/kubelogin/adaptors/oidc"
@@ -22,13 +21,11 @@ var usecasesSet = wire.NewSet(
 
 var adaptorsSet = wire.NewSet(
 	cmd.Cmd{},
-	http.HTTP{},
 	kubeconfig.KubeConfig{},
-	oidc.OIDC{},
+	oidc.Factory{},
 	wire.Bind((*adaptors.Cmd)(nil), (*cmd.Cmd)(nil)),
-	wire.Bind((*adaptors.HTTP)(nil), (*http.HTTP)(nil)),
 	wire.Bind((*adaptors.KubeConfig)(nil), (*kubeconfig.KubeConfig)(nil)),
-	wire.Bind((*adaptors.OIDC)(nil), (*oidc.OIDC)(nil)),
+	wire.Bind((*adaptors.OIDC)(nil), (*oidc.Factory)(nil)),
 )
 
 var extraSet = wire.NewSet(

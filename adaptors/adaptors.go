@@ -2,13 +2,12 @@ package adaptors
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors KubeConfig,HTTP,OIDC,OIDCClient,Logger
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors KubeConfig,OIDC,OIDCClient,Logger
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -20,18 +19,14 @@ type KubeConfig interface {
 	WriteToFile(config *kubeconfig.Config, filename string) error
 }
 
-type HTTP interface {
-	NewClient(config HTTPClientConfig) (*http.Client, error)
-}
-
-type HTTPClientConfig struct {
-	OIDCConfig                   kubeconfig.OIDCConfig
-	CertificateAuthorityFilename string
-	SkipTLSVerify                bool
-}
-
 type OIDC interface {
-	NewClient(config HTTPClientConfig) (OIDCClient, error)
+	New(config OIDCClientConfig) (OIDCClient, error)
+}
+
+type OIDCClientConfig struct {
+	Config         kubeconfig.OIDCConfig
+	CACertFilename string
+	SkipTLSVerify  bool
 }
 
 type OIDCClient interface {

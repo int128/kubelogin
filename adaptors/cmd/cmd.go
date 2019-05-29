@@ -65,15 +65,15 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 
 	cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 	in := usecases.LoginIn{
-		KubeConfigFilename:           o.KubeConfig,
-		KubeContextName:              kubeconfig.ContextName(o.KubeContext),
-		KubeUserName:                 kubeconfig.UserName(o.KubeUser),
-		CertificateAuthorityFilename: o.CertificateAuthority,
-		SkipTLSVerify:                o.SkipTLSVerify,
-		ListenPort:                   o.ListenPort,
-		SkipOpenBrowser:              o.SkipOpenBrowser,
-		Username:                     o.Username,
-		Password:                     o.Password,
+		KubeConfigFilename: o.KubeConfig,
+		KubeContextName:    kubeconfig.ContextName(o.KubeContext),
+		KubeUserName:       kubeconfig.UserName(o.KubeUser),
+		CACertFilename:     o.CertificateAuthority,
+		SkipTLSVerify:      o.SkipTLSVerify,
+		ListenPort:         o.ListenPort,
+		SkipOpenBrowser:    o.SkipOpenBrowser,
+		Username:           o.Username,
+		Password:           o.Password,
 	}
 	if err := cmd.Login.Do(ctx, in); err != nil {
 		cmd.Logger.Printf("Error: %s", err)

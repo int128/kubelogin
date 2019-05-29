@@ -11,16 +11,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type OIDC struct {
-	HTTP adaptors.HTTP
+type Factory struct {
+	Logger adaptors.Logger
 }
 
-func (o *OIDC) NewClient(config adaptors.HTTPClientConfig) (adaptors.OIDCClient, error) {
-	hc, err := o.HTTP.NewClient(adaptors.HTTPClientConfig{
-		OIDCConfig:                   config.OIDCConfig,
-		CertificateAuthorityFilename: config.CertificateAuthorityFilename,
-		SkipTLSVerify:                config.SkipTLSVerify,
-	})
+func (f *Factory) New(config adaptors.OIDCClientConfig) (adaptors.OIDCClient, error) {
+	hc, err := newHTTPClient(config, f.Logger)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not create a HTTP client")
 	}

@@ -43,10 +43,10 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	}
 	u.Logger.Debugf(1, "A token will be written to %s", destinationKubeConfigFilename)
 
-	oidcClient, err := u.OIDC.NewClient(adaptors.HTTPClientConfig{
-		OIDCConfig:                   auth.OIDCConfig,
-		CertificateAuthorityFilename: in.CertificateAuthorityFilename,
-		SkipTLSVerify:                in.SkipTLSVerify,
+	client, err := u.OIDC.New(adaptors.OIDCClientConfig{
+		Config:         auth.OIDCConfig,
+		CACertFilename: in.CACertFilename,
+		SkipTLSVerify:  in.SkipTLSVerify,
 	})
 	if err != nil {
 		return errors.Wrapf(err, "could not create an OIDC client")
@@ -54,7 +54,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 
 	if auth.OIDCConfig.IDToken() != "" {
 		u.Logger.Debugf(1, "Found the ID token in the kubeconfig")
-		token, err := oidcClient.Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig})
+		token, err := client.Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig})
 		if err == nil {
 			u.Logger.Printf("You already have a valid token until %s", token.Expiry)
 			u.dumpIDToken(token)
@@ -63,7 +63,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		u.Logger.Debugf(1, "The ID token was invalid: %s", err)
 	}
 
-	out, err := u.authenticate(ctx, oidcClient, auth, in)
+	out, err := u.authenticate(ctx, client, auth, in)
 	if err != nil {
 		return errors.Wrapf(err, "could not get a token from the OIDC provider")
 	}

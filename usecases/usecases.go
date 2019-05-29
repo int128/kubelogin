@@ -13,15 +13,15 @@ type Login interface {
 }
 
 type LoginIn struct {
-	KubeConfigFilename           string                 // Default to the environment variable or global config as kubectl
-	KubeContextName              kubeconfig.ContextName // Default to the current context but ignored if KubeUserName is set
-	KubeUserName                 kubeconfig.UserName    // Default to the user of the context
-	SkipOpenBrowser              bool
-	ListenPort                   []int
-	Username                     string
-	Password                     string
-	CertificateAuthorityFilename string // Optional
-	SkipTLSVerify                bool
+	KubeConfigFilename string                 // Default to the environment variable or global config as kubectl
+	KubeContextName    kubeconfig.ContextName // Default to the current context but ignored if KubeUserName is set
+	KubeUserName       kubeconfig.UserName    // Default to the user of the context
+	SkipOpenBrowser    bool
+	ListenPort         []int
+	Username           string
+	Password           string
+	CACertFilename     string // Optional
+	SkipTLSVerify      bool
 }
 
 type LoginPrompt interface {

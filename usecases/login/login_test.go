@@ -178,10 +178,10 @@ func (*mockPrompt) ShowLocalServerURL(url string) {
 func TestLogin_Do(t *testing.T) {
 	var prompt mockPrompt
 
-	newMockOIDC := func(ctrl *gomock.Controller, config adaptors.HTTPClientConfig, client adaptors.OIDCClient) *mock_adaptors.MockOIDC {
+	newMockOIDC := func(ctrl *gomock.Controller, config adaptors.OIDCClientConfig, client adaptors.OIDCClient) *mock_adaptors.MockOIDC {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			NewClient(config).
+			New(config).
 			Return(client, nil)
 		return mockOIDC
 	}
@@ -214,8 +214,8 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		mockOIDC := newMockOIDC(ctrl, adaptors.HTTPClientConfig{
-			OIDCConfig: f.googleOIDCConfig,
+		mockOIDC := newMockOIDC(ctrl, adaptors.OIDCClientConfig{
+			Config: f.googleOIDCConfig,
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
@@ -264,8 +264,8 @@ func TestLogin_Do(t *testing.T) {
 				RefreshToken:    "YOUR_REFRESH_TOKEN",
 			}, nil)
 
-		mockOIDC := newMockOIDC(ctrl, adaptors.HTTPClientConfig{
-			OIDCConfig: f.googleOIDCConfig,
+		mockOIDC := newMockOIDC(ctrl, adaptors.OIDCClientConfig{
+			Config: f.googleOIDCConfig,
 		}, mockOIDCClient)
 
 		u := Login{
@@ -298,8 +298,8 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		mockOIDC := newMockOIDC(ctrl, adaptors.HTTPClientConfig{
-			OIDCConfig: f.googleOIDCConfig,
+		mockOIDC := newMockOIDC(ctrl, adaptors.OIDCClientConfig{
+			Config: f.googleOIDCConfig,
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
@@ -336,8 +336,8 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.keycloakKubeConfigWithToken, "/path/to/keycloak")
 
-		mockOIDC := newMockOIDC(ctrl, adaptors.HTTPClientConfig{
-			OIDCConfig: f.keycloakOIDCConfig,
+		mockOIDC := newMockOIDC(ctrl, adaptors.OIDCClientConfig{
+			Config: f.keycloakOIDCConfig,
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.keycloakOIDCConfig,
 			LocalServerPort: []int{10000},
@@ -374,8 +374,8 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.keycloakKubeConfigWithToken, "/path/to/keycloak")
 
-		mockOIDC := newMockOIDC(ctrl, adaptors.HTTPClientConfig{
-			OIDCConfig: f.keycloakOIDCConfig,
+		mockOIDC := newMockOIDC(ctrl, adaptors.OIDCClientConfig{
+			Config: f.keycloakOIDCConfig,
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.keycloakOIDCConfig,
 			LocalServerPort: []int{10000},
@@ -412,8 +412,8 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		mockOIDC := newMockOIDC(ctrl, adaptors.HTTPClientConfig{
-			OIDCConfig:    f.googleOIDCConfig,
+		mockOIDC := newMockOIDC(ctrl, adaptors.OIDCClientConfig{
+			Config:        f.googleOIDCConfig,
 			SkipTLSVerify: true,
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
@@ -451,8 +451,8 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		mockOIDC := newMockOIDC(ctrl, adaptors.HTTPClientConfig{
-			OIDCConfig: f.googleOIDCConfig,
+		mockOIDC := newMockOIDC(ctrl, adaptors.OIDCClientConfig{
+			Config: f.googleOIDCConfig,
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
@@ -488,15 +488,11 @@ func TestLogin_Do(t *testing.T) {
 
 		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
 		mockOIDCClient.EXPECT().
-			Verify(ctx, adaptors.OIDCVerifyIn{
-				Config: f.googleOIDCConfig,
-			}).
+			Verify(ctx, adaptors.OIDCVerifyIn{Config: f.googleOIDCConfig}).
 			Return(&oidc.IDToken{}, nil)
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			NewClient(adaptors.HTTPClientConfig{
-				OIDCConfig: f.googleOIDCConfig,
-			}).
+			New(adaptors.OIDCClientConfig{Config: f.googleOIDCConfig}).
 			Return(mockOIDCClient, nil)
 
 		u := Login{
@@ -538,8 +534,8 @@ func TestLogin_Do(t *testing.T) {
 				Config: f.googleOIDCConfig,
 			}).
 			Return(nil, errors.New("token is expired"))
-		mockOIDC := newMockOIDC(ctrl, adaptors.HTTPClientConfig{
-			OIDCConfig: f.googleOIDCConfig,
+		mockOIDC := newMockOIDC(ctrl, adaptors.OIDCClientConfig{
+			Config: f.googleOIDCConfig,
 		}, mockOIDCClient)
 
 		u := Login{
@@ -575,9 +571,9 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeConfig.EXPECT().
 			WriteToFile(f.googleKubeConfigWithToken, "/path/to/google")
 
-		mockOIDC := newMockOIDC(ctrl, adaptors.HTTPClientConfig{
-			OIDCConfig:                   f.googleOIDCConfig,
-			CertificateAuthorityFilename: "/path/to/cert1",
+		mockOIDC := newMockOIDC(ctrl, adaptors.OIDCClientConfig{
+			Config:         f.googleOIDCConfig,
+			CACertFilename: "/path/to/cert1",
 		}, newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
 			Config:          f.googleOIDCConfig,
 			LocalServerPort: []int{10000},
@@ -591,8 +587,8 @@ func TestLogin_Do(t *testing.T) {
 			Prompt:     &prompt,
 		}
 		if err := u.Do(ctx, usecases.LoginIn{
-			ListenPort:                   []int{10000},
-			CertificateAuthorityFilename: "/path/to/cert1",
+			ListenPort:     []int{10000},
+			CACertFilename: "/path/to/cert1",
 		}); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
