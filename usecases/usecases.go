@@ -18,12 +18,12 @@ type LoginIn struct {
 	KubeconfigUser     kubeconfig.UserName    // Default to the user of the context
 	SkipOpenBrowser    bool
 	ListenPort         []int
-	Username           string
-	Password           string
-	CACertFilename     string // Optional
+	Username           string // If set, perform the resource owner password credentials grant
+	Password           string // If empty, read a password using Env.ReadPassword()
+	CACertFilename     string // If set, use the CA cert
 	SkipTLSVerify      bool
 }
 
-type LoginPrompt interface {
+type LoginShowLocalServerURL interface {
 	ShowLocalServerURL(url string)
 }

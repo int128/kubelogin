@@ -16,11 +16,14 @@ const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubec
     --auth-provider-arg client-id=YOUR_CLIENT_ID \
     --auth-provider-arg client-secret=YOUR_CLIENT_SECRET`
 
+const passwordPrompt = "Password: "
+
 type Login struct {
-	Kubeconfig adaptors.Kubeconfig
-	OIDC       adaptors.OIDC
-	Logger     adaptors.Logger
-	Prompt     usecases.LoginPrompt
+	Kubeconfig         adaptors.Kubeconfig
+	OIDC               adaptors.OIDC
+	Env                adaptors.Env
+	Logger             adaptors.Logger
+	ShowLocalServerURL usecases.LoginShowLocalServerURL
 }
 
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
@@ -56,6 +59,12 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 
 	var tokenSet *adaptors.OIDCAuthenticateOut
 	if in.Username != "" {
+		if in.Password == "" {
+			in.Password, err = u.Env.ReadPassword(passwordPrompt)
+			if err != nil {
+				return errors.Wrapf(err, "could not read a password")
+			}
+		}
 		out, err := client.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
 			Config:   auth.OIDCConfig,
 			Username: in.Username,
@@ -70,7 +79,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 			Config:          auth.OIDCConfig,
 			LocalServerPort: in.ListenPort,
 			SkipOpenBrowser: in.SkipOpenBrowser,
-			Prompt:          u.Prompt,
+			Prompt:          u.ShowLocalServerURL,
 		})
 		if err != nil {
 			return errors.Wrapf(err, "error while the authorization code grant flow")
@@ -99,10 +108,10 @@ func dumpIDToken(logger adaptors.Logger, token *oidc.IDToken) {
 	}
 }
 
-type Prompt struct {
+type ShowLocalServerURL struct {
 	Logger adaptors.Logger
 }
 
-func (p *Prompt) ShowLocalServerURL(url string) {
-	p.Logger.Printf("Open %s for authentication", url)
+func (s *ShowLocalServerURL) ShowLocalServerURL(url string) {
+	s.Logger.Printf("Open %s for authentication", url)
 }
