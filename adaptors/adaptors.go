@@ -7,7 +7,7 @@ import (
 	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors Kubeconfig,OIDC,OIDCClient,Logger
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors Kubeconfig,OIDC,OIDCClient,Env,Logger
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -59,6 +59,10 @@ type OIDCAuthenticateOut struct {
 
 type OIDCVerifyIn struct {
 	Config kubeconfig.OIDCConfig
+}
+
+type Env interface {
+	ReadPassword(prompt string) (string, error)
 }
 
 type Logger interface {

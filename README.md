@@ -75,8 +75,8 @@ Options:
       --user string                    The name of the kubeconfig user to use. Prior to --context
       --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
       --skip-open-browser              If true, it does not open the browser on authentication
-      --username string                Username for the resource owner password credentials grant
-      --password string                Password for the resource owner password credentials grant
+      --username string                If set, perform the resource owner password credentials grant
+      --password string                If set, use the password instead of asking it
       --certificate-authority string   Path to a cert file for the certificate authority
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
   -v, --v int                          If set to 1 or greater, it shows debug log
@@ -113,6 +113,54 @@ KUBECONFIG="/path/to/kubeconfig1:/path/to/kubeconfig2" kubelogin
 If you set multiple files, kubelogin will find the file which has the current authentication (i.e. `user` and `auth-provider`) and write a token to it.
 
 
+### Authentication flows
+
+#### Authorization code flow
+
+Kubelogin performs the authorization code flow by default.
+
+It starts the local server at port 8000 or 18000 by default.
+You need to register the following redirect URIs to the OIDC provider:
+
+- `http://localhost:8000`
+- `http://localhost:18000` (used if port 8000 is already in use)
+
+You can change the ports by the option:
+
+```sh
+kubelogin --listen-port 12345 --listen-port 23456
+```
+
+
+#### Resource owner password credentials grant flow
+
+You can use the resource owner password credentials grant flow.
+Note that not all providers support this flow as:
+
+> The resource owner password credentials grant type is suitable in
+> cases where the resource owner has a trust relationship with the
+> client, such as the device operating system or a highly privileged
+> application.
+> The authorization server should take special care when
+> enabling this grant type and only allow it when other flows are not
+> viable.
+>
+> <https://tools.ietf.org/html/rfc6749#section-4.3>
+
+You can pass the username and password:
+
+```
+% kubelogin --username USER --password PASS
+```
+
+or ask the password:
+
+```
+% kubelogin --username USER
+Password:
+```
+
+
 ### Extra scopes
 
 You can set extra scopes to request to the provider by `extra-scopes` in the kubeconfig.
@@ -127,33 +175,6 @@ Note that kubectl does not accept multiple scopes and you need to edit the kubec
 kubectl config set-credentials keycloak --auth-provider-arg extra-scopes=SCOPES
 sed -i '' -e s/SCOPES/email,profile/ $KUBECONFIG
 ```
-
-
-### Redirect URIs
-
-By default kubelogin starts the local server at port 8000 or 18000.
-You need to register the following redirect URIs to the OIDC provider:
-
-- `http://localhost:8000`
-- `http://localhost:18000` (used if port 8000 is already in use)
-
-You can change the ports by the option:
-
-```sh
-kubelogin --listen-port 12345 --listen-port 23456
-```
-
-
-### Resource owner password credentials grant
-
-By default kubelogin performs the authorization code grant.
-You can choose the resource owner password credentials grant by the options:
-
-```sh
-kubelogin --username USER --password PASS
-```
-
-Note that some providers do not support the resource owner password credentials grant.
 
 
 ### CA Certificates
