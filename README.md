@@ -51,7 +51,7 @@ You already have a valid token until 2019-05-18 10:28:51 +0900 JST
 As well as you can run it as a kubectl plugin:
 
 ```sh
-kubectl oidc-plugin
+kubectl oidc-login
 ```
 
 For more, see the following documents:
