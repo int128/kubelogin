@@ -76,10 +76,10 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		tokenSet = out
 	} else {
 		out, err := client.AuthenticateByCode(ctx, adaptors.OIDCAuthenticateByCodeIn{
-			Config:          auth.OIDCConfig,
-			LocalServerPort: in.ListenPort,
-			SkipOpenBrowser: in.SkipOpenBrowser,
-			Prompt:          u.ShowLocalServerURL,
+			Config:             auth.OIDCConfig,
+			LocalServerPort:    in.ListenPort,
+			SkipOpenBrowser:    in.SkipOpenBrowser,
+			ShowLocalServerURL: u.ShowLocalServerURL,
 		})
 		if err != nil {
 			return errors.Wrapf(err, "error while the authorization code grant flow")
@@ -108,6 +108,7 @@ func dumpIDToken(logger adaptors.Logger, token *oidc.IDToken) {
 	}
 }
 
+// ShowLocalServerURL just shows the URL of local server to console.
 type ShowLocalServerURL struct {
 	Logger adaptors.Logger
 }

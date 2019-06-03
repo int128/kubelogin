@@ -24,6 +24,8 @@ type LoginIn struct {
 	SkipTLSVerify      bool
 }
 
+// LoginShowLocalServerURL provides an interface to notify the URL of local server.
+// It is needed for the end-to-end tests.
 type LoginShowLocalServerURL interface {
 	ShowLocalServerURL(url string)
 }
