@@ -35,14 +35,10 @@ type OIDCClient interface {
 }
 
 type OIDCAuthenticateByCodeIn struct {
-	Config          kubeconfig.OIDCConfig
-	LocalServerPort []int // HTTP server port candidates
-	SkipOpenBrowser bool  // skip opening browser if true
-	Prompt          OIDCAuthenticateByCodePrompt
-}
-
-type OIDCAuthenticateByCodePrompt interface {
-	ShowLocalServerURL(url string)
+	Config             kubeconfig.OIDCConfig
+	LocalServerPort    []int // HTTP server port candidates
+	SkipOpenBrowser    bool  // skip opening browser if true
+	ShowLocalServerURL interface{ ShowLocalServerURL(url string) }
 }
 
 type OIDCAuthenticateByPasswordIn struct {

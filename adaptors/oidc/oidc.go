@@ -45,7 +45,7 @@ func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 		LocalServerPort:    in.LocalServerPort,
 		SkipOpenBrowser:    in.SkipOpenBrowser,
 		AuthCodeOptions:    []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
-		ShowLocalServerURL: in.Prompt.ShowLocalServerURL,
+		ShowLocalServerURL: in.ShowLocalServerURL.ShowLocalServerURL,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
