@@ -22,23 +22,50 @@ unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
 
+You need to setup the following components:
+
+- OIDC provider
+- Kubernetes API server
+- kubectl authentication
+- Role binding
+
+For more, see the following documents:
+
+- [Getting Started with Keycloak](docs/keycloak.md)
+- [Getting Started with Google Identity Platform](docs/google.md)
+- [Team Operation](docs/team_ops.md)
+
+
+### Login manually
+
 Just run:
 
 ```sh
 kubelogin
+
+# or run as a kubectl plugin
+kubectl oidc-login
 ```
 
 It automatically opens the browser and you can log in to the provider.
 
 <img src="docs/keycloak-login.png" alt="keycloak-login" width="455" height="329">
 
-After authentication, an ID token and refresh token will be written to the kubeconfig.
+After authentication, it writes an ID token and refresh token to the kubeconfig.
 
 ```
 % kubelogin
 Open http://localhost:8000 for authentication
 You got a valid token until 2019-05-18 10:28:51 +0900 JST
 Updated ~/.kubeconfig
+```
+
+Now you can access to the cluster.
+
+```
+% kubectl get pods
+NAME                          READY   STATUS    RESTARTS   AGE
+echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
 
 If the token is valid, kubelogin does nothing.
@@ -48,17 +75,41 @@ If the token is valid, kubelogin does nothing.
 You already have a valid token until 2019-05-18 10:28:51 +0900 JST
 ```
 
-As well as you can run it as a kubectl plugin:
+
+### Login transparently
+
+You can wrap kubectl to transparently login to the provider.
 
 ```sh
-kubectl oidc-login
+alias kubectl='kubelogin exec -- kubectl'
+
+# or run as a kubectl plugin
+alias kubectl='kubectl oidc-login exec -- kubectl'
 ```
 
-For more, see the following documents:
+If the token expired, it updates the kubeconfig and executes kubectl.
 
-- [Getting Started with Keycloak](docs/keycloak.md)
-- [Getting Started with Google Identity Platform](docs/google.md)
-- [Team Operation](docs/team_ops.md)
+```
+% kubectl get pods
+Open http://localhost:8000 for authentication
+You got a valid token until 2019-06-05 19:05:34 +0900 JST
+NAME                          READY   STATUS    RESTARTS   AGE
+echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
+```
+
+If the token is valid, it just executes kubectl.
+
+```
+% kubectl get pods
+NAME                          READY   STATUS    RESTARTS   AGE
+echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
+```
+
+It respects kubectl options passed to the extra arguments.
+For example, if you run `kubectl --kubeconfig .kubeconfig`,
+it will update `.kubeconfig` and execute kubectl.
+
+If the current auth provider is not `oidc`, it just executes kubectl.
 
 
 ## Configuration
@@ -66,20 +117,40 @@ For more, see the following documents:
 This document is for the development version.
 If you are looking for a specific version, see [the release tags](https://github.com/int128/kubelogin/tags).
 
-Kubelogin supports the following options.
+Kubelogin supports the following options:
 
 ```
-Options:
+Usage:
+  kubelogin [flags]
+  kubelogin [command]
+
+Examples:
+  # Login to the provider using authorization code grant.
+  kubelogin
+
+  # Login to the provider using resource owner password credentials grant.
+  kubelogin --username USERNAME --password PASSWORD
+
+  # Wrap kubectl and login transparently
+  alias kubectl='kubelogin exec -- kubectl'
+
+Available Commands:
+  exec        Login transparently and execute the kubectl command
+  help        Help about any command
+  version     Print the version information
+
+Flags:
       --kubeconfig string              Path to the kubeconfig file
       --context string                 The name of the kubeconfig context to use
       --user string                    The name of the kubeconfig user to use. Prior to --context
+      --certificate-authority string   Path to a cert file for the certificate authority
+      --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+  -v, --v int                          If set to 1 or greater, it shows debug log
       --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
       --skip-open-browser              If true, it does not open the browser on authentication
       --username string                If set, perform the resource owner password credentials grant
       --password string                If set, use the password instead of asking it
-      --certificate-authority string   Path to a cert file for the certificate authority
-      --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-  -v, --v int                          If set to 1 or greater, it shows debug log
+  -h, --help                           help for kubelogin
 ```
 
 It supports the following keys of `auth-provider` in a kubeconfig.

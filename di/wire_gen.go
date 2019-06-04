@@ -36,9 +36,17 @@ func NewCmd() adaptors.Cmd {
 		Logger:             adaptorsLogger,
 		ShowLocalServerURL: showLocalServerURL,
 	}
+	exec := &login.Exec{
+		Kubeconfig:         kubeconfigKubeconfig,
+		OIDC:               factory,
+		Env:                envEnv,
+		Logger:             adaptorsLogger,
+		ShowLocalServerURL: showLocalServerURL,
+	}
 	cmdCmd := &cmd.Cmd{
-		Login:  loginLogin,
-		Logger: adaptorsLogger,
+		Login:        loginLogin,
+		LoginAndExec: exec,
+		Logger:       adaptorsLogger,
 	}
 	return cmdCmd
 }
@@ -56,16 +64,24 @@ func NewCmdWith(adaptorsLogger adaptors.Logger, loginShowLocalServerURL usecases
 		Logger:             adaptorsLogger,
 		ShowLocalServerURL: loginShowLocalServerURL,
 	}
+	exec := &login.Exec{
+		Kubeconfig:         kubeconfigKubeconfig,
+		OIDC:               factory,
+		Env:                envEnv,
+		Logger:             adaptorsLogger,
+		ShowLocalServerURL: loginShowLocalServerURL,
+	}
 	cmdCmd := &cmd.Cmd{
-		Login:  loginLogin,
-		Logger: adaptorsLogger,
+		Login:        loginLogin,
+		LoginAndExec: exec,
+		Logger:       adaptorsLogger,
 	}
 	return cmdCmd
 }
 
 // di.go:
 
-var usecasesSet = wire.NewSet(login.Login{}, wire.Bind((*usecases.Login)(nil), (*login.Login)(nil)))
+var usecasesSet = wire.NewSet(login.Login{}, login.Exec{}, wire.Bind((*usecases.Login)(nil), (*login.Login)(nil)), wire.Bind((*usecases.LoginAndExec)(nil), (*login.Exec)(nil)))
 
 var adaptorsSet = wire.NewSet(cmd.Cmd{}, kubeconfig.Kubeconfig{}, oidc.Factory{}, env.Env{}, wire.Bind((*adaptors.Cmd)(nil), (*cmd.Cmd)(nil)), wire.Bind((*adaptors.Kubeconfig)(nil), (*kubeconfig.Kubeconfig)(nil)), wire.Bind((*adaptors.OIDC)(nil), (*oidc.Factory)(nil)), wire.Bind((*adaptors.Env)(nil), (*env.Env)(nil)))
 

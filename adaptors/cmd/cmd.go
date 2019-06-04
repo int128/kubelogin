@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/models/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -17,27 +17,32 @@ const examples = `  # Login to the provider using authorization code grant.
   %[1]s
 
   # Login to the provider using resource owner password credentials grant.
-  %[1]s --username USERNAME --password PASSWORD`
+  %[1]s --username USERNAME --password PASSWORD
+
+  # Wrap kubectl and login transparently
+  alias kubectl='%[1]s exec -- kubectl'`
 
 var defaultListenPort = []int{8000, 18000}
 
 type Cmd struct {
-	Login  usecases.Login
-	Logger adaptors.Logger
+	Login        usecases.Login
+	LoginAndExec usecases.LoginAndExec
+	Logger       adaptors.Logger
 }
 
 func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
-	executable := executableName(args[0])
+	var exitCode int
+	executable := filepath.Base(args[0])
 	var o struct {
 		kubectlOptions
 		kubeloginOptions
 	}
 	rootCmd := cobra.Command{
 		Use:     executable,
-		Short:   fmt.Sprintf("Login to the OpenID Connect provider and update the kubeconfig (%s %s)", executable, version),
+		Short:   "Login to the OpenID Connect provider and update the kubeconfig",
 		Example: fmt.Sprintf(examples, executable),
 		Args:    cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
+		Run: func(*cobra.Command, []string) {
 			cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 			in := usecases.LoginIn{
 				KubeconfigFilename: o.Kubeconfig,
@@ -50,18 +55,82 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 				Username:           o.Username,
 				Password:           o.Password,
 			}
-			return cmd.Login.Do(ctx, in)
+			if err := cmd.Login.Do(ctx, in); err != nil {
+				cmd.Logger.Printf("error: %s", err)
+				exitCode = 1
+				return
+			}
 		},
 	}
 	o.kubectlOptions.register(rootCmd.Flags())
 	o.kubeloginOptions.register(rootCmd.Flags())
 
+	execCmd := cobra.Command{
+		Use:   "exec [flags] -- kubectl [args]",
+		Short: "Login transparently and execute the kubectl command",
+		Args: func(execCmd *cobra.Command, args []string) error {
+			if execCmd.ArgsLenAtDash() == -1 {
+				return errors.Errorf("double dash is missing, please run as %s exec -- kubectl", executable)
+			}
+			if len(args) < 1 {
+				return errors.New("too few arguments")
+			}
+			return nil
+		},
+		Run: func(execCmd *cobra.Command, args []string) {
+			// parse the extra args and override the kubectl options
+			f := pflag.NewFlagSet(execCmd.Name(), pflag.ContinueOnError)
+			o.kubectlOptions.register(f)
+			// ignore unknown flags and help flags (-h/--help)
+			f.ParseErrorsWhitelist.UnknownFlags = true
+			f.BoolP("help", "h", false, "ignore help flags")
+			if err := f.Parse(args); err != nil {
+				cmd.Logger.Debugf(1, "error while parsing the extra arguments: %s", err)
+			}
+			cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
+			in := usecases.LoginAndExecIn{
+				LoginIn: usecases.LoginIn{
+					KubeconfigFilename: o.Kubeconfig,
+					KubeconfigContext:  kubeconfig.ContextName(o.Context),
+					KubeconfigUser:     kubeconfig.UserName(o.User),
+					CACertFilename:     o.CertificateAuthority,
+					SkipTLSVerify:      o.SkipTLSVerify,
+					ListenPort:         o.ListenPort,
+					SkipOpenBrowser:    o.SkipOpenBrowser,
+					Username:           o.Username,
+					Password:           o.Password,
+				},
+				Executable: args[0],
+				Args:       args[1:],
+			}
+			out, err := cmd.LoginAndExec.Do(ctx, in)
+			if err != nil {
+				cmd.Logger.Printf("error: %s", err)
+				exitCode = 1
+				return
+			}
+			exitCode = out.ExitCode
+		},
+	}
+	o.kubeloginOptions.register(execCmd.Flags())
+	rootCmd.AddCommand(&execCmd)
+
+	versionCmd := cobra.Command{
+		Use:   "version",
+		Short: "Print the version information",
+		Args:  cobra.NoArgs,
+		Run: func(*cobra.Command, []string) {
+			cmd.Logger.Printf("%s version %s", executable, version)
+		},
+	}
+	rootCmd.AddCommand(&versionCmd)
+
 	rootCmd.SetArgs(args[1:])
 	if err := rootCmd.Execute(); err != nil {
-		cmd.Logger.Printf("Error: %s", err)
+		cmd.Logger.Debugf(1, "error while parsing the arguments: %s", err)
 		return 1
 	}
-	return 0
+	return exitCode
 }
 
 type kubectlOptions struct {
@@ -74,6 +143,7 @@ type kubectlOptions struct {
 }
 
 func (o *kubectlOptions) register(f *pflag.FlagSet) {
+	f.SortFlags = false
 	f.StringVar(&o.Kubeconfig, "kubeconfig", "", "Path to the kubeconfig file")
 	f.StringVar(&o.Context, "context", "", "The name of the kubeconfig context to use")
 	f.StringVar(&o.User, "user", "", "The name of the kubeconfig user to use. Prior to --context")
@@ -90,16 +160,9 @@ type kubeloginOptions struct {
 }
 
 func (o *kubeloginOptions) register(f *pflag.FlagSet) {
+	f.SortFlags = false
 	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
-}
-
-func executableName(arg0 string) string {
-	base := filepath.Base(arg0)
-	if strings.HasPrefix(base, "kubectl-") {
-		return strings.ReplaceAll(strings.ReplaceAll(base, "-", " "), "_", "-")
-	}
-	return base
 }

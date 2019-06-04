@@ -1,8 +1,10 @@
 package env
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"syscall"
 
 	"github.com/pkg/errors"
@@ -25,4 +27,18 @@ func (*Env) ReadPassword(prompt string) (string, error) {
 		return "", errors.Wrapf(err, "could not write a new line")
 	}
 	return string(b), nil
+}
+
+func (*Env) Exec(ctx context.Context, executable string, args []string) (int, error) {
+	c := exec.CommandContext(ctx, executable, args...)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	if err := c.Run(); err != nil {
+		if err, ok := err.(*exec.ExitError); ok {
+			return err.ExitCode(), nil
+		}
+		return 0, errors.Wrapf(err, "could not execute the command")
+	}
+	return 0, nil
 }
