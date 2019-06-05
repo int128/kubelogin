@@ -17,7 +17,9 @@ import (
 
 var usecasesSet = wire.NewSet(
 	login.Login{},
+	login.Exec{},
 	wire.Bind((*usecases.Login)(nil), (*login.Login)(nil)),
+	wire.Bind((*usecases.LoginAndExec)(nil), (*login.Exec)(nil)),
 )
 
 var adaptorsSet = wire.NewSet(

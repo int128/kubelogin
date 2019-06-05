@@ -3,26 +3,16 @@ package login
 import (
 	"context"
 
-	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/pkg/errors"
 )
 
-const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubectl for OIDC authentication?
-  kubectl config set-credentials CONTEXT_NAME \
-    --auth-provider oidc \
-    --auth-provider-arg idp-issuer-url=https://issuer.example.com \
-    --auth-provider-arg client-id=YOUR_CLIENT_ID \
-    --auth-provider-arg client-secret=YOUR_CLIENT_SECRET`
-
-const passwordPrompt = "Password: "
-
-// Login provides the use case of login to the provider.
-// If the current auth provider is not oidc, show the error.
-// If the kubeconfig has a valid token, do nothing.
-// Otherwise, update the kubeconfig.
-type Login struct {
+// Exec provide the use case of wrapping the kubectl command.
+// If the current auth provider is not oidc, just run kubectl.
+// If the kubeconfig has a valid token, just run kubectl.
+// Otherwise, update the kubeconfig and run kubectl.
+type Exec struct {
 	Kubeconfig         adaptors.Kubeconfig
 	OIDC               adaptors.OIDC
 	Env                adaptors.Env
@@ -30,13 +20,24 @@ type Login struct {
 	ShowLocalServerURL usecases.LoginShowLocalServerURL
 }
 
-func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
+func (u *Exec) Do(ctx context.Context, in usecases.LoginAndExecIn) (*usecases.LoginAndExecOut, error) {
+	if err := u.doInternal(ctx, in.LoginIn); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	exitCode, err := u.Env.Exec(ctx, in.Executable, in.Args)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not execute kubectl")
+	}
+	return &usecases.LoginAndExecOut{ExitCode: exitCode}, nil
+}
+
+func (u *Exec) doInternal(ctx context.Context, in usecases.LoginIn) error {
 	u.Logger.Debugf(1, "WARNING: log may contain your secrets such as token or password")
 
 	auth, err := u.Kubeconfig.GetCurrentAuth(in.KubeconfigFilename, in.KubeconfigContext, in.KubeconfigUser)
 	if err != nil {
-		u.Logger.Printf(oidcConfigErrorMessage)
-		return errors.Wrapf(err, "could not find the current authentication provider")
+		u.Logger.Debugf(1, "The current authentication provider is not oidc: %s", err)
+		return nil
 	}
 	u.Logger.Debugf(1, "Using the authentication provider of the user %s", auth.UserName)
 	u.Logger.Debugf(1, "A token will be written to %s", auth.LocationOfOrigin)
@@ -54,7 +55,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		u.Logger.Debugf(1, "Found the ID token in the kubeconfig")
 		token, err := client.Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig})
 		if err == nil {
-			u.Logger.Printf("You already have a valid token until %s", token.Expiry)
+			u.Logger.Debugf(1, "You already have a valid token until %s", token.Expiry)
 			dumpIDToken(u.Logger, token)
 			return nil
 		}
@@ -100,23 +101,4 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return errors.Wrapf(err, "could not write the token to the kubeconfig")
 	}
 	return nil
-}
-
-func dumpIDToken(logger adaptors.Logger, token *oidc.IDToken) {
-	var claims map[string]interface{}
-	if err := token.Claims(&claims); err != nil {
-		logger.Debugf(1, "Error while inspection of the ID token: %s", err)
-	}
-	for k, v := range claims {
-		logger.Debugf(1, "The ID token has the claim: %s=%v", k, v)
-	}
-}
-
-// ShowLocalServerURL just shows the URL of local server to console.
-type ShowLocalServerURL struct {
-	Logger adaptors.Logger
-}
-
-func (s *ShowLocalServerURL) ShowLocalServerURL(url string) {
-	s.Logger.Printf("Open %s for authentication", url)
 }
