@@ -19,7 +19,7 @@ func (*Env) ReadPassword(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, "Password: "); err != nil {
 		return "", errors.Wrapf(err, "could not write the prompt")
 	}
-	b, err := terminal.ReadPassword(syscall.Stdin)
+	b, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return "", errors.Wrapf(err, "could not read")
 	}
