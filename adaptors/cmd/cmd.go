@@ -5,12 +5,19 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/google/wire"
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/models/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+)
+
+// Set provides an implementation and interface for Cmd.
+var Set = wire.NewSet(
+	Cmd{},
+	wire.Bind((*adaptors.Cmd)(nil), (*Cmd)(nil)),
 )
 
 const examples = `  # Login to the provider using authorization code grant.

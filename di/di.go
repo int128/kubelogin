@@ -15,43 +15,26 @@ import (
 	"github.com/int128/kubelogin/usecases/login"
 )
 
-var usecasesSet = wire.NewSet(
-	login.Login{},
-	login.Exec{},
-	wire.Bind((*usecases.Login)(nil), (*login.Login)(nil)),
-	wire.Bind((*usecases.LoginAndExec)(nil), (*login.Exec)(nil)),
-)
-
-var adaptorsSet = wire.NewSet(
-	cmd.Cmd{},
-	kubeconfig.Kubeconfig{},
-	oidc.Factory{},
-	env.Env{},
-	wire.Bind((*adaptors.Cmd)(nil), (*cmd.Cmd)(nil)),
-	wire.Bind((*adaptors.Kubeconfig)(nil), (*kubeconfig.Kubeconfig)(nil)),
-	wire.Bind((*adaptors.OIDC)(nil), (*oidc.Factory)(nil)),
-	wire.Bind((*adaptors.Env)(nil), (*env.Env)(nil)),
-)
-
-var extraSet = wire.NewSet(
-	login.ShowLocalServerURL{},
-	wire.Bind((*usecases.LoginShowLocalServerURL)(nil), (*login.ShowLocalServerURL)(nil)),
-	logger.New,
-)
-
 func NewCmd() adaptors.Cmd {
 	wire.Build(
-		usecasesSet,
-		adaptorsSet,
-		extraSet,
+		login.Set,
+		login.ExtraSet,
+		cmd.Set,
+		env.Set,
+		kubeconfig.Set,
+		oidc.Set,
+		logger.Set,
 	)
 	return nil
 }
 
 func NewCmdWith(adaptors.Logger, usecases.LoginShowLocalServerURL) adaptors.Cmd {
 	wire.Build(
-		usecasesSet,
-		adaptorsSet,
+		login.Set,
+		cmd.Set,
+		env.Set,
+		kubeconfig.Set,
+		oidc.Set,
 	)
 	return nil
 }

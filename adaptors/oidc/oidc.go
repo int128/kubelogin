@@ -5,10 +5,17 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc"
+	"github.com/google/wire"
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/oauth2cli"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+)
+
+// Set provides an implementation and interface for OIDC.
+var Set = wire.NewSet(
+	Factory{},
+	wire.Bind((*adaptors.OIDC)(nil), (*Factory)(nil)),
 )
 
 type Factory struct {
