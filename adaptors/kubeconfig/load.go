@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/int128/kubelogin/models/kubeconfig"
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
@@ -12,11 +12,11 @@ import (
 func (*Kubeconfig) GetCurrentAuth(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error) {
 	config, err := loadByDefaultRules(explicitFilename)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, xerrors.Errorf("could not load kubeconfig: %w", err)
 	}
 	auth, err := findCurrentAuth(config, contextName, userName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not find the current auth provider")
+		return nil, xerrors.Errorf("could not find the current auth provider: %w", err)
 	}
 	return auth, nil
 }
@@ -26,7 +26,7 @@ func loadByDefaultRules(explicitFilename string) (*api.Config, error) {
 	rules.ExplicitPath = explicitFilename
 	config, err := rules.Load()
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not load the kubeconfig")
+		return nil, xerrors.Errorf("error while loading config: %w", err)
 	}
 	return config, err
 }
@@ -42,22 +42,22 @@ func findCurrentAuth(config *api.Config, contextName kubeconfig.ContextName, use
 		}
 		contextNode, ok := config.Contexts[string(contextName)]
 		if !ok {
-			return nil, errors.Errorf("context %s does not exist", contextName)
+			return nil, xerrors.Errorf("context %s does not exist", contextName)
 		}
 		userName = kubeconfig.UserName(contextNode.AuthInfo)
 	}
 	userNode, ok := config.AuthInfos[string(userName)]
 	if !ok {
-		return nil, errors.Errorf("user %s does not exist", userName)
+		return nil, xerrors.Errorf("user %s does not exist", userName)
 	}
 	if userNode.AuthProvider == nil {
-		return nil, errors.Errorf("auth-provider is missing")
+		return nil, xerrors.New("auth-provider is missing")
 	}
 	if userNode.AuthProvider.Name != "oidc" {
-		return nil, errors.Errorf("auth-provider.name must be oidc but is %s", userNode.AuthProvider.Name)
+		return nil, xerrors.Errorf("auth-provider.name must be oidc but is %s", userNode.AuthProvider.Name)
 	}
 	if userNode.AuthProvider.Config == nil {
-		return nil, errors.Errorf("auth-provider.config is missing")
+		return nil, xerrors.New("auth-provider.config is missing")
 	}
 	return &kubeconfig.Auth{
 		LocationOfOrigin: userNode.LocationOfOrigin,

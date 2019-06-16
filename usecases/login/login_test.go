@@ -11,7 +11,7 @@ import (
 	"github.com/int128/kubelogin/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/models/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 )
 
 func newMockCodeOIDC(ctrl *gomock.Controller, ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) *mock_adaptors.MockOIDCClient {
@@ -185,7 +185,7 @@ func TestLogin_Do(t *testing.T) {
 			Return(mock_adaptors.NewMockOIDCClient(ctrl), nil)
 
 		mockEnv := mock_adaptors.NewMockEnv(ctrl)
-		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", errors.New("error"))
+		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", xerrors.New("error"))
 
 		u := Login{
 			Kubeconfig: mockKubeconfig,
@@ -246,7 +246,7 @@ func TestLogin_Do(t *testing.T) {
 		mockOIDCClient := newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{Config: auth.OIDCConfig})
 		mockOIDCClient.EXPECT().
 			Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig}).
-			Return(nil, errors.New("token expired"))
+			Return(nil, xerrors.New("token expired"))
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).

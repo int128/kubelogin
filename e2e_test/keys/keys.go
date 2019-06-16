@@ -8,7 +8,7 @@ import (
 	"encoding/pem"
 	"io/ioutil"
 
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 )
 
 // TLSCACert is path to the CA certificate.
@@ -54,18 +54,18 @@ func init() {
 func readPrivateKey(name string) (*rsa.PrivateKey, error) {
 	b, err := ioutil.ReadFile(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not read JWSKey")
+		return nil, xerrors.Errorf("could not read JWSKey: %w", err)
 	}
 	block, rest := pem.Decode(b)
 	if block == nil {
-		return nil, errors.New("could not decode PEM")
+		return nil, xerrors.New("could not decode PEM")
 	}
 	if len(rest) > 0 {
-		return nil, errors.New("PEM should contain single key but multiple keys")
+		return nil, xerrors.New("PEM should contain single key but multiple keys")
 	}
 	k, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not parse the key")
+		return nil, xerrors.Errorf("could not parse the key: %w", err)
 	}
 	return k, nil
 }

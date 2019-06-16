@@ -7,7 +7,7 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/usecases"
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 )
 
 // Set provides the use-cases of logging in.
@@ -51,7 +51,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	auth, err := u.Kubeconfig.GetCurrentAuth(in.KubeconfigFilename, in.KubeconfigContext, in.KubeconfigUser)
 	if err != nil {
 		u.Logger.Printf(oidcConfigErrorMessage)
-		return errors.Wrapf(err, "could not find the current authentication provider")
+		return xerrors.Errorf("could not find the current authentication provider: %w", err)
 	}
 	u.Logger.Debugf(1, "Using the authentication provider of the user %s", auth.UserName)
 	u.Logger.Debugf(1, "A token will be written to %s", auth.LocationOfOrigin)
@@ -62,7 +62,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		SkipTLSVerify:  in.SkipTLSVerify,
 	})
 	if err != nil {
-		return errors.Wrapf(err, "could not create an OIDC client")
+		return xerrors.Errorf("could not create an OIDC client: %w", err)
 	}
 
 	if auth.OIDCConfig.IDToken != "" {
@@ -81,7 +81,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		if in.Password == "" {
 			in.Password, err = u.Env.ReadPassword(passwordPrompt)
 			if err != nil {
-				return errors.Wrapf(err, "could not read a password")
+				return xerrors.Errorf("could not read a password: %w", err)
 			}
 		}
 		out, err := client.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
@@ -90,7 +90,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 			Password: in.Password,
 		})
 		if err != nil {
-			return errors.Wrapf(err, "error while the resource owner password credentials grant flow")
+			return xerrors.Errorf("error while the resource owner password credentials grant flow: %w", err)
 		}
 		tokenSet = out
 	} else {
@@ -101,7 +101,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 			ShowLocalServerURL: u.ShowLocalServerURL,
 		})
 		if err != nil {
-			return errors.Wrapf(err, "error while the authorization code grant flow")
+			return xerrors.Errorf("error while the authorization code grant flow: %w", err)
 		}
 		tokenSet = out
 	}
@@ -112,7 +112,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 
 	u.Logger.Debugf(1, "Writing the ID token and refresh token to %s", auth.LocationOfOrigin)
 	if err := u.Kubeconfig.UpdateAuth(auth); err != nil {
-		return errors.Wrapf(err, "could not write the token to the kubeconfig")
+		return xerrors.Errorf("could not write the token to the kubeconfig: %w", err)
 	}
 	return nil
 }

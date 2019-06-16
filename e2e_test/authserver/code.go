@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 )
 
 // CodeConfig represents a config for Authorization Code Grant.
@@ -67,14 +67,14 @@ func (h *codeHandler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 	case m == "GET" && p == "/.well-known/openid-configuration":
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.templates.discovery.Execute(w, h.values); err != nil {
-			return errors.Wrapf(err, "could not execute the template")
+			return xerrors.Errorf("could not execute the template: %w", err)
 		}
 	case m == "GET" && p == "/protocol/openid-connect/auth":
 		// Authentication Response
 		// http://openid.net/specs/openid-connect-core-1_0.html#AuthResponse
 		q := r.URL.Query()
 		if h.c.Scope != q.Get("scope") {
-			return errors.Errorf("scope wants %s but %s", h.c.Scope, q.Get("scope"))
+			return xerrors.Errorf("scope wants %s but %s", h.c.Scope, q.Get("scope"))
 		}
 		to := fmt.Sprintf("%s?state=%s&code=%s", q.Get("redirect_uri"), q.Get("state"), h.c.Code)
 		http.Redirect(w, r, to, 302)
@@ -82,23 +82,23 @@ func (h *codeHandler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		// Token Response
 		// http://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
 		if err := r.ParseForm(); err != nil {
-			return errors.Wrapf(err, "could not parse the form")
+			return xerrors.Errorf("could not parse the form: %w", err)
 		}
 		grantType, code := r.Form.Get("grant_type"), r.Form.Get("code")
 		if grantType != "authorization_code" {
-			return errors.Errorf("grant_type wants authorization_code but %s", grantType)
+			return xerrors.Errorf("grant_type wants authorization_code but %s", grantType)
 		}
 		if h.c.Code != code {
-			return errors.Errorf("code wants %s but %s", h.c.Code, code)
+			return xerrors.Errorf("code wants %s but %s", h.c.Code, code)
 		}
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.templates.token.Execute(w, h.values); err != nil {
-			return errors.Wrapf(err, "could not execute the template")
+			return xerrors.Errorf("could not execute the template: %w", err)
 		}
 	case m == "GET" && p == "/protocol/openid-connect/certs":
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.templates.jwks.Execute(w, h.values); err != nil {
-			return errors.Wrapf(err, "could not execute the template")
+			return xerrors.Errorf("could not execute the template: %w", err)
 		}
 	default:
 		http.Error(w, "Not Found", 404)

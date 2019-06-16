@@ -4,28 +4,28 @@ import (
 	"strings"
 
 	"github.com/int128/kubelogin/models/kubeconfig"
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 func (*Kubeconfig) UpdateAuth(auth *kubeconfig.Auth) error {
 	config, err := clientcmd.LoadFromFile(auth.LocationOfOrigin)
 	if err != nil {
-		return errors.Wrapf(err, "could not load %s", auth.LocationOfOrigin)
+		return xerrors.Errorf("could not load %s: %w", auth.LocationOfOrigin, err)
 	}
 	userNode, ok := config.AuthInfos[string(auth.UserName)]
 	if !ok {
-		return errors.Errorf("user %s does not exist", auth.UserName)
+		return xerrors.Errorf("user %s does not exist", auth.UserName)
 	}
 	if userNode.AuthProvider == nil {
-		return errors.Errorf("auth-provider is missing")
+		return xerrors.Errorf("auth-provider is missing")
 	}
 	if userNode.AuthProvider.Name != "oidc" {
-		return errors.Errorf("auth-provider must be oidc but is %s", userNode.AuthProvider.Name)
+		return xerrors.Errorf("auth-provider must be oidc but is %s", userNode.AuthProvider.Name)
 	}
 	copyOIDCConfig(auth.OIDCConfig, userNode.AuthProvider.Config)
 	if err := clientcmd.WriteToFile(*config, auth.LocationOfOrigin); err != nil {
-		return errors.Wrapf(err, "could not update %s", auth.LocationOfOrigin)
+		return xerrors.Errorf("could not update %s: %w", auth.LocationOfOrigin, err)
 	}
 	return nil
 }
