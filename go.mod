@@ -9,7 +9,7 @@ require (
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/google/wire v0.2.2
 	github.com/imdario/mergo v0.3.7 // indirect
-	github.com/int128/oauth2cli v1.4.0
+	github.com/int128/oauth2cli v1.4.1
 	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
