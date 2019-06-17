@@ -7,8 +7,16 @@ import (
 	"os/exec"
 	"syscall"
 
+	"github.com/google/wire"
+	"github.com/int128/kubelogin/adaptors"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh/terminal"
+)
+
+// Set provides an implementation and interface for Env.
+var Set = wire.NewSet(
+	Env{},
+	wire.Bind((*adaptors.Env)(nil), (*Env)(nil)),
 )
 
 // Env provides environment specific facilities.

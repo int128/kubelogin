@@ -4,9 +4,24 @@ import (
 	"context"
 
 	"github.com/coreos/go-oidc"
+	"github.com/google/wire"
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/pkg/errors"
+)
+
+// Set provides the use-cases of logging in.
+var Set = wire.NewSet(
+	Login{},
+	Exec{},
+	wire.Bind((*usecases.Login)(nil), (*Login)(nil)),
+	wire.Bind((*usecases.LoginAndExec)(nil), (*Exec)(nil)),
+)
+
+// ExtraSet is a set of interaction components for e2e testing.
+var ExtraSet = wire.NewSet(
+	ShowLocalServerURL{},
+	wire.Bind((*usecases.LoginShowLocalServerURL)(nil), (*ShowLocalServerURL)(nil)),
 )
 
 const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubectl for OIDC authentication?

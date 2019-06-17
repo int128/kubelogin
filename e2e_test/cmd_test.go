@@ -1,4 +1,4 @@
-package adaptors_test
+package e2e_test
 
 import (
 	"context"
@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/int128/kubelogin/adaptors_test/authserver"
-	"github.com/int128/kubelogin/adaptors_test/keys"
-	"github.com/int128/kubelogin/adaptors_test/kubeconfig"
-	"github.com/int128/kubelogin/adaptors_test/logger"
 	"github.com/int128/kubelogin/di"
+	"github.com/int128/kubelogin/e2e_test/authserver"
+	"github.com/int128/kubelogin/e2e_test/keys"
+	"github.com/int128/kubelogin/e2e_test/kubeconfig"
+	"github.com/int128/kubelogin/e2e_test/logger"
 )
 
 // Run the integration tests.

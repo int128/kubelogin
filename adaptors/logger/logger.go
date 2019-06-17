@@ -4,7 +4,13 @@ import (
 	"log"
 	"os"
 
+	"github.com/google/wire"
 	"github.com/int128/kubelogin/adaptors"
+)
+
+// Set provides an implementation and interface for Logger.
+var Set = wire.NewSet(
+	New,
 )
 
 // New returns a Logger with the standard log.Logger for messages and debug.

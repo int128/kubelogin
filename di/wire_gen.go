@@ -6,7 +6,6 @@
 package di
 
 import (
-	"github.com/google/wire"
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/adaptors/cmd"
 	"github.com/int128/kubelogin/adaptors/env"
@@ -78,11 +77,3 @@ func NewCmdWith(adaptorsLogger adaptors.Logger, loginShowLocalServerURL usecases
 	}
 	return cmdCmd
 }
-
-// di.go:
-
-var usecasesSet = wire.NewSet(login.Login{}, login.Exec{}, wire.Bind((*usecases.Login)(nil), (*login.Login)(nil)), wire.Bind((*usecases.LoginAndExec)(nil), (*login.Exec)(nil)))
-
-var adaptorsSet = wire.NewSet(cmd.Cmd{}, kubeconfig.Kubeconfig{}, oidc.Factory{}, env.Env{}, wire.Bind((*adaptors.Cmd)(nil), (*cmd.Cmd)(nil)), wire.Bind((*adaptors.Kubeconfig)(nil), (*kubeconfig.Kubeconfig)(nil)), wire.Bind((*adaptors.OIDC)(nil), (*oidc.Factory)(nil)), wire.Bind((*adaptors.Env)(nil), (*env.Env)(nil)))
-
-var extraSet = wire.NewSet(login.ShowLocalServerURL{}, wire.Bind((*usecases.LoginShowLocalServerURL)(nil), (*login.ShowLocalServerURL)(nil)), logger.New)
