@@ -7,7 +7,7 @@ require (
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/mock v1.3.1
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
-	github.com/google/wire v0.2.2
+	github.com/google/wire v0.3.0
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/int128/oauth2cli v1.4.1
 	github.com/json-iterator/go v1.1.6 // indirect
