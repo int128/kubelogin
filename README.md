@@ -205,18 +205,9 @@ kubelogin --listen-port 12345 --listen-port 23456
 
 #### Resource owner password credentials grant flow
 
-You can use the resource owner password credentials grant flow.
-Note that not all providers support this flow as:
-
-> The resource owner password credentials grant type is suitable in
-> cases where the resource owner has a trust relationship with the
-> client, such as the device operating system or a highly privileged
-> application.
-> The authorization server should take special care when
-> enabling this grant type and only allow it when other flows are not
-> viable.
->
-> <https://tools.ietf.org/html/rfc6749#section-4.3>
+As well as you can use the resource owner password credentials grant flow.
+Keycloak supports this flow but you need to explicitly enable the "Direct Access Grants" feature in the client settings.
+Most OIDC providers do not support this flow.
 
 You can pass the username and password:
 
@@ -224,7 +215,7 @@ You can pass the username and password:
 % kubelogin --username USER --password PASS
 ```
 
-or ask the password:
+or use the password prompt:
 
 ```
 % kubelogin --username USER
