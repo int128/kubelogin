@@ -12,16 +12,16 @@ import (
 
 // Set provides the use-cases of logging in.
 var Set = wire.NewSet(
-	Login{},
-	Exec{},
-	wire.Bind((*usecases.Login)(nil), (*Login)(nil)),
-	wire.Bind((*usecases.LoginAndExec)(nil), (*Exec)(nil)),
+	wire.Struct(new(Login), "*"),
+	wire.Struct(new(Exec), "*"),
+	wire.Bind(new(usecases.Login), new(*Login)),
+	wire.Bind(new(usecases.LoginAndExec), new(*Exec)),
 )
 
 // ExtraSet is a set of interaction components for e2e testing.
 var ExtraSet = wire.NewSet(
-	ShowLocalServerURL{},
-	wire.Bind((*usecases.LoginShowLocalServerURL)(nil), (*ShowLocalServerURL)(nil)),
+	wire.Struct(new(ShowLocalServerURL), "*"),
+	wire.Bind(new(usecases.LoginShowLocalServerURL), new(*ShowLocalServerURL)),
 )
 
 const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubectl for OIDC authentication?

@@ -14,8 +14,8 @@ import (
 
 // Set provides an implementation and interface for OIDC.
 var Set = wire.NewSet(
-	Factory{},
-	wire.Bind((*adaptors.OIDC)(nil), (*Factory)(nil)),
+	wire.Struct(new(Factory), "*"),
+	wire.Bind(new(adaptors.OIDC), new(*Factory)),
 )
 
 type Factory struct {

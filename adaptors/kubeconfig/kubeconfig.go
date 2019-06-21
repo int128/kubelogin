@@ -7,8 +7,8 @@ import (
 
 // Set provides an implementation and interface for Kubeconfig.
 var Set = wire.NewSet(
-	Kubeconfig{},
-	wire.Bind((*adaptors.Kubeconfig)(nil), (*Kubeconfig)(nil)),
+	wire.Struct(new(Kubeconfig), "*"),
+	wire.Bind(new(adaptors.Kubeconfig), new(*Kubeconfig)),
 )
 
 type Kubeconfig struct{}

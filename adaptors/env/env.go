@@ -15,8 +15,8 @@ import (
 
 // Set provides an implementation and interface for Env.
 var Set = wire.NewSet(
-	Env{},
-	wire.Bind((*adaptors.Env)(nil), (*Env)(nil)),
+	wire.Struct(new(Env), "*"),
+	wire.Bind(new(adaptors.Env), new(*Env)),
 )
 
 // Env provides environment specific facilities.

@@ -16,8 +16,8 @@ import (
 
 // Set provides an implementation and interface for Cmd.
 var Set = wire.NewSet(
-	Cmd{},
-	wire.Bind((*adaptors.Cmd)(nil), (*Cmd)(nil)),
+	wire.Struct(new(Cmd), "*"),
+	wire.Bind(new(adaptors.Cmd), new(*Cmd)),
 )
 
 const examples = `  # Login to the provider using authorization code grant.
