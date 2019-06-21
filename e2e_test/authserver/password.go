@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 )
 
 // PasswordConfig represents a config for Resource Owner Password Credentials Grant.
@@ -64,32 +64,32 @@ func (h *passwordHandler) serveHTTP(w http.ResponseWriter, r *http.Request) erro
 	case m == "GET" && p == "/.well-known/openid-configuration":
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.templates.discovery.Execute(w, h.values); err != nil {
-			return errors.Wrapf(err, "could not execute the template")
+			return xerrors.Errorf("could not execute the template: %w", err)
 		}
 	case m == "POST" && p == "/protocol/openid-connect/token":
 		// Token Response
 		// https://tools.ietf.org/html/rfc6749#section-4.3
 		if err := r.ParseForm(); err != nil {
-			return errors.Wrapf(err, "could not parse the form")
+			return xerrors.Errorf("could not parse the form: %w", err)
 		}
 		grantType, username, password := r.Form.Get("grant_type"), r.Form.Get("username"), r.Form.Get("password")
 		if grantType != "password" {
-			return errors.Errorf("grant_type wants password but %s", grantType)
+			return xerrors.Errorf("grant_type wants password but %s", grantType)
 		}
 		if h.c.Username != username {
-			return errors.Errorf("username wants %s but %s", h.c.Username, username)
+			return xerrors.Errorf("username wants %s but %s", h.c.Username, username)
 		}
 		if h.c.Password != password {
-			return errors.Errorf("password wants %s but %s", h.c.Password, password)
+			return xerrors.Errorf("password wants %s but %s", h.c.Password, password)
 		}
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.templates.token.Execute(w, h.values); err != nil {
-			return errors.Wrapf(err, "could not execute the template")
+			return xerrors.Errorf("could not execute the template: %w", err)
 		}
 	case m == "GET" && p == "/protocol/openid-connect/certs":
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.templates.jwks.Execute(w, h.values); err != nil {
-			return errors.Wrapf(err, "could not execute the template")
+			return xerrors.Errorf("could not execute the template: %w", err)
 		}
 	default:
 		http.Error(w, "Not Found", 404)

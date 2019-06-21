@@ -8,8 +8,8 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/oauth2cli"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+	"golang.org/x/xerrors"
 )
 
 // Set provides an implementation and interface for OIDC.
@@ -25,7 +25,7 @@ type Factory struct {
 func (f *Factory) New(config adaptors.OIDCClientConfig) (adaptors.OIDCClient, error) {
 	hc, err := newHTTPClient(config, f.Logger)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not create a HTTP client")
+		return nil, xerrors.Errorf("could not create a HTTP client: %w", err)
 	}
 	return &Client{hc}, nil
 }
@@ -40,7 +40,7 @@ func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	}
 	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
+		return nil, xerrors.Errorf("could not discovery the OIDC issuer: %w", err)
 	}
 	config := oauth2cli.Config{
 		OAuth2Config: oauth2.Config{
@@ -56,16 +56,16 @@ func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not get a token")
+		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		return nil, errors.Errorf("id_token is missing in the token response: %s", token)
+		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
 	}
 	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not verify the id_token")
+		return nil, xerrors.Errorf("could not verify the id_token: %w", err)
 	}
 	return &adaptors.OIDCAuthenticateOut{
 		VerifiedIDToken: verifiedIDToken,
@@ -80,7 +80,7 @@ func (c *Client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAut
 	}
 	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
+		return nil, xerrors.Errorf("could not discovery the OIDC issuer: %w", err)
 	}
 	config := oauth2.Config{
 		Endpoint:     provider.Endpoint(),
@@ -90,16 +90,16 @@ func (c *Client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAut
 	}
 	token, err := config.PasswordCredentialsToken(ctx, in.Username, in.Password)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not get a token")
+		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		return nil, errors.Errorf("id_token is missing in the token response: %s", token)
+		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
 	}
 	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not verify the id_token")
+		return nil, xerrors.Errorf("could not verify the id_token: %w", err)
 	}
 	return &adaptors.OIDCAuthenticateOut{
 		VerifiedIDToken: verifiedIDToken,
@@ -114,12 +114,12 @@ func (c *Client) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*oidc.ID
 	}
 	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not discovery the OIDC issuer")
+		return nil, xerrors.Errorf("could not discovery the OIDC issuer: %w", err)
 	}
 	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID})
 	verifiedIDToken, err := verifier.Verify(ctx, in.Config.IDToken)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not verify the id_token")
+		return nil, xerrors.Errorf("could not verify the id_token: %w", err)
 	}
 	return verifiedIDToken, nil
 }

@@ -9,9 +9,9 @@ import (
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/models/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"golang.org/x/xerrors"
 )
 
 // Set provides an implementation and interface for Cmd.
@@ -77,10 +77,10 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		Short: "Login transparently and execute the kubectl command",
 		Args: func(execCmd *cobra.Command, args []string) error {
 			if execCmd.ArgsLenAtDash() == -1 {
-				return errors.Errorf("double dash is missing, please run as %s exec -- kubectl", executable)
+				return xerrors.Errorf("double dash is missing, please run as %s exec -- kubectl", executable)
 			}
 			if len(args) < 1 {
-				return errors.New("too few arguments")
+				return xerrors.New("too few arguments")
 			}
 			return nil
 		},

@@ -9,7 +9,7 @@ import (
 	"github.com/int128/kubelogin/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/models/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 )
 
 func TestExec_Do(t *testing.T) {
@@ -68,7 +68,7 @@ func TestExec_Do(t *testing.T) {
 		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuth("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
-			Return(nil, errors.New("no oidc config"))
+			Return(nil, xerrors.New("no oidc config"))
 
 		mockEnv := mock_adaptors.NewMockEnv(ctrl)
 		mockEnv.EXPECT().
