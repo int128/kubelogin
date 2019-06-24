@@ -7,6 +7,8 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/adaptors"
+	"github.com/int128/kubelogin/adaptors/oidc/logging"
+	"github.com/int128/kubelogin/adaptors/oidc/tls"
 	"github.com/int128/oauth2cli"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
@@ -23,9 +25,20 @@ type Factory struct {
 }
 
 func (f *Factory) New(config adaptors.OIDCClientConfig) (adaptors.OIDCClient, error) {
-	hc, err := newHTTPClient(config, f.Logger)
+	tlsConfig, err := tls.NewConfig(config, f.Logger)
 	if err != nil {
-		return nil, xerrors.Errorf("could not create a HTTP client: %w", err)
+		return nil, xerrors.Errorf("could not initialize TLS config: %w", err)
+	}
+	baseTransport := &http.Transport{
+		TLSClientConfig: tlsConfig,
+		Proxy:           http.ProxyFromEnvironment,
+	}
+	loggingTransport := &logging.Transport{
+		Base:   baseTransport,
+		Logger: f.Logger,
+	}
+	hc := &http.Client{
+		Transport: loggingTransport,
 	}
 	return &Client{hc}, nil
 }

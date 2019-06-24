@@ -1,18 +1,17 @@
-package oidc
+package tls
 
 import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/int128/kubelogin/adaptors"
-	"github.com/int128/kubelogin/adaptors/oidc/logging"
 	"golang.org/x/xerrors"
 )
 
-func newHTTPClient(config adaptors.OIDCClientConfig, logger adaptors.Logger) (*http.Client, error) {
+// NewConfig returns a tls.Config with the given certificates and options.
+func NewConfig(config adaptors.OIDCClientConfig, logger adaptors.Logger) (*tls.Config, error) {
 	pool := x509.NewCertPool()
 	if config.Config.IDPCertificateAuthority != "" {
 		logger.Debugf(1, "Loading the certificate %s", config.Config.IDPCertificateAuthority)
@@ -35,21 +34,13 @@ func newHTTPClient(config adaptors.OIDCClientConfig, logger adaptors.Logger) (*h
 			return nil, xerrors.Errorf("could not load the certificate: %w", err)
 		}
 	}
-
-	var tlsConfig tls.Config
-	if len(pool.Subjects()) > 0 {
-		tlsConfig.RootCAs = pool
+	c := &tls.Config{
+		InsecureSkipVerify: config.SkipTLSVerify,
 	}
-	tlsConfig.InsecureSkipVerify = config.SkipTLSVerify
-	return &http.Client{
-		Transport: &logging.Transport{
-			Base: &http.Transport{
-				TLSClientConfig: &tlsConfig,
-				Proxy:           http.ProxyFromEnvironment,
-			},
-			Logger: logger,
-		},
-	}, nil
+	if len(pool.Subjects()) > 0 {
+		c.RootCAs = pool
+	}
+	return c, nil
 }
 
 func appendCertificateFromFile(pool *x509.CertPool, filename string) error {
