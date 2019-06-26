@@ -24,13 +24,7 @@ unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
 
-You need to setup the following components:
-
-- OIDC provider
-- Kubernetes API server
-- kubectl authentication
-- Role binding
-
+You need to configure the OIDC provider, Kubernetes API server, kubectl authentication and role binding.
 See the following documents for more:
 
 - [Getting Started with Keycloak](docs/keycloak.md)
@@ -38,9 +32,9 @@ See the following documents for more:
 - [Team Operation](docs/team_ops.md)
 
 
-### Login explicitly
+### Login by the command
 
-Just run:
+Just run the command:
 
 ```sh
 kubelogin
@@ -78,7 +72,7 @@ You already have a valid token until 2019-05-18 10:28:51 +0900 JST
 ```
 
 
-### Login transparently
+### Wrap kubectl and login transparently
 
 You can wrap kubectl to transparently login to the provider.
 
@@ -193,7 +187,7 @@ If you set multiple files, kubelogin will find the file which has the current au
 Kubelogin performs the authorization code flow by default.
 
 It starts the local server at port 8000 or 18000 by default.
-You need to register the following redirect URIs to the OIDC provider:
+You need to register the following redirect URIs to the provider:
 
 - `http://localhost:8000`
 - `http://localhost:18000` (used if port 8000 is already in use)
@@ -243,7 +237,7 @@ sed -i '' -e s/SCOPES/email,profile/ $KUBECONFIG
 
 ### CA Certificates
 
-You can set your self-signed certificates for the OIDC provider (not Kubernetes API server).
+You can use your self-signed certificates for the provider.
 
 ```sh
 kubectl config set-credentials keycloak \
