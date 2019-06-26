@@ -1,7 +1,9 @@
 # kubelogin [![CircleCI](https://circleci.com/gh/int128/kubelogin.svg?style=shield)](https://circleci.com/gh/int128/kubelogin) [![Go Report Card](https://goreportcard.com/badge/github.com/int128/kubelogin)](https://goreportcard.com/report/github.com/int128/kubelogin)
 
 This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens), also known as `kubectl oidc-login`.
-It gets a token from the OIDC provider and writes it to the kubeconfig.
+
+In Kubernetes OIDC authentication, kubectl does not provide actual authentication and we need to manually set an ID token and refresh token to the kubeconfig.
+Kubelogin provides browser based authentication and writes an ID token and refresh token to the kubeconfig.
 
 
 ## Getting Started
@@ -29,14 +31,14 @@ You need to setup the following components:
 - kubectl authentication
 - Role binding
 
-For more, see the following documents:
+See the following documents for more:
 
 - [Getting Started with Keycloak](docs/keycloak.md)
 - [Getting Started with Google Identity Platform](docs/google.md)
 - [Team Operation](docs/team_ops.md)
 
 
-### Login manually
+### Login explicitly
 
 Just run:
 
@@ -225,13 +227,13 @@ Password:
 
 ### Extra scopes
 
-You can set extra scopes to request to the provider by `extra-scopes` in the kubeconfig.
+You can set the extra scopes to request to the provider by `extra-scopes` in the kubeconfig.
 
 ```sh
 kubectl config set-credentials keycloak --auth-provider-arg extra-scopes=email
 ```
 
-Note that kubectl does not accept multiple scopes and you need to edit the kubeconfig as like:
+Currently kubectl does not accept multiple scopes, so you need to edit the kubeconfig as like:
 
 ```sh
 kubectl config set-credentials keycloak --auth-provider-arg extra-scopes=SCOPES
@@ -241,7 +243,7 @@ sed -i '' -e s/SCOPES/email,profile/ $KUBECONFIG
 
 ### CA Certificates
 
-You can set your self-signed certificates for the OIDC provider (not Kubernetes API server) by kubeconfig or option.
+You can set your self-signed certificates for the OIDC provider (not Kubernetes API server).
 
 ```sh
 kubectl config set-credentials keycloak \
@@ -258,5 +260,17 @@ See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyF
 ## Contributions
 
 This is an open source software licensed under Apache License 2.0.
-
 Feel free to open issues and pull requests for improving code and documents.
+
+### Development
+
+Go 1.12 or later is required.
+
+```sh
+# Run lint and tests
+make check
+
+# Compile and run the command
+make
+./kubelogin
+```
