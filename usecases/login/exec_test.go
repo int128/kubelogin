@@ -28,9 +28,8 @@ func TestExec_Do(t *testing.T) {
 
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			New(adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
+			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
 			Return(newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
-				Config:          auth.OIDCConfig,
 				LocalServerPort: []int{10000},
 			}), nil)
 

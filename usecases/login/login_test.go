@@ -68,9 +68,8 @@ func TestLogin_Do(t *testing.T) {
 
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			New(adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
+			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
 			Return(newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
-				Config:          auth.OIDCConfig,
 				LocalServerPort: []int{10000},
 			}), nil)
 
@@ -101,13 +100,12 @@ func TestLogin_Do(t *testing.T) {
 
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			New(adaptors.OIDCClientConfig{
+			New(ctx, adaptors.OIDCClientConfig{
 				Config:         auth.OIDCConfig,
 				CACertFilename: "/path/to/cert",
 				SkipTLSVerify:  true,
 			}).
 			Return(newMockPasswordOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByPasswordIn{
-				Config:   auth.OIDCConfig,
 				Username: "USER",
 				Password: "PASS",
 			}), nil)
@@ -145,9 +143,8 @@ func TestLogin_Do(t *testing.T) {
 
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			New(adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
+			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
 			Return(newMockPasswordOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByPasswordIn{
-				Config:   auth.OIDCConfig,
 				Username: "USER",
 				Password: "PASS",
 			}), nil)
@@ -181,7 +178,7 @@ func TestLogin_Do(t *testing.T) {
 
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			New(adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
+			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
 			Return(mock_adaptors.NewMockOIDCClient(ctrl), nil)
 
 		mockEnv := mock_adaptors.NewMockEnv(ctrl)
@@ -213,11 +210,11 @@ func TestLogin_Do(t *testing.T) {
 
 		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
 		mockOIDCClient.EXPECT().
-			Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig}).
+			Verify(ctx, adaptors.OIDCVerifyIn{IDToken: auth.OIDCConfig.IDToken}).
 			Return(&oidc.IDToken{Expiry: time.Now()}, nil)
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			New(adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
+			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
 			Return(mockOIDCClient, nil)
 
 		u := Login{
@@ -243,13 +240,13 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeconfig.EXPECT().
 			UpdateAuth(newAuth("YOUR_ID_TOKEN", "YOUR_REFRESH_TOKEN"))
 
-		mockOIDCClient := newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{Config: auth.OIDCConfig})
+		mockOIDCClient := newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{})
 		mockOIDCClient.EXPECT().
-			Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig}).
+			Verify(ctx, adaptors.OIDCVerifyIn{IDToken: auth.OIDCConfig.IDToken}).
 			Return(nil, xerrors.New("token expired"))
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
-			New(adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
+			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
 			Return(mockOIDCClient, nil)
 
 		u := Login{

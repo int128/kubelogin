@@ -85,16 +85,16 @@ func (m *MockOIDC) EXPECT() *MockOIDCMockRecorder {
 }
 
 // New mocks base method
-func (m *MockOIDC) New(arg0 adaptors.OIDCClientConfig) (adaptors.OIDCClient, error) {
-	ret := m.ctrl.Call(m, "New", arg0)
+func (m *MockOIDC) New(arg0 context.Context, arg1 adaptors.OIDCClientConfig) (adaptors.OIDCClient, error) {
+	ret := m.ctrl.Call(m, "New", arg0, arg1)
 	ret0, _ := ret[0].(adaptors.OIDCClient)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // New indicates an expected call of New
-func (mr *MockOIDCMockRecorder) New(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockOIDC)(nil).New), arg0)
+func (mr *MockOIDCMockRecorder) New(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockOIDC)(nil).New), arg0, arg1)
 }
 
 // MockOIDCClient is a mock of OIDCClient interface

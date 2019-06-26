@@ -24,7 +24,7 @@ type Factory struct {
 	Logger adaptors.Logger
 }
 
-func (f *Factory) New(config adaptors.OIDCClientConfig) (adaptors.OIDCClient, error) {
+func (f *Factory) New(ctx context.Context, config adaptors.OIDCClientConfig) (adaptors.OIDCClient, error) {
 	tlsConfig, err := tls.NewConfig(config, f.Logger)
 	if err != nil {
 		return nil, xerrors.Errorf("could not initialize TLS config: %w", err)
@@ -37,31 +37,39 @@ func (f *Factory) New(config adaptors.OIDCClientConfig) (adaptors.OIDCClient, er
 		Base:   baseTransport,
 		Logger: f.Logger,
 	}
-	hc := &http.Client{
+	httpClient := &http.Client{
 		Transport: loggingTransport,
 	}
-	return &Client{hc}, nil
-}
 
-type Client struct {
-	hc *http.Client
-}
-
-func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) (*adaptors.OIDCAuthenticateOut, error) {
-	if c.hc != nil {
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
-	}
-	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
+	provider, err := oidc.NewProvider(ctx, config.Config.IDPIssuerURL)
 	if err != nil {
 		return nil, xerrors.Errorf("could not discovery the OIDC issuer: %w", err)
 	}
-	config := oauth2cli.Config{
-		OAuth2Config: oauth2.Config{
+	return &client{
+		httpClient: httpClient,
+		provider:   provider,
+		oauth2Config: oauth2.Config{
 			Endpoint:     provider.Endpoint(),
-			ClientID:     in.Config.ClientID,
-			ClientSecret: in.Config.ClientSecret,
-			Scopes:       append(in.Config.ExtraScopes, oidc.ScopeOpenID),
+			ClientID:     config.Config.ClientID,
+			ClientSecret: config.Config.ClientSecret,
+			Scopes:       append(config.Config.ExtraScopes, oidc.ScopeOpenID),
 		},
+	}, nil
+}
+
+type client struct {
+	httpClient   *http.Client
+	provider     *oidc.Provider
+	oauth2Config oauth2.Config
+}
+
+func (c *client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) (*adaptors.OIDCAuthenticateOut, error) {
+	if c.httpClient != nil {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.httpClient)
+	}
+	config := oauth2cli.Config{
+		OAuth2Config:       c.oauth2Config,
 		LocalServerPort:    in.LocalServerPort,
 		SkipOpenBrowser:    in.SkipOpenBrowser,
 		AuthCodeOptions:    []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
@@ -75,7 +83,7 @@ func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	if !ok {
 		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
 	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID})
+	verifier := c.provider.Verifier(&oidc.Config{ClientID: c.oauth2Config.ClientID})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, xerrors.Errorf("could not verify the id_token: %w", err)
@@ -87,21 +95,11 @@ func (c *Client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	}, nil
 }
 
-func (c *Client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAuthenticateByPasswordIn) (*adaptors.OIDCAuthenticateOut, error) {
-	if c.hc != nil {
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
+func (c *client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAuthenticateByPasswordIn) (*adaptors.OIDCAuthenticateOut, error) {
+	if c.httpClient != nil {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.httpClient)
 	}
-	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL)
-	if err != nil {
-		return nil, xerrors.Errorf("could not discovery the OIDC issuer: %w", err)
-	}
-	config := oauth2.Config{
-		Endpoint:     provider.Endpoint(),
-		ClientID:     in.Config.ClientID,
-		ClientSecret: in.Config.ClientSecret,
-		Scopes:       append(in.Config.ExtraScopes, oidc.ScopeOpenID),
-	}
-	token, err := config.PasswordCredentialsToken(ctx, in.Username, in.Password)
+	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, in.Username, in.Password)
 	if err != nil {
 		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
@@ -109,7 +107,7 @@ func (c *Client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAut
 	if !ok {
 		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
 	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID})
+	verifier := c.provider.Verifier(&oidc.Config{ClientID: c.oauth2Config.ClientID})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, xerrors.Errorf("could not verify the id_token: %w", err)
@@ -121,16 +119,12 @@ func (c *Client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAut
 	}, nil
 }
 
-func (c *Client) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*oidc.IDToken, error) {
-	if c.hc != nil {
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.hc)
+func (c *client) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*oidc.IDToken, error) {
+	if c.httpClient != nil {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.httpClient)
 	}
-	provider, err := oidc.NewProvider(ctx, in.Config.IDPIssuerURL)
-	if err != nil {
-		return nil, xerrors.Errorf("could not discovery the OIDC issuer: %w", err)
-	}
-	verifier := provider.Verifier(&oidc.Config{ClientID: in.Config.ClientID})
-	verifiedIDToken, err := verifier.Verify(ctx, in.Config.IDToken)
+	verifier := c.provider.Verifier(&oidc.Config{ClientID: c.oauth2Config.ClientID})
+	verifiedIDToken, err := verifier.Verify(ctx, in.IDToken)
 	if err != nil {
 		return nil, xerrors.Errorf("could not verify the id_token: %w", err)
 	}
