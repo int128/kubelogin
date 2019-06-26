@@ -42,7 +42,7 @@ func (u *Exec) doInternal(ctx context.Context, in usecases.LoginIn) error {
 	u.Logger.Debugf(1, "Using the authentication provider of the user %s", auth.UserName)
 	u.Logger.Debugf(1, "A token will be written to %s", auth.LocationOfOrigin)
 
-	client, err := u.OIDC.New(adaptors.OIDCClientConfig{
+	client, err := u.OIDC.New(ctx, adaptors.OIDCClientConfig{
 		Config:         auth.OIDCConfig,
 		CACertFilename: in.CACertFilename,
 		SkipTLSVerify:  in.SkipTLSVerify,
@@ -53,7 +53,7 @@ func (u *Exec) doInternal(ctx context.Context, in usecases.LoginIn) error {
 
 	if auth.OIDCConfig.IDToken != "" {
 		u.Logger.Debugf(1, "Found the ID token in the kubeconfig")
-		token, err := client.Verify(ctx, adaptors.OIDCVerifyIn{Config: auth.OIDCConfig})
+		token, err := client.Verify(ctx, adaptors.OIDCVerifyIn{IDToken: auth.OIDCConfig.IDToken})
 		if err == nil {
 			u.Logger.Debugf(1, "You already have a valid token until %s", token.Expiry)
 			dumpIDToken(u.Logger, token)
@@ -71,7 +71,6 @@ func (u *Exec) doInternal(ctx context.Context, in usecases.LoginIn) error {
 			}
 		}
 		out, err := client.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
-			Config:   auth.OIDCConfig,
 			Username: in.Username,
 			Password: in.Password,
 		})
@@ -81,7 +80,6 @@ func (u *Exec) doInternal(ctx context.Context, in usecases.LoginIn) error {
 		tokenSet = out
 	} else {
 		out, err := client.AuthenticateByCode(ctx, adaptors.OIDCAuthenticateByCodeIn{
-			Config:             auth.OIDCConfig,
 			LocalServerPort:    in.ListenPort,
 			SkipOpenBrowser:    in.SkipOpenBrowser,
 			ShowLocalServerURL: u.ShowLocalServerURL,

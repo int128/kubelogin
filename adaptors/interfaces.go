@@ -19,7 +19,7 @@ type Kubeconfig interface {
 }
 
 type OIDC interface {
-	New(config OIDCClientConfig) (OIDCClient, error)
+	New(ctx context.Context, config OIDCClientConfig) (OIDCClient, error)
 }
 
 type OIDCClientConfig struct {
@@ -35,14 +35,12 @@ type OIDCClient interface {
 }
 
 type OIDCAuthenticateByCodeIn struct {
-	Config             kubeconfig.OIDCConfig
 	LocalServerPort    []int // HTTP server port candidates
 	SkipOpenBrowser    bool  // skip opening browser if true
 	ShowLocalServerURL interface{ ShowLocalServerURL(url string) }
 }
 
 type OIDCAuthenticateByPasswordIn struct {
-	Config   kubeconfig.OIDCConfig
 	Username string
 	Password string
 }
@@ -54,7 +52,7 @@ type OIDCAuthenticateOut struct {
 }
 
 type OIDCVerifyIn struct {
-	Config kubeconfig.OIDCConfig
+	IDToken string
 }
 
 type Env interface {
