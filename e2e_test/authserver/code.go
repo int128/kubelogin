@@ -13,12 +13,13 @@ import (
 
 // CodeConfig represents a config for Authorization Code Grant.
 type CodeConfig struct {
-	Issuer         string
-	Scope          string
-	IDToken        string
-	RefreshToken   string
-	IDTokenKeyPair *rsa.PrivateKey
-	Code           string
+	Issuer               string          // issuer in the discovery and token response
+	IDTokenKeyPair       *rsa.PrivateKey // JWKS for the discovery response
+	IDToken              string          // ID token in the token response
+	RefreshToken         string          // refresh token in the token response
+	ExpectedScope        string          // expected scope
+	ExpectedCode         string          // expected authorization code
+	ExpectedRefreshToken string          // expected refresh token (only for refreshing token)
 }
 
 type codeHandler struct {
@@ -29,11 +30,11 @@ type codeHandler struct {
 }
 
 func NewCodeHandler(t *testing.T, c CodeConfig) *codeHandler {
-	if c.Scope == "" {
-		c.Scope = "openid"
+	if c.ExpectedScope == "" {
+		c.ExpectedScope = "openid"
 	}
-	if c.Code == "" {
-		c.Code = "3d24a8bd-35e6-457d-999e-e04bb1dfcec7"
+	if c.ExpectedCode == "" {
+		c.ExpectedCode = "3d24a8bd-35e6-457d-999e-e04bb1dfcec7"
 	}
 	h := codeHandler{
 		t:         t,
@@ -54,7 +55,7 @@ func NewCodeHandler(t *testing.T, c CodeConfig) *codeHandler {
 
 func (h *codeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := h.serveHTTP(w, r); err != nil {
-		h.t.Logf("authserver/codeHandler: Error: %s", err)
+		h.t.Errorf("authserver/codeHandler: Error: %s", err)
 		w.WriteHeader(500)
 	}
 }
@@ -69,36 +70,52 @@ func (h *codeHandler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		if err := h.templates.discovery.Execute(w, h.values); err != nil {
 			return xerrors.Errorf("could not execute the template: %w", err)
 		}
-	case m == "GET" && p == "/protocol/openid-connect/auth":
-		// Authentication Response
-		// http://openid.net/specs/openid-connect-core-1_0.html#AuthResponse
-		q := r.URL.Query()
-		if h.c.Scope != q.Get("scope") {
-			return xerrors.Errorf("scope wants %s but %s", h.c.Scope, q.Get("scope"))
-		}
-		to := fmt.Sprintf("%s?state=%s&code=%s", q.Get("redirect_uri"), q.Get("state"), h.c.Code)
-		http.Redirect(w, r, to, 302)
-	case m == "POST" && p == "/protocol/openid-connect/token":
-		// Token Response
-		// http://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
-		if err := r.ParseForm(); err != nil {
-			return xerrors.Errorf("could not parse the form: %w", err)
-		}
-		grantType, code := r.Form.Get("grant_type"), r.Form.Get("code")
-		if grantType != "authorization_code" {
-			return xerrors.Errorf("grant_type wants authorization_code but %s", grantType)
-		}
-		if h.c.Code != code {
-			return xerrors.Errorf("code wants %s but %s", h.c.Code, code)
-		}
-		w.Header().Add("Content-Type", "application/json")
-		if err := h.templates.token.Execute(w, h.values); err != nil {
-			return xerrors.Errorf("could not execute the template: %w", err)
-		}
 	case m == "GET" && p == "/protocol/openid-connect/certs":
 		w.Header().Add("Content-Type", "application/json")
 		if err := h.templates.jwks.Execute(w, h.values); err != nil {
 			return xerrors.Errorf("could not execute the template: %w", err)
+		}
+	case m == "GET" && p == "/protocol/openid-connect/auth":
+		// Authentication Response
+		// http://openid.net/specs/openid-connect-core-1_0.html#AuthResponse
+		q := r.URL.Query()
+		if h.c.ExpectedScope != q.Get("scope") {
+			return xerrors.Errorf("scope wants %s but %s", h.c.ExpectedScope, q.Get("scope"))
+		}
+		to := fmt.Sprintf("%s?state=%s&code=%s", q.Get("redirect_uri"), q.Get("state"), h.c.ExpectedCode)
+		http.Redirect(w, r, to, 302)
+	case m == "POST" && p == "/protocol/openid-connect/token":
+		if err := r.ParseForm(); err != nil {
+			return xerrors.Errorf("could not parse the form: %w", err)
+		}
+		grantType := r.Form.Get("grant_type")
+		switch grantType {
+		case "authorization_code":
+			// 3.1.3.1. Token Request
+			// 3.1.3.3. Successful Token Response
+			// http://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
+			code := r.Form.Get("code")
+			if h.c.ExpectedCode != code {
+				return xerrors.Errorf("code wants %s but %s", h.c.ExpectedCode, code)
+			}
+			w.Header().Add("Content-Type", "application/json")
+			if err := h.templates.token.Execute(w, h.values); err != nil {
+				return xerrors.Errorf("could not execute the template: %w", err)
+			}
+		case "refresh_token":
+			// 12.1. Refresh Request
+			// 12.2. Successful Refresh Response
+			// https://openid.net/specs/openid-connect-core-1_0.html#RefreshingAccessToken
+			refreshToken := r.Form.Get("refresh_token")
+			if h.c.ExpectedRefreshToken != refreshToken {
+				return xerrors.Errorf("refresh_token wants %s but %s", h.c.ExpectedRefreshToken, refreshToken)
+			}
+			w.Header().Add("Content-Type", "application/json")
+			if err := h.templates.token.Execute(w, h.values); err != nil {
+				return xerrors.Errorf("could not execute the template: %w", err)
+			}
+		default:
+			return xerrors.Errorf("invalid grant_type: %s", grantType)
 		}
 	default:
 		http.Error(w, "Not Found", 404)

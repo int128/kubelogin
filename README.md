@@ -64,12 +64,15 @@ NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
 
-If the token is valid, kubelogin does nothing.
+If the ID token is valid, kubelogin does nothing.
 
 ```
 % kubelogin
 You already have a valid token until 2019-05-18 10:28:51 +0900 JST
 ```
+
+If the ID token has expired, kubelogin will refresh the token using the refresh token in the kubeconfig.
+If the refresh token has expired, kubelogin will proceed the authentication.
 
 
 ### Wrap kubectl and login transparently
@@ -93,7 +96,7 @@ NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
 
-If the token is valid, it just executes kubectl.
+If the ID token is valid, it just executes kubectl.
 
 ```
 % kubectl get pods
@@ -101,7 +104,10 @@ NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
 
-It respects kubectl options passed to the extra arguments.
+If the ID token has expired, kubelogin will refresh the token using the refresh token in the kubeconfig.
+If the refresh token has expired, kubelogin will proceed the authentication.
+
+Kubelogin respects kubectl options passed to the extra arguments.
 For example, if you run `kubectl --kubeconfig .kubeconfig`,
 it will update `.kubeconfig` and execute kubectl.
 

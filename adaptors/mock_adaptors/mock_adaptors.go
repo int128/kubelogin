@@ -6,7 +6,6 @@ package mock_adaptors
 
 import (
 	context "context"
-	go_oidc "github.com/coreos/go-oidc"
 	gomock "github.com/golang/mock/gomock"
 	adaptors "github.com/int128/kubelogin/adaptors"
 	kubeconfig "github.com/int128/kubelogin/models/kubeconfig"
@@ -146,10 +145,23 @@ func (mr *MockOIDCClientMockRecorder) AuthenticateByPassword(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByPassword", reflect.TypeOf((*MockOIDCClient)(nil).AuthenticateByPassword), arg0, arg1)
 }
 
+// Refresh mocks base method
+func (m *MockOIDCClient) Refresh(arg0 context.Context, arg1 adaptors.OIDCRefreshIn) (*adaptors.OIDCAuthenticateOut, error) {
+	ret := m.ctrl.Call(m, "Refresh", arg0, arg1)
+	ret0, _ := ret[0].(*adaptors.OIDCAuthenticateOut)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Refresh indicates an expected call of Refresh
+func (mr *MockOIDCClientMockRecorder) Refresh(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Refresh", reflect.TypeOf((*MockOIDCClient)(nil).Refresh), arg0, arg1)
+}
+
 // Verify mocks base method
-func (m *MockOIDCClient) Verify(arg0 context.Context, arg1 adaptors.OIDCVerifyIn) (*go_oidc.IDToken, error) {
+func (m *MockOIDCClient) Verify(arg0 context.Context, arg1 adaptors.OIDCVerifyIn) (*adaptors.OIDCVerifyOut, error) {
 	ret := m.ctrl.Call(m, "Verify", arg0, arg1)
-	ret0, _ := ret[0].(*go_oidc.IDToken)
+	ret0, _ := ret[0].(*adaptors.OIDCVerifyOut)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

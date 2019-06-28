@@ -2,8 +2,8 @@ package adaptors
 
 import (
 	"context"
+	"time"
 
-	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
@@ -31,7 +31,8 @@ type OIDCClientConfig struct {
 type OIDCClient interface {
 	AuthenticateByCode(ctx context.Context, in OIDCAuthenticateByCodeIn) (*OIDCAuthenticateOut, error)
 	AuthenticateByPassword(ctx context.Context, in OIDCAuthenticateByPasswordIn) (*OIDCAuthenticateOut, error)
-	Verify(ctx context.Context, in OIDCVerifyIn) (*oidc.IDToken, error)
+	Verify(ctx context.Context, in OIDCVerifyIn) (*OIDCVerifyOut, error)
+	Refresh(ctx context.Context, in OIDCRefreshIn) (*OIDCAuthenticateOut, error)
 }
 
 type OIDCAuthenticateByCodeIn struct {
@@ -46,13 +47,24 @@ type OIDCAuthenticateByPasswordIn struct {
 }
 
 type OIDCAuthenticateOut struct {
-	VerifiedIDToken *oidc.IDToken
-	IDToken         string
-	RefreshToken    string
+	IDToken       string
+	RefreshToken  string
+	IDTokenExpiry time.Time
+	IDTokenClaims map[string]string // string representation of claims for logging
 }
 
 type OIDCVerifyIn struct {
-	IDToken string
+	IDToken      string
+	RefreshToken string
+}
+
+type OIDCVerifyOut struct {
+	IDTokenExpiry time.Time
+	IDTokenClaims map[string]string // string representation of claims for logging
+}
+
+type OIDCRefreshIn struct {
+	RefreshToken string
 }
 
 type Env interface {

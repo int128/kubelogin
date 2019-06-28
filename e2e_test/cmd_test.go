@@ -15,6 +15,7 @@ import (
 	"github.com/int128/kubelogin/e2e_test/keys"
 	"github.com/int128/kubelogin/e2e_test/kubeconfig"
 	"github.com/int128/kubelogin/e2e_test/logger"
+	"github.com/int128/kubelogin/usecases"
 )
 
 // Run the integration tests.
@@ -26,6 +27,7 @@ import (
 //
 func TestCmd_Run(t *testing.T) {
 	timeout := 1 * time.Second
+	tokenExpiry := time.Now().Add(time.Hour)
 
 	t.Run("Defaults", func(t *testing.T) {
 		t.Parallel()
@@ -36,7 +38,7 @@ func TestCmd_Run(t *testing.T) {
 		server := authserver.Start(t, func(url string) http.Handler {
 			codeConfig = authserver.CodeConfig{
 				Issuer:         url,
-				IDToken:        newIDToken(t, url),
+				IDToken:        newIDToken(t, url, tokenExpiry),
 				IDTokenKeyPair: keys.JWSKeyPair,
 				RefreshToken:   "REFRESH_TOKEN",
 			}
@@ -67,7 +69,7 @@ func TestCmd_Run(t *testing.T) {
 		server := authserver.Start(t, func(url string) http.Handler {
 			passwordConfig = authserver.PasswordConfig{
 				Issuer:         url,
-				IDToken:        newIDToken(t, url),
+				IDToken:        newIDToken(t, url, tokenExpiry),
 				IDTokenKeyPair: keys.JWSKeyPair,
 				RefreshToken:   "REFRESH_TOKEN",
 				Username:       "USER",
@@ -82,7 +84,7 @@ func TestCmd_Run(t *testing.T) {
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		runCmd(t, ctx, nil, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--username", "USER", "--password", "PASS")
+		runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--username", "USER", "--password", "PASS")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      passwordConfig.IDToken,
 			RefreshToken: "REFRESH_TOKEN",
@@ -98,7 +100,7 @@ func TestCmd_Run(t *testing.T) {
 		server := authserver.Start(t, func(url string) http.Handler {
 			codeConfig = authserver.CodeConfig{
 				Issuer:         url,
-				IDToken:        newIDToken(t, url),
+				IDToken:        newIDToken(t, url, tokenExpiry),
 				IDTokenKeyPair: keys.JWSKeyPair,
 				RefreshToken:   "REFRESH_TOKEN",
 			}
@@ -132,10 +134,10 @@ func TestCmd_Run(t *testing.T) {
 		server := authserver.Start(t, func(url string) http.Handler {
 			codeConfig = authserver.CodeConfig{
 				Issuer:         url,
-				IDToken:        newIDToken(t, url),
+				IDToken:        newIDToken(t, url, tokenExpiry),
 				IDTokenKeyPair: keys.JWSKeyPair,
 				RefreshToken:   "REFRESH_TOKEN",
-				Scope:          "profile groups openid",
+				ExpectedScope:  "profile groups openid",
 			}
 			return authserver.NewCodeHandler(t, codeConfig)
 		})
@@ -165,7 +167,7 @@ func TestCmd_Run(t *testing.T) {
 		server := authserver.StartTLS(t, keys.TLSServerCert, keys.TLSServerKey, func(url string) http.Handler {
 			codeConfig = authserver.CodeConfig{
 				Issuer:         url,
-				IDToken:        newIDToken(t, url),
+				IDToken:        newIDToken(t, url, tokenExpiry),
 				IDTokenKeyPair: keys.JWSKeyPair,
 				RefreshToken:   "REFRESH_TOKEN",
 			}
@@ -197,7 +199,7 @@ func TestCmd_Run(t *testing.T) {
 		server := authserver.StartTLS(t, keys.TLSServerCert, keys.TLSServerKey, func(url string) http.Handler {
 			codeConfig = authserver.CodeConfig{
 				Issuer:         url,
-				IDToken:        newIDToken(t, url),
+				IDToken:        newIDToken(t, url, tokenExpiry),
 				IDTokenKeyPair: keys.JWSKeyPair,
 				RefreshToken:   "REFRESH_TOKEN",
 			}
@@ -220,7 +222,7 @@ func TestCmd_Run(t *testing.T) {
 		})
 	})
 
-	t.Run("AlreadyHaveValidToken", func(t *testing.T) {
+	t.Run("HasValidToken", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
@@ -235,21 +237,53 @@ func TestCmd_Run(t *testing.T) {
 		})
 		defer server.Shutdown(t, ctx)
 
-		idToken := newIDToken(t, codeConfig.Issuer)
+		idToken := newIDToken(t, codeConfig.Issuer, tokenExpiry)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:  codeConfig.Issuer,
 			IDToken: idToken,
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		runCmd(t, ctx, nil, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken: idToken,
 		})
 	})
+
+	t.Run("HasValidRefreshToken", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		var codeConfig authserver.CodeConfig
+		server := authserver.Start(t, func(url string) http.Handler {
+			codeConfig = authserver.CodeConfig{
+				Issuer:               url,
+				IDToken:              newIDToken(t, url, tokenExpiry),
+				IDTokenKeyPair:       keys.JWSKeyPair,
+				RefreshToken:         "REFRESH_TOKEN",
+				ExpectedRefreshToken: "CURRENT_REFRESH_TOKEN",
+			}
+			return authserver.NewCodeHandler(t, codeConfig)
+		})
+		defer server.Shutdown(t, ctx)
+
+		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+			Issuer:       codeConfig.Issuer,
+			IDToken:      newIDToken(t, codeConfig.Issuer, time.Now().Add(-time.Hour)), // expired
+			RefreshToken: "CURRENT_REFRESH_TOKEN",
+		})
+		defer os.Remove(kubeConfigFilename)
+
+		runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+			IDToken:      codeConfig.IDToken,
+			RefreshToken: codeConfig.RefreshToken,
+		})
+	})
 }
 
-func newIDToken(t *testing.T, issuer string) string {
+func newIDToken(t *testing.T, issuer string, expiry time.Time) string {
 	t.Helper()
 	var claims struct {
 		jwt.StandardClaims
@@ -258,7 +292,7 @@ func newIDToken(t *testing.T, issuer string) string {
 	claims.StandardClaims = jwt.StandardClaims{
 		Issuer:    issuer,
 		Audience:  "kubernetes",
-		ExpiresAt: time.Now().Add(time.Hour).Unix(),
+		ExpiresAt: expiry.Unix(),
 		Subject:   "SUBJECT",
 		IssuedAt:  time.Now().Unix(),
 	}
@@ -271,13 +305,21 @@ func newIDToken(t *testing.T, issuer string) string {
 	return s
 }
 
-func runCmd(t *testing.T, ctx context.Context, br *browserRequest, args ...string) {
+func runCmd(t *testing.T, ctx context.Context, s usecases.LoginShowLocalServerURL, args ...string) {
 	t.Helper()
-	cmd := di.NewCmdWith(logger.New(t), br)
+	cmd := di.NewCmdWith(logger.New(t), s)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "--v=1"}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)
 	}
+}
+
+type nopBrowserRequest struct {
+	t *testing.T
+}
+
+func (r *nopBrowserRequest) ShowLocalServerURL(url string) {
+	r.t.Errorf("ShowLocalServerURL must not be called")
 }
 
 type browserRequest struct {

@@ -5,257 +5,221 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coreos/go-oidc"
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/models/kubeconfig"
 	"github.com/int128/kubelogin/usecases"
+	"github.com/int128/kubelogin/usecases/mock_usecases"
 	"golang.org/x/xerrors"
 )
 
-func newMockCodeOIDC(ctrl *gomock.Controller, ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) *mock_adaptors.MockOIDCClient {
-	mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
-	mockOIDCClient.EXPECT().
-		AuthenticateByCode(ctx, in).
-		Return(&adaptors.OIDCAuthenticateOut{
-			VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
-			IDToken:         "YOUR_ID_TOKEN",
-			RefreshToken:    "YOUR_REFRESH_TOKEN",
-		}, nil)
-	return mockOIDCClient
-}
-
-func newMockPasswordOIDC(ctrl *gomock.Controller, ctx context.Context, in adaptors.OIDCAuthenticateByPasswordIn) *mock_adaptors.MockOIDCClient {
-	mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
-	mockOIDCClient.EXPECT().
-		AuthenticateByPassword(ctx, in).
-		Return(&adaptors.OIDCAuthenticateOut{
-			VerifiedIDToken: &oidc.IDToken{Subject: "SUBJECT"},
-			IDToken:         "YOUR_ID_TOKEN",
-			RefreshToken:    "YOUR_REFRESH_TOKEN",
-		}, nil)
-	return mockOIDCClient
-}
-
-func newAuth(idToken, refreshToken string) *kubeconfig.Auth {
-	return &kubeconfig.Auth{
-		LocationOfOrigin: "theLocation",
-		UserName:         "google",
-		OIDCConfig: kubeconfig.OIDCConfig{
-			IDPIssuerURL: "https://accounts.google.com",
-			ClientID:     "YOUR_CLIENT_ID",
-			ClientSecret: "YOUR_CLIENT_SECRET",
-			IDToken:      idToken,
-			RefreshToken: refreshToken,
-		},
-	}
-}
-
 func TestLogin_Do(t *testing.T) {
-	t.Run("Defaults", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		ctx := context.TODO()
-		auth := newAuth("", "")
-
-		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
-		mockKubeconfig.EXPECT().
-			GetCurrentAuth("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
-			Return(auth, nil)
-		mockKubeconfig.EXPECT().
-			UpdateAuth(newAuth("YOUR_ID_TOKEN", "YOUR_REFRESH_TOKEN"))
-
-		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
-		mockOIDC.EXPECT().
-			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
-			Return(newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{
-				LocalServerPort: []int{10000},
-			}), nil)
-
-		u := Login{
-			Kubeconfig: mockKubeconfig,
-			OIDC:       mockOIDC,
-			Logger:     mock_adaptors.NewLogger(t, ctrl),
-		}
-		if err := u.Do(ctx, usecases.LoginIn{
-			ListenPort: []int{10000},
-		}); err != nil {
-			t.Errorf("Do returned error: %+v", err)
-		}
-	})
+	dummyTokenClaims := map[string]string{"sub": "YOUR_SUBJECT"}
+	futureTime := time.Now().Add(time.Hour) //TODO: inject time service
 
 	t.Run("FullOptions", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		auth := newAuth("", "")
-
-		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
-		mockKubeconfig.EXPECT().
-			GetCurrentAuth("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
-			Return(auth, nil)
-		mockKubeconfig.EXPECT().
-			UpdateAuth(newAuth("YOUR_ID_TOKEN", "YOUR_REFRESH_TOKEN"))
-
-		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
-		mockOIDC.EXPECT().
-			New(ctx, adaptors.OIDCClientConfig{
-				Config:         auth.OIDCConfig,
-				CACertFilename: "/path/to/cert",
-				SkipTLSVerify:  true,
-			}).
-			Return(newMockPasswordOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByPasswordIn{
-				Username: "USER",
-				Password: "PASS",
-			}), nil)
-
-		u := Login{
-			Kubeconfig: mockKubeconfig,
-			OIDC:       mockOIDC,
-			Logger:     mock_adaptors.NewLogger(t, ctrl),
-		}
-		if err := u.Do(ctx, usecases.LoginIn{
+		in := usecases.LoginIn{
 			KubeconfigFilename: "/path/to/kubeconfig",
 			KubeconfigContext:  "theContext",
 			KubeconfigUser:     "theUser",
+			ListenPort:         []int{10000},
+			SkipOpenBrowser:    true,
 			Username:           "USER",
 			Password:           "PASS",
 			CACertFilename:     "/path/to/cert",
 			SkipTLSVerify:      true,
-		}); err != nil {
+		}
+		currentAuth := &kubeconfig.Auth{
+			LocationOfOrigin: "/path/to/kubeconfig",
+			UserName:         "theUser",
+			OIDCConfig: kubeconfig.OIDCConfig{
+				IDPIssuerURL: "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+		}
+		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig.EXPECT().
+			GetCurrentAuth("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
+			Return(currentAuth, nil)
+		mockKubeconfig.EXPECT().
+			UpdateAuth(&kubeconfig.Auth{
+				LocationOfOrigin: "/path/to/kubeconfig",
+				UserName:         "theUser",
+				OIDCConfig: kubeconfig.OIDCConfig{
+					IDPIssuerURL: "https://accounts.google.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
+					IDToken:      "YOUR_ID_TOKEN",
+					RefreshToken: "YOUR_REFRESH_TOKEN",
+				},
+			})
+		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication.EXPECT().
+			Do(ctx, usecases.AuthenticationIn{
+				CurrentAuth:     currentAuth,
+				ListenPort:      []int{10000},
+				SkipOpenBrowser: true,
+				Username:        "USER",
+				Password:        "PASS",
+				CACertFilename:  "/path/to/cert",
+				SkipTLSVerify:   true,
+			}).
+			Return(&usecases.AuthenticationOut{
+				IDToken:       "YOUR_ID_TOKEN",
+				RefreshToken:  "YOUR_REFRESH_TOKEN",
+				IDTokenExpiry: futureTime,
+				IDTokenClaims: dummyTokenClaims,
+			}, nil)
+		u := Login{
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			Logger:         mock_adaptors.NewLogger(t, ctrl),
+		}
+		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
 	})
 
-	t.Run("AskPassword", func(t *testing.T) {
+	t.Run("HasValidIDToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		auth := newAuth("", "")
-
+		in := usecases.LoginIn{}
+		currentAuth := &kubeconfig.Auth{
+			LocationOfOrigin: "/path/to/kubeconfig",
+			UserName:         "theUser",
+			OIDCConfig: kubeconfig.OIDCConfig{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				IDToken:      "VALID_ID_TOKEN",
+			},
+		}
 		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuth("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
-			Return(auth, nil)
-		mockKubeconfig.EXPECT().
-			UpdateAuth(newAuth("YOUR_ID_TOKEN", "YOUR_REFRESH_TOKEN"))
-
-		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
-		mockOIDC.EXPECT().
-			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
-			Return(newMockPasswordOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByPasswordIn{
-				Username: "USER",
-				Password: "PASS",
-			}), nil)
-
-		mockEnv := mock_adaptors.NewMockEnv(ctrl)
-		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
-
+			Return(currentAuth, nil)
+		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication.EXPECT().
+			Do(ctx, usecases.AuthenticationIn{CurrentAuth: currentAuth}).
+			Return(&usecases.AuthenticationOut{
+				AlreadyHasValidIDToken: true,
+				IDToken:                "VALID_ID_TOKEN",
+				IDTokenExpiry:          futureTime,
+				IDTokenClaims:          dummyTokenClaims,
+			}, nil)
 		u := Login{
-			Kubeconfig: mockKubeconfig,
-			OIDC:       mockOIDC,
-			Logger:     mock_adaptors.NewLogger(t, ctrl),
-			Env:        mockEnv,
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			Logger:         mock_adaptors.NewLogger(t, ctrl),
 		}
-		if err := u.Do(ctx, usecases.LoginIn{
-			Username: "USER",
-		}); err != nil {
+		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
 	})
 
-	t.Run("AskPasswordError", func(t *testing.T) {
+	t.Run("NoOIDCConfig", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		auth := newAuth("", "")
-
+		in := usecases.LoginIn{}
 		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuth("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
-			Return(auth, nil)
-
-		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
-		mockOIDC.EXPECT().
-			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
-			Return(mock_adaptors.NewMockOIDCClient(ctrl), nil)
-
-		mockEnv := mock_adaptors.NewMockEnv(ctrl)
-		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", xerrors.New("error"))
-
+			Return(nil, xerrors.New("no oidc config"))
+		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
 		u := Login{
-			Kubeconfig: mockKubeconfig,
-			OIDC:       mockOIDC,
-			Logger:     mock_adaptors.NewLogger(t, ctrl),
-			Env:        mockEnv,
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			Logger:         mock_adaptors.NewLogger(t, ctrl),
 		}
-		if err := u.Do(ctx, usecases.LoginIn{
-			Username: "USER",
-		}); err == nil {
-			t.Errorf("err wants an error but nil")
+		if err := u.Do(ctx, in); err == nil {
+			t.Errorf("err wants non-nil but nil")
 		}
 	})
 
-	t.Run("KubeconfigHasValidToken", func(t *testing.T) {
+	t.Run("AuthenticationError", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		auth := newAuth("VALID_ID_TOKEN", "N/A")
-
+		in := usecases.LoginIn{}
+		currentAuth := &kubeconfig.Auth{
+			LocationOfOrigin: "/path/to/kubeconfig",
+			UserName:         "google",
+			OIDCConfig: kubeconfig.OIDCConfig{
+				IDPIssuerURL: "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+		}
 		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuth("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
-			Return(auth, nil)
-
-		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
-		mockOIDCClient.EXPECT().
-			Verify(ctx, adaptors.OIDCVerifyIn{IDToken: auth.OIDCConfig.IDToken}).
-			Return(&oidc.IDToken{Expiry: time.Now()}, nil)
-		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
-		mockOIDC.EXPECT().
-			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
-			Return(mockOIDCClient, nil)
-
+			Return(currentAuth, nil)
+		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication.EXPECT().
+			Do(ctx, usecases.AuthenticationIn{CurrentAuth: currentAuth}).
+			Return(nil, xerrors.New("authentication error"))
 		u := Login{
-			Kubeconfig: mockKubeconfig,
-			OIDC:       mockOIDC,
-			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			Logger:         mock_adaptors.NewLogger(t, ctrl),
 		}
-		if err := u.Do(ctx, usecases.LoginIn{}); err != nil {
-			t.Errorf("Do returned error: %+v", err)
+		if err := u.Do(ctx, in); err == nil {
+			t.Errorf("err wants non-nil but nil")
 		}
 	})
 
-	t.Run("KubeconfigHasExpiredToken", func(t *testing.T) {
+	t.Run("WriteError", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		auth := newAuth("EXPIRED_ID_TOKEN", "EXPIRED_REFRESH_TOKEN")
-
+		in := usecases.LoginIn{}
+		currentAuth := &kubeconfig.Auth{
+			LocationOfOrigin: "/path/to/kubeconfig",
+			UserName:         "google",
+			OIDCConfig: kubeconfig.OIDCConfig{
+				IDPIssuerURL: "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+		}
 		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuth("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
-			Return(auth, nil)
+			Return(currentAuth, nil)
 		mockKubeconfig.EXPECT().
-			UpdateAuth(newAuth("YOUR_ID_TOKEN", "YOUR_REFRESH_TOKEN"))
-
-		mockOIDCClient := newMockCodeOIDC(ctrl, ctx, adaptors.OIDCAuthenticateByCodeIn{})
-		mockOIDCClient.EXPECT().
-			Verify(ctx, adaptors.OIDCVerifyIn{IDToken: auth.OIDCConfig.IDToken}).
-			Return(nil, xerrors.New("token expired"))
-		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
-		mockOIDC.EXPECT().
-			New(ctx, adaptors.OIDCClientConfig{Config: auth.OIDCConfig}).
-			Return(mockOIDCClient, nil)
-
+			UpdateAuth(&kubeconfig.Auth{
+				LocationOfOrigin: "/path/to/kubeconfig",
+				UserName:         "google",
+				OIDCConfig: kubeconfig.OIDCConfig{
+					IDPIssuerURL: "https://accounts.google.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
+					IDToken:      "YOUR_ID_TOKEN",
+					RefreshToken: "YOUR_REFRESH_TOKEN",
+				},
+			}).
+			Return(xerrors.New("I/O error"))
+		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication.EXPECT().
+			Do(ctx, usecases.AuthenticationIn{CurrentAuth: currentAuth}).
+			Return(&usecases.AuthenticationOut{
+				IDToken:       "YOUR_ID_TOKEN",
+				RefreshToken:  "YOUR_REFRESH_TOKEN",
+				IDTokenExpiry: futureTime,
+				IDTokenClaims: dummyTokenClaims,
+			}, nil)
 		u := Login{
-			Kubeconfig: mockKubeconfig,
-			OIDC:       mockOIDC,
-			Logger:     mock_adaptors.NewLogger(t, ctrl),
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			Logger:         mock_adaptors.NewLogger(t, ctrl),
 		}
-		if err := u.Do(ctx, usecases.LoginIn{}); err != nil {
-			t.Errorf("Do returned error: %+v", err)
+		if err := u.Do(ctx, in); err == nil {
+			t.Errorf("err wants non-nil but nil")
 		}
 	})
 }

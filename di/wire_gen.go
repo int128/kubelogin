@@ -13,34 +13,38 @@ import (
 	"github.com/int128/kubelogin/adaptors/logger"
 	"github.com/int128/kubelogin/adaptors/oidc"
 	"github.com/int128/kubelogin/usecases"
+	"github.com/int128/kubelogin/usecases/auth"
 	"github.com/int128/kubelogin/usecases/login"
 )
 
 // Injectors from di.go:
 
 func NewCmd() adaptors.Cmd {
-	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	adaptorsLogger := logger.New()
 	factory := &oidc.Factory{
 		Logger: adaptorsLogger,
 	}
 	envEnv := &env.Env{}
-	showLocalServerURL := &login.ShowLocalServerURL{
+	showLocalServerURL := &auth.ShowLocalServerURL{
 		Logger: adaptorsLogger,
 	}
-	loginLogin := &login.Login{
-		Kubeconfig:         kubeconfigKubeconfig,
+	authentication := &auth.Authentication{
 		OIDC:               factory,
 		Env:                envEnv,
 		Logger:             adaptorsLogger,
 		ShowLocalServerURL: showLocalServerURL,
 	}
+	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
+	loginLogin := &login.Login{
+		Authentication: authentication,
+		Kubeconfig:     kubeconfigKubeconfig,
+		Logger:         adaptorsLogger,
+	}
 	exec := &login.Exec{
-		Kubeconfig:         kubeconfigKubeconfig,
-		OIDC:               factory,
-		Env:                envEnv,
-		Logger:             adaptorsLogger,
-		ShowLocalServerURL: showLocalServerURL,
+		Authentication: authentication,
+		Kubeconfig:     kubeconfigKubeconfig,
+		Env:            envEnv,
+		Logger:         adaptorsLogger,
 	}
 	cmdCmd := &cmd.Cmd{
 		Login:        loginLogin,
@@ -51,24 +55,27 @@ func NewCmd() adaptors.Cmd {
 }
 
 func NewCmdWith(adaptorsLogger adaptors.Logger, loginShowLocalServerURL usecases.LoginShowLocalServerURL) adaptors.Cmd {
-	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	factory := &oidc.Factory{
 		Logger: adaptorsLogger,
 	}
 	envEnv := &env.Env{}
-	loginLogin := &login.Login{
-		Kubeconfig:         kubeconfigKubeconfig,
+	authentication := &auth.Authentication{
 		OIDC:               factory,
 		Env:                envEnv,
 		Logger:             adaptorsLogger,
 		ShowLocalServerURL: loginShowLocalServerURL,
 	}
+	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
+	loginLogin := &login.Login{
+		Authentication: authentication,
+		Kubeconfig:     kubeconfigKubeconfig,
+		Logger:         adaptorsLogger,
+	}
 	exec := &login.Exec{
-		Kubeconfig:         kubeconfigKubeconfig,
-		OIDC:               factory,
-		Env:                envEnv,
-		Logger:             adaptorsLogger,
-		ShowLocalServerURL: loginShowLocalServerURL,
+		Authentication: authentication,
+		Kubeconfig:     kubeconfigKubeconfig,
+		Env:            envEnv,
+		Logger:         adaptorsLogger,
 	}
 	cmdCmd := &cmd.Cmd{
 		Login:        loginLogin,
