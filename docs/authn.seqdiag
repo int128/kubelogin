@@ -1,0 +1,16 @@
+seqdiag {
+  User -> kubelogin [label = "execute"];
+  kubelogin -> Browser [label = "open"];
+  Browser -> Provider [label = "authentication request"];
+  Browser <-- Provider [label = "redirect"];
+  User -> Browser [label = "enter credentials"];
+  Browser -> Provider [label = "credentials"];
+  Browser <-- Provider [label = "authentication response"];
+  User <-- Browser [label = "success"];
+  kubelogin <-- Browser [label = "close"];
+  kubelogin -> Provider [label = "token request"];
+  kubelogin <-- Provider [label = "token response"];
+  kubelogin -> kubeconfig [label = "write token"];
+  kubelogin <-- kubeconfig;
+  User <-- kubelogin;
+}

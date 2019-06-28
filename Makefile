@@ -3,7 +3,7 @@ TARGET_PLUGIN := kubectl-oidc_login
 CIRCLE_TAG ?= HEAD
 LDFLAGS := -X main.version=$(CIRCLE_TAG)
 
-.PHONY: check run release clean
+.PHONY: check run diagram release clean
 
 all: $(TARGET)
 
@@ -20,6 +20,11 @@ $(TARGET_PLUGIN): $(TARGET)
 
 run: $(TARGET_PLUGIN)
 	-PATH=.:$(PATH) kubectl oidc-login --help
+
+diagram: docs/authn.png
+
+%.png: %.seqdiag
+	seqdiag -a -f /Library/Fonts/Verdana.ttf $<
 
 dist:
 	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kubelogin.rb oidc-login.yaml" -- -ldflags "$(LDFLAGS)"
