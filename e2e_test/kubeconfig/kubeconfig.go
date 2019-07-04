@@ -16,6 +16,7 @@ type Values struct {
 	IDPCertificateAuthority     string
 	IDPCertificateAuthorityData string
 	IDToken                     string
+	RefreshToken                string
 }
 
 // Create creates a kubeconfig file and returns path to it.

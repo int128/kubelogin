@@ -2,11 +2,12 @@ package usecases
 
 import (
 	"context"
+	"time"
 
 	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_usecases/mock_usecases.go github.com/int128/kubelogin/usecases Login,LoginAndExec
+//go:generate mockgen -destination mock_usecases/mock_usecases.go github.com/int128/kubelogin/usecases Login,LoginAndExec,Authentication
 
 type Login interface {
 	Do(ctx context.Context, in LoginIn) error
@@ -42,4 +43,26 @@ type LoginAndExecIn struct {
 
 type LoginAndExecOut struct {
 	ExitCode int
+}
+
+type Authentication interface {
+	Do(ctx context.Context, in AuthenticationIn) (*AuthenticationOut, error)
+}
+
+type AuthenticationIn struct {
+	CurrentAuth     *kubeconfig.Auth
+	SkipOpenBrowser bool
+	ListenPort      []int
+	Username        string // If set, perform the resource owner password credentials grant
+	Password        string // If empty, read a password using Env.ReadPassword()
+	CACertFilename  string // If set, use the CA cert
+	SkipTLSVerify   bool
+}
+
+type AuthenticationOut struct {
+	AlreadyHasValidIDToken bool
+	IDTokenExpiry          time.Time
+	IDTokenClaims          map[string]string
+	IDToken                string
+	RefreshToken           string
 }
