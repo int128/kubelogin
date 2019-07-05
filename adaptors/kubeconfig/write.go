@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func (*Kubeconfig) UpdateAuth(auth *kubeconfig.Auth) error {
+func (*Kubeconfig) UpdateAuthProvider(auth *kubeconfig.AuthProvider) error {
 	config, err := clientcmd.LoadFromFile(auth.LocationOfOrigin)
 	if err != nil {
 		return xerrors.Errorf("could not load %s: %w", auth.LocationOfOrigin, err)

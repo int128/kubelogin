@@ -37,6 +37,8 @@ func (*Env) ReadPassword(prompt string) (string, error) {
 	return string(b), nil
 }
 
+// Exec executes the command and returns the exit code.
+// Unlike the exec package, this does not return an error even if the command exited with non-zero code.
 func (*Env) Exec(ctx context.Context, executable string, args []string) (int, error) {
 	c := exec.CommandContext(ctx, executable, args...)
 	c.Stdin = os.Stdin

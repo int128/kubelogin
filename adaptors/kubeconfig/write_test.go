@@ -18,7 +18,7 @@ func TestKubeconfig_UpdateAuth(t *testing.T) {
 				t.Errorf("Could not remove the temp file: %s", err)
 			}
 		}()
-		if err := k.UpdateAuth(&kubeconfig.Auth{
+		if err := k.UpdateAuthProvider(&kubeconfig.AuthProvider{
 			LocationOfOrigin: f.Name(),
 			UserName:         "google",
 			OIDCConfig: kubeconfig.OIDCConfig{
@@ -66,7 +66,7 @@ users:
 				t.Errorf("Could not remove the temp file: %s", err)
 			}
 		}()
-		if err := k.UpdateAuth(&kubeconfig.Auth{
+		if err := k.UpdateAuthProvider(&kubeconfig.AuthProvider{
 			LocationOfOrigin: f.Name(),
 			UserName:         "google",
 			OIDCConfig: kubeconfig.OIDCConfig{

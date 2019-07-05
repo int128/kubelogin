@@ -31,12 +31,15 @@ const examples = `  # Login to the provider using authorization code grant.
 
 var defaultListenPort = []int{8000, 18000}
 
+// Cmd provides interaction with command line interface (CLI).
 type Cmd struct {
 	Login        usecases.Login
 	LoginAndExec usecases.LoginAndExec
 	Logger       adaptors.Logger
 }
 
+// Run parses the command line arguments and executes the specified use-case.
+// It returns an exit code, that is 0 on success or 1 on error.
 func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 	var exitCode int
 	executable := filepath.Base(args[0])
@@ -140,6 +143,7 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 	return exitCode
 }
 
+// kubectlOptions represents kubectl specific options.
 type kubectlOptions struct {
 	Kubeconfig           string
 	Context              string
@@ -159,6 +163,7 @@ func (o *kubectlOptions) register(f *pflag.FlagSet) {
 	f.IntVarP(&o.Verbose, "v", "v", 0, "If set to 1 or greater, it shows debug log")
 }
 
+// kubeloginOptions represents application specific options.
 type kubeloginOptions struct {
 	ListenPort      []int
 	SkipOpenBrowser bool

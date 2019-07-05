@@ -6,15 +6,16 @@ type ContextName string
 // UserName represents name of a user.
 type UserName string
 
-// Auth represents the authentication provider,
+// AuthProvider represents the authentication provider,
 // i.e. context, user and auth-provider in a kubeconfig.
-type Auth struct {
+type AuthProvider struct {
 	LocationOfOrigin string      // Path to the kubeconfig file which contains the user
 	UserName         UserName    // User name
 	ContextName      ContextName // Context name (optional)
 	OIDCConfig       OIDCConfig
 }
 
+// OIDCConfig represents a configuration of an OIDC provider.
 type OIDCConfig struct {
 	IDPIssuerURL                string   // idp-issuer-url
 	ClientID                    string   // client-id

@@ -28,7 +28,7 @@ func TestAuthentication_Do(t *testing.T) {
 			SkipOpenBrowser: true,
 			CACertFilename:  "/path/to/cert",
 			SkipTLSVerify:   true,
-			CurrentAuth: &kubeconfig.Auth{
+			CurrentAuthProvider: &kubeconfig.AuthProvider{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
@@ -50,7 +50,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config:         in.CurrentAuth.OIDCConfig,
+				Config:         in.CurrentAuthProvider.OIDCConfig,
 				CACertFilename: "/path/to/cert",
 				SkipTLSVerify:  true,
 			}).
@@ -83,7 +83,7 @@ func TestAuthentication_Do(t *testing.T) {
 			Password:       "PASS",
 			CACertFilename: "/path/to/cert",
 			SkipTLSVerify:  true,
-			CurrentAuth: &kubeconfig.Auth{
+			CurrentAuthProvider: &kubeconfig.AuthProvider{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
@@ -105,7 +105,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config:         in.CurrentAuth.OIDCConfig,
+				Config:         in.CurrentAuthProvider.OIDCConfig,
 				CACertFilename: "/path/to/cert",
 				SkipTLSVerify:  true,
 			}).
@@ -135,7 +135,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
 			Username: "USER",
-			CurrentAuth: &kubeconfig.Auth{
+			CurrentAuthProvider: &kubeconfig.AuthProvider{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
@@ -157,7 +157,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuth.OIDCConfig,
+				Config: in.CurrentAuthProvider.OIDCConfig,
 			}).
 			Return(mockOIDCClient, nil)
 		mockEnv := mock_adaptors.NewMockEnv(ctrl)
@@ -188,7 +188,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
 			Username: "USER",
-			CurrentAuth: &kubeconfig.Auth{
+			CurrentAuthProvider: &kubeconfig.AuthProvider{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
@@ -198,7 +198,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuth.OIDCConfig,
+				Config: in.CurrentAuthProvider.OIDCConfig,
 			}).
 			Return(mock_adaptors.NewMockOIDCClient(ctrl), nil)
 		mockEnv := mock_adaptors.NewMockEnv(ctrl)
@@ -222,7 +222,7 @@ func TestAuthentication_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
-			CurrentAuth: &kubeconfig.Auth{
+			CurrentAuthProvider: &kubeconfig.AuthProvider{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
@@ -240,7 +240,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuth.OIDCConfig,
+				Config: in.CurrentAuthProvider.OIDCConfig,
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
@@ -267,7 +267,7 @@ func TestAuthentication_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
-			CurrentAuth: &kubeconfig.Auth{
+			CurrentAuthProvider: &kubeconfig.AuthProvider{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
@@ -296,7 +296,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuth.OIDCConfig,
+				Config: in.CurrentAuthProvider.OIDCConfig,
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
@@ -324,7 +324,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
 			ListenPort: []int{10000},
-			CurrentAuth: &kubeconfig.Auth{
+			CurrentAuthProvider: &kubeconfig.AuthProvider{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
@@ -358,7 +358,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuth.OIDCConfig,
+				Config: in.CurrentAuthProvider.OIDCConfig,
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{

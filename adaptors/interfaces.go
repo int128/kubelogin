@@ -14,14 +14,15 @@ type Cmd interface {
 }
 
 type Kubeconfig interface {
-	GetCurrentAuth(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error)
-	UpdateAuth(auth *kubeconfig.Auth) error
+	GetCurrentAuthProvider(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error)
+	UpdateAuthProvider(auth *kubeconfig.AuthProvider) error
 }
 
 type OIDC interface {
 	New(ctx context.Context, config OIDCClientConfig) (OIDCClient, error)
 }
 
+// OIDCClientConfig represents a configuration of an OIDCClient to create.
 type OIDCClientConfig struct {
 	Config         kubeconfig.OIDCConfig
 	CACertFilename string
@@ -35,17 +36,21 @@ type OIDCClient interface {
 	Refresh(ctx context.Context, in OIDCRefreshIn) (*OIDCAuthenticateOut, error)
 }
 
+// OIDCAuthenticateByCodeIn represents an input DTO of OIDCClient.AuthenticateByCode.
 type OIDCAuthenticateByCodeIn struct {
 	LocalServerPort    []int // HTTP server port candidates
 	SkipOpenBrowser    bool  // skip opening browser if true
 	ShowLocalServerURL interface{ ShowLocalServerURL(url string) }
 }
 
+// OIDCAuthenticateByPasswordIn represents an input DTO of OIDCClient.AuthenticateByPassword.
 type OIDCAuthenticateByPasswordIn struct {
 	Username string
 	Password string
 }
 
+// OIDCAuthenticateOut represents an output DTO of
+// OIDCClient.AuthenticateByCode, OIDCClient.AuthenticateByPassword and OIDCClient.Refresh.
 type OIDCAuthenticateOut struct {
 	IDToken       string
 	RefreshToken  string
@@ -53,16 +58,19 @@ type OIDCAuthenticateOut struct {
 	IDTokenClaims map[string]string // string representation of claims for logging
 }
 
+// OIDCVerifyIn represents an input DTO of OIDCClient.Verify.
 type OIDCVerifyIn struct {
 	IDToken      string
 	RefreshToken string
 }
 
+// OIDCVerifyIn represents an output DTO of OIDCClient.Verify.
 type OIDCVerifyOut struct {
 	IDTokenExpiry time.Time
 	IDTokenClaims map[string]string // string representation of claims for logging
 }
 
+// OIDCRefreshIn represents an input DTO of OIDCClient.Refresh.
 type OIDCRefreshIn struct {
 	RefreshToken string
 }

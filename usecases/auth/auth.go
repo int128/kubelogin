@@ -10,7 +10,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// Set provides the use-cases of logging in.
+// Set provides the use-case of Authentication.
 var Set = wire.NewSet(
 	wire.Struct(new(Authentication), "*"),
 	wire.Bind(new(usecases.Authentication), new(*Authentication)),
@@ -24,6 +24,19 @@ var ExtraSet = wire.NewSet(
 
 const passwordPrompt = "Password: "
 
+// Authentication provides the internal use-case of authentication.
+//
+// If the IDToken is not set, it performs the authentication flow.
+// If the IDToken is valid, it does nothing.
+// If the IDtoken has expired and the RefreshToken is set, it refreshes the token.
+// If the RefreshToken has expired, it performs the authentication flow.
+//
+// The authentication flow is determined as:
+//
+// If the Username is not set, it performs the authorization code flow.
+// Otherwise, it performs the resource owner password credentials flow.
+// If the Password is not set, it asks a password by the prompt.
+//
 type Authentication struct {
 	OIDC               adaptors.OIDC
 	Env                adaptors.Env
@@ -33,7 +46,7 @@ type Authentication struct {
 
 func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (*usecases.AuthenticationOut, error) {
 	client, err := u.OIDC.New(ctx, adaptors.OIDCClientConfig{
-		Config:         in.CurrentAuth.OIDCConfig,
+		Config:         in.CurrentAuthProvider.OIDCConfig,
 		CACertFilename: in.CACertFilename,
 		SkipTLSVerify:  in.SkipTLSVerify,
 	})
@@ -41,9 +54,9 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 		return nil, xerrors.Errorf("could not create an OIDC client: %w", err)
 	}
 
-	if in.CurrentAuth.OIDCConfig.IDToken != "" {
+	if in.CurrentAuthProvider.OIDCConfig.IDToken != "" {
 		u.Logger.Debugf(1, "Verifying the token in the kubeconfig")
-		out, err := client.Verify(ctx, adaptors.OIDCVerifyIn{IDToken: in.CurrentAuth.OIDCConfig.IDToken})
+		out, err := client.Verify(ctx, adaptors.OIDCVerifyIn{IDToken: in.CurrentAuthProvider.OIDCConfig.IDToken})
 		if err != nil {
 			return nil, xerrors.Errorf("invalid ID token in the kubeconfig, you need to remove it manually: %w", err)
 		}
@@ -51,8 +64,8 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 			u.Logger.Debugf(1, "You already have a valid token in the kubeconfig")
 			return &usecases.AuthenticationOut{
 				AlreadyHasValidIDToken: true,
-				IDToken:                in.CurrentAuth.OIDCConfig.IDToken,
-				RefreshToken:           in.CurrentAuth.OIDCConfig.RefreshToken,
+				IDToken:                in.CurrentAuthProvider.OIDCConfig.IDToken,
+				RefreshToken:           in.CurrentAuthProvider.OIDCConfig.RefreshToken,
 				IDTokenExpiry:          out.IDTokenExpiry,
 				IDTokenClaims:          out.IDTokenClaims,
 			}, nil
@@ -60,10 +73,10 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 		u.Logger.Debugf(1, "You have an expired token at %s", out.IDTokenExpiry)
 	}
 
-	if in.CurrentAuth.OIDCConfig.RefreshToken != "" {
+	if in.CurrentAuthProvider.OIDCConfig.RefreshToken != "" {
 		u.Logger.Debugf(1, "Refreshing the token")
 		out, err := client.Refresh(ctx, adaptors.OIDCRefreshIn{
-			RefreshToken: in.CurrentAuth.OIDCConfig.RefreshToken,
+			RefreshToken: in.CurrentAuthProvider.OIDCConfig.RefreshToken,
 		})
 		if err == nil {
 			return &usecases.AuthenticationOut{

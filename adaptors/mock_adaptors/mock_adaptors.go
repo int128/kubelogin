@@ -35,29 +35,29 @@ func (m *MockKubeconfig) EXPECT() *MockKubeconfigMockRecorder {
 	return m.recorder
 }
 
-// GetCurrentAuth mocks base method
-func (m *MockKubeconfig) GetCurrentAuth(arg0 string, arg1 kubeconfig.ContextName, arg2 kubeconfig.UserName) (*kubeconfig.Auth, error) {
-	ret := m.ctrl.Call(m, "GetCurrentAuth", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*kubeconfig.Auth)
+// GetCurrentAuthProvider mocks base method
+func (m *MockKubeconfig) GetCurrentAuthProvider(arg0 string, arg1 kubeconfig.ContextName, arg2 kubeconfig.UserName) (*kubeconfig.AuthProvider, error) {
+	ret := m.ctrl.Call(m, "GetCurrentAuthProvider", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*kubeconfig.AuthProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetCurrentAuth indicates an expected call of GetCurrentAuth
-func (mr *MockKubeconfigMockRecorder) GetCurrentAuth(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentAuth", reflect.TypeOf((*MockKubeconfig)(nil).GetCurrentAuth), arg0, arg1, arg2)
+// GetCurrentAuthProvider indicates an expected call of GetCurrentAuthProvider
+func (mr *MockKubeconfigMockRecorder) GetCurrentAuthProvider(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentAuthProvider", reflect.TypeOf((*MockKubeconfig)(nil).GetCurrentAuthProvider), arg0, arg1, arg2)
 }
 
-// UpdateAuth mocks base method
-func (m *MockKubeconfig) UpdateAuth(arg0 *kubeconfig.Auth) error {
-	ret := m.ctrl.Call(m, "UpdateAuth", arg0)
+// UpdateAuthProvider mocks base method
+func (m *MockKubeconfig) UpdateAuthProvider(arg0 *kubeconfig.AuthProvider) error {
+	ret := m.ctrl.Call(m, "UpdateAuthProvider", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateAuth indicates an expected call of UpdateAuth
-func (mr *MockKubeconfigMockRecorder) UpdateAuth(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuth", reflect.TypeOf((*MockKubeconfig)(nil).UpdateAuth), arg0)
+// UpdateAuthProvider indicates an expected call of UpdateAuthProvider
+func (mr *MockKubeconfigMockRecorder) UpdateAuthProvider(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthProvider", reflect.TypeOf((*MockKubeconfig)(nil).UpdateAuthProvider), arg0)
 }
 
 // MockOIDC is a mock of OIDC interface

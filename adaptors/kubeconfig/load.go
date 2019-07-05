@@ -9,12 +9,12 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-func (*Kubeconfig) GetCurrentAuth(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error) {
+func (*Kubeconfig) GetCurrentAuthProvider(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error) {
 	config, err := loadByDefaultRules(explicitFilename)
 	if err != nil {
 		return nil, xerrors.Errorf("could not load kubeconfig: %w", err)
 	}
-	auth, err := findCurrentAuth(config, contextName, userName)
+	auth, err := findCurrentAuthProvider(config, contextName, userName)
 	if err != nil {
 		return nil, xerrors.Errorf("could not find the current auth provider: %w", err)
 	}
@@ -31,11 +31,11 @@ func loadByDefaultRules(explicitFilename string) (*api.Config, error) {
 	return config, err
 }
 
-// findCurrentAuth resolves the current auth provider.
+// findCurrentAuthProvider resolves the current auth provider.
 // If contextName is given, this returns the user of the context.
 // If userName is given, this ignores the context and returns the user.
 // If any context or user is not found, this returns an error.
-func findCurrentAuth(config *api.Config, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error) {
+func findCurrentAuthProvider(config *api.Config, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error) {
 	if userName == "" {
 		if contextName == "" {
 			contextName = kubeconfig.ContextName(config.CurrentContext)
@@ -59,7 +59,7 @@ func findCurrentAuth(config *api.Config, contextName kubeconfig.ContextName, use
 	if userNode.AuthProvider.Config == nil {
 		return nil, xerrors.New("auth-provider.config is missing")
 	}
-	return &kubeconfig.Auth{
+	return &kubeconfig.AuthProvider{
 		LocationOfOrigin: userNode.LocationOfOrigin,
 		UserName:         userName,
 		ContextName:      contextName,
