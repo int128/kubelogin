@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -17,32 +18,32 @@ var Set = wire.NewSet(
 func New() adaptors.Logger {
 	return &Logger{
 		stdLogger:   log.New(os.Stderr, "", 0),
-		debugLogger: log.New(os.Stderr, "", log.Ltime|log.Lmicroseconds),
+		debugLogger: log.New(os.Stderr, "", log.Ltime|log.Lmicroseconds|log.Lshortfile),
 	}
 }
 
-// FromStdLogger returns a Logger with the given standard log.Logger.
-func FromStdLogger(l stdLogger) *Logger {
-	return &Logger{
-		stdLogger:   l,
-		debugLogger: l,
-	}
+func NewWith(s stdLogger, d debugLogger) *Logger {
+	return &Logger{s, d, 0}
 }
 
 type stdLogger interface {
 	Printf(format string, v ...interface{})
 }
 
+type debugLogger interface {
+	Output(calldepth int, s string) error
+}
+
 // Logger wraps the standard log.Logger and just provides debug level.
 type Logger struct {
 	stdLogger
-	debugLogger stdLogger
-	level       adaptors.LogLevel
+	debugLogger
+	level adaptors.LogLevel
 }
 
 func (l *Logger) Debugf(level adaptors.LogLevel, format string, v ...interface{}) {
 	if l.IsEnabled(level) {
-		l.debugLogger.Printf(format, v...)
+		_ = l.debugLogger.Output(2, fmt.Sprintf(format, v...))
 	}
 }
 

@@ -5,7 +5,8 @@ import (
 )
 
 func New(t testingLogger) *logger.Logger {
-	return logger.FromStdLogger(&bridge{t})
+	b := &bridge{t}
+	return logger.NewWith(b, b)
 }
 
 type testingLogger interface {
@@ -18,4 +19,9 @@ type bridge struct {
 
 func (b *bridge) Printf(format string, v ...interface{}) {
 	b.t.Logf(format, v...)
+}
+
+func (b *bridge) Output(calldepth int, s string) error {
+	b.t.Logf("%s", s)
+	return nil
 }

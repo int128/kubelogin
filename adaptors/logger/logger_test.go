@@ -7,12 +7,13 @@ import (
 	"github.com/int128/kubelogin/adaptors"
 )
 
-type mockStdLogger struct {
+type mockDebugLogger struct {
 	count int
 }
 
-func (l *mockStdLogger) Printf(format string, v ...interface{}) {
+func (l *mockDebugLogger) Output(int, string) error {
 	l.count++
+	return nil
 }
 
 func TestLogger_Debugf(t *testing.T) {
@@ -33,7 +34,7 @@ func TestLogger_Debugf(t *testing.T) {
 		{2, 3, 0},
 	} {
 		t.Run(fmt.Sprintf("%+v", c), func(t *testing.T) {
-			m := &mockStdLogger{}
+			m := &mockDebugLogger{}
 			l := &Logger{debugLogger: m, level: c.loggerLevel}
 			l.Debugf(c.debugfLevel, "hello")
 			if m.count != c.count {
@@ -41,6 +42,14 @@ func TestLogger_Debugf(t *testing.T) {
 			}
 		})
 	}
+}
+
+type mockStdLogger struct {
+	count int
+}
+
+func (l *mockStdLogger) Printf(format string, v ...interface{}) {
+	l.count++
 }
 
 func TestLogger_Printf(t *testing.T) {
