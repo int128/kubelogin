@@ -33,7 +33,7 @@ type Authentication struct {
 
 func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (*usecases.AuthenticationOut, error) {
 	client, err := u.OIDC.New(ctx, adaptors.OIDCClientConfig{
-		Config:         in.CurrentAuth.OIDCConfig,
+		Config:         in.CurrentAuthProvider.OIDCConfig,
 		CACertFilename: in.CACertFilename,
 		SkipTLSVerify:  in.SkipTLSVerify,
 	})
@@ -41,9 +41,9 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 		return nil, xerrors.Errorf("could not create an OIDC client: %w", err)
 	}
 
-	if in.CurrentAuth.OIDCConfig.IDToken != "" {
+	if in.CurrentAuthProvider.OIDCConfig.IDToken != "" {
 		u.Logger.Debugf(1, "Verifying the token in the kubeconfig")
-		out, err := client.Verify(ctx, adaptors.OIDCVerifyIn{IDToken: in.CurrentAuth.OIDCConfig.IDToken})
+		out, err := client.Verify(ctx, adaptors.OIDCVerifyIn{IDToken: in.CurrentAuthProvider.OIDCConfig.IDToken})
 		if err != nil {
 			return nil, xerrors.Errorf("invalid ID token in the kubeconfig, you need to remove it manually: %w", err)
 		}
@@ -51,8 +51,8 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 			u.Logger.Debugf(1, "You already have a valid token in the kubeconfig")
 			return &usecases.AuthenticationOut{
 				AlreadyHasValidIDToken: true,
-				IDToken:                in.CurrentAuth.OIDCConfig.IDToken,
-				RefreshToken:           in.CurrentAuth.OIDCConfig.RefreshToken,
+				IDToken:                in.CurrentAuthProvider.OIDCConfig.IDToken,
+				RefreshToken:           in.CurrentAuthProvider.OIDCConfig.RefreshToken,
 				IDTokenExpiry:          out.IDTokenExpiry,
 				IDTokenClaims:          out.IDTokenClaims,
 			}, nil
@@ -60,10 +60,10 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 		u.Logger.Debugf(1, "You have an expired token at %s", out.IDTokenExpiry)
 	}
 
-	if in.CurrentAuth.OIDCConfig.RefreshToken != "" {
+	if in.CurrentAuthProvider.OIDCConfig.RefreshToken != "" {
 		u.Logger.Debugf(1, "Refreshing the token")
 		out, err := client.Refresh(ctx, adaptors.OIDCRefreshIn{
-			RefreshToken: in.CurrentAuth.OIDCConfig.RefreshToken,
+			RefreshToken: in.CurrentAuthProvider.OIDCConfig.RefreshToken,
 		})
 		if err == nil {
 			return &usecases.AuthenticationOut{

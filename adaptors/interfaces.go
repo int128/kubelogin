@@ -14,8 +14,8 @@ type Cmd interface {
 }
 
 type Kubeconfig interface {
-	GetCurrentAuth(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.Auth, error)
-	UpdateAuth(auth *kubeconfig.Auth) error
+	GetCurrentAuthProvider(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error)
+	UpdateAuthProvider(auth *kubeconfig.AuthProvider) error
 }
 
 type OIDC interface {

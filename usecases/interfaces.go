@@ -50,13 +50,13 @@ type Authentication interface {
 }
 
 type AuthenticationIn struct {
-	CurrentAuth     *kubeconfig.Auth
-	SkipOpenBrowser bool
-	ListenPort      []int
-	Username        string // If set, perform the resource owner password credentials grant
-	Password        string // If empty, read a password using Env.ReadPassword()
-	CACertFilename  string // If set, use the CA cert
-	SkipTLSVerify   bool
+	CurrentAuthProvider *kubeconfig.AuthProvider
+	SkipOpenBrowser     bool
+	ListenPort          []int
+	Username            string // If set, perform the resource owner password credentials grant
+	Password            string // If empty, read a password using Env.ReadPassword()
+	CACertFilename      string // If set, use the CA cert
+	SkipTLSVerify       bool
 }
 
 type AuthenticationOut struct {
