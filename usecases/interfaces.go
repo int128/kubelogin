@@ -13,6 +13,7 @@ type Login interface {
 	Do(ctx context.Context, in LoginIn) error
 }
 
+// LoginIn represents an input DTO of the Login use-case.
 type LoginIn struct {
 	KubeconfigFilename string                 // Default to the environment variable or global config as kubectl
 	KubeconfigContext  kubeconfig.ContextName // Default to the current context but ignored if KubeconfigUser is set
@@ -35,6 +36,7 @@ type LoginAndExec interface {
 	Do(ctx context.Context, in LoginAndExecIn) (*LoginAndExecOut, error)
 }
 
+// LoginAndExecInIn represents an input DTO of the LoginAndExec use-case.
 type LoginAndExecIn struct {
 	LoginIn    LoginIn
 	Executable string
@@ -49,6 +51,7 @@ type Authentication interface {
 	Do(ctx context.Context, in AuthenticationIn) (*AuthenticationOut, error)
 }
 
+// AuthenticationIn represents an input DTO of the Authentication use-case.
 type AuthenticationIn struct {
 	CurrentAuthProvider *kubeconfig.AuthProvider
 	SkipOpenBrowser     bool
@@ -59,6 +62,7 @@ type AuthenticationIn struct {
 	SkipTLSVerify       bool
 }
 
+// AuthenticationIn represents an output DTO of the Authentication use-case.
 type AuthenticationOut struct {
 	AlreadyHasValidIDToken bool
 	IDTokenExpiry          time.Time

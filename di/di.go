@@ -16,6 +16,7 @@ import (
 	"github.com/int128/kubelogin/usecases/login"
 )
 
+// NewCmd returns an instance of adaptors.Cmd.
 func NewCmd() adaptors.Cmd {
 	wire.Build(
 		auth.Set,
@@ -30,6 +31,8 @@ func NewCmd() adaptors.Cmd {
 	return nil
 }
 
+// NewCmdWith returns an instance of adaptors.Cmd with given dependencies.
+// This is only for e2e tests.
 func NewCmdWith(adaptors.Logger, usecases.LoginShowLocalServerURL) adaptors.Cmd {
 	wire.Build(
 		auth.Set,

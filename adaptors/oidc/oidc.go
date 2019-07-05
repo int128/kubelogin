@@ -26,6 +26,7 @@ type Factory struct {
 	Logger adaptors.Logger
 }
 
+// New returns an instance of adaptors.OIDCClient with the given configuration.
 func (f *Factory) New(ctx context.Context, config adaptors.OIDCClientConfig) (adaptors.OIDCClient, error) {
 	tlsConfig, err := tls.NewConfig(config, f.Logger)
 	if err != nil {
@@ -68,6 +69,7 @@ type client struct {
 	logger       adaptors.Logger
 }
 
+// AuthenticateByCode performs the authorization code flow.
 func (c *client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) (*adaptors.OIDCAuthenticateOut, error) {
 	if c.httpClient != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.httpClient)
@@ -104,6 +106,7 @@ func (c *client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	}, nil
 }
 
+// AuthenticateByPassword performs the resource owner password credentials flow.
 func (c *client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAuthenticateByPasswordIn) (*adaptors.OIDCAuthenticateOut, error) {
 	if c.httpClient != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.httpClient)

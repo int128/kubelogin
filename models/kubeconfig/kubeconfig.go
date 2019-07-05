@@ -15,6 +15,7 @@ type AuthProvider struct {
 	OIDCConfig       OIDCConfig
 }
 
+// OIDCConfig represents a configuration of an OIDC provider.
 type OIDCConfig struct {
 	IDPIssuerURL                string   // idp-issuer-url
 	ClientID                    string   // client-id

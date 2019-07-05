@@ -8,10 +8,12 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// Exec provide the use case of wrapping the kubectl command.
+// Exec provide the use case of transparently executing kubectl.
+//
 // If the current auth provider is not oidc, just run kubectl.
 // If the kubeconfig has a valid token, just run kubectl.
 // Otherwise, update the kubeconfig and run kubectl.
+//
 type Exec struct {
 	Authentication usecases.Authentication
 	Kubeconfig     adaptors.Kubeconfig

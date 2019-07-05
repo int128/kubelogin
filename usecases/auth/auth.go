@@ -10,7 +10,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// Set provides the use-cases of logging in.
+// Set provides the use-case of Authentication.
 var Set = wire.NewSet(
 	wire.Struct(new(Authentication), "*"),
 	wire.Bind(new(usecases.Authentication), new(*Authentication)),
@@ -24,6 +24,19 @@ var ExtraSet = wire.NewSet(
 
 const passwordPrompt = "Password: "
 
+// Authentication provides the internal use-case of authentication.
+//
+// If the IDToken is not set, it performs the authentication flow.
+// If the IDToken is valid, it does nothing.
+// If the IDtoken has expired and the RefreshToken is set, it refreshes the token.
+// If the RefreshToken has expired, it performs the authentication flow.
+//
+// The authentication flow is determined as:
+//
+// If the Username is not set, it performs the authorization code flow.
+// Otherwise, it performs the resource owner password credentials flow.
+// If the Password is not set, it asks a password by the prompt.
+//
 type Authentication struct {
 	OIDC               adaptors.OIDC
 	Env                adaptors.Env

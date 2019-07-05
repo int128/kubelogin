@@ -24,10 +24,12 @@ const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubec
     --auth-provider-arg client-id=YOUR_CLIENT_ID \
     --auth-provider-arg client-secret=YOUR_CLIENT_SECRET`
 
-// Login provides the use case of login to the provider.
+// Login provides the use case of explicit login.
+//
 // If the current auth provider is not oidc, show the error.
 // If the kubeconfig has a valid token, do nothing.
 // Otherwise, update the kubeconfig.
+//
 type Login struct {
 	Authentication usecases.Authentication
 	Kubeconfig     adaptors.Kubeconfig
