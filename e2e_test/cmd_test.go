@@ -30,7 +30,6 @@ import (
 //
 func TestCmd_Run(t *testing.T) {
 	timeout := 1 * time.Second
-	tokenExpiry := time.Now().Add(time.Hour)
 
 	t.Run("Defaults", func(t *testing.T) {
 		t.Parallel()
@@ -42,12 +41,8 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, tokenExpiry)
-		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-		service.EXPECT().AuthenticateCode("openid").Return("YOUR_AUTH_CODE", nil)
-		service.EXPECT().Exchange("YOUR_AUTH_CODE").
-			Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
+		var idToken string
+		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{Issuer: serverURL})
 		defer os.Remove(kubeConfigFilename)
@@ -71,7 +66,7 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, tokenExpiry)
+		idToken := newIDToken(t, serverURL, "", time.Hour)
 		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
 		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
 		service.EXPECT().AuthenticatePassword("USER", "PASS", "openid").
@@ -97,12 +92,8 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, tokenExpiry)
-		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-		service.EXPECT().AuthenticateCode("openid").Return("YOUR_AUTH_CODE", nil)
-		service.EXPECT().Exchange("YOUR_AUTH_CODE").
-			Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
+		var idToken string
+		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{Issuer: serverURL})
 		defer os.Remove(kubeConfigFilename)
@@ -128,12 +119,8 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, tokenExpiry)
-		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-		service.EXPECT().AuthenticateCode("profile groups openid").Return("YOUR_AUTH_CODE", nil)
-		service.EXPECT().Exchange("YOUR_AUTH_CODE").
-			Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
+		var idToken string
+		setupMockIDPForCodeFlow(t, service, serverURL, "profile groups openid", &idToken)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:      serverURL,
@@ -160,12 +147,8 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.StartTLS(t, keys.TLSServerCert, keys.TLSServerKey, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, tokenExpiry)
-		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-		service.EXPECT().AuthenticateCode("openid").Return("YOUR_AUTH_CODE", nil)
-		service.EXPECT().Exchange("YOUR_AUTH_CODE").
-			Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
+		var idToken string
+		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  serverURL,
@@ -192,12 +175,8 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.StartTLS(t, keys.TLSServerCert, keys.TLSServerKey, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, tokenExpiry)
-		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-		service.EXPECT().AuthenticateCode("openid").Return("YOUR_AUTH_CODE", nil)
-		service.EXPECT().Exchange("YOUR_AUTH_CODE").
-			Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
+		var idToken string
+		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                      serverURL,
@@ -224,7 +203,7 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, tokenExpiry)
+		idToken := newIDToken(t, serverURL, "YOUR_NONCE", time.Hour)
 		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
 		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
 
@@ -252,7 +231,7 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, tokenExpiry)
+		idToken := newIDToken(t, serverURL, "YOUR_NONCE", time.Hour)
 		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
 		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
 		service.EXPECT().Refresh("VALID_REFRESH_TOKEN").
@@ -260,7 +239,7 @@ func TestCmd_Run(t *testing.T) {
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:       serverURL,
-			IDToken:      newIDToken(t, serverURL, time.Now().Add(-time.Hour)), // expired
+			IDToken:      newIDToken(t, serverURL, "YOUR_NONCE", -time.Hour), // expired
 			RefreshToken: "VALID_REFRESH_TOKEN",
 		})
 		defer os.Remove(kubeConfigFilename)
@@ -282,19 +261,15 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, tokenExpiry)
-		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+		var idToken string
+		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
 		service.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
 			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
 			MaxTimes(2) // package oauth2 will retry refreshing the token
-		service.EXPECT().AuthenticateCode("openid").Return("YOUR_AUTH_CODE", nil)
-		service.EXPECT().Exchange("YOUR_AUTH_CODE").
-			Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:       serverURL,
-			IDToken:      newIDToken(t, serverURL, time.Now().Add(-time.Hour)), // expired
+			IDToken:      newIDToken(t, serverURL, "YOUR_NONCE", -time.Hour), // expired
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		})
 		defer os.Remove(kubeConfigFilename)
@@ -308,19 +283,21 @@ func TestCmd_Run(t *testing.T) {
 	})
 }
 
-func newIDToken(t *testing.T, issuer string, expiry time.Time) string {
+func newIDToken(t *testing.T, issuer, nonce string, expiration time.Duration) string {
 	t.Helper()
 	var claims struct {
 		jwt.StandardClaims
+		Nonce  string   `json:"nonce"`
 		Groups []string `json:"groups"`
 	}
 	claims.StandardClaims = jwt.StandardClaims{
 		Issuer:    issuer,
 		Audience:  "kubernetes",
-		ExpiresAt: expiry.Unix(),
 		Subject:   "SUBJECT",
 		IssuedAt:  time.Now().Unix(),
+		ExpiresAt: time.Now().Add(expiration).Unix(),
 	}
+	claims.Nonce = nonce
 	claims.Groups = []string{"admin", "users"}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	s, err := token.SignedString(keys.JWSKeyPair)
@@ -328,6 +305,22 @@ func newIDToken(t *testing.T, issuer string, expiry time.Time) string {
 		t.Fatalf("Could not sign the claims: %s", err)
 	}
 	return s
+}
+
+func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, serverURL, scope string, idToken *string) {
+	var nonce string
+	service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+	service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+	service.EXPECT().AuthenticateCode(scope, gomock.Any()).
+		DoAndReturn(func(_, gotNonce string) (string, error) {
+			nonce = gotNonce
+			return "YOUR_AUTH_CODE", nil
+		})
+	service.EXPECT().Exchange("YOUR_AUTH_CODE").
+		DoAndReturn(func(string) (*idp.TokenResponse, error) {
+			*idToken = newIDToken(t, serverURL, nonce, time.Hour)
+			return idp.NewTokenResponse(*idToken, "YOUR_REFRESH_TOKEN"), nil
+		})
 }
 
 func runCmd(t *testing.T, ctx context.Context, s usecases.LoginShowLocalServerURL, args ...string) {
