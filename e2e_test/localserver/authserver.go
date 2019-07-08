@@ -1,8 +1,7 @@
-// Package authserver provides an authentication server which supports
-// Authorization Code Grant and Resource Owner Password Credentials Grant.
+// Package localserver provides a http server running on localhost.
 // This is only for testing.
 //
-package authserver
+package localserver
 
 import (
 	"context"
@@ -29,12 +28,12 @@ func (s *shutdowner) Shutdown(t *testing.T, ctx context.Context) {
 }
 
 // Start starts an authentication server.
-func Start(t *testing.T, h func(url string) http.Handler) Shutdowner {
+func Start(t *testing.T, h http.Handler) (string, Shutdowner) {
 	t.Helper()
 	l, port := newLocalhostListener(t)
 	url := "http://localhost:" + port
 	s := &http.Server{
-		Handler: h(url),
+		Handler: h,
 	}
 	go func() {
 		err := s.Serve(l)
@@ -42,16 +41,16 @@ func Start(t *testing.T, h func(url string) http.Handler) Shutdowner {
 			t.Error(err)
 		}
 	}()
-	return &shutdowner{l, s}
+	return url, &shutdowner{l, s}
 }
 
 // Start starts an authentication server with TLS.
-func StartTLS(t *testing.T, cert string, key string, h func(url string) http.Handler) Shutdowner {
+func StartTLS(t *testing.T, cert string, key string, h http.Handler) (string, Shutdowner) {
 	t.Helper()
 	l, port := newLocalhostListener(t)
 	url := "https://localhost:" + port
 	s := &http.Server{
-		Handler: h(url),
+		Handler: h,
 	}
 	go func() {
 		err := s.ServeTLS(l, cert, key)
@@ -59,7 +58,7 @@ func StartTLS(t *testing.T, cert string, key string, h func(url string) http.Han
 			t.Error(err)
 		}
 	}()
-	return &shutdowner{l, s}
+	return url, &shutdowner{l, s}
 }
 
 func newLocalhostListener(t *testing.T) (net.Listener, string) {
