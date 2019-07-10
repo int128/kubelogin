@@ -2,6 +2,8 @@ package oidc
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/binary"
 	"fmt"
 	"net/http"
 	"time"
@@ -74,11 +76,15 @@ func (c *client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	if c.httpClient != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.httpClient)
 	}
+	nonce, err := newNonce()
+	if err != nil {
+		return nil, xerrors.Errorf("could not generate a nonce parameter")
+	}
 	config := oauth2cli.Config{
 		OAuth2Config:       c.oauth2Config,
 		LocalServerPort:    in.LocalServerPort,
 		SkipOpenBrowser:    in.SkipOpenBrowser,
-		AuthCodeOptions:    []oauth2.AuthCodeOption{oauth2.AccessTypeOffline},
+		AuthCodeOptions:    []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oidc.Nonce(nonce)},
 		ShowLocalServerURL: in.ShowLocalServerURL.ShowLocalServerURL,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
@@ -94,6 +100,9 @@ func (c *client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	if err != nil {
 		return nil, xerrors.Errorf("could not verify the id_token: %w", err)
 	}
+	if verifiedIDToken.Nonce != nonce {
+		return nil, xerrors.Errorf("nonce of ID token did not match (want %s but was %s)", nonce, verifiedIDToken.Nonce)
+	}
 	claims, err := dumpClaims(verifiedIDToken)
 	if err != nil {
 		c.logger.Debugf(1, "incomplete claims of the ID token: %w", err)
@@ -104,6 +113,14 @@ func (c *client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 		IDTokenExpiry: verifiedIDToken.Expiry,
 		IDTokenClaims: claims,
 	}, nil
+}
+
+func newNonce() (string, error) {
+	var n uint64
+	if err := binary.Read(rand.Reader, binary.LittleEndian, &n); err != nil {
+		return "", xerrors.Errorf("error while reading random: %w", err)
+	}
+	return fmt.Sprintf("%x", n), nil
 }
 
 // AuthenticateByPassword performs the resource owner password credentials flow.

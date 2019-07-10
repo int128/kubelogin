@@ -14,18 +14,23 @@ func NewHandler(t *testing.T, service Service) *Handler {
 	return &Handler{t, service}
 }
 
+// Handler provides a HTTP handler for the identity provider of OpenID Connect.
+// You need to implement the Service interface.
+// Note that this skips some security checks and is only for testing.
 type Handler struct {
 	t       *testing.T
 	service Service
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err := h.serveHTTP(w, r)
+	wr := &responseWriterRecorder{w, 200}
+	err := h.serveHTTP(wr, r)
 	if err == nil {
+		h.t.Logf("%d %s %s", wr.statusCode, r.Method, r.RequestURI)
 		return
 	}
 	if errResp := new(ErrorResponse); xerrors.As(err, &errResp) {
-		h.t.Logf("idp/handler: 400 Bad Request: %+v", errResp)
+		h.t.Logf("400 %s %s: %s", r.Method, r.RequestURI, err)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(400)
 		e := json.NewEncoder(w)
@@ -34,14 +39,23 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	h.t.Errorf("idp/handler: 500 Server Error: %s", err)
+	h.t.Logf("500 %s %s: %s", r.Method, r.RequestURI, err)
 	http.Error(w, err.Error(), 500)
+}
+
+type responseWriterRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (w *responseWriterRecorder) WriteHeader(statusCode int) {
+	w.ResponseWriter.WriteHeader(statusCode)
+	w.statusCode = statusCode
 }
 
 func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 	m := r.Method
 	p := r.URL.Path
-	h.t.Logf("idp/handler: %s %s", m, r.RequestURI)
 	switch {
 	case m == "GET" && p == "/.well-known/openid-configuration":
 		discoveryResponse := h.service.Discovery()
@@ -58,11 +72,11 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			return xerrors.Errorf("could not render json: %w", err)
 		}
 	case m == "GET" && p == "/auth":
-		// Authentication Response
-		// http://openid.net/specs/openid-connect-core-1_0.html#AuthResponse
+		// 3.1.2.1. Authentication Request
+		// https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 		q := r.URL.Query()
-		redirectURI, scope, state := q.Get("redirect_uri"), q.Get("scope"), q.Get("state")
-		code, err := h.service.AuthenticateCode(scope)
+		redirectURI, scope, state, nonce := q.Get("redirect_uri"), q.Get("scope"), q.Get("state"), q.Get("nonce")
+		code, err := h.service.AuthenticateCode(scope, nonce)
 		if err != nil {
 			return xerrors.Errorf("authentication error: %w", err)
 		}
@@ -76,8 +90,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		switch grantType {
 		case "authorization_code":
 			// 3.1.3.1. Token Request
-			// 3.1.3.3. Successful Token Response
-			// http://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
+			// https://openid.net/specs/openid-connect-core-1_0.html#TokenRequest
 			code := r.Form.Get("code")
 			tokenResponse, err := h.service.Exchange(code)
 			if err != nil {
@@ -89,7 +102,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 				return xerrors.Errorf("could not render json: %w", err)
 			}
 		case "password":
-			// Token Response
+			// 4.3. Resource Owner Password Credentials Grant
 			// https://tools.ietf.org/html/rfc6749#section-4.3
 			username, password, scope := r.Form.Get("username"), r.Form.Get("password"), r.Form.Get("scope")
 			tokenResponse, err := h.service.AuthenticatePassword(username, password, scope)
@@ -103,7 +116,6 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			}
 		case "refresh_token":
 			// 12.1. Refresh Request
-			// 12.2. Successful Refresh Response
 			// https://openid.net/specs/openid-connect-core-1_0.html#RefreshingAccessToken
 			refreshToken := r.Form.Get("refresh_token")
 			tokenResponse, err := h.service.Refresh(refreshToken)
@@ -116,7 +128,12 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 				return xerrors.Errorf("could not render json: %w", err)
 			}
 		default:
-			return xerrors.Errorf("invalid grant_type: %s", grantType)
+			// 5.2. Error Response
+			// https://tools.ietf.org/html/rfc6749#section-5.2
+			return &ErrorResponse{
+				Code:        "invalid_grant",
+				Description: fmt.Sprintf("unknown grant_type %s", grantType),
+			}
 		}
 	default:
 		http.NotFound(w, r)

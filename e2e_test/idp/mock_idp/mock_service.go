@@ -34,16 +34,16 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // AuthenticateCode mocks base method
-func (m *MockService) AuthenticateCode(arg0 string) (string, error) {
-	ret := m.ctrl.Call(m, "AuthenticateCode", arg0)
+func (m *MockService) AuthenticateCode(arg0, arg1 string) (string, error) {
+	ret := m.ctrl.Call(m, "AuthenticateCode", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AuthenticateCode indicates an expected call of AuthenticateCode
-func (mr *MockServiceMockRecorder) AuthenticateCode(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateCode", reflect.TypeOf((*MockService)(nil).AuthenticateCode), arg0)
+func (mr *MockServiceMockRecorder) AuthenticateCode(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateCode", reflect.TypeOf((*MockService)(nil).AuthenticateCode), arg0, arg1)
 }
 
 // AuthenticatePassword mocks base method

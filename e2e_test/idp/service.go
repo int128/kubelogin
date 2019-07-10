@@ -16,7 +16,7 @@ import (
 type Service interface {
 	Discovery() *DiscoveryResponse
 	GetCertificates() *CertificatesResponse
-	AuthenticateCode(scope string) (code string, err error)
+	AuthenticateCode(scope, nonce string) (code string, err error)
 	Exchange(code string) (*TokenResponse, error)
 	AuthenticatePassword(username, password, scope string) (*TokenResponse, error)
 	Refresh(refreshToken string) (*TokenResponse, error)
