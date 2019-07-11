@@ -19,7 +19,7 @@ brew install kubelogin
 kubectl krew install oidc-login
 
 # GitHub Releases
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.12.0/kubelogin_linux_amd64.zip
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.13.0/kubelogin_linux_amd64.zip
 unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
@@ -47,7 +47,7 @@ It automatically opens the browser and you can log in to the provider.
 
 <img src="docs/keycloak-login.png" alt="keycloak-login" width="455" height="329">
 
-After authentication, it writes an ID token and refresh token to the kubeconfig.
+After authentication, kubelogin writes an ID token and refresh token to the kubeconfig.
 
 ```
 % kubelogin
@@ -86,7 +86,7 @@ alias kubectl='kubelogin exec -- kubectl'
 alias kubectl='kubectl oidc-login exec -- kubectl'
 ```
 
-If the token expired, it updates the kubeconfig and executes kubectl.
+If the token expired, kubelogin updates the kubeconfig and executes kubectl.
 
 ```
 % kubectl get pods
@@ -96,7 +96,7 @@ NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
 
-If the ID token is valid, it just executes kubectl.
+If the ID token is valid, kubelogin just executes kubectl.
 
 ```
 % kubectl get pods
@@ -111,7 +111,7 @@ Kubelogin respects kubectl options passed to the extra arguments.
 For example, if you run `kubectl --kubeconfig .kubeconfig`,
 it will update `.kubeconfig` and execute kubectl.
 
-If the current auth provider is not `oidc`, it just executes kubectl.
+If the current auth provider is not `oidc`, kubelogin just executes kubectl.
 
 
 ## Configuration
