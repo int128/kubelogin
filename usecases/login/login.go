@@ -48,13 +48,13 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	u.Logger.Debugf(1, "A token will be written to %s", authProvider.LocationOfOrigin)
 
 	out, err := u.Authentication.Do(ctx, usecases.AuthenticationIn{
-		CurrentAuthProvider: authProvider,
-		SkipOpenBrowser:     in.SkipOpenBrowser,
-		ListenPort:          in.ListenPort,
-		Username:            in.Username,
-		Password:            in.Password,
-		CACertFilename:      in.CACertFilename,
-		SkipTLSVerify:       in.SkipTLSVerify,
+		OIDCConfig:      authProvider.OIDCConfig,
+		SkipOpenBrowser: in.SkipOpenBrowser,
+		ListenPort:      in.ListenPort,
+		Username:        in.Username,
+		Password:        in.Password,
+		CACertFilename:  in.CACertFilename,
+		SkipTLSVerify:   in.SkipTLSVerify,
 	})
 	if err != nil {
 		return xerrors.Errorf("error while authentication: %w", err)

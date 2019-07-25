@@ -69,13 +69,13 @@ func TestExec_Do(t *testing.T) {
 		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, usecases.AuthenticationIn{
-				CurrentAuthProvider: currentAuthProvider,
-				ListenPort:          []int{10000},
-				SkipOpenBrowser:     true,
-				Username:            "USER",
-				Password:            "PASS",
-				CACertFilename:      "/path/to/cert",
-				SkipTLSVerify:       true,
+				OIDCConfig:      currentAuthProvider.OIDCConfig,
+				ListenPort:      []int{10000},
+				SkipOpenBrowser: true,
+				Username:        "USER",
+				Password:        "PASS",
+				CACertFilename:  "/path/to/cert",
+				SkipTLSVerify:   true,
 			}).
 			Return(&usecases.AuthenticationOut{
 				IDToken:       "YOUR_ID_TOKEN",
@@ -128,7 +128,7 @@ func TestExec_Do(t *testing.T) {
 			Return(currentAuthProvider, nil)
 		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{CurrentAuthProvider: currentAuthProvider}).
+			Do(ctx, usecases.AuthenticationIn{OIDCConfig: currentAuthProvider.OIDCConfig}).
 			Return(&usecases.AuthenticationOut{
 				AlreadyHasValidIDToken: true,
 				IDToken:                "VALID_ID_TOKEN",
@@ -209,7 +209,7 @@ func TestExec_Do(t *testing.T) {
 			Return(currentAuthProvider, nil)
 		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{CurrentAuthProvider: currentAuthProvider}).
+			Do(ctx, usecases.AuthenticationIn{OIDCConfig: currentAuthProvider.OIDCConfig}).
 			Return(nil, xerrors.New("authentication error"))
 		u := Exec{
 			Authentication: mockAuthentication,
@@ -259,7 +259,7 @@ func TestExec_Do(t *testing.T) {
 			Return(xerrors.New("I/O error"))
 		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{CurrentAuthProvider: currentAuthProvider}).
+			Do(ctx, usecases.AuthenticationIn{OIDCConfig: currentAuthProvider.OIDCConfig}).
 			Return(&usecases.AuthenticationOut{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",

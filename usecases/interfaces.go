@@ -53,13 +53,13 @@ type Authentication interface {
 
 // AuthenticationIn represents an input DTO of the Authentication use-case.
 type AuthenticationIn struct {
-	CurrentAuthProvider *kubeconfig.AuthProvider
-	SkipOpenBrowser     bool
-	ListenPort          []int
-	Username            string // If set, perform the resource owner password credentials grant
-	Password            string // If empty, read a password using Env.ReadPassword()
-	CACertFilename      string // If set, use the CA cert
-	SkipTLSVerify       bool
+	OIDCConfig      kubeconfig.OIDCConfig
+	SkipOpenBrowser bool
+	ListenPort      []int
+	Username        string // If set, perform the resource owner password credentials grant
+	Password        string // If empty, read a password using Env.ReadPassword()
+	CACertFilename  string // If set, use the CA cert
+	SkipTLSVerify   bool
 }
 
 // AuthenticationIn represents an output DTO of the Authentication use-case.
