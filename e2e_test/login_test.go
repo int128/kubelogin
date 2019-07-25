@@ -21,14 +21,19 @@ import (
 	"github.com/int128/kubelogin/usecases"
 )
 
-// Run the integration tests.
+var (
+	tokenExpiryFuture = time.Now().Add(time.Hour).Round(time.Second)
+	tokenExpiryPast   = time.Now().Add(-time.Hour).Round(time.Second)
+)
+
+// Run the integration tests of the Login use-case.
 //
 // 1. Start the auth server.
 // 2. Run the Cmd.
 // 3. Open a request for the local server.
-// 4. Verify the kuneconfig.
+// 4. Verify the kubeconfig.
 //
-func TestCmd_Run(t *testing.T) {
+func TestCmd_Run_Login(t *testing.T) {
 	timeout := 1 * time.Second
 
 	t.Run("Defaults", func(t *testing.T) {
@@ -66,7 +71,7 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, "", time.Hour)
+		idToken := newIDToken(t, serverURL, "", tokenExpiryFuture)
 		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
 		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
 		service.EXPECT().AuthenticatePassword("USER", "PASS", "openid").
@@ -203,7 +208,7 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, "YOUR_NONCE", time.Hour)
+		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
 		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
 
@@ -231,7 +236,7 @@ func TestCmd_Run(t *testing.T) {
 		service := mock_idp.NewMockService(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
 		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, "YOUR_NONCE", time.Hour)
+		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
 		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
 		service.EXPECT().Refresh("VALID_REFRESH_TOKEN").
@@ -239,7 +244,7 @@ func TestCmd_Run(t *testing.T) {
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:       serverURL,
-			IDToken:      newIDToken(t, serverURL, "YOUR_NONCE", -time.Hour), // expired
+			IDToken:      newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast), // expired
 			RefreshToken: "VALID_REFRESH_TOKEN",
 		})
 		defer os.Remove(kubeConfigFilename)
@@ -269,7 +274,7 @@ func TestCmd_Run(t *testing.T) {
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:       serverURL,
-			IDToken:      newIDToken(t, serverURL, "YOUR_NONCE", -time.Hour), // expired
+			IDToken:      newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast), // expired
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		})
 		defer os.Remove(kubeConfigFilename)
@@ -283,7 +288,7 @@ func TestCmd_Run(t *testing.T) {
 	})
 }
 
-func newIDToken(t *testing.T, issuer, nonce string, expiration time.Duration) string {
+func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 	t.Helper()
 	var claims struct {
 		jwt.StandardClaims
@@ -295,7 +300,7 @@ func newIDToken(t *testing.T, issuer, nonce string, expiration time.Duration) st
 		Audience:  "kubernetes",
 		Subject:   "SUBJECT",
 		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(expiration).Unix(),
+		ExpiresAt: expiry.Unix(),
 	}
 	claims.Nonce = nonce
 	claims.Groups = []string{"admin", "users"}
@@ -318,14 +323,14 @@ func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, server
 		})
 	service.EXPECT().Exchange("YOUR_AUTH_CODE").
 		DoAndReturn(func(string) (*idp.TokenResponse, error) {
-			*idToken = newIDToken(t, serverURL, nonce, time.Hour)
+			*idToken = newIDToken(t, serverURL, nonce, tokenExpiryFuture)
 			return idp.NewTokenResponse(*idToken, "YOUR_REFRESH_TOKEN"), nil
 		})
 }
 
 func runCmd(t *testing.T, ctx context.Context, s usecases.LoginShowLocalServerURL, args ...string) {
 	t.Helper()
-	cmd := di.NewCmdWith(logger.New(t), s)
+	cmd := di.NewCmdForHeadless(logger.New(t), s, nil)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "--v=1"}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)

@@ -8,12 +8,15 @@ package di
 import (
 	"github.com/int128/kubelogin/adaptors"
 	"github.com/int128/kubelogin/adaptors/cmd"
+	"github.com/int128/kubelogin/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/adaptors/env"
 	"github.com/int128/kubelogin/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/adaptors/logger"
 	"github.com/int128/kubelogin/adaptors/oidc"
+	"github.com/int128/kubelogin/adaptors/tokencache"
 	"github.com/int128/kubelogin/usecases"
 	"github.com/int128/kubelogin/usecases/auth"
+	credentialplugin2 "github.com/int128/kubelogin/usecases/credentialplugin"
 	"github.com/int128/kubelogin/usecases/login"
 )
 
@@ -40,6 +43,14 @@ func NewCmd() adaptors.Cmd {
 		Kubeconfig:     kubeconfigKubeconfig,
 		Logger:         adaptorsLogger,
 	}
+	repository := &tokencache.Repository{}
+	interaction := &credentialplugin.Interaction{}
+	getToken := &credentialplugin2.GetToken{
+		Authentication:       authentication,
+		TokenCacheRepository: repository,
+		Interaction:          interaction,
+		Logger:               adaptorsLogger,
+	}
 	exec := &login.Exec{
 		Authentication: authentication,
 		Kubeconfig:     kubeconfigKubeconfig,
@@ -48,13 +59,14 @@ func NewCmd() adaptors.Cmd {
 	}
 	cmdCmd := &cmd.Cmd{
 		Login:        loginLogin,
+		GetToken:     getToken,
 		LoginAndExec: exec,
 		Logger:       adaptorsLogger,
 	}
 	return cmdCmd
 }
 
-func NewCmdWith(adaptorsLogger adaptors.Logger, loginShowLocalServerURL usecases.LoginShowLocalServerURL) adaptors.Cmd {
+func NewCmdForHeadless(adaptorsLogger adaptors.Logger, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialPluginInteraction adaptors.CredentialPluginInteraction) adaptors.Cmd {
 	factory := &oidc.Factory{
 		Logger: adaptorsLogger,
 	}
@@ -71,6 +83,13 @@ func NewCmdWith(adaptorsLogger adaptors.Logger, loginShowLocalServerURL usecases
 		Kubeconfig:     kubeconfigKubeconfig,
 		Logger:         adaptorsLogger,
 	}
+	repository := &tokencache.Repository{}
+	getToken := &credentialplugin2.GetToken{
+		Authentication:       authentication,
+		TokenCacheRepository: repository,
+		Interaction:          credentialPluginInteraction,
+		Logger:               adaptorsLogger,
+	}
 	exec := &login.Exec{
 		Authentication: authentication,
 		Kubeconfig:     kubeconfigKubeconfig,
@@ -79,6 +98,7 @@ func NewCmdWith(adaptorsLogger adaptors.Logger, loginShowLocalServerURL usecases
 	}
 	cmdCmd := &cmd.Cmd{
 		Login:        loginLogin,
+		GetToken:     getToken,
 		LoginAndExec: exec,
 		Logger:       adaptorsLogger,
 	}
