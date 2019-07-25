@@ -18,8 +18,6 @@ jobs:
       - run: go get github.com/int128/goxzst
       - run: go get github.com/tcnksm/ghr
       - checkout
-      # workaround for https://github.com/golang/go/issues/27925
-      - run: sed -e '/^k8s.io\/client-go /d' -i go.sum
       - run: make check
       - run: bash <(curl -s https://codecov.io/bash)
       - run: make run
