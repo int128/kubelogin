@@ -1,4 +1,4 @@
-# Team Operation
+# Team on-boarding
 
 ## kops
 
@@ -29,12 +29,14 @@ preferences: {}
 users:
 - name: hello.k8s.local
   user:
-    auth-provider:
-      name: oidc
-      config:
-        client-id: YOUR_CLIEND_ID
-        client-secret: YOUR_CLIENT_SECRET
-        idp-issuer-url: YOUR_ISSUER
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: kubelogin
+      args:
+      - get-token
+      - --oidc-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM
+      - --oidc-client-id=YOUR_CLIENT_ID
+      - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
-You can share the kubeconfig to your team members for easy onboarding.
+You can share the kubeconfig to your team members for on-boarding.

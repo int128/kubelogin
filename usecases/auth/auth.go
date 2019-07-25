@@ -55,13 +55,13 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 	}
 
 	if in.OIDCConfig.IDToken != "" {
-		u.Logger.Debugf(1, "Verifying the token in the kubeconfig")
+		u.Logger.Debugf(1, "Verifying the existing token")
 		out, err := client.Verify(ctx, adaptors.OIDCVerifyIn{IDToken: in.OIDCConfig.IDToken})
 		if err != nil {
-			return nil, xerrors.Errorf("invalid ID token in the kubeconfig, you need to remove it manually: %w", err)
+			return nil, xerrors.Errorf("you need to remove the existing token manually: %w", err)
 		}
 		if out.IDTokenExpiry.After(time.Now()) { //TODO: inject time service
-			u.Logger.Debugf(1, "You already have a valid token in the kubeconfig")
+			u.Logger.Debugf(1, "You already have a valid token")
 			return &usecases.AuthenticationOut{
 				AlreadyHasValidIDToken: true,
 				IDToken:                in.OIDCConfig.IDToken,

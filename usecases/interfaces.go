@@ -7,7 +7,7 @@ import (
 	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_usecases/mock_usecases.go github.com/int128/kubelogin/usecases Login,LoginAndExec,Authentication
+//go:generate mockgen -destination mock_usecases/mock_usecases.go github.com/int128/kubelogin/usecases Login,LoginAndExec,GetToken,Authentication
 
 type Login interface {
 	Do(ctx context.Context, in LoginIn) error
@@ -30,6 +30,25 @@ type LoginIn struct {
 // It is needed for the end-to-end tests.
 type LoginShowLocalServerURL interface {
 	ShowLocalServerURL(url string)
+}
+
+type GetToken interface {
+	Do(ctx context.Context, in GetTokenIn) error
+}
+
+// GetTokenIn represents an input DTO of the GetToken use-case.
+type GetTokenIn struct {
+	IssuerURL          string
+	ClientID           string
+	ClientSecret       string
+	ExtraScopes        []string // optional
+	SkipOpenBrowser    bool
+	ListenPort         []int
+	Username           string // If set, perform the resource owner password credentials grant
+	Password           string // If empty, read a password using Env.ReadPassword()
+	CACertFilename     string // If set, use the CA cert
+	SkipTLSVerify      bool
+	TokenCacheFilename string
 }
 
 type LoginAndExec interface {

@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/int128/kubelogin/models/credentialplugin"
 	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors Kubeconfig,OIDC,OIDCClient,Env,Logger
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/adaptors Kubeconfig,TokenCacheRepository,CredentialPluginInteraction,OIDC,OIDCClient,Env,Logger
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -16,6 +17,15 @@ type Cmd interface {
 type Kubeconfig interface {
 	GetCurrentAuthProvider(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error)
 	UpdateAuthProvider(auth *kubeconfig.AuthProvider) error
+}
+
+type TokenCacheRepository interface {
+	Read(filename string) (*credentialplugin.TokenCache, error)
+	Write(filename string, tc credentialplugin.TokenCache) error
+}
+
+type CredentialPluginInteraction interface {
+	Write(out credentialplugin.Output) error
 }
 
 type OIDC interface {
