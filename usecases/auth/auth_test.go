@@ -28,11 +28,9 @@ func TestAuthentication_Do(t *testing.T) {
 			SkipOpenBrowser: true,
 			CACertFilename:  "/path/to/cert",
 			SkipTLSVerify:   true,
-			CurrentAuthProvider: &kubeconfig.AuthProvider{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
+			OIDCConfig: kubeconfig.OIDCConfig{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			},
 		}
 		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
@@ -50,7 +48,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config:         in.CurrentAuthProvider.OIDCConfig,
+				Config:         in.OIDCConfig,
 				CACertFilename: "/path/to/cert",
 				SkipTLSVerify:  true,
 			}).
@@ -83,11 +81,9 @@ func TestAuthentication_Do(t *testing.T) {
 			Password:       "PASS",
 			CACertFilename: "/path/to/cert",
 			SkipTLSVerify:  true,
-			CurrentAuthProvider: &kubeconfig.AuthProvider{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
+			OIDCConfig: kubeconfig.OIDCConfig{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			},
 		}
 		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
@@ -105,7 +101,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config:         in.CurrentAuthProvider.OIDCConfig,
+				Config:         in.OIDCConfig,
 				CACertFilename: "/path/to/cert",
 				SkipTLSVerify:  true,
 			}).
@@ -135,11 +131,9 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
 			Username: "USER",
-			CurrentAuthProvider: &kubeconfig.AuthProvider{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
+			OIDCConfig: kubeconfig.OIDCConfig{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			},
 		}
 		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
@@ -157,7 +151,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuthProvider.OIDCConfig,
+				Config: in.OIDCConfig,
 			}).
 			Return(mockOIDCClient, nil)
 		mockEnv := mock_adaptors.NewMockEnv(ctrl)
@@ -188,17 +182,15 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
 			Username: "USER",
-			CurrentAuthProvider: &kubeconfig.AuthProvider{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
+			OIDCConfig: kubeconfig.OIDCConfig{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			},
 		}
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuthProvider.OIDCConfig,
+				Config: in.OIDCConfig,
 			}).
 			Return(mock_adaptors.NewMockOIDCClient(ctrl), nil)
 		mockEnv := mock_adaptors.NewMockEnv(ctrl)
@@ -222,12 +214,10 @@ func TestAuthentication_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
-			CurrentAuthProvider: &kubeconfig.AuthProvider{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-					IDToken:      "VALID_ID_TOKEN",
-				},
+			OIDCConfig: kubeconfig.OIDCConfig{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				IDToken:      "VALID_ID_TOKEN",
 			},
 		}
 		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
@@ -240,7 +230,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuthProvider.OIDCConfig,
+				Config: in.OIDCConfig,
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
@@ -267,13 +257,11 @@ func TestAuthentication_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
-			CurrentAuthProvider: &kubeconfig.AuthProvider{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-					IDToken:      "EXPIRED_ID_TOKEN",
-					RefreshToken: "VALID_REFRESH_TOKEN",
-				},
+			OIDCConfig: kubeconfig.OIDCConfig{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				IDToken:      "EXPIRED_ID_TOKEN",
+				RefreshToken: "VALID_REFRESH_TOKEN",
 			},
 		}
 		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
@@ -296,7 +284,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuthProvider.OIDCConfig,
+				Config: in.OIDCConfig,
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
@@ -324,13 +312,11 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx := context.TODO()
 		in := usecases.AuthenticationIn{
 			ListenPort: []int{10000},
-			CurrentAuthProvider: &kubeconfig.AuthProvider{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-					IDToken:      "EXPIRED_ID_TOKEN",
-					RefreshToken: "EXPIRED_REFRESH_TOKEN",
-				},
+			OIDCConfig: kubeconfig.OIDCConfig{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				IDToken:      "EXPIRED_ID_TOKEN",
+				RefreshToken: "EXPIRED_REFRESH_TOKEN",
 			},
 		}
 		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
@@ -358,7 +344,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
 		mockOIDC.EXPECT().
 			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.CurrentAuthProvider.OIDCConfig,
+				Config: in.OIDCConfig,
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
