@@ -11,7 +11,7 @@ jobs:
           curl -L -o ~/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.14.0/bin/linux/amd64/kubectl
           chmod +x ~/bin/kubectl
       - run: |
-          curl -L -o ~/bin/ghcp https://github.com/int128/ghcp/releases/download/v1.3.0/ghcp_linux_amd64
+          curl -L -o ~/bin/ghcp https://github.com/int128/ghcp/releases/download/v1.5.0/ghcp_linux_amd64
           chmod +x ~/bin/ghcp
       - run: |
           curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ~/bin v1.16.0
