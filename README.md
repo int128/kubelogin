@@ -81,11 +81,14 @@ NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
 
-Kubelogin writes the ID token and refresh token to the cache file.
+Kubelogin writes the ID token and refresh token to the token cache file.
 
 If the cached ID token is valid, kubelogin just returns it.
 If the cached ID token has expired, kubelogin will refresh the token using the refresh token.
-If the refresh token has expired, kubelogin will proceed the authentication.
+If the refresh token has expired, kubelogin will perform reauthentication.
+
+You can log out by removing the token cache file (default `~/.kube/oidc-login.token-cache`).
+Kubelogin will perform authentication if the token cache file does not exist.
 
 
 ### Run as a standalone command
