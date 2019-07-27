@@ -2,8 +2,8 @@
 
 This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens), also known as `kubectl oidc-login`.
 
-In Kubernetes OIDC authentication, kubectl does not provide actual authentication and we need to manually set an ID token and refresh token to the kubeconfig.
 Kubelogin integrates browser based authentication with kubectl.
+You do not need to manually set an ID token and refresh token to the kubeconfig.
 
 
 ## Getting Started
@@ -19,7 +19,7 @@ brew install kubelogin
 kubectl krew install oidc-login
 
 # GitHub Releases
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.13.0/kubelogin_linux_amd64.zip
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.14.0/kubelogin_linux_amd64.zip
 unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
@@ -40,8 +40,6 @@ You can run kubelogin as the following methods:
 
 ### Run as a credential plugin
 
-Status: beta since kubelogin v1.14.0.
-
 You can run kubelogin as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
 This provides transparent login without manually running `kubelogin` command.
 
@@ -53,8 +51,9 @@ users:
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubelogin
+      command: kubectl
       args:
+      - oidc-login
       - get-token
       - --oidc-issuer-url=https://issuer.example.com
       - --oidc-client-id=YOUR_CLIENT_ID
@@ -90,8 +89,6 @@ If the refresh token has expired, kubelogin will proceed the authentication.
 
 
 ### Run as a standalone command
-
-Status: stable.
 
 You can run kubelogin as a standalone command.
 In this method, you need to manually run the command before running kubectl.
@@ -150,9 +147,7 @@ If the ID token has expired, kubelogin will refresh the token using the refresh 
 If the refresh token has expired, kubelogin will proceed the authentication.
 
 
-### Wrap kubectl
-
-Status: DEPRECATED and will be removed in kubelogin v1.15.0.
+### Wrap kubectl (deprecated)
 
 You can wrap kubectl to transparently login to the provider.
 
