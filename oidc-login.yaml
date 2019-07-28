@@ -3,26 +3,16 @@ kind: Plugin
 metadata:
   name: oidc-login
 spec:
-  shortDescription: Login for OpenID Connect authentication
+  homepage: https://github.com/int128/kubelogin
+  shortDescription: kubectl integration for OpenID Connect authentication
   description: |
-    This plugin gets a token from the OIDC provider and writes it to the kubeconfig.
-
-    Just run:
-      % kubectl oidc-login
-
-    It opens the browser and you can log in to the provider.
-    After authentication, it gets an ID token and refresh token and writes them to the kubeconfig.
+    Kubelogin integrates browser based authentication with kubectl.
+    You do not need to manually set an ID token and refresh token to the kubeconfig.
 
   caveats: |
-    You need to setup the following components:
-      * OIDC provider
-      * Kubernetes API server
-      * Role for your group or user
-      * kubectl authentication
-
+    You need to setup the OIDC provider, Kubernetes API server, role binding and kubeconfig.
     See https://github.com/int128/kubelogin for more.
 
-  homepage: https://github.com/int128/kubelogin
   version: {{ env "VERSION" }}
   platforms:
     - uri: https://github.com/int128/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_linux_amd64.zip
