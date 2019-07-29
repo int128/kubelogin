@@ -24,10 +24,6 @@ As well as it respects the environment variable `KUBECONFIG`.
 
 TODO
 
-### Wrap kubectl and login transparently
-
-TODO
-
 
 ## Architecture
 

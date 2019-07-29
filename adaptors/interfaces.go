@@ -87,7 +87,6 @@ type OIDCRefreshIn struct {
 
 type Env interface {
 	ReadPassword(prompt string) (string, error)
-	Exec(ctx context.Context, executable string, args []string) (int, error)
 }
 
 type Logger interface {

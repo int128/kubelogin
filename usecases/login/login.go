@@ -12,9 +12,7 @@ import (
 // Set provides the use-cases of logging in.
 var Set = wire.NewSet(
 	wire.Struct(new(Login), "*"),
-	wire.Struct(new(Exec), "*"),
 	wire.Bind(new(usecases.Login), new(*Login)),
-	wire.Bind(new(usecases.LoginAndExec), new(*Exec)),
 )
 
 const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubectl for OIDC authentication?

@@ -278,19 +278,6 @@ func (m *MockEnv) EXPECT() *MockEnvMockRecorder {
 	return m.recorder
 }
 
-// Exec mocks base method
-func (m *MockEnv) Exec(arg0 context.Context, arg1 string, arg2 []string) (int, error) {
-	ret := m.ctrl.Call(m, "Exec", arg0, arg1, arg2)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Exec indicates an expected call of Exec
-func (mr *MockEnvMockRecorder) Exec(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockEnv)(nil).Exec), arg0, arg1, arg2)
-}
-
 // ReadPassword mocks base method
 func (m *MockEnv) ReadPassword(arg0 string) (string, error) {
 	ret := m.ctrl.Call(m, "ReadPassword", arg0)

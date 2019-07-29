@@ -35,7 +35,6 @@ You can run kubelogin as the following methods:
 
 - Run as a credential plugin
 - Run as a standalone command
-- Wrap kubectl (deprecated)
 
 
 ### Run as a credential plugin
@@ -150,45 +149,6 @@ If the ID token has expired, kubelogin will refresh the token using the refresh 
 If the refresh token has expired, kubelogin will proceed the authentication.
 
 
-### Wrap kubectl (deprecated)
-
-You can wrap kubectl to transparently login to the provider.
-
-```sh
-alias kubectl='kubelogin exec -- kubectl'
-
-# or run as a kubectl plugin
-alias kubectl='kubectl oidc-login exec -- kubectl'
-```
-
-If the token expired, kubelogin updates the kubeconfig and executes kubectl.
-
-```
-% kubectl get pods
-Open http://localhost:8000 for authentication
-You got a valid token until 2019-06-05 19:05:34 +0900 JST
-NAME                          READY   STATUS    RESTARTS   AGE
-echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
-```
-
-If the ID token is valid, kubelogin just executes kubectl.
-
-```
-% kubectl get pods
-NAME                          READY   STATUS    RESTARTS   AGE
-echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
-```
-
-If the ID token has expired, kubelogin will refresh the token using the refresh token in the kubeconfig.
-If the refresh token has expired, kubelogin will proceed the authentication.
-
-Kubelogin respects kubectl options passed to the extra arguments.
-For example, if you run `kubectl --kubeconfig .kubeconfig`,
-it will update `.kubeconfig` and execute kubectl.
-
-If the current auth provider is not `oidc`, kubelogin just executes kubectl.
-
-
 ## Configuration
 
 This document is for the development version.
@@ -263,7 +223,6 @@ Examples:
   kubelogin get-token --oidc-issuer-url=https://issuer.example.com
 
 Available Commands:
-  exec        Login transparently and execute the kubectl command (deprecated)
   get-token   Run as a kubectl credential plugin
   help        Help about any command
   version     Print the version information
