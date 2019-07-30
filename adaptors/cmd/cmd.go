@@ -35,10 +35,9 @@ var defaultTokenCache = homedir.HomeDir() + "/.kube/oidc-login.token-cache"
 
 // Cmd provides interaction with command line interface (CLI).
 type Cmd struct {
-	Login        usecases.Login
-	GetToken     usecases.GetToken
-	LoginAndExec usecases.LoginAndExec
-	Logger       adaptors.Logger
+	Login    usecases.Login
+	GetToken usecases.GetToken
+	Logger   adaptors.Logger
 }
 
 // Run parses the command line arguments and executes the specified use-case.
@@ -77,57 +76,6 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 	}
 	o.kubectlOptions.register(rootCmd.Flags())
 	o.kubeloginOptions.register(rootCmd.Flags())
-
-	//TODO: deprecated
-	execCmd := cobra.Command{
-		Use:   "exec [flags] -- kubectl [args]",
-		Short: "Login transparently and execute the kubectl command (deprecated)",
-		Args: func(execCmd *cobra.Command, args []string) error {
-			if execCmd.ArgsLenAtDash() == -1 {
-				return xerrors.Errorf("double dash is missing, please run as %s exec -- kubectl", executable)
-			}
-			if len(args) < 1 {
-				return xerrors.New("too few arguments")
-			}
-			return nil
-		},
-		Run: func(execCmd *cobra.Command, args []string) {
-			// parse the extra args and override the kubectl options
-			f := pflag.NewFlagSet(execCmd.Name(), pflag.ContinueOnError)
-			o.kubectlOptions.register(f)
-			// ignore unknown flags and help flags (-h/--help)
-			f.ParseErrorsWhitelist.UnknownFlags = true
-			f.BoolP("help", "h", false, "ignore help flags")
-			if err := f.Parse(args); err != nil {
-				cmd.Logger.Debugf(1, "error while parsing the extra arguments: %s", err)
-			}
-			cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
-			in := usecases.LoginAndExecIn{
-				LoginIn: usecases.LoginIn{
-					KubeconfigFilename: o.Kubeconfig,
-					KubeconfigContext:  kubeconfig.ContextName(o.Context),
-					KubeconfigUser:     kubeconfig.UserName(o.User),
-					CACertFilename:     o.CertificateAuthority,
-					SkipTLSVerify:      o.SkipTLSVerify,
-					ListenPort:         o.ListenPort,
-					SkipOpenBrowser:    o.SkipOpenBrowser,
-					Username:           o.Username,
-					Password:           o.Password,
-				},
-				Executable: args[0],
-				Args:       args[1:],
-			}
-			out, err := cmd.LoginAndExec.Do(ctx, in)
-			if err != nil {
-				cmd.Logger.Printf("error: %s", err)
-				exitCode = 1
-				return
-			}
-			exitCode = out.ExitCode
-		},
-	}
-	o.kubeloginOptions.register(execCmd.Flags())
-	rootCmd.AddCommand(&execCmd)
 
 	getTokenCmd := newGetTokenCmd(ctx, cmd)
 	rootCmd.AddCommand(getTokenCmd)

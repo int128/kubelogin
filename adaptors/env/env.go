@@ -1,10 +1,8 @@
 package env
 
 import (
-	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"syscall"
 
 	"github.com/google/wire"
@@ -35,20 +33,4 @@ func (*Env) ReadPassword(prompt string) (string, error) {
 		return "", xerrors.Errorf("could not write a new line: %w", err)
 	}
 	return string(b), nil
-}
-
-// Exec executes the command and returns the exit code.
-// Unlike the exec package, this does not return an error even if the command exited with non-zero code.
-func (*Env) Exec(ctx context.Context, executable string, args []string) (int, error) {
-	c := exec.CommandContext(ctx, executable, args...)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		if err, ok := err.(*exec.ExitError); ok {
-			return err.ExitCode(), nil
-		}
-		return 0, xerrors.Errorf("could not execute the command: %w", err)
-	}
-	return 0, nil
 }

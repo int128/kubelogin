@@ -51,17 +51,10 @@ func NewCmd() adaptors.Cmd {
 		Interaction:          interaction,
 		Logger:               adaptorsLogger,
 	}
-	exec := &login.Exec{
-		Authentication: authentication,
-		Kubeconfig:     kubeconfigKubeconfig,
-		Env:            envEnv,
-		Logger:         adaptorsLogger,
-	}
 	cmdCmd := &cmd.Cmd{
-		Login:        loginLogin,
-		GetToken:     getToken,
-		LoginAndExec: exec,
-		Logger:       adaptorsLogger,
+		Login:    loginLogin,
+		GetToken: getToken,
+		Logger:   adaptorsLogger,
 	}
 	return cmdCmd
 }
@@ -90,17 +83,10 @@ func NewCmdForHeadless(adaptorsLogger adaptors.Logger, loginShowLocalServerURL u
 		Interaction:          credentialPluginInteraction,
 		Logger:               adaptorsLogger,
 	}
-	exec := &login.Exec{
-		Authentication: authentication,
-		Kubeconfig:     kubeconfigKubeconfig,
-		Env:            envEnv,
-		Logger:         adaptorsLogger,
-	}
 	cmdCmd := &cmd.Cmd{
-		Login:        loginLogin,
-		GetToken:     getToken,
-		LoginAndExec: exec,
-		Logger:       adaptorsLogger,
+		Login:    loginLogin,
+		GetToken: getToken,
+		Logger:   adaptorsLogger,
 	}
 	return cmdCmd
 }

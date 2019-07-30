@@ -7,7 +7,7 @@ import (
 	"github.com/int128/kubelogin/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_usecases/mock_usecases.go github.com/int128/kubelogin/usecases Login,LoginAndExec,GetToken,Authentication
+//go:generate mockgen -destination mock_usecases/mock_usecases.go github.com/int128/kubelogin/usecases Login,GetToken,Authentication
 
 type Login interface {
 	Do(ctx context.Context, in LoginIn) error
@@ -49,21 +49,6 @@ type GetTokenIn struct {
 	CACertFilename     string // If set, use the CA cert
 	SkipTLSVerify      bool
 	TokenCacheFilename string
-}
-
-type LoginAndExec interface {
-	Do(ctx context.Context, in LoginAndExecIn) (*LoginAndExecOut, error)
-}
-
-// LoginAndExecInIn represents an input DTO of the LoginAndExec use-case.
-type LoginAndExecIn struct {
-	LoginIn    LoginIn
-	Executable string
-	Args       []string
-}
-
-type LoginAndExecOut struct {
-	ExitCode int
 }
 
 type Authentication interface {
