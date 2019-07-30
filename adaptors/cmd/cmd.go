@@ -43,44 +43,17 @@ type Cmd struct {
 // Run parses the command line arguments and executes the specified use-case.
 // It returns an exit code, that is 0 on success or 1 on error.
 func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
-	var exitCode int
 	executable := filepath.Base(args[0])
-	var o struct {
-		kubectlOptions
-		kubeloginOptions
-	}
-	rootCmd := cobra.Command{
-		Use:     executable,
-		Short:   "Login to the OpenID Connect provider and update the kubeconfig",
-		Example: fmt.Sprintf(examples, executable),
-		Args:    cobra.NoArgs,
-		Run: func(*cobra.Command, []string) {
-			cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
-			in := usecases.LoginIn{
-				KubeconfigFilename: o.Kubeconfig,
-				KubeconfigContext:  kubeconfig.ContextName(o.Context),
-				KubeconfigUser:     kubeconfig.UserName(o.User),
-				CACertFilename:     o.CertificateAuthority,
-				SkipTLSVerify:      o.SkipTLSVerify,
-				ListenPort:         o.ListenPort,
-				SkipOpenBrowser:    o.SkipOpenBrowser,
-				Username:           o.Username,
-				Password:           o.Password,
-			}
-			if err := cmd.Login.Do(ctx, in); err != nil {
-				cmd.Logger.Printf("error: %s", err)
-				exitCode = 1
-				return
-			}
-		},
-	}
-	o.kubectlOptions.register(rootCmd.Flags())
-	o.kubeloginOptions.register(rootCmd.Flags())
+
+	rootCmd := newRootCmd(ctx, executable, cmd)
+	rootCmd.Version = version
+	rootCmd.SilenceUsage = true
+	rootCmd.SilenceErrors = true
 
 	getTokenCmd := newGetTokenCmd(ctx, cmd)
 	rootCmd.AddCommand(getTokenCmd)
 
-	versionCmd := cobra.Command{
+	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print the version information",
 		Args:  cobra.NoArgs,
@@ -88,14 +61,15 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 			cmd.Logger.Printf("%s version %s", executable, version)
 		},
 	}
-	rootCmd.AddCommand(&versionCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	rootCmd.SetArgs(args[1:])
 	if err := rootCmd.Execute(); err != nil {
-		cmd.Logger.Debugf(1, "error while parsing the arguments: %s", err)
+		cmd.Logger.Printf("error: %s", err)
+		cmd.Logger.Debugf(1, "stacktrace: %+v", err)
 		return 1
 	}
-	return exitCode
+	return 0
 }
 
 // kubectlOptions represents kubectl specific options.
@@ -118,15 +92,15 @@ func (o *kubectlOptions) register(f *pflag.FlagSet) {
 	f.IntVarP(&o.Verbose, "v", "v", 0, "If set to 1 or greater, it shows debug log")
 }
 
-// kubeloginOptions represents application specific options.
-type kubeloginOptions struct {
+// loginOptions represents the options for Login use-case.
+type loginOptions struct {
 	ListenPort      []int
 	SkipOpenBrowser bool
 	Username        string
 	Password        string
 }
 
-func (o *kubeloginOptions) register(f *pflag.FlagSet) {
+func (o *loginOptions) register(f *pflag.FlagSet) {
 	f.SortFlags = false
 	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
@@ -134,9 +108,43 @@ func (o *kubeloginOptions) register(f *pflag.FlagSet) {
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
 }
 
+func newRootCmd(ctx context.Context, executable string, cmd *Cmd) *cobra.Command {
+	var o struct {
+		kubectlOptions
+		loginOptions
+	}
+	rootCmd := &cobra.Command{
+		Use:     executable,
+		Short:   "Login to the OpenID Connect provider and update the kubeconfig",
+		Example: fmt.Sprintf(examples, executable),
+		Args:    cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
+			in := usecases.LoginIn{
+				KubeconfigFilename: o.Kubeconfig,
+				KubeconfigContext:  kubeconfig.ContextName(o.Context),
+				KubeconfigUser:     kubeconfig.UserName(o.User),
+				CACertFilename:     o.CertificateAuthority,
+				SkipTLSVerify:      o.SkipTLSVerify,
+				ListenPort:         o.ListenPort,
+				SkipOpenBrowser:    o.SkipOpenBrowser,
+				Username:           o.Username,
+				Password:           o.Password,
+			}
+			if err := cmd.Login.Do(ctx, in); err != nil {
+				return xerrors.Errorf("error: %w", err)
+			}
+			return nil
+		},
+	}
+	o.kubectlOptions.register(rootCmd.Flags())
+	o.loginOptions.register(rootCmd.Flags())
+	return rootCmd
+}
+
 // getTokenOptions represents the options for get-token command.
 type getTokenOptions struct {
-	kubeloginOptions
+	loginOptions
 	IssuerURL            string
 	ClientID             string
 	ClientSecret         string
@@ -149,7 +157,7 @@ type getTokenOptions struct {
 
 func (o *getTokenOptions) register(f *pflag.FlagSet) {
 	f.SortFlags = false
-	o.kubeloginOptions.register(f)
+	o.loginOptions.register(f)
 	f.StringVar(&o.IssuerURL, "oidc-issuer-url", "", "Issuer URL of the provider (mandatory)")
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider (mandatory)")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
@@ -198,7 +206,6 @@ func newGetTokenCmd(ctx context.Context, cmd *Cmd) *cobra.Command {
 			return nil
 		},
 	}
-	c.SilenceUsage = true
 	o.register(c.Flags())
 	return c
 }
