@@ -36,56 +36,181 @@ var (
 func TestCmd_Run_Login(t *testing.T) {
 	timeout := 1 * time.Second
 
-	t.Run("Defaults", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+	type testParameter struct {
+		startServer                       func(t *testing.T, h http.Handler) (string, localserver.Shutdowner)
+		kubeconfigIDPCertificateAuthority string
+		clientTLSConfig                   *tls.Config
+	}
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
-		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
+	testParameters := map[string]testParameter{
+		"NoTLS": {
+			startServer: localserver.Start,
+		},
+		"CACert": {
+			startServer: func(t *testing.T, h http.Handler) (string, localserver.Shutdowner) {
+				return localserver.StartTLS(t, keys.TLSServerCert, keys.TLSServerKey, h)
+			},
+			kubeconfigIDPCertificateAuthority: keys.TLSCACert,
+			clientTLSConfig:                   keys.TLSCACertAsConfig,
+		},
+	}
 
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{Issuer: serverURL})
-		defer os.Remove(kubeConfigFilename)
+	runTest := func(t *testing.T, p testParameter) {
+		t.Run("Defaults", func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-		req := startBrowserRequest(t, ctx, nil)
-		runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "0")
-		req.wait()
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
+			service := mock_idp.NewMockService(ctrl)
+			serverURL, server := p.startServer(t, idp.NewHandler(t, service))
+			defer server.Shutdown(t, ctx)
+			var idToken string
+			setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
+
+			kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+				Issuer:                  serverURL,
+				IDPCertificateAuthority: p.kubeconfigIDPCertificateAuthority,
+			})
+			defer os.Remove(kubeConfigFilename)
+
+			req := startBrowserRequest(t, ctx, p.clientTLSConfig)
+			runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "0")
+			req.wait()
+			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+				IDToken:      idToken,
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			})
 		})
-	})
 
-	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+		t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
-		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, "", tokenExpiryFuture)
-		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-		service.EXPECT().AuthenticatePassword("USER", "PASS", "openid").
-			Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
+			service := mock_idp.NewMockService(ctrl)
+			serverURL, server := p.startServer(t, idp.NewHandler(t, service))
+			defer server.Shutdown(t, ctx)
+			idToken := newIDToken(t, serverURL, "", tokenExpiryFuture)
+			service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+			service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+			service.EXPECT().AuthenticatePassword("USER", "PASS", "openid").
+				Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
 
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{Issuer: serverURL})
-		defer os.Remove(kubeConfigFilename)
+			kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+				Issuer:                  serverURL,
+				IDPCertificateAuthority: p.kubeconfigIDPCertificateAuthority,
+			})
+			defer os.Remove(kubeConfigFilename)
 
-		runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--username", "USER", "--password", "PASS")
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
+			runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--username", "USER", "--password", "PASS")
+			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+				IDToken:      idToken,
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			})
 		})
-	})
+
+		t.Run("HasValidToken", func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			service := mock_idp.NewMockService(ctrl)
+			serverURL, server := p.startServer(t, idp.NewHandler(t, service))
+			defer server.Shutdown(t, ctx)
+			idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
+			service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+			service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+
+			kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+				Issuer:                  serverURL,
+				IDToken:                 idToken,
+				RefreshToken:            "YOUR_REFRESH_TOKEN",
+				IDPCertificateAuthority: p.kubeconfigIDPCertificateAuthority,
+			})
+			defer os.Remove(kubeConfigFilename)
+
+			runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+				IDToken:      idToken,
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			})
+		})
+
+		t.Run("HasValidRefreshToken", func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			service := mock_idp.NewMockService(ctrl)
+			serverURL, server := p.startServer(t, idp.NewHandler(t, service))
+			defer server.Shutdown(t, ctx)
+			idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
+			service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+			service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+			service.EXPECT().Refresh("VALID_REFRESH_TOKEN").
+				Return(idp.NewTokenResponse(idToken, "NEW_REFRESH_TOKEN"), nil)
+
+			kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+				Issuer:                  serverURL,
+				IDToken:                 newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast), // expired
+				RefreshToken:            "VALID_REFRESH_TOKEN",
+				IDPCertificateAuthority: p.kubeconfigIDPCertificateAuthority,
+			})
+			defer os.Remove(kubeConfigFilename)
+
+			runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+				IDToken:      idToken,
+				RefreshToken: "NEW_REFRESH_TOKEN",
+			})
+		})
+
+		t.Run("HasExpiredRefreshToken", func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			service := mock_idp.NewMockService(ctrl)
+			serverURL, server := p.startServer(t, idp.NewHandler(t, service))
+			defer server.Shutdown(t, ctx)
+			var idToken string
+			setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
+			service.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
+				Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
+				MaxTimes(2) // package oauth2 will retry refreshing the token
+
+			kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+				Issuer:                  serverURL,
+				IDToken:                 newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast), // expired
+				RefreshToken:            "EXPIRED_REFRESH_TOKEN",
+				IDPCertificateAuthority: p.kubeconfigIDPCertificateAuthority,
+			})
+			defer os.Remove(kubeConfigFilename)
+
+			req := startBrowserRequest(t, ctx, p.clientTLSConfig)
+			runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+				IDToken:      idToken,
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			})
+		})
+	}
+
+	for name, p := range testParameters {
+		t.Run(name, func(t *testing.T) {
+			runTest(t, p)
+		})
+	}
 
 	t.Run("env:KUBECONFIG", func(t *testing.T) {
 		t.Parallel()
@@ -136,151 +261,6 @@ func TestCmd_Run_Login(t *testing.T) {
 		req := startBrowserRequest(t, ctx, nil)
 		runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "0")
 		req.wait()
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
-	})
-
-	t.Run("CACert", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.StartTLS(t, keys.TLSServerCert, keys.TLSServerKey, idp.NewHandler(t, service))
-		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
-
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                  serverURL,
-			IDPCertificateAuthority: keys.TLSCACert,
-		})
-		defer os.Remove(kubeConfigFilename)
-
-		req := startBrowserRequest(t, ctx, keys.TLSCACertAsConfig)
-		runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "0")
-		req.wait()
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
-	})
-
-	t.Run("CACertData", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.StartTLS(t, keys.TLSServerCert, keys.TLSServerKey, idp.NewHandler(t, service))
-		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
-
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                      serverURL,
-			IDPCertificateAuthorityData: keys.TLSCACertAsBase64,
-		})
-		defer os.Remove(kubeConfigFilename)
-
-		req := startBrowserRequest(t, ctx, keys.TLSCACertAsConfig)
-		runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "0")
-		req.wait()
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
-	})
-
-	t.Run("HasValidToken", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
-		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
-		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:       serverURL,
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
-		defer os.Remove(kubeConfigFilename)
-
-		runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
-	})
-
-	t.Run("HasValidRefreshToken", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
-		defer server.Shutdown(t, ctx)
-		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
-		service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-		service.EXPECT().Refresh("VALID_REFRESH_TOKEN").
-			Return(idp.NewTokenResponse(idToken, "NEW_REFRESH_TOKEN"), nil)
-
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:       serverURL,
-			IDToken:      newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast), // expired
-			RefreshToken: "VALID_REFRESH_TOKEN",
-		})
-		defer os.Remove(kubeConfigFilename)
-
-		runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
-			RefreshToken: "NEW_REFRESH_TOKEN",
-		})
-	})
-
-	t.Run("HasExpiredRefreshToken", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
-		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
-		service.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
-			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
-			MaxTimes(2) // package oauth2 will retry refreshing the token
-
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:       serverURL,
-			IDToken:      newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast), // expired
-			RefreshToken: "EXPIRED_REFRESH_TOKEN",
-		})
-		defer os.Remove(kubeConfigFilename)
-
-		req := startBrowserRequest(t, ctx, nil)
-		runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
 			RefreshToken: "YOUR_REFRESH_TOKEN",
