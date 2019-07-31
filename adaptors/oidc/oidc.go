@@ -71,11 +71,16 @@ type client struct {
 	logger       adaptors.Logger
 }
 
-// AuthenticateByCode performs the authorization code flow.
-func (c *client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) (*adaptors.OIDCAuthenticateOut, error) {
+func (c *client) wrapContext(ctx context.Context) context.Context {
 	if c.httpClient != nil {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.httpClient)
 	}
+	return ctx
+}
+
+// AuthenticateByCode performs the authorization code flow.
+func (c *client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthenticateByCodeIn) (*adaptors.OIDCAuthenticateOut, error) {
+	ctx = c.wrapContext(ctx)
 	nonce, err := newNonce()
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a nonce parameter")
@@ -125,9 +130,7 @@ func newNonce() (string, error) {
 
 // AuthenticateByPassword performs the resource owner password credentials flow.
 func (c *client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAuthenticateByPasswordIn) (*adaptors.OIDCAuthenticateOut, error) {
-	if c.httpClient != nil {
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.httpClient)
-	}
+	ctx = c.wrapContext(ctx)
 	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, in.Username, in.Password)
 	if err != nil {
 		return nil, xerrors.Errorf("could not get a token: %w", err)
@@ -156,9 +159,7 @@ func (c *client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAut
 // Verify checks client ID and signature of the ID token.
 // This does not check the expiration and caller should check it.
 func (c *client) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*adaptors.OIDCVerifyOut, error) {
-	if c.httpClient != nil {
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, c.httpClient)
-	}
+	ctx = c.wrapContext(ctx)
 	verifier := c.provider.Verifier(&oidc.Config{
 		ClientID:        c.oauth2Config.ClientID,
 		SkipExpiryCheck: true,
@@ -179,6 +180,7 @@ func (c *client) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*adaptor
 
 // Refresh sends a refresh token request and returns a token set.
 func (c *client) Refresh(ctx context.Context, in adaptors.OIDCRefreshIn) (*adaptors.OIDCAuthenticateOut, error) {
+	ctx = c.wrapContext(ctx)
 	currentToken := &oauth2.Token{
 		Expiry:       time.Now(),
 		RefreshToken: in.RefreshToken,
