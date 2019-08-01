@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/coreos/go-oidc"
@@ -14,9 +15,17 @@ import (
 	"github.com/int128/kubelogin/adaptors/oidc/logging"
 	"github.com/int128/kubelogin/adaptors/oidc/tls"
 	"github.com/int128/oauth2cli"
+	"github.com/pkg/browser"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
 )
+
+func init() {
+	// In credential plugin mode, some browser launcher writes a message to stdout
+	// and it may break the credential json for client-go.
+	// This prevents the browser launcher from breaking the credential json.
+	browser.Stdout = os.Stderr
+}
 
 // Set provides an implementation and interface for OIDC.
 var Set = wire.NewSet(
