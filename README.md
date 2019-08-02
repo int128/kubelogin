@@ -2,8 +2,8 @@
 
 This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens), also known as `kubectl oidc-login`.
 
-Kubelogin integrates browser based authentication with kubectl.
-You do not need to manually set an ID token and refresh token to the kubeconfig.
+You can log in to the OIDC provider on the browser and kubelogin gets a token from the provider.
+Kubelogin returns the token to kubectl (credential plugin mode) or writes the token to the kubeconfig (standalone mode).
 
 
 ## Getting Started
@@ -33,11 +33,11 @@ See the following documents for more:
 
 You can run kubelogin as the following methods:
 
-- Run as a credential plugin
-- Run as a standalone command
+- Credential plugin mode
+- Standalone mode
 
 
-### Run as a credential plugin
+### Credential plugin mode
 
 You can run kubelogin as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
 This provides transparent login without manually running `kubelogin` command.
@@ -90,7 +90,7 @@ You can log out by removing the token cache file (default `~/.kube/oidc-login.to
 Kubelogin will perform authentication if the token cache file does not exist.
 
 
-### Run as a standalone command
+### Standalone mode
 
 You can run kubelogin as a standalone command.
 In this method, you need to manually run the command before running kubectl.
@@ -155,7 +155,7 @@ This document is for the development version.
 If you are looking for a specific version, see [the release tags](https://github.com/int128/kubelogin/tags).
 
 
-### Run as a credential plugin
+### Credential plugin mode
 
 Kubelogin supports the following options:
 
@@ -200,7 +200,7 @@ You can use your self-signed certificates for the provider.
 ```
 
 
-### Run as a standalone command
+### Standalone mode
 
 Kubelogin supports the following options:
 
