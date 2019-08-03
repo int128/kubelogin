@@ -130,7 +130,7 @@ You got a valid token until 2019-05-18 10:28:51 +0900 JST
 Updated ~/.kubeconfig
 ```
 
-Now you can access to the cluster.
+Now you can access the cluster.
 
 ```
 % kubectl get pods

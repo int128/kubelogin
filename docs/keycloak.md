@@ -88,7 +88,7 @@ users:
 
 ## 5. Run kubectl
 
-Make sure you can access to the Kubernetes cluster.
+Make sure you can access the Kubernetes cluster.
 
 ```
 % kubectl get nodes
