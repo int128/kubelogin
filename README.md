@@ -138,6 +138,22 @@ NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
 
+Your kubeconfig looks like:
+
+```yaml
+users:
+- name: keycloak
+  user:
+    auth-provider:
+      config:
+        client-id: YOUR_CLIENT_ID
+        client-secret: YOUR_CLIENT_SECRET
+        idp-issuer-url: https://issuer.example.com
+        id-token: ey...       # kubelogin will add or update the ID token here
+        refresh-token: ey...  # kubelogin will add or update the refresh token here
+      name: oidc
+```
+
 If the ID token is valid, kubelogin does nothing.
 
 ```
