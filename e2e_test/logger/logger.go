@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/int128/kubelogin/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 )
 
 func New(t testingLogger) *logger.Logger {

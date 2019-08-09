@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/adaptors"
-	"github.com/int128/kubelogin/adaptors/mock_adaptors"
-	"github.com/int128/kubelogin/di"
 	"github.com/int128/kubelogin/e2e_test/idp"
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
 	"github.com/int128/kubelogin/e2e_test/localserver"
 	"github.com/int128/kubelogin/e2e_test/logger"
-	"github.com/int128/kubelogin/models/credentialplugin"
-	"github.com/int128/kubelogin/usecases"
+	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
+	"github.com/int128/kubelogin/pkg/di"
+	"github.com/int128/kubelogin/pkg/models/credentialplugin"
+	"github.com/int128/kubelogin/pkg/usecases"
 )
 
 // Run the integration tests of the credential plugin use-case.
