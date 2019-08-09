@@ -11,14 +11,14 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/di"
 	"github.com/int128/kubelogin/e2e_test/idp"
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
 	"github.com/int128/kubelogin/e2e_test/keys"
 	"github.com/int128/kubelogin/e2e_test/kubeconfig"
 	"github.com/int128/kubelogin/e2e_test/localserver"
 	"github.com/int128/kubelogin/e2e_test/logger"
-	"github.com/int128/kubelogin/usecases"
+	"github.com/int128/kubelogin/pkg/di"
+	"github.com/int128/kubelogin/pkg/usecases"
 )
 
 var (
