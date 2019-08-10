@@ -29,6 +29,7 @@ You need to configure the OIDC provider, Kubernetes API server, kubeconfig and r
 See the following documents for more:
 
 - [Getting Started with Keycloak](docs/keycloak.md)
+- [Getting Started with dex and GitHub](docs/dex.md)
 - [Getting Started with Google Identity Platform](docs/google.md)
 
 You can run kubelogin as the following methods:

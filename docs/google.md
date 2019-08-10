@@ -13,6 +13,23 @@ Open [Google APIs Console](https://console.developers.google.com/apis/credential
 
 - Application Type: Other
 
+Now test authentication with Google Identity Platform.
+
+```sh
+kubectl oidc-login get-token -v1 \
+  --oidc-issuer-url=https://accounts.google.com \
+  --oidc-client-id=YOUR_CLIENT_ID.apps.googleusercontent.com \
+  --oidc-client-secret=YOUR_CLIENT_SECRET
+```
+
+You should get claims like:
+
+```
+17:21:32.052655 get_token.go:57: ID token has the claim: iss=https://accounts.google.com
+17:21:32.052672 get_token.go:57: ID token has the claim: sub=YOUR_SUBJECT
+17:21:32.052683 get_token.go:57: ID token has the claim: aud=YOUR_CLIENT_ID.apps.googleusercontent.com
+```
+
 ## 2. Setup Kubernetes API server
 
 Configure your Kubernetes API Server accepts [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
@@ -33,7 +50,7 @@ spec:
 
 ## 3. Setup Kubernetes cluster
 
-Here assign the `cluster-admin` role to you.
+Here assign the `cluster-admin` role to your subject.
 
 ```yaml
 kind: ClusterRoleBinding
@@ -46,7 +63,7 @@ roleRef:
   name: cluster-admin
 subjects:
 - kind: User
-  name: https://accounts.google.com#1234567890
+  name: YOUR_SUBJECT
 ```
 
 You can create a custom role and assign it as well.

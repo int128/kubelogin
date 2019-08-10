@@ -1,59 +1,66 @@
-# Getting Started with Keycloak
+# Getting Started with dex and GitHub
 
 ## Prerequisite
 
-- You have an administrator role of the Keycloak realm.
-- You have an administrator role of the Kubernetes cluster.
+- You have a GitHub account.
 - You can configure the Kubernetes API server.
 - `kubectl` and `kubelogin` are installed.
 
-## 1. Setup Keycloak
+## 1. Setup GitHub OAuth
 
-Open the Keycloak and create an OIDC client as follows:
+Open [GitHub OAuth Apps](https://github.com/settings/developers) and create an application with the following setting:
 
-- Client ID: `kubernetes`
-- Valid Redirect URLs:
-    - `http://localhost:8000`
-    - `http://localhost:18000` (used if the port 8000 is already in use)
-- Issuer URL: `https://keycloak.example.com/auth/realms/YOUR_REALM`
+- Application name: (any)
+- Homepage URL: `https://dex.example.com`
+- Authorization callback URL: `https://dex.example.com/callback`
 
-You can associate client roles by adding the following mapper:
+## 2. Setup dex
 
-- Name: `groups`
-- Mapper Type: `User Client Role`
-- Client ID: `kubernetes`
-- Client Role prefix: `kubernetes:`
-- Token Claim Name: `groups`
-- Add to ID token: on
+Configure the dex with the following config:
 
-For example, if you have the `admin` role of the client, you will get a JWT with the claim `{"groups": ["kubernetes:admin"]}`.
+```yaml
+issuer: https://dex.example.com
+connectors:
+- type: github
+  id: github
+  name: GitHub
+  config:
+    clientID: YOUR_GITHUB_CLIENT_ID
+    clientSecret: YOUR_GITHUB_CLIENT_SECRET
+    redirectURI: https://dex.example.com/callback
+staticClients:
+- id: kubernetes
+  name: Kubernetes
+  redirectURIs:
+    - http://localhost:8000
+    - http://localhost:18000
+  secret: YOUR_DEX_CLIENT_SECRET
+```
 
-Now test authentication with the Keycloak.
+Now test authentication with the dex.
 
 ```sh
 kubectl oidc-login get-token -v1 \
-  --oidc-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM \
+  --oidc-issuer-url=https://dex.example.com \
   --oidc-client-id=kubernetes \
-  --oidc-client-secret=YOUR_CLIENT_SECRET
+  --oidc-client-secret=YOUR_DEX_CLIENT_SECRET
 ```
 
 You should get claims like:
 
 ```
-17:21:32.052655 get_token.go:57: ID token has the claim: iss=https://keycloak.example.com/auth/realms/YOUR_REALM
+17:21:32.052655 get_token.go:57: ID token has the claim: iss=https://dex.example.com
 17:21:32.052672 get_token.go:57: ID token has the claim: sub=YOUR_SUBJECT
 17:21:32.052683 get_token.go:57: ID token has the claim: aud=kubernetes
-17:21:32.052694 get_token.go:57: ID token has the claim: groups=[kubernetes:admin]
 ```
 
-## 2. Setup Kubernetes API server
+## 3. Setup Kubernetes API server
 
 Configure your Kubernetes API server accepts [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
 
 ```
---oidc-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM
+--oidc-issuer-url=https://dex.example.com
 --oidc-client-id=kubernetes
---oidc-groups-claim=groups
 ```
 
 If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and add the following spec:
@@ -61,14 +68,13 @@ If you are using [kops](https://github.com/kubernetes/kops), run `kops edit clus
 ```yaml
 spec:
   kubeAPIServer:
-    oidcIssuerURL: https://keycloak.example.com/auth/realms/YOUR_REALM
+    oidcIssuerURL: https://dex.example.com
     oidcClientID: kubernetes
-    oidcGroupsClaim: groups
 ```
 
-## 3. Setup Kubernetes cluster
+## 4. Create a role binding
 
-Here assign the `cluster-admin` role to the `kubernetes:admin` group.
+Here assign the `cluster-admin` role to your subject.
 
 ```yaml
 kind: ClusterRoleBinding
@@ -80,13 +86,13 @@ roleRef:
   kind: ClusterRole
   name: cluster-admin
 subjects:
-- kind: Group
-  name: kubernetes:admin
+- kind: User
+  name: YOUR_SUBJECT
 ```
 
 You can create a custom role and assign it as well.
 
-## 4. Setup kubeconfig
+## 5. Setup kubeconfig
 
 Configure the kubeconfig like:
 
@@ -99,27 +105,28 @@ clusters:
 contexts:
 - context:
     cluster: example.k8s.local
-    user: keycloak
-  name: keycloak@example.k8s.local
-current-context: keycloak@example.k8s.local
+    user: dex
+  name: dex@example.k8s.local
+current-context: dex@example.k8s.local
 kind: Config
 preferences: {}
 users:
-- name: keycloak
+- name: dex
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubelogin
+      command: kubectl
       args:
+      - oidc-login
       - get-token
-      - --oidc-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM
+      - --oidc-issuer-url=https://dex.example.com
       - --oidc-client-id=kubernetes
-      - --oidc-client-secret=YOUR_CLIENT_SECRET
+      - --oidc-client-secret=YOUR_DEX_CLIENT_SECRET
 ```
 
 You can share the kubeconfig to your team members for on-boarding.
 
-## 5. Run kubectl
+## 6. Run kubectl
 
 Make sure you can access the Kubernetes cluster.
 
