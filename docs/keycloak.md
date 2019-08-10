@@ -73,6 +73,19 @@ You can create a custom role and assign it as well.
 Configure the kubeconfig like:
 
 ```yaml
+apiVersion: v1
+clusters:
+- cluster:
+    server: https://api.example.com
+  name: example.k8s.local
+contexts:
+- context:
+    cluster: example.k8s.local
+    user: keycloak
+  name: keycloak@example.k8s.local
+current-context: keycloak@example.k8s.local
+kind: Config
+preferences: {}
 users:
 - name: keycloak
   user:
@@ -85,6 +98,8 @@ users:
       - --oidc-client-id=kubernetes
       - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
+
+You can share the kubeconfig to your team members for on-boarding.
 
 ## 5. Run kubectl
 

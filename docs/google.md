@@ -56,6 +56,19 @@ You can create a custom role and assign it as well.
 Configure the kubeconfig like:
 
 ```yaml
+apiVersion: v1
+clusters:
+- cluster:
+    server: https://api.example.com
+  name: example.k8s.local
+contexts:
+- context:
+    cluster: example.k8s.local
+    user: google
+  name: google@example.k8s.local
+current-context: google@example.k8s.local
+kind: Config
+preferences: {}
 users:
 - name: google
   user:
@@ -68,6 +81,8 @@ users:
       - --oidc-client-id=YOUR_CLIENT_ID.apps.googleusercontent.com
       - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
+
+You can share the kubeconfig to your team members for on-boarding.
 
 ## 5. Run kubectl
 
