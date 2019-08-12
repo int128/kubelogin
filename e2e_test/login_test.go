@@ -124,8 +124,6 @@ func TestCmd_Run_Login(t *testing.T) {
 			serverURL, server := p.startServer(t, idp.NewHandler(t, service))
 			defer server.Shutdown(t, ctx)
 			idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
-			service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-			service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
 
 			kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 				Issuer:                  serverURL,

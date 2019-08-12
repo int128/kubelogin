@@ -8,7 +8,7 @@ import (
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig,TokenCacheRepository,CredentialPluginInteraction,OIDC,OIDCClient,Env,Logger
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig,TokenCacheRepository,CredentialPluginInteraction,OIDC,OIDCClient,OIDCDecoder,Env,Logger
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -42,7 +42,6 @@ type OIDCClientConfig struct {
 type OIDCClient interface {
 	AuthenticateByCode(ctx context.Context, in OIDCAuthenticateByCodeIn) (*OIDCAuthenticateOut, error)
 	AuthenticateByPassword(ctx context.Context, in OIDCAuthenticateByPasswordIn) (*OIDCAuthenticateOut, error)
-	Verify(ctx context.Context, in OIDCVerifyIn) (*OIDCVerifyOut, error)
 	Refresh(ctx context.Context, in OIDCRefreshIn) (*OIDCAuthenticateOut, error)
 }
 
@@ -68,21 +67,18 @@ type OIDCAuthenticateOut struct {
 	IDTokenClaims map[string]string // string representation of claims for logging
 }
 
-// OIDCVerifyIn represents an input DTO of OIDCClient.Verify.
-type OIDCVerifyIn struct {
-	IDToken      string
-	RefreshToken string
-}
-
-// OIDCVerifyIn represents an output DTO of OIDCClient.Verify.
-type OIDCVerifyOut struct {
-	IDTokenExpiry time.Time
-	IDTokenClaims map[string]string // string representation of claims for logging
-}
-
 // OIDCRefreshIn represents an input DTO of OIDCClient.Refresh.
 type OIDCRefreshIn struct {
 	RefreshToken string
+}
+
+type OIDCDecoder interface {
+	DecodeIDToken(t string) (*DecodedIDToken, error)
+}
+
+type DecodedIDToken struct {
+	IDTokenExpiry time.Time
+	IDTokenClaims map[string]string // string representation of claims for logging
 }
 
 type Env interface {

@@ -31,6 +31,8 @@ func init() {
 var Set = wire.NewSet(
 	wire.Struct(new(Factory), "*"),
 	wire.Bind(new(adaptors.OIDC), new(*Factory)),
+	wire.Struct(new(Decoder)),
+	wire.Bind(new(adaptors.OIDCDecoder), new(*Decoder)),
 )
 
 type Factory struct {
@@ -165,28 +167,6 @@ func (c *client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAut
 	}, nil
 }
 
-// Verify checks client ID and signature of the ID token.
-// This does not check the expiration and caller should check it.
-func (c *client) Verify(ctx context.Context, in adaptors.OIDCVerifyIn) (*adaptors.OIDCVerifyOut, error) {
-	ctx = c.wrapContext(ctx)
-	verifier := c.provider.Verifier(&oidc.Config{
-		ClientID:        c.oauth2Config.ClientID,
-		SkipExpiryCheck: true,
-	})
-	verifiedIDToken, err := verifier.Verify(ctx, in.IDToken)
-	if err != nil {
-		return nil, xerrors.Errorf("could not verify the id_token: %w", err)
-	}
-	claims, err := dumpClaims(verifiedIDToken)
-	if err != nil {
-		c.logger.Debugf(1, "incomplete claims of the ID token: %w", err)
-	}
-	return &adaptors.OIDCVerifyOut{
-		IDTokenExpiry: verifiedIDToken.Expiry,
-		IDTokenClaims: claims,
-	}, nil
-}
-
 // Refresh sends a refresh token request and returns a token set.
 func (c *client) Refresh(ctx context.Context, in adaptors.OIDCRefreshIn) (*adaptors.OIDCAuthenticateOut, error) {
 	ctx = c.wrapContext(ctx)
@@ -223,17 +203,5 @@ func (c *client) Refresh(ctx context.Context, in adaptors.OIDCRefreshIn) (*adapt
 func dumpClaims(token *oidc.IDToken) (map[string]string, error) {
 	var rawClaims map[string]interface{}
 	err := token.Claims(&rawClaims)
-	claims := make(map[string]string)
-	for k, v := range rawClaims {
-		switch v.(type) {
-		case float64:
-			claims[k] = fmt.Sprintf("%f", v.(float64))
-		default:
-			claims[k] = fmt.Sprintf("%s", v)
-		}
-	}
-	if err != nil {
-		return claims, xerrors.Errorf("error while decoding the ID token: %w", err)
-	}
-	return claims, nil
+	return dumpRawClaims(rawClaims), err
 }
