@@ -29,10 +29,11 @@ type GetToken struct {
 func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 	u.Logger.Debugf(1, "WARNING: log may contain your secrets such as token or password")
 
-	tokenCache, err := u.TokenCacheRepository.Read(in.TokenCacheFilename)
+	cacheKey := credentialplugin.TokenCacheKey{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
+	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
 	if err != nil {
 		u.Logger.Debugf(1, "could not read the token cache file: %s", err)
-		tokenCache = &credentialplugin.TokenCache{}
+		cache = &credentialplugin.TokenCache{}
 	}
 	out, err := u.Authentication.Do(ctx, usecases.AuthenticationIn{
 		OIDCConfig: kubeconfig.OIDCConfig{
@@ -40,8 +41,8 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 			ClientID:     in.ClientID,
 			ClientSecret: in.ClientSecret,
 			ExtraScopes:  in.ExtraScopes,
-			IDToken:      tokenCache.IDToken,
-			RefreshToken: tokenCache.RefreshToken,
+			IDToken:      cache.IDToken,
+			RefreshToken: cache.RefreshToken,
 		},
 		SkipOpenBrowser: in.SkipOpenBrowser,
 		ListenPort:      in.ListenPort,
@@ -58,10 +59,11 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 	}
 	if !out.AlreadyHasValidIDToken {
 		u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)
-		if err := u.TokenCacheRepository.Write(in.TokenCacheFilename, credentialplugin.TokenCache{
+		cache := credentialplugin.TokenCache{
 			IDToken:      out.IDToken,
 			RefreshToken: out.RefreshToken,
-		}); err != nil {
+		}
+		if err := u.TokenCacheRepository.Save(in.TokenCacheDir, cacheKey, cache); err != nil {
 			return xerrors.Errorf("could not write the token cache: %w", err)
 		}
 	}

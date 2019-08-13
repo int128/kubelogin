@@ -84,29 +84,29 @@ func (m *MockTokenCacheRepository) EXPECT() *MockTokenCacheRepositoryMockRecorde
 	return m.recorder
 }
 
-// Read mocks base method
-func (m *MockTokenCacheRepository) Read(arg0 string) (*credentialplugin.TokenCache, error) {
-	ret := m.ctrl.Call(m, "Read", arg0)
+// FindByKey mocks base method
+func (m *MockTokenCacheRepository) FindByKey(arg0 string, arg1 credentialplugin.TokenCacheKey) (*credentialplugin.TokenCache, error) {
+	ret := m.ctrl.Call(m, "FindByKey", arg0, arg1)
 	ret0, _ := ret[0].(*credentialplugin.TokenCache)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Read indicates an expected call of Read
-func (mr *MockTokenCacheRepositoryMockRecorder) Read(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockTokenCacheRepository)(nil).Read), arg0)
+// FindByKey indicates an expected call of FindByKey
+func (mr *MockTokenCacheRepositoryMockRecorder) FindByKey(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByKey", reflect.TypeOf((*MockTokenCacheRepository)(nil).FindByKey), arg0, arg1)
 }
 
-// Write mocks base method
-func (m *MockTokenCacheRepository) Write(arg0 string, arg1 credentialplugin.TokenCache) error {
-	ret := m.ctrl.Call(m, "Write", arg0, arg1)
+// Save mocks base method
+func (m *MockTokenCacheRepository) Save(arg0 string, arg1 credentialplugin.TokenCacheKey, arg2 credentialplugin.TokenCache) error {
+	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Write indicates an expected call of Write
-func (mr *MockTokenCacheRepositoryMockRecorder) Write(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockTokenCacheRepository)(nil).Write), arg0, arg1)
+// Save indicates an expected call of Save
+func (mr *MockTokenCacheRepositoryMockRecorder) Save(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockTokenCacheRepository)(nil).Save), arg0, arg1, arg2)
 }
 
 // MockCredentialPluginInteraction is a mock of CredentialPluginInteraction interface

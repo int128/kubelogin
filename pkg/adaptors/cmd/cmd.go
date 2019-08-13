@@ -31,7 +31,7 @@ const examples = `  # Login to the provider using the authorization code flow.
   %[1]s get-token --oidc-issuer-url=https://issuer.example.com`
 
 var defaultListenPort = []int{8000, 18000}
-var defaultTokenCache = homedir.HomeDir() + "/.kube/oidc-login.token-cache"
+var defaultTokenCacheDir = homedir.HomeDir() + "/.kube/cache/oidc-login"
 
 // Cmd provides interaction with command line interface (CLI).
 type Cmd struct {
@@ -152,7 +152,7 @@ type getTokenOptions struct {
 	CertificateAuthority string
 	SkipTLSVerify        bool
 	Verbose              int
-	TokenCacheFilename   string
+	TokenCacheDir        string
 }
 
 func (o *getTokenOptions) register(f *pflag.FlagSet) {
@@ -165,7 +165,7 @@ func (o *getTokenOptions) register(f *pflag.FlagSet) {
 	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	f.IntVarP(&o.Verbose, "v", "v", 0, "If set to 1 or greater, it shows debug log")
-	f.StringVar(&o.TokenCacheFilename, "token-cache", defaultTokenCache, "Path to a file for caching the token")
+	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for caching tokens")
 }
 
 func newGetTokenCmd(ctx context.Context, cmd *Cmd) *cobra.Command {
@@ -188,17 +188,17 @@ func newGetTokenCmd(ctx context.Context, cmd *Cmd) *cobra.Command {
 		RunE: func(*cobra.Command, []string) error {
 			cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 			in := usecases.GetTokenIn{
-				IssuerURL:          o.IssuerURL,
-				ClientID:           o.ClientID,
-				ClientSecret:       o.ClientSecret,
-				ExtraScopes:        o.ExtraScopes,
-				CACertFilename:     o.CertificateAuthority,
-				SkipTLSVerify:      o.SkipTLSVerify,
-				ListenPort:         o.ListenPort,
-				SkipOpenBrowser:    o.SkipOpenBrowser,
-				Username:           o.Username,
-				Password:           o.Password,
-				TokenCacheFilename: o.TokenCacheFilename,
+				IssuerURL:       o.IssuerURL,
+				ClientID:        o.ClientID,
+				ClientSecret:    o.ClientSecret,
+				ExtraScopes:     o.ExtraScopes,
+				CACertFilename:  o.CertificateAuthority,
+				SkipTLSVerify:   o.SkipTLSVerify,
+				ListenPort:      o.ListenPort,
+				SkipOpenBrowser: o.SkipOpenBrowser,
+				Username:        o.Username,
+				Password:        o.Password,
+				TokenCacheDir:   o.TokenCacheDir,
 			}
 			if err := cmd.GetToken.Do(ctx, in); err != nil {
 				return xerrors.Errorf("error: %w", err)

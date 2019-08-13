@@ -104,10 +104,10 @@ func TestCmd_Run(t *testing.T) {
 		getToken := mock_usecases.NewMockGetToken(ctrl)
 		getToken.EXPECT().
 			Do(ctx, usecases.GetTokenIn{
-				ListenPort:         defaultListenPort,
-				TokenCacheFilename: defaultTokenCache,
-				IssuerURL:          "https://issuer.example.com",
-				ClientID:           "YOUR_CLIENT_ID",
+				ListenPort:    defaultListenPort,
+				TokenCacheDir: defaultTokenCacheDir,
+				IssuerURL:     "https://issuer.example.com",
+				ClientID:      "YOUR_CLIENT_ID",
 			})
 
 		logger := mock_adaptors.NewLogger(t, ctrl)
@@ -135,17 +135,17 @@ func TestCmd_Run(t *testing.T) {
 		getToken := mock_usecases.NewMockGetToken(ctrl)
 		getToken.EXPECT().
 			Do(ctx, usecases.GetTokenIn{
-				TokenCacheFilename: defaultTokenCache,
-				IssuerURL:          "https://issuer.example.com",
-				ClientID:           "YOUR_CLIENT_ID",
-				ClientSecret:       "YOUR_CLIENT_SECRET",
-				ExtraScopes:        []string{"email", "profile"},
-				CACertFilename:     "/path/to/cacert",
-				SkipTLSVerify:      true,
-				ListenPort:         []int{10080, 20080},
-				SkipOpenBrowser:    true,
-				Username:           "USER",
-				Password:           "PASS",
+				TokenCacheDir:   defaultTokenCacheDir,
+				IssuerURL:       "https://issuer.example.com",
+				ClientID:        "YOUR_CLIENT_ID",
+				ClientSecret:    "YOUR_CLIENT_SECRET",
+				ExtraScopes:     []string{"email", "profile"},
+				CACertFilename:  "/path/to/cacert",
+				SkipTLSVerify:   true,
+				ListenPort:      []int{10080, 20080},
+				SkipOpenBrowser: true,
+				Username:        "USER",
+				Password:        "PASS",
 			})
 
 		logger := mock_adaptors.NewLogger(t, ctrl)

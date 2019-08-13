@@ -23,16 +23,16 @@ func TestGetToken_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := usecases.GetTokenIn{
-			IssuerURL:          "https://accounts.google.com",
-			ClientID:           "YOUR_CLIENT_ID",
-			ClientSecret:       "YOUR_CLIENT_SECRET",
-			TokenCacheFilename: "/path/to/token-cache",
-			ListenPort:         []int{10000},
-			SkipOpenBrowser:    true,
-			Username:           "USER",
-			Password:           "PASS",
-			CACertFilename:     "/path/to/cert",
-			SkipTLSVerify:      true,
+			IssuerURL:       "https://accounts.google.com",
+			ClientID:        "YOUR_CLIENT_ID",
+			ClientSecret:    "YOUR_CLIENT_SECRET",
+			TokenCacheDir:   "/path/to/token-cache",
+			ListenPort:      []int{10000},
+			SkipOpenBrowser: true,
+			Username:        "USER",
+			Password:        "PASS",
+			CACertFilename:  "/path/to/cert",
+			SkipTLSVerify:   true,
 		}
 		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
 		mockAuthentication.EXPECT().
@@ -57,13 +57,21 @@ func TestGetToken_Do(t *testing.T) {
 			}, nil)
 		tokenCacheRepository := mock_adaptors.NewMockTokenCacheRepository(ctrl)
 		tokenCacheRepository.EXPECT().
-			Read("/path/to/token-cache").
+			FindByKey("/path/to/token-cache", credentialplugin.TokenCacheKey{
+				IssuerURL: "https://accounts.google.com",
+				ClientID:  "YOUR_CLIENT_ID",
+			}).
 			Return(nil, xerrors.New("file not found"))
 		tokenCacheRepository.EXPECT().
-			Write("/path/to/token-cache", credentialplugin.TokenCache{
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
-			})
+			Save("/path/to/token-cache",
+				credentialplugin.TokenCacheKey{
+					IssuerURL: "https://accounts.google.com",
+					ClientID:  "YOUR_CLIENT_ID",
+				},
+				credentialplugin.TokenCache{
+					IDToken:      "YOUR_ID_TOKEN",
+					RefreshToken: "YOUR_REFRESH_TOKEN",
+				})
 		credentialPluginInteraction := mock_adaptors.NewMockCredentialPluginInteraction(ctrl)
 		credentialPluginInteraction.EXPECT().
 			Write(credentialplugin.Output{
@@ -86,10 +94,10 @@ func TestGetToken_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := usecases.GetTokenIn{
-			IssuerURL:          "https://accounts.google.com",
-			ClientID:           "YOUR_CLIENT_ID",
-			ClientSecret:       "YOUR_CLIENT_SECRET",
-			TokenCacheFilename: "/path/to/token-cache",
+			IssuerURL:     "https://accounts.google.com",
+			ClientID:      "YOUR_CLIENT_ID",
+			ClientSecret:  "YOUR_CLIENT_SECRET",
+			TokenCacheDir: "/path/to/token-cache",
 		}
 		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
 		mockAuthentication.EXPECT().
@@ -109,7 +117,10 @@ func TestGetToken_Do(t *testing.T) {
 			}, nil)
 		tokenCacheRepository := mock_adaptors.NewMockTokenCacheRepository(ctrl)
 		tokenCacheRepository.EXPECT().
-			Read("/path/to/token-cache").
+			FindByKey("/path/to/token-cache", credentialplugin.TokenCacheKey{
+				IssuerURL: "https://accounts.google.com",
+				ClientID:  "YOUR_CLIENT_ID",
+			}).
 			Return(&credentialplugin.TokenCache{
 				IDToken: "VALID_ID_TOKEN",
 			}, nil)
@@ -135,10 +146,10 @@ func TestGetToken_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := usecases.GetTokenIn{
-			IssuerURL:          "https://accounts.google.com",
-			ClientID:           "YOUR_CLIENT_ID",
-			ClientSecret:       "YOUR_CLIENT_SECRET",
-			TokenCacheFilename: "/path/to/token-cache",
+			IssuerURL:     "https://accounts.google.com",
+			ClientID:      "YOUR_CLIENT_ID",
+			ClientSecret:  "YOUR_CLIENT_SECRET",
+			TokenCacheDir: "/path/to/token-cache",
 		}
 		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
 		mockAuthentication.EXPECT().
@@ -152,7 +163,10 @@ func TestGetToken_Do(t *testing.T) {
 			Return(nil, xerrors.New("authentication error"))
 		tokenCacheRepository := mock_adaptors.NewMockTokenCacheRepository(ctrl)
 		tokenCacheRepository.EXPECT().
-			Read("/path/to/token-cache").
+			FindByKey("/path/to/token-cache", credentialplugin.TokenCacheKey{
+				IssuerURL: "https://accounts.google.com",
+				ClientID:  "YOUR_CLIENT_ID",
+			}).
 			Return(nil, xerrors.New("file not found"))
 		u := GetToken{
 			Authentication:       mockAuthentication,

@@ -3,7 +3,13 @@ package credentialplugin
 
 import "time"
 
-// TokenCache represents a token object cached.
+// TokenCacheKey represents a key of a token cache.
+type TokenCacheKey struct {
+	IssuerURL string
+	ClientID  string
+}
+
+// TokenCache represents a token cache.
 type TokenCache struct {
 	IDToken      string `json:"id_token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`

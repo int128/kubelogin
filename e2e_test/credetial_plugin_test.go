@@ -2,6 +2,8 @@ package e2e_test
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -26,6 +28,15 @@ import (
 //
 func TestCmd_Run_CredentialPlugin(t *testing.T) {
 	timeout := 1 * time.Second
+	cacheDir, err := ioutil.TempDir("", "kube")
+	if err != nil {
+		t.Fatalf("could not create a cache dir: %s", err)
+	}
+	defer func() {
+		if err := os.RemoveAll(cacheDir); err != nil {
+			t.Errorf("could not clean up the cache dir: %s", err)
+		}
+	}()
 
 	t.Run("Defaults", func(t *testing.T) {
 		t.Parallel()
@@ -56,7 +67,7 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 		runGetTokenCmd(t, ctx, req, credentialPluginInteraction,
 			"--skip-open-browser",
 			"--listen-port", "0",
-			"--token-cache", "/dev/null",
+			"--token-cache-dir", cacheDir,
 			"--oidc-issuer-url", serverURL,
 			"--oidc-client-id", "kubernetes",
 		)
