@@ -10,7 +10,7 @@ import (
 	"github.com/int128/kubelogin/pkg/models/credentialplugin"
 )
 
-func TestRepository_Read(t *testing.T) {
+func TestRepository_FindByKey(t *testing.T) {
 	var r Repository
 
 	t.Run("Success", func(t *testing.T) {
@@ -23,13 +23,17 @@ func TestRepository_Read(t *testing.T) {
 				t.Errorf("could not clean up the temp dir: %s", err)
 			}
 		}()
+		key := credentialplugin.TokenCacheKey{
+			IssuerURL: "YOUR_ISSUER",
+			ClientID:  "YOUR_CLIENT_ID",
+		}
 		json := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}`
-		filename := filepath.Join(dir, "token-cache")
+		filename := filepath.Join(dir, computeFilename(key))
 		if err := ioutil.WriteFile(filename, []byte(json), 0600); err != nil {
 			t.Fatalf("could not write to the temp file: %s", err)
 		}
 
-		tokenCache, err := r.Read(filename)
+		tokenCache, err := r.FindByKey(dir, key)
 		if err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
@@ -40,7 +44,7 @@ func TestRepository_Read(t *testing.T) {
 	})
 }
 
-func TestRepository_Write(t *testing.T) {
+func TestRepository_Save(t *testing.T) {
 	var r Repository
 
 	t.Run("Success", func(t *testing.T) {
@@ -54,12 +58,16 @@ func TestRepository_Write(t *testing.T) {
 			}
 		}()
 
-		filename := filepath.Join(dir, "token-cache")
+		key := credentialplugin.TokenCacheKey{
+			IssuerURL: "YOUR_ISSUER",
+			ClientID:  "YOUR_CLIENT_ID",
+		}
 		tokenCache := credentialplugin.TokenCache{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
-		if err := r.Write(filename, tokenCache); err != nil {
+		if err := r.Save(dir, key, tokenCache); err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
 
+		filename := filepath.Join(dir, computeFilename(key))
 		b, err := ioutil.ReadFile(filename)
 		if err != nil {
 			t.Fatalf("could not read the token cache file: %s", err)

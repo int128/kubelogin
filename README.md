@@ -87,7 +87,7 @@ If the cached ID token is valid, kubelogin just returns it.
 If the cached ID token has expired, kubelogin will refresh the token using the refresh token.
 If the refresh token has expired, kubelogin will perform reauthentication.
 
-You can log out by removing the token cache file (default `~/.kube/oidc-login.token-cache`).
+You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
 Kubelogin will perform authentication if the token cache file does not exist.
 
 
@@ -195,7 +195,7 @@ Flags:
       --certificate-authority string   Path to a cert file for the certificate authority
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
   -v, --v int                          If set to 1 or greater, it shows debug log
-      --token-cache string             Path to a file for caching the token (default "~/.kube/oidc-login.token-cache")
+      --token-cache-dir string         Path to a directory for caching tokens (default "~/.kube/cache/oidc-login")
   -h, --help                           help for get-token
 ```
 

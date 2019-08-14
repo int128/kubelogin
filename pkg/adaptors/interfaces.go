@@ -20,8 +20,8 @@ type Kubeconfig interface {
 }
 
 type TokenCacheRepository interface {
-	Read(filename string) (*credentialplugin.TokenCache, error)
-	Write(filename string, tc credentialplugin.TokenCache) error
+	FindByKey(dir string, key credentialplugin.TokenCacheKey) (*credentialplugin.TokenCache, error)
+	Save(dir string, key credentialplugin.TokenCacheKey, cache credentialplugin.TokenCache) error
 }
 
 type CredentialPluginInteraction interface {

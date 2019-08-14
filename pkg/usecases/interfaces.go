@@ -38,17 +38,17 @@ type GetToken interface {
 
 // GetTokenIn represents an input DTO of the GetToken use-case.
 type GetTokenIn struct {
-	IssuerURL          string
-	ClientID           string
-	ClientSecret       string
-	ExtraScopes        []string // optional
-	SkipOpenBrowser    bool
-	ListenPort         []int
-	Username           string // If set, perform the resource owner password credentials grant
-	Password           string // If empty, read a password using Env.ReadPassword()
-	CACertFilename     string // If set, use the CA cert
-	SkipTLSVerify      bool
-	TokenCacheFilename string
+	IssuerURL       string
+	ClientID        string
+	ClientSecret    string
+	ExtraScopes     []string // optional
+	SkipOpenBrowser bool
+	ListenPort      []int
+	Username        string // If set, perform the resource owner password credentials grant
+	Password        string // If empty, read a password using Env.ReadPassword()
+	CACertFilename  string // If set, use the CA cert
+	SkipTLSVerify   bool
+	TokenCacheDir   string
 }
 
 type Authentication interface {
