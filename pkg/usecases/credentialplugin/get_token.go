@@ -55,7 +55,7 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 		return xerrors.Errorf("error while authentication: %w", err)
 	}
 	for k, v := range out.IDTokenClaims {
-		u.Logger.Debugf(1, "ID token has the claim: %s=%v", k, v)
+		u.Logger.Debugf(1, "the ID token has the claim: %s=%v", k, v)
 	}
 	if !out.AlreadyHasValidIDToken {
 		u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)

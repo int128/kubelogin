@@ -42,8 +42,8 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		u.Logger.Printf(oidcConfigErrorMessage)
 		return xerrors.Errorf("could not find the current authentication provider: %w", err)
 	}
-	u.Logger.Debugf(1, "Using the authentication provider of the user %s", authProvider.UserName)
-	u.Logger.Debugf(1, "A token will be written to %s", authProvider.LocationOfOrigin)
+	u.Logger.Debugf(1, "using the authentication provider of the user %s", authProvider.UserName)
+	u.Logger.Debugf(1, "a token will be written to %s", authProvider.LocationOfOrigin)
 
 	out, err := u.Authentication.Do(ctx, usecases.AuthenticationIn{
 		OIDCConfig:      authProvider.OIDCConfig,
@@ -58,7 +58,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 		return xerrors.Errorf("error while authentication: %w", err)
 	}
 	for k, v := range out.IDTokenClaims {
-		u.Logger.Debugf(1, "ID token has the claim: %s=%v", k, v)
+		u.Logger.Debugf(1, "the ID token has the claim: %s=%v", k, v)
 	}
 	if out.AlreadyHasValidIDToken {
 		u.Logger.Printf("You already have a valid token until %s", out.IDTokenExpiry)
@@ -68,7 +68,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)
 	authProvider.OIDCConfig.IDToken = out.IDToken
 	authProvider.OIDCConfig.RefreshToken = out.RefreshToken
-	u.Logger.Debugf(1, "Writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
+	u.Logger.Debugf(1, "writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
 	if err := u.Kubeconfig.UpdateAuthProvider(authProvider); err != nil {
 		return xerrors.Errorf("could not write the token to the kubeconfig: %w", err)
 	}

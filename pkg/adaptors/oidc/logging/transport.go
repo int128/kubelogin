@@ -24,7 +24,7 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	reqDump, err := httputil.DumpRequestOut(req, t.IsDumpBodyEnabled())
 	if err != nil {
-		t.Logger.Debugf(logLevelDumpHeaders, "Error: could not dump the request: %s", err)
+		t.Logger.Debugf(logLevelDumpHeaders, "could not dump the request: %s", err)
 		return t.Base.RoundTrip(req)
 	}
 	t.Logger.Debugf(logLevelDumpHeaders, "%s", string(reqDump))
@@ -34,7 +34,7 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	respDump, err := httputil.DumpResponse(resp, t.IsDumpBodyEnabled())
 	if err != nil {
-		t.Logger.Debugf(logLevelDumpHeaders, "Error: could not dump the response: %s", err)
+		t.Logger.Debugf(logLevelDumpHeaders, "could not dump the response: %s", err)
 		return resp, err
 	}
 	t.Logger.Debugf(logLevelDumpHeaders, "%s", string(respDump))
