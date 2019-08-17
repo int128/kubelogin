@@ -1,9 +1,8 @@
-.PHONY: clean
-
 all: server.crt ca.crt jws.key
 
+.PHONY: clean
 clean:
-	rm -v ca.* server.*
+	-rm -v ca.* server.*
 
 ca.key:
 	openssl genrsa -out $@ 1024

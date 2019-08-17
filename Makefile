@@ -3,10 +3,9 @@ TARGET_PLUGIN := kubectl-oidc_login
 CIRCLE_TAG ?= HEAD
 LDFLAGS := -X main.version=$(CIRCLE_TAG)
 
-.PHONY: check run diagram release clean
-
 all: $(TARGET)
 
+.PHONY: check
 check:
 	golangci-lint run
 	$(MAKE) -C e2e_test/keys/testdata
@@ -18,6 +17,7 @@ $(TARGET): $(wildcard *.go)
 $(TARGET_PLUGIN): $(TARGET)
 	ln -sf $(TARGET) $@
 
+.PHONY: run
 run: $(TARGET_PLUGIN)
 	-PATH=.:$(PATH) kubectl oidc-login --help
 
@@ -32,11 +32,13 @@ dist:
 	mkdir -p dist/plugins
 	cp dist/gh/oidc-login.yaml dist/plugins/oidc-login.yaml
 
+.PHONY: release
 release: dist
 	ghr -u "$(CIRCLE_PROJECT_USERNAME)" -r "$(CIRCLE_PROJECT_REPONAME)" "$(CIRCLE_TAG)" dist/gh/
 	ghcp commit -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -m "$(CIRCLE_TAG)" -C dist/ kubelogin.rb
 	ghcp fork-commit -u kubernetes-sigs -r krew-index -b "oidc-login-$(CIRCLE_TAG)" -m "Bump oidc-login to $(CIRCLE_TAG)" -C dist/ plugins/oidc-login.yaml
 
+.PHONY: clean
 clean:
 	-rm $(TARGET)
 	-rm $(TARGET_PLUGIN)
