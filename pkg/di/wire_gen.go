@@ -27,12 +27,14 @@ func NewCmd() adaptors.Cmd {
 	factory := &oidc.Factory{
 		Logger: adaptorsLogger,
 	}
+	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
 	showLocalServerURL := &auth.ShowLocalServerURL{
 		Logger: adaptorsLogger,
 	}
 	authentication := &auth.Authentication{
 		OIDC:               factory,
+		OIDCDecoder:        decoder,
 		Env:                envEnv,
 		Logger:             adaptorsLogger,
 		ShowLocalServerURL: showLocalServerURL,
@@ -63,9 +65,11 @@ func NewCmdForHeadless(adaptorsLogger adaptors.Logger, loginShowLocalServerURL u
 	factory := &oidc.Factory{
 		Logger: adaptorsLogger,
 	}
+	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
 	authentication := &auth.Authentication{
 		OIDC:               factory,
+		OIDCDecoder:        decoder,
 		Env:                envEnv,
 		Logger:             adaptorsLogger,
 		ShowLocalServerURL: loginShowLocalServerURL,

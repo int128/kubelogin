@@ -39,12 +39,35 @@ const passwordPrompt = "Password: "
 //
 type Authentication struct {
 	OIDC               adaptors.OIDC
+	OIDCDecoder        adaptors.OIDCDecoder
 	Env                adaptors.Env
 	Logger             adaptors.Logger
 	ShowLocalServerURL usecases.LoginShowLocalServerURL
 }
 
 func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (*usecases.AuthenticationOut, error) {
+	if in.OIDCConfig.IDToken != "" {
+		u.Logger.Debugf(1, "Checking expiration of the existing token")
+		// Skip verification of the token to reduce time of a discovery request.
+		// Here it trusts the signature and claims and checks only expiration,
+		// because the token has been verified before caching.
+		token, err := u.OIDCDecoder.DecodeIDToken(in.OIDCConfig.IDToken)
+		if err != nil {
+			return nil, xerrors.Errorf("invalid token and you need to remove the cache: %w", err)
+		}
+		if token.IDTokenExpiry.After(time.Now()) { //TODO: inject time service
+			u.Logger.Debugf(1, "You already have a valid token until %s", token.IDTokenExpiry)
+			return &usecases.AuthenticationOut{
+				AlreadyHasValidIDToken: true,
+				IDToken:                in.OIDCConfig.IDToken,
+				RefreshToken:           in.OIDCConfig.RefreshToken,
+				IDTokenExpiry:          token.IDTokenExpiry,
+				IDTokenClaims:          token.IDTokenClaims,
+			}, nil
+		}
+		u.Logger.Debugf(1, "You have an expired token at %s", token.IDTokenExpiry)
+	}
+
 	client, err := u.OIDC.New(ctx, adaptors.OIDCClientConfig{
 		Config:         in.OIDCConfig,
 		CACertFilename: in.CACertFilename,
@@ -52,25 +75,6 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("could not create an OIDC client: %w", err)
-	}
-
-	if in.OIDCConfig.IDToken != "" {
-		u.Logger.Debugf(1, "Verifying the existing token")
-		out, err := client.Verify(ctx, adaptors.OIDCVerifyIn{IDToken: in.OIDCConfig.IDToken})
-		if err != nil {
-			return nil, xerrors.Errorf("you need to remove the existing token manually: %w", err)
-		}
-		if out.IDTokenExpiry.After(time.Now()) { //TODO: inject time service
-			u.Logger.Debugf(1, "You already have a valid token")
-			return &usecases.AuthenticationOut{
-				AlreadyHasValidIDToken: true,
-				IDToken:                in.OIDCConfig.IDToken,
-				RefreshToken:           in.OIDCConfig.RefreshToken,
-				IDTokenExpiry:          out.IDTokenExpiry,
-				IDTokenClaims:          out.IDTokenClaims,
-			}, nil
-		}
-		u.Logger.Debugf(1, "You have an expired token at %s", out.IDTokenExpiry)
 	}
 
 	if in.OIDCConfig.RefreshToken != "" {

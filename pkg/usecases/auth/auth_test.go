@@ -220,22 +220,17 @@ func TestAuthentication_Do(t *testing.T) {
 				IDToken:      "VALID_ID_TOKEN",
 			},
 		}
-		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
-		mockOIDCClient.EXPECT().
-			Verify(ctx, adaptors.OIDCVerifyIn{IDToken: "VALID_ID_TOKEN"}).
-			Return(&adaptors.OIDCVerifyOut{
+		mockOIDCDecoder := mock_adaptors.NewMockOIDCDecoder(ctrl)
+		mockOIDCDecoder.EXPECT().
+			DecodeIDToken("VALID_ID_TOKEN").
+			Return(&adaptors.DecodedIDToken{
 				IDTokenExpiry: futureTime,
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		mockOIDC := mock_adaptors.NewMockOIDC(ctrl)
-		mockOIDC.EXPECT().
-			New(ctx, adaptors.OIDCClientConfig{
-				Config: in.OIDCConfig,
-			}).
-			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDC:   mockOIDC,
-			Logger: mock_adaptors.NewLogger(t, ctrl),
+			OIDC:        mock_adaptors.NewMockOIDC(ctrl),
+			OIDCDecoder: mockOIDCDecoder,
+			Logger:      mock_adaptors.NewLogger(t, ctrl),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -264,13 +259,14 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken: "VALID_REFRESH_TOKEN",
 			},
 		}
-		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
-		mockOIDCClient.EXPECT().
-			Verify(ctx, adaptors.OIDCVerifyIn{IDToken: "EXPIRED_ID_TOKEN"}).
-			Return(&adaptors.OIDCVerifyOut{
+		mockOIDCDecoder := mock_adaptors.NewMockOIDCDecoder(ctrl)
+		mockOIDCDecoder.EXPECT().
+			DecodeIDToken("EXPIRED_ID_TOKEN").
+			Return(&adaptors.DecodedIDToken{
 				IDTokenExpiry: pastTime,
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
+		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, adaptors.OIDCRefreshIn{
 				RefreshToken: "VALID_REFRESH_TOKEN",
@@ -288,8 +284,9 @@ func TestAuthentication_Do(t *testing.T) {
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDC:   mockOIDC,
-			Logger: mock_adaptors.NewLogger(t, ctrl),
+			OIDC:        mockOIDC,
+			OIDCDecoder: mockOIDCDecoder,
+			Logger:      mock_adaptors.NewLogger(t, ctrl),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -319,13 +316,14 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken: "EXPIRED_REFRESH_TOKEN",
 			},
 		}
-		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
-		mockOIDCClient.EXPECT().
-			Verify(ctx, adaptors.OIDCVerifyIn{IDToken: "EXPIRED_ID_TOKEN"}).
-			Return(&adaptors.OIDCVerifyOut{
+		mockOIDCDecoder := mock_adaptors.NewMockOIDCDecoder(ctrl)
+		mockOIDCDecoder.EXPECT().
+			DecodeIDToken("EXPIRED_ID_TOKEN").
+			Return(&adaptors.DecodedIDToken{
 				IDTokenExpiry: pastTime,
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
+		mockOIDCClient := mock_adaptors.NewMockOIDCClient(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, adaptors.OIDCRefreshIn{
 				RefreshToken: "EXPIRED_REFRESH_TOKEN",
@@ -348,8 +346,9 @@ func TestAuthentication_Do(t *testing.T) {
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDC:   mockOIDC,
-			Logger: mock_adaptors.NewLogger(t, ctrl),
+			OIDC:        mockOIDC,
+			OIDCDecoder: mockOIDCDecoder,
+			Logger:      mock_adaptors.NewLogger(t, ctrl),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
