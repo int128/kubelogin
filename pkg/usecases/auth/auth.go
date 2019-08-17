@@ -68,6 +68,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 		u.Logger.Debugf(1, "you have an expired token at %s", token.IDTokenExpiry)
 	}
 
+	u.Logger.Debugf(1, "initializing an OIDC client")
 	client, err := u.OIDC.New(ctx, adaptors.OIDCClientConfig{
 		Config:         in.OIDCConfig,
 		CACertFilename: in.CACertFilename,
