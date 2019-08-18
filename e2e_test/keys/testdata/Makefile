@@ -1,13 +1,13 @@
+all: ca.key ca.crt server.key server.crt jws.key
+
 .PHONY: clean
-
-all: server.crt ca.crt jws.key
-
 clean:
-	rm -v ca.* server.*
+	-rm -v ca.* server.* jws.*
 
 ca.key:
 	openssl genrsa -out $@ 1024
 
+.INTERMEDIATE: ca.csr
 ca.csr: openssl.cnf ca.key
 	openssl req -config openssl.cnf \
 		-new \
@@ -26,6 +26,7 @@ ca.crt: ca.csr ca.key
 server.key:
 	openssl genrsa -out $@ 1024
 
+.INTERMEDIATE: server.csr
 server.csr: openssl.cnf server.key
 	openssl req -config openssl.cnf \
 		-new \

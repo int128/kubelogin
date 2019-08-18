@@ -1,9 +1,8 @@
-.PHONY: clean
-
 all: ca1.crt ca1.crt.base64 ca2.crt ca2.crt.base64 ca3.crt ca3.crt.base64
 
+.PHONY: clean
 clean:
-	rm -v *.key *.csr *.crt *.base64
+	-rm -v *.key *.csr *.crt *.base64
 
 %.key:
 	openssl genrsa -out $@ 1024
