@@ -8,7 +8,6 @@ all: $(TARGET)
 .PHONY: check
 check:
 	golangci-lint run
-	$(MAKE) -C e2e_test/keys/testdata
 	go test -v -race -cover -coverprofile=coverage.out ./...
 
 $(TARGET): $(wildcard *.go)
