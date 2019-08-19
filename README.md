@@ -20,7 +20,7 @@ brew install kubelogin
 kubectl krew install oidc-login
 
 # GitHub Releases
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.14.1/kubelogin_linux_amd64.zip
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.14.2/kubelogin_linux_amd64.zip
 unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
@@ -34,7 +34,7 @@ See the following documents for more:
 
 You can run kubelogin as the following methods:
 
-- Credential plugin mode
+- Credential plugin mode (recommended)
 - Standalone mode
 
 
