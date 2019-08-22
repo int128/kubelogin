@@ -30,7 +30,10 @@ func TestCmd_Run(t *testing.T) {
 		logger.EXPECT().SetLevel(adaptors.LogLevel(0))
 
 		cmd := Cmd{
-			Login:  login,
+			Root: &Root{
+				Login:  login,
+				Logger: logger,
+			},
 			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable}, version)
@@ -62,7 +65,10 @@ func TestCmd_Run(t *testing.T) {
 		logger.EXPECT().SetLevel(adaptors.LogLevel(1))
 
 		cmd := Cmd{
-			Login:  login,
+			Root: &Root{
+				Login:  login,
+				Logger: logger,
+			},
 			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
@@ -87,7 +93,10 @@ func TestCmd_Run(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		cmd := Cmd{
-			Login:  mock_usecases.NewMockLogin(ctrl),
+			Root: &Root{
+				Login:  mock_usecases.NewMockLogin(ctrl),
+				Logger: mock_adaptors.NewLogger(t, ctrl),
+			},
 			Logger: mock_adaptors.NewLogger(t, ctrl),
 		}
 		exitCode := cmd.Run(context.TODO(), []string{executable, "some"}, version)
@@ -114,8 +123,11 @@ func TestCmd_Run(t *testing.T) {
 		logger.EXPECT().SetLevel(adaptors.LogLevel(0))
 
 		cmd := Cmd{
-			GetToken: getToken,
-			Logger:   logger,
+			GetToken: &GetToken{
+				GetToken: getToken,
+				Logger:   logger,
+			},
+			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
 			"get-token",
@@ -152,8 +164,11 @@ func TestCmd_Run(t *testing.T) {
 		logger.EXPECT().SetLevel(adaptors.LogLevel(1))
 
 		cmd := Cmd{
-			GetToken: getToken,
-			Logger:   logger,
+			GetToken: &GetToken{
+				GetToken: getToken,
+				Logger:   logger,
+			},
+			Logger: logger,
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
 			"get-token",
@@ -181,8 +196,11 @@ func TestCmd_Run(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		cmd := Cmd{
-			GetToken: mock_usecases.NewMockGetToken(ctrl),
-			Logger:   mock_adaptors.NewLogger(t, ctrl),
+			GetToken: &GetToken{
+				GetToken: mock_usecases.NewMockGetToken(ctrl),
+				Logger:   mock_adaptors.NewLogger(t, ctrl),
+			},
+			Logger: mock_adaptors.NewLogger(t, ctrl),
 		}
 		exitCode := cmd.Run(ctx, []string{executable, "get-token"}, version)
 		if exitCode != 1 {
@@ -195,8 +213,11 @@ func TestCmd_Run(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		cmd := Cmd{
-			GetToken: mock_usecases.NewMockGetToken(ctrl),
-			Logger:   mock_adaptors.NewLogger(t, ctrl),
+			GetToken: &GetToken{
+				GetToken: mock_usecases.NewMockGetToken(ctrl),
+				Logger:   mock_adaptors.NewLogger(t, ctrl),
+			},
+			Logger: mock_adaptors.NewLogger(t, ctrl),
 		}
 		exitCode := cmd.Run(ctx, []string{executable, "get-token", "foo"}, version)
 		if exitCode != 1 {
