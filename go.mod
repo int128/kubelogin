@@ -3,7 +3,7 @@ module github.com/int128/kubelogin
 go 1.12
 
 require (
-	github.com/coreos/go-oidc v2.0.0+incompatible
+	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/dgrijalva/jwt-go v0.0.0-20160705203006-01aeca54ebda
 	github.com/go-test/deep v1.0.3
 	github.com/golang/mock v1.3.1
