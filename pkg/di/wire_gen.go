@@ -45,6 +45,10 @@ func NewCmd() adaptors.Cmd {
 		Kubeconfig:     kubeconfigKubeconfig,
 		Logger:         adaptorsLogger,
 	}
+	root := &cmd.Root{
+		Login:  loginLogin,
+		Logger: adaptorsLogger,
+	}
 	repository := &tokencache.Repository{}
 	interaction := &credentialplugin.Interaction{}
 	getToken := &credentialplugin2.GetToken{
@@ -53,9 +57,13 @@ func NewCmd() adaptors.Cmd {
 		Interaction:          interaction,
 		Logger:               adaptorsLogger,
 	}
-	cmdCmd := &cmd.Cmd{
-		Login:    loginLogin,
+	cmdGetToken := &cmd.GetToken{
 		GetToken: getToken,
+		Logger:   adaptorsLogger,
+	}
+	cmdCmd := &cmd.Cmd{
+		Root:     root,
+		GetToken: cmdGetToken,
 		Logger:   adaptorsLogger,
 	}
 	return cmdCmd
@@ -80,6 +88,10 @@ func NewCmdForHeadless(adaptorsLogger adaptors.Logger, loginShowLocalServerURL u
 		Kubeconfig:     kubeconfigKubeconfig,
 		Logger:         adaptorsLogger,
 	}
+	root := &cmd.Root{
+		Login:  loginLogin,
+		Logger: adaptorsLogger,
+	}
 	repository := &tokencache.Repository{}
 	getToken := &credentialplugin2.GetToken{
 		Authentication:       authentication,
@@ -87,9 +99,13 @@ func NewCmdForHeadless(adaptorsLogger adaptors.Logger, loginShowLocalServerURL u
 		Interaction:          credentialPluginInteraction,
 		Logger:               adaptorsLogger,
 	}
-	cmdCmd := &cmd.Cmd{
-		Login:    loginLogin,
+	cmdGetToken := &cmd.GetToken{
 		GetToken: getToken,
+		Logger:   adaptorsLogger,
+	}
+	cmdCmd := &cmd.Cmd{
+		Root:     root,
+		GetToken: cmdGetToken,
 		Logger:   adaptorsLogger,
 	}
 	return cmdCmd
