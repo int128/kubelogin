@@ -3,8 +3,8 @@
 This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens), also known as `kubectl oidc-login`.
 
 This is designed to run as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
-When you run `kubectl`, kubelogin opens the browser and you can log in to the provider.
-Then kubelogin gets a token from the provider and kubectl calls the Kubernetes APIs with the token.
+When you run kubectl, kubelogin opens the browser and you can log in to the provider.
+Then kubelogin gets a token from the provider and kubectl access Kubernetes APIs with the token.
 
 
 ## Getting Started
@@ -13,8 +13,7 @@ You can install the latest release from [Homebrew](https://brew.sh/), [Krew](htt
 
 ```sh
 # Homebrew
-brew tap int128/kubelogin
-brew install kubelogin
+brew install int128/kubelogin/kubelogin
 
 # Krew
 kubectl krew install oidc-login
@@ -359,6 +358,13 @@ or use the password prompt:
 % kubelogin --username USER
 Password:
 ```
+
+
+## Related topics
+
+### Kubernetes Dashboard
+
+You can access the Kubernetes Dashboard using kubelogin and [kauthproxy](https://github.com/int128/kauthproxy).
 
 
 ## Contributions
