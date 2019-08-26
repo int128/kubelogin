@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	logLevelDumpHeaders = 2
-	logLevelDumpBody    = 3
+	levelDumpHeaders = 2
+	levelDumpBody    = 3
 )
 
 type Transport struct {
@@ -18,33 +18,25 @@ type Transport struct {
 }
 
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if !t.IsDumpEnabled() {
+	if !t.Logger.IsEnabled(levelDumpHeaders) {
 		return t.Base.RoundTrip(req)
 	}
 
-	reqDump, err := httputil.DumpRequestOut(req, t.IsDumpBodyEnabled())
+	reqDump, err := httputil.DumpRequestOut(req, t.Logger.IsEnabled(levelDumpBody))
 	if err != nil {
-		t.Logger.Debugf(logLevelDumpHeaders, "could not dump the request: %s", err)
+		t.Logger.V(levelDumpHeaders).Infof("could not dump the request: %s", err)
 		return t.Base.RoundTrip(req)
 	}
-	t.Logger.Debugf(logLevelDumpHeaders, "%s", string(reqDump))
+	t.Logger.V(levelDumpHeaders).Infof("%s", string(reqDump))
 	resp, err := t.Base.RoundTrip(req)
 	if err != nil {
 		return resp, err
 	}
-	respDump, err := httputil.DumpResponse(resp, t.IsDumpBodyEnabled())
+	respDump, err := httputil.DumpResponse(resp, t.Logger.IsEnabled(levelDumpBody))
 	if err != nil {
-		t.Logger.Debugf(logLevelDumpHeaders, "could not dump the response: %s", err)
+		t.Logger.V(levelDumpHeaders).Infof("could not dump the response: %s", err)
 		return resp, err
 	}
-	t.Logger.Debugf(logLevelDumpHeaders, "%s", string(respDump))
+	t.Logger.V(levelDumpHeaders).Infof("%s", string(respDump))
 	return resp, err
-}
-
-func (t *Transport) IsDumpEnabled() bool {
-	return t.Logger.IsEnabled(logLevelDumpHeaders)
-}
-
-func (t *Transport) IsDumpBodyEnabled() bool {
-	return t.Logger.IsEnabled(logLevelDumpBody)
 }

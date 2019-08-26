@@ -11,7 +11,6 @@ import (
 
 func TestNewConfig(t *testing.T) {
 	testingLogger := logger.New(t)
-	testingLogger.SetLevel(1)
 
 	t.Run("Defaults", func(t *testing.T) {
 		c, err := NewConfig(adaptors.OIDCClientConfig{}, testingLogger)

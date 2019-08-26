@@ -32,7 +32,6 @@ func (o *getTokenOptions) register(f *pflag.FlagSet) {
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
 	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
-	f.IntVarP(&o.Verbose, "v", "v", 0, "If set to 1 or greater, it shows debug log")
 	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for caching tokens")
 }
 
@@ -59,7 +58,6 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(*cobra.Command, []string) error {
-			cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 			in := usecases.GetTokenIn{
 				IssuerURL:       o.IssuerURL,
 				ClientID:        o.ClientID,

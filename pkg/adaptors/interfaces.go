@@ -6,6 +6,7 @@ import (
 
 	"github.com/int128/kubelogin/pkg/models/credentialplugin"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
+	"github.com/spf13/pflag"
 )
 
 //go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig,TokenCacheRepository,CredentialPluginInteraction,OIDC,OIDCClient,OIDCDecoder,Env,Logger
@@ -86,10 +87,14 @@ type Env interface {
 }
 
 type Logger interface {
-	Printf(format string, v ...interface{})
-	Debugf(level LogLevel, format string, v ...interface{})
-	SetLevel(level LogLevel)
-	IsEnabled(level LogLevel) bool
+	AddFlags(f *pflag.FlagSet)
+	Printf(format string, args ...interface{})
+	V(level int) Verbose
+	IsEnabled(level int) bool
+}
+
+type Verbose interface {
+	Infof(format string, args ...interface{})
 }
 
 // LogLevel represents a log level for debug.

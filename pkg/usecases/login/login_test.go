@@ -77,7 +77,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t, ctrl),
+			Logger:         mock_adaptors.NewLogger(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -114,7 +114,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t, ctrl),
+			Logger:         mock_adaptors.NewLogger(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -134,7 +134,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t, ctrl),
+			Logger:         mock_adaptors.NewLogger(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -166,7 +166,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t, ctrl),
+			Logger:         mock_adaptors.NewLogger(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -216,7 +216,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t, ctrl),
+			Logger:         mock_adaptors.NewLogger(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")

@@ -63,7 +63,7 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 	rootCmd.SetArgs(args[1:])
 	if err := rootCmd.Execute(); err != nil {
 		cmd.Logger.Printf("error: %s", err)
-		cmd.Logger.Debugf(1, "stacktrace: %+v", err)
+		cmd.Logger.V(1).Infof("stacktrace: %+v", err)
 		return 1
 	}
 	return 0

@@ -10,6 +10,7 @@ import (
 	adaptors "github.com/int128/kubelogin/pkg/adaptors"
 	credentialplugin "github.com/int128/kubelogin/pkg/models/credentialplugin"
 	kubeconfig "github.com/int128/kubelogin/pkg/models/kubeconfig"
+	pflag "github.com/spf13/pflag"
 	reflect "reflect"
 )
 
@@ -337,23 +338,18 @@ func (m *MockLogger) EXPECT() *MockLoggerMockRecorder {
 	return m.recorder
 }
 
-// Debugf mocks base method
-func (m *MockLogger) Debugf(arg0 adaptors.LogLevel, arg1 string, arg2 ...interface{}) {
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	m.ctrl.Call(m, "Debugf", varargs...)
+// AddFlags mocks base method
+func (m *MockLogger) AddFlags(arg0 *pflag.FlagSet) {
+	m.ctrl.Call(m, "AddFlags", arg0)
 }
 
-// Debugf indicates an expected call of Debugf
-func (mr *MockLoggerMockRecorder) Debugf(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debugf", reflect.TypeOf((*MockLogger)(nil).Debugf), varargs...)
+// AddFlags indicates an expected call of AddFlags
+func (mr *MockLoggerMockRecorder) AddFlags(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFlags", reflect.TypeOf((*MockLogger)(nil).AddFlags), arg0)
 }
 
 // IsEnabled mocks base method
-func (m *MockLogger) IsEnabled(arg0 adaptors.LogLevel) bool {
+func (m *MockLogger) IsEnabled(arg0 int) bool {
 	ret := m.ctrl.Call(m, "IsEnabled", arg0)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -379,12 +375,14 @@ func (mr *MockLoggerMockRecorder) Printf(arg0 interface{}, arg1 ...interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Printf", reflect.TypeOf((*MockLogger)(nil).Printf), varargs...)
 }
 
-// SetLevel mocks base method
-func (m *MockLogger) SetLevel(arg0 adaptors.LogLevel) {
-	m.ctrl.Call(m, "SetLevel", arg0)
+// V mocks base method
+func (m *MockLogger) V(arg0 int) adaptors.Verbose {
+	ret := m.ctrl.Call(m, "V", arg0)
+	ret0, _ := ret[0].(adaptors.Verbose)
+	return ret0
 }
 
-// SetLevel indicates an expected call of SetLevel
-func (mr *MockLoggerMockRecorder) SetLevel(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLevel", reflect.TypeOf((*MockLogger)(nil).SetLevel), arg0)
+// V indicates an expected call of V
+func (mr *MockLoggerMockRecorder) V(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "V", reflect.TypeOf((*MockLogger)(nil).V), arg0)
 }

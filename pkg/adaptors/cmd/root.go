@@ -19,7 +19,6 @@ type kubectlOptions struct {
 	User                 string
 	CertificateAuthority string
 	SkipTLSVerify        bool
-	Verbose              int
 }
 
 func (o *kubectlOptions) register(f *pflag.FlagSet) {
@@ -29,7 +28,6 @@ func (o *kubectlOptions) register(f *pflag.FlagSet) {
 	f.StringVar(&o.User, "user", "", "The name of the kubeconfig user to use. Prior to --context")
 	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
-	f.IntVarP(&o.Verbose, "v", "v", 0, "If set to 1 or greater, it shows debug log")
 }
 
 // loginOptions represents the options for Login use-case.
@@ -64,7 +62,6 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 		Example: fmt.Sprintf(examples, executable),
 		Args:    cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
-			cmd.Logger.SetLevel(adaptors.LogLevel(o.Verbose))
 			in := usecases.LoginIn{
 				KubeconfigFilename: o.Kubeconfig,
 				KubeconfigContext:  kubeconfig.ContextName(o.Context),
@@ -84,5 +81,6 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 	}
 	o.kubectlOptions.register(rootCmd.Flags())
 	o.loginOptions.register(rootCmd.Flags())
+	cmd.Logger.AddFlags(rootCmd.PersistentFlags())
 	return rootCmd
 }

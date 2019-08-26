@@ -49,9 +49,9 @@ kubectl oidc-login get-token -v1 \
 You should get claims like:
 
 ```
-17:21:32.052655 get_token.go:57: ID token has the claim: iss=https://dex.example.com
-17:21:32.052672 get_token.go:57: ID token has the claim: sub=YOUR_SUBJECT
-17:21:32.052683 get_token.go:57: ID token has the claim: aud=kubernetes
+I0827 12:29:03.086531   23722 get_token.go:59] the ID token has the claim: aud=kubernetes
+I0827 12:29:03.086553   23722 get_token.go:59] the ID token has the claim: iss=https://dex.example.com
+I0827 12:29:03.086561   23722 get_token.go:59] the ID token has the claim: sub=YOUR_SUBJECT
 ```
 
 ## 3. Setup Kubernetes API server

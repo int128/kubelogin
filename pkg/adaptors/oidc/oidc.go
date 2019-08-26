@@ -121,7 +121,7 @@ func (c *client) AuthenticateByCode(ctx context.Context, in adaptors.OIDCAuthent
 	}
 	claims, err := dumpClaims(verifiedIDToken)
 	if err != nil {
-		c.logger.Debugf(1, "incomplete claims of the ID token: %w", err)
+		c.logger.V(1).Infof("incomplete claims of the ID token: %w", err)
 	}
 	return &adaptors.OIDCAuthenticateOut{
 		IDToken:       idToken,
@@ -157,7 +157,7 @@ func (c *client) AuthenticateByPassword(ctx context.Context, in adaptors.OIDCAut
 	}
 	claims, err := dumpClaims(verifiedIDToken)
 	if err != nil {
-		c.logger.Debugf(1, "incomplete claims of the ID token: %w", err)
+		c.logger.V(1).Infof("incomplete claims of the ID token: %w", err)
 	}
 	return &adaptors.OIDCAuthenticateOut{
 		IDToken:       idToken,
@@ -190,7 +190,7 @@ func (c *client) Refresh(ctx context.Context, in adaptors.OIDCRefreshIn) (*adapt
 	}
 	claims, err := dumpClaims(verifiedIDToken)
 	if err != nil {
-		c.logger.Debugf(1, "incomplete claims of the ID token: %w", err)
+		c.logger.V(1).Infof("incomplete claims of the ID token: %w", err)
 	}
 	return &adaptors.OIDCAuthenticateOut{
 		IDToken:       idToken,
