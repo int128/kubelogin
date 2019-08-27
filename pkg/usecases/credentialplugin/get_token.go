@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"golang.org/x/xerrors"
 )

@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 )
 
 func TestFactory_tlsConfigFor(t *testing.T) {

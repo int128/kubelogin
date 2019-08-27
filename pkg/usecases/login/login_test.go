@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"github.com/int128/kubelogin/pkg/usecases/mock_usecases"
 	"golang.org/x/xerrors"
@@ -42,7 +42,7 @@ func TestLogin_Do(t *testing.T) {
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			},
 		}
-		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
 			Return(currentAuthProvider, nil)
@@ -99,7 +99,7 @@ func TestLogin_Do(t *testing.T) {
 				IDToken:      "VALID_ID_TOKEN",
 			},
 		}
-		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
@@ -127,7 +127,7 @@ func TestLogin_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := usecases.LoginIn{}
-		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(nil, xerrors.New("no oidc config"))
@@ -156,7 +156,7 @@ func TestLogin_Do(t *testing.T) {
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			},
 		}
-		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
@@ -188,7 +188,7 @@ func TestLogin_Do(t *testing.T) {
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			},
 		}
-		mockKubeconfig := mock_adaptors.NewMockKubeconfig(ctrl)
+		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)

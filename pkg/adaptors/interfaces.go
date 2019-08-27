@@ -2,19 +2,10 @@ package adaptors
 
 import (
 	"context"
-
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 )
-
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
-}
-
-type Kubeconfig interface {
-	GetCurrentAuthProvider(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error)
-	UpdateAuthProvider(auth *kubeconfig.AuthProvider) error
 }
 
 // LogLevel represents a log level for debug.

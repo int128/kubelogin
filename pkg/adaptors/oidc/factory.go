@@ -9,9 +9,9 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc"
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc/logging"
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
 )

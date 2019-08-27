@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"

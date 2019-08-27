@@ -8,10 +8,10 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc/mock_oidc"
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"golang.org/x/xerrors"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 )
 
 //go:generate mockgen -destination mock_usecases/mock_usecases.go github.com/int128/kubelogin/pkg/usecases Login,GetToken,Authentication
