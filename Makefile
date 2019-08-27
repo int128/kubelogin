@@ -20,11 +20,6 @@ $(TARGET_PLUGIN): $(TARGET)
 run: $(TARGET_PLUGIN)
 	-PATH=.:$(PATH) kubectl oidc-login --help
 
-diagram: docs/authn.png
-
-%.png: %.seqdiag
-	seqdiag -a -f /Library/Fonts/Verdana.ttf $<
-
 dist:
 	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kubelogin.rb oidc-login.yaml" -- -ldflags "$(LDFLAGS)"
 	mv dist/gh/kubelogin.rb dist/
