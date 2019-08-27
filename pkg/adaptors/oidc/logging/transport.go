@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 
-	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 
 type Transport struct {
 	Base   http.RoundTripper
-	Logger adaptors.Logger
+	Logger logger.Interface
 }
 
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {

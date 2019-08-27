@@ -4,13 +4,13 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/int128/kubelogin/e2e_test/logger"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 )
 
 func TestNewConfig(t *testing.T) {
-	testingLogger := logger.New(t)
+	testingLogger := mock_logger.New(t)
 
 	t.Run("Defaults", func(t *testing.T) {
 		c, err := NewConfig(adaptors.OIDCClientConfig{}, testingLogger)

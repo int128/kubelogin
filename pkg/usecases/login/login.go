@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"golang.org/x/xerrors"
 )
@@ -31,7 +32,7 @@ const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubec
 type Login struct {
 	Authentication usecases.Authentication
 	Kubeconfig     adaptors.Kubeconfig
-	Logger         adaptors.Logger
+	Logger         logger.Interface
 }
 
 func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {

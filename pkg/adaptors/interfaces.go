@@ -6,10 +6,9 @@ import (
 
 	"github.com/int128/kubelogin/pkg/models/credentialplugin"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
-	"github.com/spf13/pflag"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig,TokenCacheRepository,CredentialPluginInteraction,OIDC,OIDCClient,OIDCDecoder,Env,Logger
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig,TokenCacheRepository,CredentialPluginInteraction,OIDC,OIDCClient,OIDCDecoder,Env
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -84,17 +83,6 @@ type DecodedIDToken struct {
 
 type Env interface {
 	ReadPassword(prompt string) (string, error)
-}
-
-type Logger interface {
-	AddFlags(f *pflag.FlagSet)
-	Printf(format string, args ...interface{})
-	V(level int) Verbose
-	IsEnabled(level int) bool
-}
-
-type Verbose interface {
-	Infof(format string, args ...interface{})
 }
 
 // LogLevel represents a log level for debug.

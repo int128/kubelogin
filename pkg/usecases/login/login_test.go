@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
@@ -77,7 +78,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t),
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -114,7 +115,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t),
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -134,7 +135,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t),
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -166,7 +167,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t),
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -216,7 +217,7 @@ func TestLogin_Do(t *testing.T) {
 		u := Login{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_adaptors.NewLogger(t),
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")

@@ -12,6 +12,7 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc/logging"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc/tls"
 	"github.com/int128/oauth2cli"
@@ -36,7 +37,7 @@ var Set = wire.NewSet(
 )
 
 type Factory struct {
-	Logger adaptors.Logger
+	Logger logger.Interface
 }
 
 // New returns an instance of adaptors.OIDCClient with the given configuration.
@@ -79,7 +80,7 @@ type client struct {
 	httpClient   *http.Client
 	provider     *oidc.Provider
 	oauth2Config oauth2.Config
-	logger       adaptors.Logger
+	logger       logger.Interface
 }
 
 func (c *client) wrapContext(ctx context.Context) context.Context {

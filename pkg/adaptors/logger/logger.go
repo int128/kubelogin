@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors"
 	"github.com/spf13/pflag"
 	"k8s.io/klog"
 )
@@ -17,10 +16,21 @@ var Set = wire.NewSet(
 )
 
 // New returns a Logger with the standard log.Logger and klog.
-func New() adaptors.Logger {
+func New() Interface {
 	return &Logger{
 		goLogger: log.New(os.Stderr, "", 0),
 	}
+}
+
+type Interface interface {
+	AddFlags(f *pflag.FlagSet)
+	Printf(format string, args ...interface{})
+	V(level int) Verbose
+	IsEnabled(level int) bool
+}
+
+type Verbose interface {
+	Infof(format string, args ...interface{})
 }
 
 type goLogger interface {
@@ -40,7 +50,7 @@ func (*Logger) AddFlags(f *pflag.FlagSet) {
 }
 
 // V returns a logger enabled only if the level is enabled.
-func (*Logger) V(level int) adaptors.Verbose {
+func (*Logger) V(level int) Verbose {
 	return klog.V(klog.Level(level))
 }
 

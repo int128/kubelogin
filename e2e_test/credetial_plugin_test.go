@@ -11,8 +11,8 @@ import (
 	"github.com/int128/kubelogin/e2e_test/idp"
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
 	"github.com/int128/kubelogin/e2e_test/localserver"
-	"github.com/int128/kubelogin/e2e_test/logger"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/models/credentialplugin"
@@ -77,7 +77,7 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 
 func runGetTokenCmd(t *testing.T, ctx context.Context, s usecases.LoginShowLocalServerURL, interaction adaptors.CredentialPluginInteraction, args ...string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(logger.New(t), s, interaction)
+	cmd := di.NewCmdForHeadless(mock_logger.New(t), s, interaction)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "get-token", "--v=1"}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)

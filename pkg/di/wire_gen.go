@@ -69,7 +69,7 @@ func NewCmd() adaptors.Cmd {
 	return cmdCmd
 }
 
-func NewCmdForHeadless(adaptorsLogger adaptors.Logger, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialPluginInteraction adaptors.CredentialPluginInteraction) adaptors.Cmd {
+func NewCmdForHeadless(adaptorsLogger logger.Interface, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialPluginInteraction adaptors.CredentialPluginInteraction) adaptors.Cmd {
 	factory := &oidc.Factory{
 		Logger: adaptorsLogger,
 	}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/models/credentialplugin"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
@@ -23,7 +24,7 @@ type GetToken struct {
 	Authentication       usecases.Authentication
 	TokenCacheRepository adaptors.TokenCacheRepository
 	Interaction          adaptors.CredentialPluginInteraction
-	Logger               adaptors.Logger
+	Logger               logger.Interface
 }
 
 func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {

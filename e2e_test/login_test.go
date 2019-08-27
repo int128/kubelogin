@@ -16,7 +16,7 @@ import (
 	"github.com/int128/kubelogin/e2e_test/keys"
 	"github.com/int128/kubelogin/e2e_test/kubeconfig"
 	"github.com/int128/kubelogin/e2e_test/localserver"
-	"github.com/int128/kubelogin/e2e_test/logger"
+	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/usecases"
 )
@@ -308,7 +308,7 @@ func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, server
 
 func runCmd(t *testing.T, ctx context.Context, s usecases.LoginShowLocalServerURL, args ...string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(logger.New(t), s, nil)
+	cmd := di.NewCmdForHeadless(mock_logger.New(t), s, nil)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "--v=1"}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)

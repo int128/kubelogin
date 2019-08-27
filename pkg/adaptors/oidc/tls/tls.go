@@ -7,11 +7,12 @@ import (
 	"io/ioutil"
 
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"golang.org/x/xerrors"
 )
 
 // NewConfig returns a tls.Config with the given certificates and options.
-func NewConfig(config adaptors.OIDCClientConfig, logger adaptors.Logger) (*tls.Config, error) {
+func NewConfig(config adaptors.OIDCClientConfig, logger logger.Interface) (*tls.Config, error) {
 	pool := x509.NewCertPool()
 	if config.Config.IDPCertificateAuthority != "" {
 		logger.V(1).Infof("Loading the certificate %s", config.Config.IDPCertificateAuthority)

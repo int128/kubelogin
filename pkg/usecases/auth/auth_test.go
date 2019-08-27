@@ -8,6 +8,7 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
@@ -55,7 +56,7 @@ func TestAuthentication_Do(t *testing.T) {
 			Return(mockOIDCClient, nil)
 		u := Authentication{
 			OIDC:   mockOIDC,
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -108,7 +109,7 @@ func TestAuthentication_Do(t *testing.T) {
 			Return(mockOIDCClient, nil)
 		u := Authentication{
 			OIDC:   mockOIDC,
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -159,7 +160,7 @@ func TestAuthentication_Do(t *testing.T) {
 		u := Authentication{
 			OIDC:   mockOIDC,
 			Env:    mockEnv,
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -198,7 +199,7 @@ func TestAuthentication_Do(t *testing.T) {
 		u := Authentication{
 			OIDC:   mockOIDC,
 			Env:    mockEnv,
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err == nil {
@@ -230,7 +231,7 @@ func TestAuthentication_Do(t *testing.T) {
 		u := Authentication{
 			OIDC:        mock_adaptors.NewMockOIDC(ctrl),
 			OIDCDecoder: mockOIDCDecoder,
-			Logger:      mock_adaptors.NewLogger(t),
+			Logger:      mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -286,7 +287,7 @@ func TestAuthentication_Do(t *testing.T) {
 		u := Authentication{
 			OIDC:        mockOIDC,
 			OIDCDecoder: mockOIDCDecoder,
-			Logger:      mock_adaptors.NewLogger(t),
+			Logger:      mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -348,7 +349,7 @@ func TestAuthentication_Do(t *testing.T) {
 		u := Authentication{
 			OIDC:        mockOIDC,
 			OIDCDecoder: mockOIDCDecoder,
-			Logger:      mock_adaptors.NewLogger(t),
+			Logger:      mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {

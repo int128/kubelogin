@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"github.com/spf13/cobra"
@@ -48,7 +48,7 @@ func (o *loginOptions) register(f *pflag.FlagSet) {
 
 type Root struct {
 	Login  usecases.Login
-	Logger adaptors.Logger
+	Logger logger.Interface
 }
 
 func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {

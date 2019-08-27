@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/homedir"
 )
@@ -34,7 +35,7 @@ var defaultTokenCacheDir = homedir.HomeDir() + "/.kube/cache/oidc-login"
 type Cmd struct {
 	Root     *Root
 	GetToken *GetToken
-	Logger   adaptors.Logger
+	Logger   logger.Interface
 }
 
 // Run parses the command line arguments and executes the specified use-case.

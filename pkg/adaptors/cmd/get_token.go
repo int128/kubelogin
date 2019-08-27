@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -37,7 +37,7 @@ func (o *getTokenOptions) register(f *pflag.FlagSet) {
 
 type GetToken struct {
 	GetToken usecases.GetToken
-	Logger   adaptors.Logger
+	Logger   logger.Interface
 }
 
 func (cmd *GetToken) New(ctx context.Context) *cobra.Command {

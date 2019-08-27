@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"golang.org/x/xerrors"
 )
@@ -41,7 +42,7 @@ type Authentication struct {
 	OIDC               adaptors.OIDC
 	OIDCDecoder        adaptors.OIDCDecoder
 	Env                adaptors.Env
-	Logger             adaptors.Logger
+	Logger             logger.Interface
 	ShowLocalServerURL usecases.LoginShowLocalServerURL
 }
 
@@ -136,7 +137,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 
 // ShowLocalServerURL just shows the URL of local server to console.
 type ShowLocalServerURL struct {
-	Logger adaptors.Logger
+	Logger logger.Interface
 }
 
 func (s *ShowLocalServerURL) ShowLocalServerURL(url string) {

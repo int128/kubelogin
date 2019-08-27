@@ -39,7 +39,7 @@ func NewCmd() adaptors.Cmd {
 
 // NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
 func NewCmdForHeadless(
-	adaptors.Logger,
+	logger.Interface,
 	usecases.LoginShowLocalServerURL,
 	adaptors.CredentialPluginInteraction,
 ) adaptors.Cmd {

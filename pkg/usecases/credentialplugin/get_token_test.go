@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/pkg/models/credentialplugin"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
@@ -82,7 +83,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			Interaction:          credentialPluginInteraction,
-			Logger:               mock_adaptors.NewLogger(t),
+			Logger:               mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -134,7 +135,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			Interaction:          credentialPluginInteraction,
-			Logger:               mock_adaptors.NewLogger(t),
+			Logger:               mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -172,7 +173,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			Interaction:          mock_adaptors.NewMockCredentialPluginInteraction(ctrl),
-			Logger:               mock_adaptors.NewLogger(t),
+			Logger:               mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
