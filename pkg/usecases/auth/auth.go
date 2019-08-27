@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/usecases"
@@ -42,7 +42,7 @@ const passwordPrompt = "Password: "
 type Authentication struct {
 	OIDCFactory        oidc.FactoryInterface
 	OIDCDecoder        oidc.DecoderInterface
-	Env                adaptors.Env
+	Env                env.Interface
 	Logger             logger.Interface
 	ShowLocalServerURL usecases.LoginShowLocalServerURL
 }

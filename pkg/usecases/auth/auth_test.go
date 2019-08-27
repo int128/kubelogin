@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc/mock_oidc"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
@@ -156,7 +156,7 @@ func TestAuthentication_Do(t *testing.T) {
 				Config: in.OIDCConfig,
 			}).
 			Return(mockOIDCClient, nil)
-		mockEnv := mock_adaptors.NewMockEnv(ctrl)
+		mockEnv := mock_env.NewMockInterface(ctrl)
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
 		u := Authentication{
 			OIDCFactory: mockOIDCFactory,
@@ -195,7 +195,7 @@ func TestAuthentication_Do(t *testing.T) {
 				Config: in.OIDCConfig,
 			}).
 			Return(mock_oidc.NewMockInterface(ctrl), nil)
-		mockEnv := mock_adaptors.NewMockEnv(ctrl)
+		mockEnv := mock_env.NewMockInterface(ctrl)
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", xerrors.New("error"))
 		u := Authentication{
 			OIDCFactory: mockOIDCFactory,

@@ -6,16 +6,21 @@ import (
 	"syscall"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors"
 	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/xerrors"
 )
 
+//go:generate mockgen -destination mock_env/mock_env.go github.com/int128/kubelogin/pkg/adaptors/env Interface
+
 // Set provides an implementation and interface for Env.
 var Set = wire.NewSet(
 	wire.Struct(new(Env), "*"),
-	wire.Bind(new(adaptors.Env), new(*Env)),
+	wire.Bind(new(Interface), new(*Env)),
 )
+
+type Interface interface {
+	ReadPassword(prompt string) (string, error)
+}
 
 // Env provides environment specific facilities.
 type Env struct{}
