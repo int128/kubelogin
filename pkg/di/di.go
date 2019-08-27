@@ -5,7 +5,6 @@ package di
 
 import (
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	credentialPluginAdaptor "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
@@ -20,7 +19,7 @@ import (
 )
 
 // NewCmd returns an instance of adaptors.Cmd.
-func NewCmd() adaptors.Cmd {
+func NewCmd() cmd.Interface {
 	wire.Build(
 		auth.Set,
 		auth.ExtraSet,
@@ -42,7 +41,7 @@ func NewCmdForHeadless(
 	logger.Interface,
 	usecases.LoginShowLocalServerURL,
 	credentialPluginAdaptor.Interface,
-) adaptors.Cmd {
+) cmd.Interface {
 	wire.Build(
 		auth.Set,
 		login.Set,

@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/homedir"
@@ -14,10 +13,14 @@ import (
 // Set provides an implementation and interface for Cmd.
 var Set = wire.NewSet(
 	wire.Struct(new(Cmd), "*"),
-	wire.Bind(new(adaptors.Cmd), new(*Cmd)),
+	wire.Bind(new(Interface), new(*Cmd)),
 	wire.Struct(new(Root), "*"),
 	wire.Struct(new(GetToken), "*"),
 )
+
+type Interface interface {
+	Run(ctx context.Context, args []string, version string) int
+}
 
 const examples = `  # Login to the provider using the authorization code flow.
   %[1]s

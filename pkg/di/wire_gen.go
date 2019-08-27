@@ -6,7 +6,6 @@
 package di
 
 import (
-	"github.com/int128/kubelogin/pkg/adaptors"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
@@ -22,7 +21,7 @@ import (
 
 // Injectors from di.go:
 
-func NewCmd() adaptors.Cmd {
+func NewCmd() cmd.Interface {
 	loggerInterface := logger.New()
 	factory := &oidc.Factory{
 		Logger: loggerInterface,
@@ -69,7 +68,7 @@ func NewCmd() adaptors.Cmd {
 	return cmdCmd
 }
 
-func NewCmdForHeadless(loggerInterface logger.Interface, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialpluginInterface credentialplugin.Interface) adaptors.Cmd {
+func NewCmdForHeadless(loggerInterface logger.Interface, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
 	factory := &oidc.Factory{
 		Logger: loggerInterface,
 	}
