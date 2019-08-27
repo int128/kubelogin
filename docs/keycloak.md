@@ -40,10 +40,10 @@ kubectl oidc-login get-token -v1 \
 You should get claims like:
 
 ```
-17:21:32.052655 get_token.go:57: ID token has the claim: iss=https://keycloak.example.com/auth/realms/YOUR_REALM
-17:21:32.052672 get_token.go:57: ID token has the claim: sub=YOUR_SUBJECT
-17:21:32.052683 get_token.go:57: ID token has the claim: aud=kubernetes
-17:21:32.052694 get_token.go:57: ID token has the claim: groups=[kubernetes:admin]
+I0827 12:29:03.086476   23722 get_token.go:59] the ID token has the claim: groups=[kubernetes:admin]
+I0827 12:29:03.086531   23722 get_token.go:59] the ID token has the claim: aud=kubernetes
+I0827 12:29:03.086553   23722 get_token.go:59] the ID token has the claim: iss=https://keycloak.example.com/auth/realms/YOUR_REALM
+I0827 12:29:03.086561   23722 get_token.go:59] the ID token has the claim: sub=f08655e2-901f-48e5-8c64-bb9f7784d5df
 ```
 
 ## 2. Setup Kubernetes API server

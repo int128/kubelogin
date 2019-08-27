@@ -1,31 +1,46 @@
 package mock_adaptors
 
 import (
-	"github.com/golang/mock/gomock"
+	"fmt"
+
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/spf13/pflag"
 )
 
-func NewLogger(t testingLogger, ctrl *gomock.Controller) *Logger {
-	return &Logger{
-		MockLogger:    NewMockLogger(ctrl),
-		testingLogger: t,
-	}
+func NewLogger(t testingLogger) *Logger {
+	return &Logger{t}
 }
 
 type testingLogger interface {
 	Logf(format string, v ...interface{})
 }
 
-// Logger provides mock feature but overrides output methods with actual logging.
+// Logger provides logging facility using testing.T.
 type Logger struct {
-	*MockLogger
-	testingLogger testingLogger
+	t testingLogger
 }
 
-func (l *Logger) Printf(format string, v ...interface{}) {
-	l.testingLogger.Logf(format, v...)
+func (*Logger) AddFlags(f *pflag.FlagSet) {
+	f.IntP("v", "v", 0, "dummy flag used in the tests")
 }
 
-func (l *Logger) Debugf(level adaptors.LogLevel, format string, v ...interface{}) {
-	l.testingLogger.Logf(format, v...)
+func (l *Logger) Printf(format string, args ...interface{}) {
+	l.t.Logf(format, args...)
+}
+
+type Verbose struct {
+	t     testingLogger
+	level int
+}
+
+func (v *Verbose) Infof(format string, args ...interface{}) {
+	v.t.Logf(fmt.Sprintf("I%d] ", v.level)+format, args...)
+}
+
+func (l *Logger) V(level int) adaptors.Verbose {
+	return &Verbose{l.t, level}
+}
+
+func (*Logger) IsEnabled(level int) bool {
+	return true
 }

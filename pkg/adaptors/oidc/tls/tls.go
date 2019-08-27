@@ -14,21 +14,21 @@ import (
 func NewConfig(config adaptors.OIDCClientConfig, logger adaptors.Logger) (*tls.Config, error) {
 	pool := x509.NewCertPool()
 	if config.Config.IDPCertificateAuthority != "" {
-		logger.Debugf(1, "Loading the certificate %s", config.Config.IDPCertificateAuthority)
+		logger.V(1).Infof("Loading the certificate %s", config.Config.IDPCertificateAuthority)
 		err := appendCertificateFromFile(pool, config.Config.IDPCertificateAuthority)
 		if err != nil {
 			return nil, xerrors.Errorf("could not load the certificate of idp-certificate-authority: %w", err)
 		}
 	}
 	if config.Config.IDPCertificateAuthorityData != "" {
-		logger.Debugf(1, "Loading the certificate of idp-certificate-authority-data")
+		logger.V(1).Infof("Loading the certificate of idp-certificate-authority-data")
 		err := appendEncodedCertificate(pool, config.Config.IDPCertificateAuthorityData)
 		if err != nil {
 			return nil, xerrors.Errorf("could not load the certificate of idp-certificate-authority-data: %w", err)
 		}
 	}
 	if config.CACertFilename != "" {
-		logger.Debugf(1, "Loading the certificate %s", config.CACertFilename)
+		logger.V(1).Infof("Loading the certificate %s", config.CACertFilename)
 		err := appendCertificateFromFile(pool, config.CACertFilename)
 		if err != nil {
 			return nil, xerrors.Errorf("could not load the certificate: %w", err)

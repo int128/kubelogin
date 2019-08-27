@@ -47,7 +47,7 @@ type Authentication struct {
 
 func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (*usecases.AuthenticationOut, error) {
 	if in.OIDCConfig.IDToken != "" {
-		u.Logger.Debugf(1, "checking expiration of the existing token")
+		u.Logger.V(1).Infof("checking expiration of the existing token")
 		// Skip verification of the token to reduce time of a discovery request.
 		// Here it trusts the signature and claims and checks only expiration,
 		// because the token has been verified before caching.
@@ -56,7 +56,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 			return nil, xerrors.Errorf("invalid token and you need to remove the cache: %w", err)
 		}
 		if token.IDTokenExpiry.After(time.Now()) { //TODO: inject time service
-			u.Logger.Debugf(1, "you already have a valid token until %s", token.IDTokenExpiry)
+			u.Logger.V(1).Infof("you already have a valid token until %s", token.IDTokenExpiry)
 			return &usecases.AuthenticationOut{
 				AlreadyHasValidIDToken: true,
 				IDToken:                in.OIDCConfig.IDToken,
@@ -65,10 +65,10 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 				IDTokenClaims:          token.IDTokenClaims,
 			}, nil
 		}
-		u.Logger.Debugf(1, "you have an expired token at %s", token.IDTokenExpiry)
+		u.Logger.V(1).Infof("you have an expired token at %s", token.IDTokenExpiry)
 	}
 
-	u.Logger.Debugf(1, "initializing an OIDC client")
+	u.Logger.V(1).Infof("initializing an OIDC client")
 	client, err := u.OIDC.New(ctx, adaptors.OIDCClientConfig{
 		Config:         in.OIDCConfig,
 		CACertFilename: in.CACertFilename,
@@ -79,7 +79,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 	}
 
 	if in.OIDCConfig.RefreshToken != "" {
-		u.Logger.Debugf(1, "refreshing the token")
+		u.Logger.V(1).Infof("refreshing the token")
 		out, err := client.Refresh(ctx, adaptors.OIDCRefreshIn{
 			RefreshToken: in.OIDCConfig.RefreshToken,
 		})
@@ -91,11 +91,11 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 				IDTokenClaims: out.IDTokenClaims,
 			}, nil
 		}
-		u.Logger.Debugf(1, "could not refresh the token: %s", err)
+		u.Logger.V(1).Infof("could not refresh the token: %s", err)
 	}
 
 	if in.Username == "" {
-		u.Logger.Debugf(1, "performing the authentication code flow")
+		u.Logger.V(1).Infof("performing the authentication code flow")
 		out, err := client.AuthenticateByCode(ctx, adaptors.OIDCAuthenticateByCodeIn{
 			LocalServerPort:    in.ListenPort,
 			SkipOpenBrowser:    in.SkipOpenBrowser,
@@ -112,7 +112,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 		}, nil
 	}
 
-	u.Logger.Debugf(1, "performing the resource owner password credentials flow")
+	u.Logger.V(1).Infof("performing the resource owner password credentials flow")
 	if in.Password == "" {
 		in.Password, err = u.Env.ReadPassword(passwordPrompt)
 		if err != nil {

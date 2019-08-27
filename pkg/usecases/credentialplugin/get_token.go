@@ -27,13 +27,13 @@ type GetToken struct {
 }
 
 func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
-	u.Logger.Debugf(1, "WARNING: log may contain your secrets such as token or password")
+	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
 
-	u.Logger.Debugf(1, "finding a token from cache directory %s", in.TokenCacheDir)
+	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
 	cacheKey := credentialplugin.TokenCacheKey{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
 	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
 	if err != nil {
-		u.Logger.Debugf(1, "could not find a token cache: %s", err)
+		u.Logger.V(1).Infof("could not find a token cache: %s", err)
 		cache = &credentialplugin.TokenCache{}
 	}
 	out, err := u.Authentication.Do(ctx, usecases.AuthenticationIn{
@@ -56,7 +56,7 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 		return xerrors.Errorf("error while authentication: %w", err)
 	}
 	for k, v := range out.IDTokenClaims {
-		u.Logger.Debugf(1, "the ID token has the claim: %s=%v", k, v)
+		u.Logger.V(1).Infof("the ID token has the claim: %s=%v", k, v)
 	}
 	if !out.AlreadyHasValidIDToken {
 		u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)
@@ -69,7 +69,7 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 		}
 	}
 
-	u.Logger.Debugf(1, "writing the token to client-go")
+	u.Logger.V(1).Infof("writing the token to client-go")
 	if err := u.Interaction.Write(credentialplugin.Output{Token: out.IDToken, Expiry: out.IDTokenExpiry}); err != nil {
 		return xerrors.Errorf("could not write the token to client-go: %w", err)
 	}

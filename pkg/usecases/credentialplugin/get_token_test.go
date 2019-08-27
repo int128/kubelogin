@@ -82,7 +82,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			Interaction:          credentialPluginInteraction,
-			Logger:               mock_adaptors.NewLogger(t, ctrl),
+			Logger:               mock_adaptors.NewLogger(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -134,7 +134,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			Interaction:          credentialPluginInteraction,
-			Logger:               mock_adaptors.NewLogger(t, ctrl),
+			Logger:               mock_adaptors.NewLogger(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -172,7 +172,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			Interaction:          mock_adaptors.NewMockCredentialPluginInteraction(ctrl),
-			Logger:               mock_adaptors.NewLogger(t, ctrl),
+			Logger:               mock_adaptors.NewLogger(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")

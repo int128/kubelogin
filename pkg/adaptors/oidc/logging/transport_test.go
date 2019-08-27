@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors"
 	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
 )
 
@@ -26,12 +25,6 @@ func TestLoggingTransport_RoundTrip(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	logger := mock_adaptors.NewLogger(t, ctrl)
-	logger.EXPECT().
-		IsEnabled(gomock.Any()).
-		Return(true).
-		AnyTimes()
-
 	req := httptest.NewRequest("GET", "http://example.com/hello", nil)
 	resp, err := http.ReadResponse(bufio.NewReader(strings.NewReader(`HTTP/1.1 200 OK
 Host: example.com
@@ -44,7 +37,7 @@ dummy`)), req)
 
 	transport := &Transport{
 		Base:   &mockTransport{resp: resp},
-		Logger: logger,
+		Logger: mock_adaptors.NewLogger(t),
 	}
 	gotResp, err := transport.RoundTrip(req)
 	if err != nil {
@@ -52,39 +45,5 @@ dummy`)), req)
 	}
 	if gotResp != resp {
 		t.Errorf("resp wants %v but %v", resp, gotResp)
-	}
-}
-
-func TestLoggingTransport_IsDumpEnabled(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	logger := mock_adaptors.NewLogger(t, ctrl)
-	logger.EXPECT().
-		IsEnabled(adaptors.LogLevel(logLevelDumpHeaders)).
-		Return(true)
-
-	transport := &Transport{
-		Logger: logger,
-	}
-	if transport.IsDumpEnabled() != true {
-		t.Errorf("IsDumpEnabled wants true")
-	}
-}
-
-func TestLoggingTransport_IsDumpBodyEnabled(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	logger := mock_adaptors.NewLogger(t, ctrl)
-	logger.EXPECT().
-		IsEnabled(adaptors.LogLevel(logLevelDumpBody)).
-		Return(true)
-
-	transport := &Transport{
-		Logger: logger,
-	}
-	if transport.IsDumpBodyEnabled() != true {
-		t.Errorf("IsDumpBodyEnabled wants true")
 	}
 }

@@ -1,12 +1,14 @@
 package logger
 
 import (
-	"fmt"
+	"flag"
 	"log"
 	"os"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/spf13/pflag"
+	"k8s.io/klog"
 )
 
 // Set provides an implementation and interface for Logger.
@@ -14,43 +16,35 @@ var Set = wire.NewSet(
 	New,
 )
 
-// New returns a Logger with the standard log.Logger for messages and debug.
+// New returns a Logger with the standard log.Logger and klog.
 func New() adaptors.Logger {
 	return &Logger{
-		stdLogger:   log.New(os.Stderr, "", 0),
-		debugLogger: log.New(os.Stderr, "", log.Ltime|log.Lmicroseconds|log.Lshortfile),
+		goLogger: log.New(os.Stderr, "", 0),
 	}
 }
 
-func NewWith(s stdLogger, d debugLogger) *Logger {
-	return &Logger{s, d, 0}
-}
-
-type stdLogger interface {
+type goLogger interface {
 	Printf(format string, v ...interface{})
 }
 
-type debugLogger interface {
-	Output(calldepth int, s string) error
-}
-
-// Logger wraps the standard log.Logger and just provides debug level.
+// Logger provides logging facility using log.Logger and klog.
 type Logger struct {
-	stdLogger
-	debugLogger
-	level adaptors.LogLevel
+	goLogger
 }
 
-func (l *Logger) Debugf(level adaptors.LogLevel, format string, v ...interface{}) {
-	if l.IsEnabled(level) {
-		_ = l.debugLogger.Output(2, fmt.Sprintf(format, v...))
-	}
+// AddFlags adds the flags such as -v.
+func (*Logger) AddFlags(f *pflag.FlagSet) {
+	gf := flag.NewFlagSet("", flag.ContinueOnError)
+	klog.InitFlags(gf)
+	f.AddGoFlagSet(gf)
 }
 
-func (l *Logger) SetLevel(level adaptors.LogLevel) {
-	l.level = level
+// V returns a logger enabled only if the level is enabled.
+func (*Logger) V(level int) adaptors.Verbose {
+	return klog.V(klog.Level(level))
 }
 
-func (l *Logger) IsEnabled(level adaptors.LogLevel) bool {
-	return level <= l.level
+// IsEnabled returns true if the level is enabled.
+func (*Logger) IsEnabled(level int) bool {
+	return bool(klog.V(klog.Level(level)))
 }
