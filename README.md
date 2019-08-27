@@ -11,7 +11,7 @@ Then kubelogin gets a token from the provider and kubectl access Kubernetes APIs
 
 ### Setup
 
-You can install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases) as follows:
+Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases) as follows:
 
 ```sh
 # Homebrew
@@ -26,17 +26,16 @@ unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
 
-You need to configure the OIDC provider, Kubernetes API server, kubeconfig and role binding.
+You need to configure the OIDC provider, Kubernetes API server and role binding.
 See the following documents for more:
 
 - [Getting Started with Keycloak](docs/keycloak.md)
 - [Getting Started with dex and GitHub](docs/dex.md)
 - [Getting Started with Google Identity Platform](docs/google.md)
 
-You can run kubelogin as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
+Configure the kubeconfig to run kubelogin as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
 It provides transparent login without manually running kubelogin command.
-
-Configure the kubeconfig like:
+For example,
 
 ```yaml
 users:
@@ -53,7 +52,7 @@ users:
       - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
-### Login
+### Run
 
 Run kubectl.
 
@@ -85,10 +84,10 @@ If the refresh token has expired, kubelogin will perform reauthentication.
 You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
 Kubelogin will perform authentication if the token cache file does not exist.
 
-### Login manually
+### Standalone mode
 
-You can run kubelogin to manually update the ID token in the kubeconfig.
-See [standalone mode](docs/standalone-mode.md) for details.
+As well as you can update the ID token in the kubeconfig by running the command.
+See [standalone mode](docs/standalone-mode.md) for more.
 
 
 ## Usage
@@ -121,6 +120,8 @@ Flags:
   -h, --help                           help for get-token
 ```
 
+See also the options in [standalone mode](docs/standalone-mode.md).
+
 ### Extra scopes
 
 You can set the extra scopes to request to the provider by `--oidc-extra-scope`.
@@ -132,7 +133,7 @@ You can set the extra scopes to request to the provider by `--oidc-extra-scope`.
 
 ### CA Certificates
 
-You can use your self-signed certificates for the provider.
+You can use your self-signed certificate for the provider.
 
 ```yaml
       - --certificate-authority=/home/user/.kube/keycloak-ca.pem
@@ -158,12 +159,9 @@ You need to register the following redirect URIs to the provider:
 
 You can change the ports by the option:
 
-```sh
-# run as a standalone command
-kubelogin --listen-port 12345 --listen-port 23456
-
-# run as a credential plugin
-kubelogin get-token --listen-port 12345 --listen-port 23456
+```yaml
+      - --listen-port 12345
+      - --listen-port 23456
 ```
 
 #### Resource owner password credentials grant flow
@@ -174,11 +172,12 @@ Most OIDC providers do not support this flow.
 
 You can pass the username and password:
 
-```
-% kubelogin --username USER --password PASS
+```yaml
+      - --username USERNAME
+      - --password PASSWORD
 ```
 
-or use the password prompt:
+If the password is not set, kubelogin will show the prompt.
 
 ```
 % kubelogin --username USER
@@ -186,7 +185,7 @@ Password:
 ```
 
 
-## Related topics
+## Related works
 
 ### Kubernetes Dashboard
 
