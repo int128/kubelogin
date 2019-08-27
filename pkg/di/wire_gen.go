@@ -23,31 +23,31 @@ import (
 // Injectors from di.go:
 
 func NewCmd() adaptors.Cmd {
-	adaptorsLogger := logger.New()
+	loggerInterface := logger.New()
 	factory := &oidc.Factory{
-		Logger: adaptorsLogger,
+		Logger: loggerInterface,
 	}
 	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
 	showLocalServerURL := &auth.ShowLocalServerURL{
-		Logger: adaptorsLogger,
+		Logger: loggerInterface,
 	}
 	authentication := &auth.Authentication{
-		OIDC:               factory,
+		OIDCFactory:        factory,
 		OIDCDecoder:        decoder,
 		Env:                envEnv,
-		Logger:             adaptorsLogger,
+		Logger:             loggerInterface,
 		ShowLocalServerURL: showLocalServerURL,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	loginLogin := &login.Login{
 		Authentication: authentication,
 		Kubeconfig:     kubeconfigKubeconfig,
-		Logger:         adaptorsLogger,
+		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
 		Login:  loginLogin,
-		Logger: adaptorsLogger,
+		Logger: loggerInterface,
 	}
 	repository := &tokencache.Repository{}
 	interaction := &credentialplugin.Interaction{}
@@ -55,58 +55,58 @@ func NewCmd() adaptors.Cmd {
 		Authentication:       authentication,
 		TokenCacheRepository: repository,
 		Interaction:          interaction,
-		Logger:               adaptorsLogger,
+		Logger:               loggerInterface,
 	}
 	cmdGetToken := &cmd.GetToken{
 		GetToken: getToken,
-		Logger:   adaptorsLogger,
+		Logger:   loggerInterface,
 	}
 	cmdCmd := &cmd.Cmd{
 		Root:     root,
 		GetToken: cmdGetToken,
-		Logger:   adaptorsLogger,
+		Logger:   loggerInterface,
 	}
 	return cmdCmd
 }
 
-func NewCmdForHeadless(adaptorsLogger logger.Interface, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialPluginInteraction adaptors.CredentialPluginInteraction) adaptors.Cmd {
+func NewCmdForHeadless(loggerInterface logger.Interface, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialPluginInteraction adaptors.CredentialPluginInteraction) adaptors.Cmd {
 	factory := &oidc.Factory{
-		Logger: adaptorsLogger,
+		Logger: loggerInterface,
 	}
 	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
 	authentication := &auth.Authentication{
-		OIDC:               factory,
+		OIDCFactory:        factory,
 		OIDCDecoder:        decoder,
 		Env:                envEnv,
-		Logger:             adaptorsLogger,
+		Logger:             loggerInterface,
 		ShowLocalServerURL: loginShowLocalServerURL,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	loginLogin := &login.Login{
 		Authentication: authentication,
 		Kubeconfig:     kubeconfigKubeconfig,
-		Logger:         adaptorsLogger,
+		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
 		Login:  loginLogin,
-		Logger: adaptorsLogger,
+		Logger: loggerInterface,
 	}
 	repository := &tokencache.Repository{}
 	getToken := &credentialplugin2.GetToken{
 		Authentication:       authentication,
 		TokenCacheRepository: repository,
 		Interaction:          credentialPluginInteraction,
-		Logger:               adaptorsLogger,
+		Logger:               loggerInterface,
 	}
 	cmdGetToken := &cmd.GetToken{
 		GetToken: getToken,
-		Logger:   adaptorsLogger,
+		Logger:   loggerInterface,
 	}
 	cmdCmd := &cmd.Cmd{
 		Root:     root,
 		GetToken: cmdGetToken,
-		Logger:   adaptorsLogger,
+		Logger:   loggerInterface,
 	}
 	return cmdCmd
 }

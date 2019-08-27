@@ -7,6 +7,7 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"golang.org/x/xerrors"
 )
@@ -39,8 +40,8 @@ const passwordPrompt = "Password: "
 // If the Password is not set, it asks a password by the prompt.
 //
 type Authentication struct {
-	OIDC               adaptors.OIDC
-	OIDCDecoder        adaptors.OIDCDecoder
+	OIDCFactory        oidc.FactoryInterface
+	OIDCDecoder        oidc.DecoderInterface
 	Env                adaptors.Env
 	Logger             logger.Interface
 	ShowLocalServerURL usecases.LoginShowLocalServerURL
@@ -69,19 +70,19 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 		u.Logger.V(1).Infof("you have an expired token at %s", token.IDTokenExpiry)
 	}
 
-	u.Logger.V(1).Infof("initializing an OIDC client")
-	client, err := u.OIDC.New(ctx, adaptors.OIDCClientConfig{
+	u.Logger.V(1).Infof("initializing an OIDCFactory client")
+	client, err := u.OIDCFactory.New(ctx, oidc.ClientConfig{
 		Config:         in.OIDCConfig,
 		CACertFilename: in.CACertFilename,
 		SkipTLSVerify:  in.SkipTLSVerify,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("could not create an OIDC client: %w", err)
+		return nil, xerrors.Errorf("could not create an OIDCFactory client: %w", err)
 	}
 
 	if in.OIDCConfig.RefreshToken != "" {
 		u.Logger.V(1).Infof("refreshing the token")
-		out, err := client.Refresh(ctx, adaptors.OIDCRefreshIn{
+		out, err := client.Refresh(ctx, oidc.RefreshIn{
 			RefreshToken: in.OIDCConfig.RefreshToken,
 		})
 		if err == nil {
@@ -97,7 +98,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 
 	if in.Username == "" {
 		u.Logger.V(1).Infof("performing the authentication code flow")
-		out, err := client.AuthenticateByCode(ctx, adaptors.OIDCAuthenticateByCodeIn{
+		out, err := client.AuthenticateByCode(ctx, oidc.AuthenticateByCodeIn{
 			LocalServerPort:    in.ListenPort,
 			SkipOpenBrowser:    in.SkipOpenBrowser,
 			ShowLocalServerURL: u.ShowLocalServerURL,
@@ -120,7 +121,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 			return nil, xerrors.Errorf("could not read a password: %w", err)
 		}
 	}
-	out, err := client.AuthenticateByPassword(ctx, adaptors.OIDCAuthenticateByPasswordIn{
+	out, err := client.AuthenticateByPassword(ctx, oidc.AuthenticateByPasswordIn{
 		Username: in.Username,
 		Password: in.Password,
 	})

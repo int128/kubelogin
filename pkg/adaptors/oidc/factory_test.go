@@ -1,19 +1,19 @@
-package tls
+package oidc
 
 import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/int128/kubelogin/pkg/adaptors"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 )
 
-func TestNewConfig(t *testing.T) {
+func TestFactory_tlsConfigFor(t *testing.T) {
 	testingLogger := mock_logger.New(t)
+	factory := &Factory{Logger: testingLogger}
 
 	t.Run("Defaults", func(t *testing.T) {
-		c, err := NewConfig(adaptors.OIDCClientConfig{}, testingLogger)
+		c, err := factory.tlsConfigFor(ClientConfig{})
 		if err != nil {
 			t.Fatalf("NewConfig error: %+v", err)
 		}
@@ -25,10 +25,10 @@ func TestNewConfig(t *testing.T) {
 		}
 	})
 	t.Run("SkipTLSVerify", func(t *testing.T) {
-		config := adaptors.OIDCClientConfig{
+		config := ClientConfig{
 			SkipTLSVerify: true,
 		}
-		c, err := NewConfig(config, testingLogger)
+		c, err := factory.tlsConfigFor(config)
 		if err != nil {
 			t.Fatalf("NewConfig error: %+v", err)
 		}
@@ -40,14 +40,14 @@ func TestNewConfig(t *testing.T) {
 		}
 	})
 	t.Run("AllCertificates", func(t *testing.T) {
-		config := adaptors.OIDCClientConfig{
+		config := ClientConfig{
 			Config: kubeconfig.OIDCConfig{
-				IDPCertificateAuthority:     "testdata/ca1.crt",
-				IDPCertificateAuthorityData: string(readFile(t, "testdata/ca2.crt.base64")),
+				IDPCertificateAuthority:     "testdata/tls/ca1.crt",
+				IDPCertificateAuthorityData: string(readFile(t, "testdata/tls/ca2.crt.base64")),
 			},
-			CACertFilename: "testdata/ca3.crt",
+			CACertFilename: "testdata/tls/ca3.crt",
 		}
-		c, err := NewConfig(config, testingLogger)
+		c, err := factory.tlsConfigFor(config)
 		if err != nil {
 			t.Fatalf("NewConfig error: %+v", err)
 		}
@@ -63,14 +63,14 @@ func TestNewConfig(t *testing.T) {
 		}
 	})
 	t.Run("InvalidCertificate", func(t *testing.T) {
-		config := adaptors.OIDCClientConfig{
+		config := ClientConfig{
 			Config: kubeconfig.OIDCConfig{
-				IDPCertificateAuthority:     "testdata/ca1.crt",
-				IDPCertificateAuthorityData: string(readFile(t, "testdata/ca2.crt.base64")),
+				IDPCertificateAuthority:     "testdata/tls/ca1.crt",
+				IDPCertificateAuthorityData: string(readFile(t, "testdata/tls/ca2.crt.base64")),
 			},
 			CACertFilename: "testdata/Makefile", // invalid cert
 		}
-		_, err := NewConfig(config, testingLogger)
+		_, err := factory.tlsConfigFor(config)
 		if err == nil {
 			t.Fatalf("NewConfig wants non-nil but nil")
 		}
