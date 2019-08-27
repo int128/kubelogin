@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	credentialplugin2 "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
-	"github.com/int128/kubelogin/pkg/models/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
+	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"github.com/int128/kubelogin/pkg/usecases/mock_usecases"
@@ -58,26 +58,26 @@ func TestGetToken_Do(t *testing.T) {
 				IDTokenExpiry: futureTime,
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		tokenCacheRepository := mock_adaptors.NewMockTokenCacheRepository(ctrl)
+		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
-			FindByKey("/path/to/token-cache", credentialplugin.TokenCacheKey{
+			FindByKey("/path/to/token-cache", tokencache.Key{
 				IssuerURL: "https://accounts.google.com",
 				ClientID:  "YOUR_CLIENT_ID",
 			}).
 			Return(nil, xerrors.New("file not found"))
 		tokenCacheRepository.EXPECT().
 			Save("/path/to/token-cache",
-				credentialplugin.TokenCacheKey{
+				tokencache.Key{
 					IssuerURL: "https://accounts.google.com",
 					ClientID:  "YOUR_CLIENT_ID",
 				},
-				credentialplugin.TokenCache{
+				tokencache.TokenCache{
 					IDToken:      "YOUR_ID_TOKEN",
 					RefreshToken: "YOUR_REFRESH_TOKEN",
 				})
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		credentialPluginInteraction.EXPECT().
-			Write(credentialplugin2.Output{
+			Write(credentialplugin.Output{
 				Token:  "YOUR_ID_TOKEN",
 				Expiry: futureTime,
 			})
@@ -118,18 +118,18 @@ func TestGetToken_Do(t *testing.T) {
 				IDTokenExpiry:          futureTime,
 				IDTokenClaims:          dummyTokenClaims,
 			}, nil)
-		tokenCacheRepository := mock_adaptors.NewMockTokenCacheRepository(ctrl)
+		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
-			FindByKey("/path/to/token-cache", credentialplugin.TokenCacheKey{
+			FindByKey("/path/to/token-cache", tokencache.Key{
 				IssuerURL: "https://accounts.google.com",
 				ClientID:  "YOUR_CLIENT_ID",
 			}).
-			Return(&credentialplugin.TokenCache{
+			Return(&tokencache.TokenCache{
 				IDToken: "VALID_ID_TOKEN",
 			}, nil)
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		credentialPluginInteraction.EXPECT().
-			Write(credentialplugin2.Output{
+			Write(credentialplugin.Output{
 				Token:  "VALID_ID_TOKEN",
 				Expiry: futureTime,
 			})
@@ -164,9 +164,9 @@ func TestGetToken_Do(t *testing.T) {
 				},
 			}).
 			Return(nil, xerrors.New("authentication error"))
-		tokenCacheRepository := mock_adaptors.NewMockTokenCacheRepository(ctrl)
+		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
-			FindByKey("/path/to/token-cache", credentialplugin.TokenCacheKey{
+			FindByKey("/path/to/token-cache", tokencache.Key{
 				IssuerURL: "https://accounts.google.com",
 				ClientID:  "YOUR_CLIENT_ID",
 			}).

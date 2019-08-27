@@ -3,11 +3,10 @@ package adaptors
 import (
 	"context"
 
-	"github.com/int128/kubelogin/pkg/models/credentialplugin"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig,TokenCacheRepository
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -16,11 +15,6 @@ type Cmd interface {
 type Kubeconfig interface {
 	GetCurrentAuthProvider(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error)
 	UpdateAuthProvider(auth *kubeconfig.AuthProvider) error
-}
-
-type TokenCacheRepository interface {
-	FindByKey(dir string, key credentialplugin.TokenCacheKey) (*credentialplugin.TokenCache, error)
-	Save(dir string, key credentialplugin.TokenCacheKey, cache credentialplugin.TokenCache) error
 }
 
 // LogLevel represents a log level for debug.

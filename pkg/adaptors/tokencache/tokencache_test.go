@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
-	"github.com/int128/kubelogin/pkg/models/credentialplugin"
 )
 
 func TestRepository_FindByKey(t *testing.T) {
@@ -23,7 +22,7 @@ func TestRepository_FindByKey(t *testing.T) {
 				t.Errorf("could not clean up the temp dir: %s", err)
 			}
 		}()
-		key := credentialplugin.TokenCacheKey{
+		key := Key{
 			IssuerURL: "YOUR_ISSUER",
 			ClientID:  "YOUR_CLIENT_ID",
 		}
@@ -37,7 +36,7 @@ func TestRepository_FindByKey(t *testing.T) {
 		if err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
-		want := &credentialplugin.TokenCache{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
+		want := &TokenCache{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
 		if diff := deep.Equal(tokenCache, want); diff != nil {
 			t.Error(diff)
 		}
@@ -58,11 +57,11 @@ func TestRepository_Save(t *testing.T) {
 			}
 		}()
 
-		key := credentialplugin.TokenCacheKey{
+		key := Key{
 			IssuerURL: "YOUR_ISSUER",
 			ClientID:  "YOUR_CLIENT_ID",
 		}
-		tokenCache := credentialplugin.TokenCache{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
+		tokenCache := TokenCache{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
 		if err := r.Save(dir, key, tokenCache); err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}

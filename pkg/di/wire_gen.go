@@ -69,7 +69,7 @@ func NewCmd() adaptors.Cmd {
 	return cmdCmd
 }
 
-func NewCmdForHeadless(loggerInterface logger.Interface, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialPluginInteraction credentialplugin.Interface) adaptors.Cmd {
+func NewCmdForHeadless(loggerInterface logger.Interface, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialpluginInterface credentialplugin.Interface) adaptors.Cmd {
 	factory := &oidc.Factory{
 		Logger: loggerInterface,
 	}
@@ -96,7 +96,7 @@ func NewCmdForHeadless(loggerInterface logger.Interface, loginShowLocalServerURL
 	getToken := &credentialplugin2.GetToken{
 		Authentication:       authentication,
 		TokenCacheRepository: repository,
-		Interaction:          credentialPluginInteraction,
+		Interaction:          credentialpluginInterface,
 		Logger:               loggerInterface,
 	}
 	cmdGetToken := &cmd.GetToken{

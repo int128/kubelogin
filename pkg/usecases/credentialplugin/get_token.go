@@ -7,10 +7,9 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors"
-	credentialplugin2 "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/models/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases"
 	"golang.org/x/xerrors"
@@ -23,8 +22,8 @@ var Set = wire.NewSet(
 
 type GetToken struct {
 	Authentication       usecases.Authentication
-	TokenCacheRepository adaptors.TokenCacheRepository
-	Interaction          credentialplugin2.Interface
+	TokenCacheRepository tokencache.Interface
+	Interaction          credentialplugin.Interface
 	Logger               logger.Interface
 }
 
@@ -32,11 +31,11 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
 
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
-	cacheKey := credentialplugin.TokenCacheKey{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
+	cacheKey := tokencache.Key{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
 	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
-		cache = &credentialplugin.TokenCache{}
+		cache = &tokencache.TokenCache{}
 	}
 	out, err := u.Authentication.Do(ctx, usecases.AuthenticationIn{
 		OIDCConfig: kubeconfig.OIDCConfig{
@@ -62,7 +61,7 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 	}
 	if !out.AlreadyHasValidIDToken {
 		u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)
-		cache := credentialplugin.TokenCache{
+		cache := tokencache.TokenCache{
 			IDToken:      out.IDToken,
 			RefreshToken: out.RefreshToken,
 		}
@@ -72,7 +71,7 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 	}
 
 	u.Logger.V(1).Infof("writing the token to client-go")
-	if err := u.Interaction.Write(credentialplugin2.Output{Token: out.IDToken, Expiry: out.IDTokenExpiry}); err != nil {
+	if err := u.Interaction.Write(credentialplugin.Output{Token: out.IDToken, Expiry: out.IDTokenExpiry}); err != nil {
 		return xerrors.Errorf("could not write the token to client-go: %w", err)
 	}
 	return nil
