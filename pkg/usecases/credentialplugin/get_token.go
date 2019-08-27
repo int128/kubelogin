@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors"
+	credentialplugin2 "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/models/credentialplugin"
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
@@ -23,7 +24,7 @@ var Set = wire.NewSet(
 type GetToken struct {
 	Authentication       usecases.Authentication
 	TokenCacheRepository adaptors.TokenCacheRepository
-	Interaction          adaptors.CredentialPluginInteraction
+	Interaction          credentialplugin2.Interface
 	Logger               logger.Interface
 }
 
@@ -71,7 +72,7 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 	}
 
 	u.Logger.V(1).Infof("writing the token to client-go")
-	if err := u.Interaction.Write(credentialplugin.Output{Token: out.IDToken, Expiry: out.IDTokenExpiry}); err != nil {
+	if err := u.Interaction.Write(credentialplugin2.Output{Token: out.IDToken, Expiry: out.IDTokenExpiry}); err != nil {
 		return xerrors.Errorf("could not write the token to client-go: %w", err)
 	}
 	return nil

@@ -7,7 +7,7 @@ import (
 	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 )
 
-//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig,TokenCacheRepository,CredentialPluginInteraction
+//go:generate mockgen -destination mock_adaptors/mock_adaptors.go github.com/int128/kubelogin/pkg/adaptors Kubeconfig,TokenCacheRepository
 
 type Cmd interface {
 	Run(ctx context.Context, args []string, version string) int
@@ -21,10 +21,6 @@ type Kubeconfig interface {
 type TokenCacheRepository interface {
 	FindByKey(dir string, key credentialplugin.TokenCacheKey) (*credentialplugin.TokenCache, error)
 	Save(dir string, key credentialplugin.TokenCacheKey, cache credentialplugin.TokenCache) error
-}
-
-type CredentialPluginInteraction interface {
-	Write(out credentialplugin.Output) error
 }
 
 // LogLevel represents a log level for debug.

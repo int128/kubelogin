@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	credentialplugin2 "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
 	"github.com/int128/kubelogin/pkg/models/credentialplugin"
@@ -73,9 +75,9 @@ func TestGetToken_Do(t *testing.T) {
 					IDToken:      "YOUR_ID_TOKEN",
 					RefreshToken: "YOUR_REFRESH_TOKEN",
 				})
-		credentialPluginInteraction := mock_adaptors.NewMockCredentialPluginInteraction(ctrl)
+		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		credentialPluginInteraction.EXPECT().
-			Write(credentialplugin.Output{
+			Write(credentialplugin2.Output{
 				Token:  "YOUR_ID_TOKEN",
 				Expiry: futureTime,
 			})
@@ -125,9 +127,9 @@ func TestGetToken_Do(t *testing.T) {
 			Return(&credentialplugin.TokenCache{
 				IDToken: "VALID_ID_TOKEN",
 			}, nil)
-		credentialPluginInteraction := mock_adaptors.NewMockCredentialPluginInteraction(ctrl)
+		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		credentialPluginInteraction.EXPECT().
-			Write(credentialplugin.Output{
+			Write(credentialplugin2.Output{
 				Token:  "VALID_ID_TOKEN",
 				Expiry: futureTime,
 			})
@@ -172,7 +174,7 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
-			Interaction:          mock_adaptors.NewMockCredentialPluginInteraction(ctrl),
+			Interaction:          mock_credentialplugin.NewMockInterface(ctrl),
 			Logger:               mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {

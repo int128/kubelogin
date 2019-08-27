@@ -41,7 +41,7 @@ func NewCmd() adaptors.Cmd {
 func NewCmdForHeadless(
 	logger.Interface,
 	usecases.LoginShowLocalServerURL,
-	adaptors.CredentialPluginInteraction,
+	credentialPluginAdaptor.Interface,
 ) adaptors.Cmd {
 	wire.Build(
 		auth.Set,
