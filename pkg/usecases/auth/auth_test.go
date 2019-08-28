@@ -12,7 +12,6 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc/mock_oidc"
-	"github.com/int128/kubelogin/pkg/usecases"
 	"golang.org/x/xerrors"
 )
 
@@ -25,7 +24,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.AuthenticationIn{
+		in := Input{
 			ListenPort:      []int{10000},
 			SkipOpenBrowser: true,
 			CACertFilename:  "/path/to/cert",
@@ -63,7 +62,7 @@ func TestAuthentication_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &usecases.AuthenticationOut{
+		want := &Output{
 			IDToken:       "YOUR_ID_TOKEN",
 			RefreshToken:  "YOUR_REFRESH_TOKEN",
 			IDTokenExpiry: futureTime,
@@ -78,7 +77,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.AuthenticationIn{
+		in := Input{
 			Username:       "USER",
 			Password:       "PASS",
 			CACertFilename: "/path/to/cert",
@@ -116,7 +115,7 @@ func TestAuthentication_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &usecases.AuthenticationOut{
+		want := &Output{
 			IDToken:       "YOUR_ID_TOKEN",
 			RefreshToken:  "YOUR_REFRESH_TOKEN",
 			IDTokenExpiry: futureTime,
@@ -131,7 +130,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.AuthenticationIn{
+		in := Input{
 			Username: "USER",
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
@@ -167,7 +166,7 @@ func TestAuthentication_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &usecases.AuthenticationOut{
+		want := &Output{
 			IDToken:       "YOUR_ID_TOKEN",
 			RefreshToken:  "YOUR_REFRESH_TOKEN",
 			IDTokenExpiry: futureTime,
@@ -182,7 +181,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.AuthenticationIn{
+		in := Input{
 			Username: "USER",
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
@@ -215,7 +214,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.AuthenticationIn{
+		in := Input{
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
@@ -238,7 +237,7 @@ func TestAuthentication_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &usecases.AuthenticationOut{
+		want := &Output{
 			AlreadyHasValidIDToken: true,
 			IDToken:                "VALID_ID_TOKEN",
 			IDTokenExpiry:          futureTime,
@@ -253,7 +252,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.AuthenticationIn{
+		in := Input{
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
@@ -294,7 +293,7 @@ func TestAuthentication_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &usecases.AuthenticationOut{
+		want := &Output{
 			IDToken:       "NEW_ID_TOKEN",
 			RefreshToken:  "NEW_REFRESH_TOKEN",
 			IDTokenExpiry: futureTime,
@@ -309,7 +308,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.AuthenticationIn{
+		in := Input{
 			ListenPort: []int{10000},
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
@@ -356,7 +355,7 @@ func TestAuthentication_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &usecases.AuthenticationOut{
+		want := &Output{
 			IDToken:       "NEW_ID_TOKEN",
 			RefreshToken:  "NEW_REFRESH_TOKEN",
 			IDTokenExpiry: futureTime,

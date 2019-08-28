@@ -6,23 +6,55 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
-	"github.com/int128/kubelogin/pkg/usecases"
 	"golang.org/x/xerrors"
 )
+
+//go:generate mockgen -destination mock_auth/mock_auth.go github.com/int128/kubelogin/pkg/usecases/auth Interface
 
 // Set provides the use-case of Authentication.
 var Set = wire.NewSet(
 	wire.Struct(new(Authentication), "*"),
-	wire.Bind(new(usecases.Authentication), new(*Authentication)),
+	wire.Bind(new(Interface), new(*Authentication)),
 )
 
 // ExtraSet is a set of interaction components for e2e testing.
 var ExtraSet = wire.NewSet(
 	wire.Struct(new(ShowLocalServerURL), "*"),
-	wire.Bind(new(usecases.LoginShowLocalServerURL), new(*ShowLocalServerURL)),
+	wire.Bind(new(ShowLocalServerURLInterface), new(*ShowLocalServerURL)),
 )
+
+type Interface interface {
+	Do(ctx context.Context, in Input) (*Output, error)
+}
+
+// ShowLocalServerURLInterface provides an interface to notify the URL of local server.
+// It is needed for the end-to-end tests.
+type ShowLocalServerURLInterface interface {
+	ShowLocalServerURL(url string)
+}
+
+// Input represents an input DTO of the Authentication use-case.
+type Input struct {
+	OIDCConfig      kubeconfig.OIDCConfig
+	SkipOpenBrowser bool
+	ListenPort      []int
+	Username        string // If set, perform the resource owner password credentials grant
+	Password        string // If empty, read a password using Env.ReadPassword()
+	CACertFilename  string // If set, use the CA cert
+	SkipTLSVerify   bool
+}
+
+// Output represents an output DTO of the Authentication use-case.
+type Output struct {
+	AlreadyHasValidIDToken bool
+	IDTokenExpiry          time.Time
+	IDTokenClaims          map[string]string
+	IDToken                string
+	RefreshToken           string
+}
 
 const passwordPrompt = "Password: "
 
@@ -44,10 +76,10 @@ type Authentication struct {
 	OIDCDecoder        oidc.DecoderInterface
 	Env                env.Interface
 	Logger             logger.Interface
-	ShowLocalServerURL usecases.LoginShowLocalServerURL
+	ShowLocalServerURL ShowLocalServerURLInterface
 }
 
-func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (*usecases.AuthenticationOut, error) {
+func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	if in.OIDCConfig.IDToken != "" {
 		u.Logger.V(1).Infof("checking expiration of the existing token")
 		// Skip verification of the token to reduce time of a discovery request.
@@ -59,7 +91,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 		}
 		if token.IDTokenExpiry.After(time.Now()) { //TODO: inject time service
 			u.Logger.V(1).Infof("you already have a valid token until %s", token.IDTokenExpiry)
-			return &usecases.AuthenticationOut{
+			return &Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                in.OIDCConfig.IDToken,
 				RefreshToken:           in.OIDCConfig.RefreshToken,
@@ -86,7 +118,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 			RefreshToken: in.OIDCConfig.RefreshToken,
 		})
 		if err == nil {
-			return &usecases.AuthenticationOut{
+			return &Output{
 				IDToken:       out.IDToken,
 				RefreshToken:  out.RefreshToken,
 				IDTokenExpiry: out.IDTokenExpiry,
@@ -106,7 +138,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 		if err != nil {
 			return nil, xerrors.Errorf("error while the authorization code flow: %w", err)
 		}
-		return &usecases.AuthenticationOut{
+		return &Output{
 			IDToken:       out.IDToken,
 			RefreshToken:  out.RefreshToken,
 			IDTokenExpiry: out.IDTokenExpiry,
@@ -128,7 +160,7 @@ func (u *Authentication) Do(ctx context.Context, in usecases.AuthenticationIn) (
 	if err != nil {
 		return nil, xerrors.Errorf("error while the resource owner password credentials flow: %w", err)
 	}
-	return &usecases.AuthenticationOut{
+	return &Output{
 		IDToken:       out.IDToken,
 		RefreshToken:  out.RefreshToken,
 		IDTokenExpiry: out.IDTokenExpiry,

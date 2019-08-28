@@ -12,8 +12,8 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
-	"github.com/int128/kubelogin/pkg/usecases"
-	"github.com/int128/kubelogin/pkg/usecases/mock_usecases"
+	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/auth/mock_auth"
 	"golang.org/x/xerrors"
 )
 
@@ -25,7 +25,7 @@ func TestGetToken_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.GetTokenIn{
+		in := Input{
 			IssuerURL:       "https://accounts.google.com",
 			ClientID:        "YOUR_CLIENT_ID",
 			ClientSecret:    "YOUR_CLIENT_SECRET",
@@ -37,9 +37,9 @@ func TestGetToken_Do(t *testing.T) {
 			CACertFilename:  "/path/to/cert",
 			SkipTLSVerify:   true,
 		}
-		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication := mock_auth.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{
+			Do(ctx, auth.Input{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					IDPIssuerURL: "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
@@ -52,7 +52,7 @@ func TestGetToken_Do(t *testing.T) {
 				CACertFilename:  "/path/to/cert",
 				SkipTLSVerify:   true,
 			}).
-			Return(&usecases.AuthenticationOut{
+			Return(&auth.Output{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,
@@ -96,15 +96,15 @@ func TestGetToken_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.GetTokenIn{
+		in := Input{
 			IssuerURL:     "https://accounts.google.com",
 			ClientID:      "YOUR_CLIENT_ID",
 			ClientSecret:  "YOUR_CLIENT_SECRET",
 			TokenCacheDir: "/path/to/token-cache",
 		}
-		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication := mock_auth.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{
+			Do(ctx, auth.Input{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					IDPIssuerURL: "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
@@ -112,7 +112,7 @@ func TestGetToken_Do(t *testing.T) {
 					IDToken:      "VALID_ID_TOKEN",
 				},
 			}).
-			Return(&usecases.AuthenticationOut{
+			Return(&auth.Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                "VALID_ID_TOKEN",
 				IDTokenExpiry:          futureTime,
@@ -148,15 +148,15 @@ func TestGetToken_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.GetTokenIn{
+		in := Input{
 			IssuerURL:     "https://accounts.google.com",
 			ClientID:      "YOUR_CLIENT_ID",
 			ClientSecret:  "YOUR_CLIENT_SECRET",
 			TokenCacheDir: "/path/to/token-cache",
 		}
-		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication := mock_auth.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{
+			Do(ctx, auth.Input{
 				OIDCConfig: kubeconfig.OIDCConfig{
 					IDPIssuerURL: "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",

@@ -13,10 +13,9 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/usecases"
 	"github.com/int128/kubelogin/pkg/usecases/auth"
 	credentialplugin2 "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
-	"github.com/int128/kubelogin/pkg/usecases/login"
+	"github.com/int128/kubelogin/pkg/usecases/standalone"
 )
 
 // Injectors from di.go:
@@ -39,14 +38,14 @@ func NewCmd() cmd.Interface {
 		ShowLocalServerURL: showLocalServerURL,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
-	loginLogin := &login.Login{
+	standaloneStandalone := &standalone.Standalone{
 		Authentication: authentication,
 		Kubeconfig:     kubeconfigKubeconfig,
 		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
-		Login:  loginLogin,
-		Logger: loggerInterface,
+		Standalone: standaloneStandalone,
+		Logger:     loggerInterface,
 	}
 	repository := &tokencache.Repository{}
 	interaction := &credentialplugin.Interaction{}
@@ -68,7 +67,7 @@ func NewCmd() cmd.Interface {
 	return cmdCmd
 }
 
-func NewCmdForHeadless(loggerInterface logger.Interface, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
+func NewCmdForHeadless(loggerInterface logger.Interface, showLocalServerURLInterface auth.ShowLocalServerURLInterface, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
 	factory := &oidc.Factory{
 		Logger: loggerInterface,
 	}
@@ -79,17 +78,17 @@ func NewCmdForHeadless(loggerInterface logger.Interface, loginShowLocalServerURL
 		OIDCDecoder:        decoder,
 		Env:                envEnv,
 		Logger:             loggerInterface,
-		ShowLocalServerURL: loginShowLocalServerURL,
+		ShowLocalServerURL: showLocalServerURLInterface,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
-	loginLogin := &login.Login{
+	standaloneStandalone := &standalone.Standalone{
 		Authentication: authentication,
 		Kubeconfig:     kubeconfigKubeconfig,
 		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
-		Login:  loginLogin,
-		Logger: loggerInterface,
+		Standalone: standaloneStandalone,
+		Logger:     loggerInterface,
 	}
 	repository := &tokencache.Repository{}
 	getToken := &credentialplugin2.GetToken{

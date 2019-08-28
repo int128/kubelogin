@@ -6,7 +6,7 @@ import (
 
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/usecases"
+	"github.com/int128/kubelogin/pkg/usecases/standalone"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/xerrors"
@@ -47,8 +47,8 @@ func (o *loginOptions) register(f *pflag.FlagSet) {
 }
 
 type Root struct {
-	Login  usecases.Login
-	Logger logger.Interface
+	Standalone standalone.Interface
+	Logger     logger.Interface
 }
 
 func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
@@ -62,7 +62,7 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 		Example: fmt.Sprintf(examples, executable),
 		Args:    cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
-			in := usecases.LoginIn{
+			in := standalone.Input{
 				KubeconfigFilename: o.Kubeconfig,
 				KubeconfigContext:  kubeconfig.ContextName(o.Context),
 				KubeconfigUser:     kubeconfig.UserName(o.User),
@@ -73,7 +73,7 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 				Username:           o.Username,
 				Password:           o.Password,
 			}
-			if err := cmd.Login.Do(ctx, in); err != nil {
+			if err := cmd.Standalone.Do(ctx, in); err != nil {
 				return xerrors.Errorf("error: %w", err)
 			}
 			return nil

@@ -1,4 +1,4 @@
-package login
+package standalone
 
 import (
 	"context"
@@ -9,12 +9,12 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/usecases"
-	"github.com/int128/kubelogin/pkg/usecases/mock_usecases"
+	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/auth/mock_auth"
 	"golang.org/x/xerrors"
 )
 
-func TestLogin_Do(t *testing.T) {
+func TestStandalone_Do(t *testing.T) {
 	dummyTokenClaims := map[string]string{"sub": "YOUR_SUBJECT"}
 	futureTime := time.Now().Add(time.Hour) //TODO: inject time service
 
@@ -22,7 +22,7 @@ func TestLogin_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.LoginIn{
+		in := Input{
 			KubeconfigFilename: "/path/to/kubeconfig",
 			KubeconfigContext:  "theContext",
 			KubeconfigUser:     "theUser",
@@ -58,9 +58,9 @@ func TestLogin_Do(t *testing.T) {
 					RefreshToken: "YOUR_REFRESH_TOKEN",
 				},
 			})
-		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication := mock_auth.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{
+			Do(ctx, auth.Input{
 				OIDCConfig:      currentAuthProvider.OIDCConfig,
 				ListenPort:      []int{10000},
 				SkipOpenBrowser: true,
@@ -69,13 +69,13 @@ func TestLogin_Do(t *testing.T) {
 				CACertFilename:  "/path/to/cert",
 				SkipTLSVerify:   true,
 			}).
-			Return(&usecases.AuthenticationOut{
+			Return(&auth.Output{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		u := Login{
+		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
 			Logger:         mock_logger.New(t),
@@ -89,7 +89,7 @@ func TestLogin_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.LoginIn{}
+		in := Input{}
 		currentAuthProvider := &kubeconfig.AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "theUser",
@@ -103,16 +103,16 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
-		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication := mock_auth.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{OIDCConfig: currentAuthProvider.OIDCConfig}).
-			Return(&usecases.AuthenticationOut{
+			Do(ctx, auth.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
+			Return(&auth.Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                "VALID_ID_TOKEN",
 				IDTokenExpiry:          futureTime,
 				IDTokenClaims:          dummyTokenClaims,
 			}, nil)
-		u := Login{
+		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
 			Logger:         mock_logger.New(t),
@@ -126,13 +126,13 @@ func TestLogin_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.LoginIn{}
+		in := Input{}
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(nil, xerrors.New("no oidc config"))
-		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
-		u := Login{
+		mockAuthentication := mock_auth.NewMockInterface(ctrl)
+		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
 			Logger:         mock_logger.New(t),
@@ -146,7 +146,7 @@ func TestLogin_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.LoginIn{}
+		in := Input{}
 		currentAuthProvider := &kubeconfig.AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "google",
@@ -160,11 +160,11 @@ func TestLogin_Do(t *testing.T) {
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
-		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication := mock_auth.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{OIDCConfig: currentAuthProvider.OIDCConfig}).
+			Do(ctx, auth.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
 			Return(nil, xerrors.New("authentication error"))
-		u := Login{
+		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
 			Logger:         mock_logger.New(t),
@@ -178,7 +178,7 @@ func TestLogin_Do(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
-		in := usecases.LoginIn{}
+		in := Input{}
 		currentAuthProvider := &kubeconfig.AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "google",
@@ -205,16 +205,16 @@ func TestLogin_Do(t *testing.T) {
 				},
 			}).
 			Return(xerrors.New("I/O error"))
-		mockAuthentication := mock_usecases.NewMockAuthentication(ctrl)
+		mockAuthentication := mock_auth.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, usecases.AuthenticationIn{OIDCConfig: currentAuthProvider.OIDCConfig}).
-			Return(&usecases.AuthenticationOut{
+			Do(ctx, auth.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
+			Return(&auth.Output{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		u := Login{
+		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
 			Logger:         mock_logger.New(t),
