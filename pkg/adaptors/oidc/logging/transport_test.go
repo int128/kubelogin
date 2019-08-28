@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 )
 
 type mockTransport struct {
@@ -37,7 +37,7 @@ dummy`)), req)
 
 	transport := &Transport{
 		Base:   &mockTransport{resp: resp},
-		Logger: mock_adaptors.NewLogger(t),
+		Logger: mock_logger.New(t),
 	}
 	gotResp, err := transport.RoundTrip(req)
 	if err != nil {

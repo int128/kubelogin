@@ -11,12 +11,11 @@ import (
 	"github.com/int128/kubelogin/e2e_test/idp"
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
 	"github.com/int128/kubelogin/e2e_test/localserver"
-	"github.com/int128/kubelogin/e2e_test/logger"
-	"github.com/int128/kubelogin/pkg/adaptors"
-	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/di"
-	"github.com/int128/kubelogin/pkg/models/credentialplugin"
-	"github.com/int128/kubelogin/pkg/usecases"
+	"github.com/int128/kubelogin/pkg/usecases/auth"
 )
 
 // Run the integration tests of the credential plugin use-case.
@@ -51,7 +50,7 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 		var idToken string
 		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
 
-		credentialPluginInteraction := mock_adaptors.NewMockCredentialPluginInteraction(ctrl)
+		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		credentialPluginInteraction.EXPECT().
 			Write(gomock.Any()).
 			Do(func(out credentialplugin.Output) {
@@ -75,9 +74,9 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 	})
 }
 
-func runGetTokenCmd(t *testing.T, ctx context.Context, s usecases.LoginShowLocalServerURL, interaction adaptors.CredentialPluginInteraction, args ...string) {
+func runGetTokenCmd(t *testing.T, ctx context.Context, s auth.ShowLocalServerURLInterface, interaction credentialplugin.Interface, args ...string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(logger.New(t), s, interaction)
+	cmd := di.NewCmdForHeadless(mock_logger.New(t), s, interaction)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "get-token", "--v=1"}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)

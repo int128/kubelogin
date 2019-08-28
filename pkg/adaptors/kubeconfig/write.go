@@ -3,12 +3,11 @@ package kubeconfig
 import (
 	"strings"
 
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func (*Kubeconfig) UpdateAuthProvider(auth *kubeconfig.AuthProvider) error {
+func (*Kubeconfig) UpdateAuthProvider(auth *AuthProvider) error {
 	config, err := clientcmd.LoadFromFile(auth.LocationOfOrigin)
 	if err != nil {
 		return xerrors.Errorf("could not load %s: %w", auth.LocationOfOrigin, err)
@@ -30,7 +29,7 @@ func (*Kubeconfig) UpdateAuthProvider(auth *kubeconfig.AuthProvider) error {
 	return nil
 }
 
-func copyOIDCConfig(config kubeconfig.OIDCConfig, m map[string]string) {
+func copyOIDCConfig(config OIDCConfig, m map[string]string) {
 	setOrDeleteKey(m, "idp-issuer-url", config.IDPIssuerURL)
 	setOrDeleteKey(m, "client-id", config.ClientID)
 	setOrDeleteKey(m, "client-secret", config.ClientSecret)

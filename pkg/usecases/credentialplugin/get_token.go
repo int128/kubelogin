@@ -7,36 +7,58 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors"
-	"github.com/int128/kubelogin/pkg/models/credentialplugin"
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
-	"github.com/int128/kubelogin/pkg/usecases"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
+	"github.com/int128/kubelogin/pkg/usecases/auth"
 	"golang.org/x/xerrors"
 )
 
+//go:generate mockgen -destination mock_credentialplugin/mock_credentialplugin.go github.com/int128/kubelogin/pkg/usecases/credentialplugin Interface
+
 var Set = wire.NewSet(
 	wire.Struct(new(GetToken), "*"),
-	wire.Bind(new(usecases.GetToken), new(*GetToken)),
+	wire.Bind(new(Interface), new(*GetToken)),
 )
 
-type GetToken struct {
-	Authentication       usecases.Authentication
-	TokenCacheRepository adaptors.TokenCacheRepository
-	Interaction          adaptors.CredentialPluginInteraction
-	Logger               adaptors.Logger
+type Interface interface {
+	Do(ctx context.Context, in Input) error
 }
 
-func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
+// Input represents an input DTO of the GetToken use-case.
+type Input struct {
+	IssuerURL       string
+	ClientID        string
+	ClientSecret    string
+	ExtraScopes     []string // optional
+	SkipOpenBrowser bool
+	ListenPort      []int
+	Username        string // If set, perform the resource owner password credentials grant
+	Password        string // If empty, read a password using Env.ReadPassword()
+	CACertFilename  string // If set, use the CA cert
+	SkipTLSVerify   bool
+	TokenCacheDir   string
+}
+
+type GetToken struct {
+	Authentication       auth.Interface
+	TokenCacheRepository tokencache.Interface
+	Interaction          credentialplugin.Interface
+	Logger               logger.Interface
+}
+
+func (u *GetToken) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
 
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
-	cacheKey := credentialplugin.TokenCacheKey{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
+	cacheKey := tokencache.Key{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
 	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
-		cache = &credentialplugin.TokenCache{}
+		cache = &tokencache.TokenCache{}
 	}
-	out, err := u.Authentication.Do(ctx, usecases.AuthenticationIn{
+	out, err := u.Authentication.Do(ctx, auth.Input{
 		OIDCConfig: kubeconfig.OIDCConfig{
 			IDPIssuerURL: in.IssuerURL,
 			ClientID:     in.ClientID,
@@ -60,7 +82,7 @@ func (u *GetToken) Do(ctx context.Context, in usecases.GetTokenIn) error {
 	}
 	if !out.AlreadyHasValidIDToken {
 		u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)
-		cache := credentialplugin.TokenCache{
+		cache := tokencache.TokenCache{
 			IDToken:      out.IDToken,
 			RefreshToken: out.RefreshToken,
 		}

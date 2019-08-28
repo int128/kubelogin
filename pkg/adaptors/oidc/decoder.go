@@ -8,15 +8,23 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/int128/kubelogin/pkg/adaptors"
 	"golang.org/x/xerrors"
 )
+
+type DecoderInterface interface {
+	DecodeIDToken(t string) (*DecodedIDToken, error)
+}
+
+type DecodedIDToken struct {
+	IDTokenExpiry time.Time
+	IDTokenClaims map[string]string // string representation of claims for logging
+}
 
 type Decoder struct{}
 
 // DecodeIDToken returns the claims of the ID token.
 // Note that this method does not verify the signature and always trust it.
-func (d *Decoder) DecodeIDToken(t string) (*adaptors.DecodedIDToken, error) {
+func (d *Decoder) DecodeIDToken(t string) (*DecodedIDToken, error) {
 	parts := strings.Split(t, ".")
 	if len(parts) != 3 {
 		return nil, xerrors.Errorf("token contains an invalid number of segments")
@@ -33,7 +41,7 @@ func (d *Decoder) DecodeIDToken(t string) (*adaptors.DecodedIDToken, error) {
 	if err := json.NewDecoder(bytes.NewBuffer(b)).Decode(&rawClaims); err != nil {
 		return nil, xerrors.Errorf("could not decode the json of token: %w", err)
 	}
-	return &adaptors.DecodedIDToken{
+	return &DecodedIDToken{
 		IDTokenExpiry: time.Unix(claims.ExpiresAt, 0),
 		IDTokenClaims: dumpRawClaims(rawClaims),
 	}, nil

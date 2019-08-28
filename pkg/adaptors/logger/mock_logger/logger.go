@@ -1,9 +1,9 @@
-package logger
+package mock_logger
 
 import (
 	"fmt"
 
-	"github.com/int128/kubelogin/pkg/adaptors"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/spf13/pflag"
 )
 
@@ -37,7 +37,7 @@ func (v *Verbose) Infof(format string, args ...interface{}) {
 	v.t.Logf(fmt.Sprintf("I%d] ", v.level)+format, args...)
 }
 
-func (l *Logger) V(level int) adaptors.Verbose {
+func (l *Logger) V(level int) logger.Verbose {
 	return &Verbose{l.t, level}
 }
 

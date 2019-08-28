@@ -4,8 +4,6 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 )
 
 func TestKubeconfig_UpdateAuth(t *testing.T) {
@@ -18,10 +16,10 @@ func TestKubeconfig_UpdateAuth(t *testing.T) {
 				t.Errorf("Could not remove the temp file: %s", err)
 			}
 		}()
-		if err := k.UpdateAuthProvider(&kubeconfig.AuthProvider{
+		if err := k.UpdateAuthProvider(&AuthProvider{
 			LocationOfOrigin: f.Name(),
 			UserName:         "google",
-			OIDCConfig: kubeconfig.OIDCConfig{
+			OIDCConfig: OIDCConfig{
 				IDPIssuerURL: "https://accounts.google.com",
 				ClientID:     "GOOGLE_CLIENT_ID",
 				ClientSecret: "GOOGLE_CLIENT_SECRET",
@@ -66,10 +64,10 @@ users:
 				t.Errorf("Could not remove the temp file: %s", err)
 			}
 		}()
-		if err := k.UpdateAuthProvider(&kubeconfig.AuthProvider{
+		if err := k.UpdateAuthProvider(&AuthProvider{
 			LocationOfOrigin: f.Name(),
 			UserName:         "google",
-			OIDCConfig: kubeconfig.OIDCConfig{
+			OIDCConfig: OIDCConfig{
 				IDPIssuerURL:                "https://accounts.google.com",
 				ClientID:                    "GOOGLE_CLIENT_ID",
 				ClientSecret:                "GOOGLE_CLIENT_SECRET",

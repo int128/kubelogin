@@ -1,19 +1,39 @@
-package login
+package standalone
 
 import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors"
-	"github.com/int128/kubelogin/pkg/usecases"
+	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/usecases/auth"
 	"golang.org/x/xerrors"
 )
 
-// Set provides the use-cases of logging in.
+//go:generate mockgen -destination mock_standalone/mock_standalone.go github.com/int128/kubelogin/pkg/usecases/standalone Interface
+
+// Set provides the use-case.
 var Set = wire.NewSet(
-	wire.Struct(new(Login), "*"),
-	wire.Bind(new(usecases.Login), new(*Login)),
+	wire.Struct(new(Standalone), "*"),
+	wire.Bind(new(Interface), new(*Standalone)),
 )
+
+type Interface interface {
+	Do(ctx context.Context, in Input) error
+}
+
+// Input represents an input DTO of the use-case.
+type Input struct {
+	KubeconfigFilename string                 // Default to the environment variable or global config as kubectl
+	KubeconfigContext  kubeconfig.ContextName // Default to the current context but ignored if KubeconfigUser is set
+	KubeconfigUser     kubeconfig.UserName    // Default to the user of the context
+	SkipOpenBrowser    bool
+	ListenPort         []int
+	Username           string // If set, perform the resource owner password credentials grant
+	Password           string // If empty, read a password using Env.ReadPassword()
+	CACertFilename     string // If set, use the CA cert
+	SkipTLSVerify      bool
+}
 
 const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubectl for OIDC authentication?
   kubectl config set-credentials CONTEXT_NAME \
@@ -22,19 +42,19 @@ const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubec
     --auth-provider-arg client-id=YOUR_CLIENT_ID \
     --auth-provider-arg client-secret=YOUR_CLIENT_SECRET`
 
-// Login provides the use case of explicit login.
+// Standalone provides the use case of explicit login.
 //
 // If the current auth provider is not oidc, show the error.
 // If the kubeconfig has a valid token, do nothing.
 // Otherwise, update the kubeconfig.
 //
-type Login struct {
-	Authentication usecases.Authentication
-	Kubeconfig     adaptors.Kubeconfig
-	Logger         adaptors.Logger
+type Standalone struct {
+	Authentication auth.Interface
+	Kubeconfig     kubeconfig.Interface
+	Logger         logger.Interface
 }
 
-func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
+func (u *Standalone) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
 
 	authProvider, err := u.Kubeconfig.GetCurrentAuthProvider(in.KubeconfigFilename, in.KubeconfigContext, in.KubeconfigUser)
@@ -45,7 +65,7 @@ func (u *Login) Do(ctx context.Context, in usecases.LoginIn) error {
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
 
-	out, err := u.Authentication.Do(ctx, usecases.AuthenticationIn{
+	out, err := u.Authentication.Do(ctx, auth.Input{
 		OIDCConfig:      authProvider.OIDCConfig,
 		SkipOpenBrowser: in.SkipOpenBrowser,
 		ListenPort:      in.ListenPort,

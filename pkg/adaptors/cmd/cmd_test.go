@@ -5,9 +5,11 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/mock_adaptors"
-	"github.com/int128/kubelogin/pkg/usecases"
-	"github.com/int128/kubelogin/pkg/usecases/mock_usecases"
+	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
+	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/int128/kubelogin/pkg/usecases/credentialplugin/mock_credentialplugin"
+	"github.com/int128/kubelogin/pkg/usecases/standalone"
+	"github.com/int128/kubelogin/pkg/usecases/standalone/mock_standalone"
 )
 
 func TestCmd_Run(t *testing.T) {
@@ -19,18 +21,18 @@ func TestCmd_Run(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 
-		login := mock_usecases.NewMockLogin(ctrl)
-		login.EXPECT().
-			Do(ctx, usecases.LoginIn{
+		mockStandalone := mock_standalone.NewMockInterface(ctrl)
+		mockStandalone.EXPECT().
+			Do(ctx, standalone.Input{
 				ListenPort: defaultListenPort,
 			})
 
 		cmd := Cmd{
 			Root: &Root{
-				Login:  login,
-				Logger: mock_adaptors.NewLogger(t),
+				Standalone: mockStandalone,
+				Logger:     mock_logger.New(t),
 			},
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		exitCode := cmd.Run(ctx, []string{executable}, version)
 		if exitCode != 0 {
@@ -43,9 +45,9 @@ func TestCmd_Run(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 
-		login := mock_usecases.NewMockLogin(ctrl)
-		login.EXPECT().
-			Do(ctx, usecases.LoginIn{
+		mockStandalone := mock_standalone.NewMockInterface(ctrl)
+		mockStandalone.EXPECT().
+			Do(ctx, standalone.Input{
 				KubeconfigFilename: "/path/to/kubeconfig",
 				KubeconfigContext:  "hello.k8s.local",
 				KubeconfigUser:     "google",
@@ -59,10 +61,10 @@ func TestCmd_Run(t *testing.T) {
 
 		cmd := Cmd{
 			Root: &Root{
-				Login:  login,
-				Logger: mock_adaptors.NewLogger(t),
+				Standalone: mockStandalone,
+				Logger:     mock_logger.New(t),
 			},
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
 			"--kubeconfig", "/path/to/kubeconfig",
@@ -87,10 +89,10 @@ func TestCmd_Run(t *testing.T) {
 		defer ctrl.Finish()
 		cmd := Cmd{
 			Root: &Root{
-				Login:  mock_usecases.NewMockLogin(ctrl),
-				Logger: mock_adaptors.NewLogger(t),
+				Standalone: mock_standalone.NewMockInterface(ctrl),
+				Logger:     mock_logger.New(t),
 			},
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		exitCode := cmd.Run(context.TODO(), []string{executable, "some"}, version)
 		if exitCode != 1 {
@@ -103,9 +105,9 @@ func TestCmd_Run(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 
-		getToken := mock_usecases.NewMockGetToken(ctrl)
+		getToken := mock_credentialplugin.NewMockInterface(ctrl)
 		getToken.EXPECT().
-			Do(ctx, usecases.GetTokenIn{
+			Do(ctx, credentialplugin.Input{
 				ListenPort:    defaultListenPort,
 				TokenCacheDir: defaultTokenCacheDir,
 				IssuerURL:     "https://issuer.example.com",
@@ -114,13 +116,13 @@ func TestCmd_Run(t *testing.T) {
 
 		cmd := Cmd{
 			Root: &Root{
-				Logger: mock_adaptors.NewLogger(t),
+				Logger: mock_logger.New(t),
 			},
 			GetToken: &GetToken{
 				GetToken: getToken,
-				Logger:   mock_adaptors.NewLogger(t),
+				Logger:   mock_logger.New(t),
 			},
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
 			"get-token",
@@ -137,9 +139,9 @@ func TestCmd_Run(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 
-		getToken := mock_usecases.NewMockGetToken(ctrl)
+		getToken := mock_credentialplugin.NewMockInterface(ctrl)
 		getToken.EXPECT().
-			Do(ctx, usecases.GetTokenIn{
+			Do(ctx, credentialplugin.Input{
 				TokenCacheDir:   defaultTokenCacheDir,
 				IssuerURL:       "https://issuer.example.com",
 				ClientID:        "YOUR_CLIENT_ID",
@@ -155,13 +157,13 @@ func TestCmd_Run(t *testing.T) {
 
 		cmd := Cmd{
 			Root: &Root{
-				Logger: mock_adaptors.NewLogger(t),
+				Logger: mock_logger.New(t),
 			},
 			GetToken: &GetToken{
 				GetToken: getToken,
-				Logger:   mock_adaptors.NewLogger(t),
+				Logger:   mock_logger.New(t),
 			},
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		exitCode := cmd.Run(ctx, []string{executable,
 			"get-token",
@@ -190,13 +192,13 @@ func TestCmd_Run(t *testing.T) {
 		ctx := context.TODO()
 		cmd := Cmd{
 			Root: &Root{
-				Logger: mock_adaptors.NewLogger(t),
+				Logger: mock_logger.New(t),
 			},
 			GetToken: &GetToken{
-				GetToken: mock_usecases.NewMockGetToken(ctrl),
-				Logger:   mock_adaptors.NewLogger(t),
+				GetToken: mock_credentialplugin.NewMockInterface(ctrl),
+				Logger:   mock_logger.New(t),
 			},
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		exitCode := cmd.Run(ctx, []string{executable, "get-token"}, version)
 		if exitCode != 1 {
@@ -210,13 +212,13 @@ func TestCmd_Run(t *testing.T) {
 		ctx := context.TODO()
 		cmd := Cmd{
 			Root: &Root{
-				Logger: mock_adaptors.NewLogger(t),
+				Logger: mock_logger.New(t),
 			},
 			GetToken: &GetToken{
-				GetToken: mock_usecases.NewMockGetToken(ctrl),
-				Logger:   mock_adaptors.NewLogger(t),
+				GetToken: mock_credentialplugin.NewMockInterface(ctrl),
+				Logger:   mock_logger.New(t),
 			},
-			Logger: mock_adaptors.NewLogger(t),
+			Logger: mock_logger.New(t),
 		}
 		exitCode := cmd.Run(ctx, []string{executable, "get-token", "foo"}, version)
 		if exitCode != 1 {

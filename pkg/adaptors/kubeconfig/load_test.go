@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
-	"github.com/int128/kubelogin/pkg/models/kubeconfig"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
@@ -106,11 +105,11 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Could not find the current auth: %s", err)
 		}
-		want := &kubeconfig.AuthProvider{
+		want := &AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "theUser",
 			ContextName:      "theContext",
-			OIDCConfig: kubeconfig.OIDCConfig{
+			OIDCConfig: OIDCConfig{
 				IDPIssuerURL:                "https://accounts.google.com",
 				ClientID:                    "GOOGLE_CLIENT_ID",
 				ClientSecret:                "GOOGLE_CLIENT_SECRET",
@@ -148,11 +147,11 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Could not find the current auth: %s", err)
 		}
-		want := &kubeconfig.AuthProvider{
+		want := &AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "theUser",
 			ContextName:      "theContext",
-			OIDCConfig: kubeconfig.OIDCConfig{
+			OIDCConfig: OIDCConfig{
 				IDPIssuerURL: "https://accounts.google.com",
 			},
 		}
@@ -178,10 +177,10 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Could not find the current auth: %s", err)
 		}
-		want := &kubeconfig.AuthProvider{
+		want := &AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "theUser",
-			OIDCConfig: kubeconfig.OIDCConfig{
+			OIDCConfig: OIDCConfig{
 				IDPIssuerURL: "https://accounts.google.com",
 			},
 		}

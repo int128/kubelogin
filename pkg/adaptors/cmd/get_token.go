@@ -3,8 +3,8 @@ package cmd
 import (
 	"context"
 
-	"github.com/int128/kubelogin/pkg/adaptors"
-	"github.com/int128/kubelogin/pkg/usecases"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/xerrors"
@@ -36,8 +36,8 @@ func (o *getTokenOptions) register(f *pflag.FlagSet) {
 }
 
 type GetToken struct {
-	GetToken usecases.GetToken
-	Logger   adaptors.Logger
+	GetToken credentialplugin.Interface
+	Logger   logger.Interface
 }
 
 func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
@@ -58,7 +58,7 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(*cobra.Command, []string) error {
-			in := usecases.GetTokenIn{
+			in := credentialplugin.Input{
 				IssuerURL:       o.IssuerURL,
 				ClientID:        o.ClientID,
 				ClientSecret:    o.ClientSecret,

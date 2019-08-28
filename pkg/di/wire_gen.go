@@ -6,7 +6,6 @@
 package di
 
 import (
-	"github.com/int128/kubelogin/pkg/adaptors"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
@@ -14,40 +13,39 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/usecases"
 	"github.com/int128/kubelogin/pkg/usecases/auth"
 	credentialplugin2 "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
-	"github.com/int128/kubelogin/pkg/usecases/login"
+	"github.com/int128/kubelogin/pkg/usecases/standalone"
 )
 
 // Injectors from di.go:
 
-func NewCmd() adaptors.Cmd {
-	adaptorsLogger := logger.New()
+func NewCmd() cmd.Interface {
+	loggerInterface := logger.New()
 	factory := &oidc.Factory{
-		Logger: adaptorsLogger,
+		Logger: loggerInterface,
 	}
 	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
 	showLocalServerURL := &auth.ShowLocalServerURL{
-		Logger: adaptorsLogger,
+		Logger: loggerInterface,
 	}
 	authentication := &auth.Authentication{
-		OIDC:               factory,
+		OIDCFactory:        factory,
 		OIDCDecoder:        decoder,
 		Env:                envEnv,
-		Logger:             adaptorsLogger,
+		Logger:             loggerInterface,
 		ShowLocalServerURL: showLocalServerURL,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
-	loginLogin := &login.Login{
+	standaloneStandalone := &standalone.Standalone{
 		Authentication: authentication,
 		Kubeconfig:     kubeconfigKubeconfig,
-		Logger:         adaptorsLogger,
+		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
-		Login:  loginLogin,
-		Logger: adaptorsLogger,
+		Standalone: standaloneStandalone,
+		Logger:     loggerInterface,
 	}
 	repository := &tokencache.Repository{}
 	interaction := &credentialplugin.Interaction{}
@@ -55,58 +53,58 @@ func NewCmd() adaptors.Cmd {
 		Authentication:       authentication,
 		TokenCacheRepository: repository,
 		Interaction:          interaction,
-		Logger:               adaptorsLogger,
+		Logger:               loggerInterface,
 	}
 	cmdGetToken := &cmd.GetToken{
 		GetToken: getToken,
-		Logger:   adaptorsLogger,
+		Logger:   loggerInterface,
 	}
 	cmdCmd := &cmd.Cmd{
 		Root:     root,
 		GetToken: cmdGetToken,
-		Logger:   adaptorsLogger,
+		Logger:   loggerInterface,
 	}
 	return cmdCmd
 }
 
-func NewCmdForHeadless(adaptorsLogger adaptors.Logger, loginShowLocalServerURL usecases.LoginShowLocalServerURL, credentialPluginInteraction adaptors.CredentialPluginInteraction) adaptors.Cmd {
+func NewCmdForHeadless(loggerInterface logger.Interface, showLocalServerURLInterface auth.ShowLocalServerURLInterface, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
 	factory := &oidc.Factory{
-		Logger: adaptorsLogger,
+		Logger: loggerInterface,
 	}
 	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
 	authentication := &auth.Authentication{
-		OIDC:               factory,
+		OIDCFactory:        factory,
 		OIDCDecoder:        decoder,
 		Env:                envEnv,
-		Logger:             adaptorsLogger,
-		ShowLocalServerURL: loginShowLocalServerURL,
+		Logger:             loggerInterface,
+		ShowLocalServerURL: showLocalServerURLInterface,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
-	loginLogin := &login.Login{
+	standaloneStandalone := &standalone.Standalone{
 		Authentication: authentication,
 		Kubeconfig:     kubeconfigKubeconfig,
-		Logger:         adaptorsLogger,
+		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
-		Login:  loginLogin,
-		Logger: adaptorsLogger,
+		Standalone: standaloneStandalone,
+		Logger:     loggerInterface,
 	}
 	repository := &tokencache.Repository{}
 	getToken := &credentialplugin2.GetToken{
 		Authentication:       authentication,
 		TokenCacheRepository: repository,
-		Interaction:          credentialPluginInteraction,
-		Logger:               adaptorsLogger,
+		Interaction:          credentialpluginInterface,
+		Logger:               loggerInterface,
 	}
 	cmdGetToken := &cmd.GetToken{
 		GetToken: getToken,
-		Logger:   adaptorsLogger,
+		Logger:   loggerInterface,
 	}
 	cmdCmd := &cmd.Cmd{
 		Root:     root,
 		GetToken: cmdGetToken,
-		Logger:   adaptorsLogger,
+		Logger:   loggerInterface,
 	}
 	return cmdCmd
 }
