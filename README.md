@@ -115,9 +115,22 @@ Flags:
       --oidc-extra-scope strings       Scopes to request to the provider
       --certificate-authority string   Path to a cert file for the certificate authority
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-  -v, --v int                          If set to 1 or greater, it shows debug log
       --token-cache-dir string         Path to a directory for caching tokens (default "~/.kube/cache/oidc-login")
   -h, --help                           help for get-token
+
+Global Flags:
+      --add_dir_header                   If true, adds the file directory to the header
+      --alsologtostderr                  log to standard error as well as files
+      --log_backtrace_at traceLocation   when logging hits line file:N, emit a stack trace (default :0)
+      --log_dir string                   If non-empty, write log files in this directory
+      --log_file string                  If non-empty, use this log file
+      --log_file_max_size uint           Defines the maximum size a log file can grow to. Unit is megabytes. If the value is 0, the maximum file size is unlimited. (default 1800)
+      --logtostderr                      log to standard error instead of files (default true)
+      --skip_headers                     If true, avoid header prefixes in the log messages
+      --skip_log_headers                 If true, avoid headers when opening log files
+      --stderrthreshold severity         logs at or above this threshold go to stderr (default 2)
+  -v, --v Level                          number for the log level verbosity
+      --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
 ```
 
 See also the options in [standalone mode](docs/standalone-mode.md).
