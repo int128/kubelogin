@@ -8,7 +8,7 @@ require (
 	github.com/go-test/deep v1.0.3
 	github.com/golang/mock v1.3.1
 	github.com/google/wire v0.3.0
-	github.com/int128/oauth2cli v1.4.1
+	github.com/int128/oauth2cli v1.5.0
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/spf13/cobra v0.0.5
