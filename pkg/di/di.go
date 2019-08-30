@@ -22,7 +22,7 @@ func NewCmd() cmd.Interface {
 	wire.Build(
 		// use-cases
 		auth.Set,
-		auth.ExtraSet,
+		wire.Value(auth.DefaultLocalServerReadyFunc),
 		standalone.Set,
 		credentialPluginUseCase.Set,
 
@@ -39,11 +39,7 @@ func NewCmd() cmd.Interface {
 }
 
 // NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
-func NewCmdForHeadless(
-	logger.Interface,
-	auth.ShowLocalServerURLInterface,
-	credentialPluginAdaptor.Interface,
-) cmd.Interface {
+func NewCmdForHeadless(logger.Interface, auth.LocalServerReadyFunc, credentialPluginAdaptor.Interface) cmd.Interface {
 	wire.Build(
 		auth.Set,
 		standalone.Set,
