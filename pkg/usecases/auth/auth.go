@@ -9,6 +9,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
 
@@ -20,20 +21,14 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*Authentication)),
 )
 
-// ExtraSet is a set of interaction components for e2e testing.
-var ExtraSet = wire.NewSet(
-	wire.Struct(new(ShowLocalServerURL), "*"),
-	wire.Bind(new(ShowLocalServerURLInterface), new(*ShowLocalServerURL)),
-)
+// LocalServerReadyFunc provides an extension point for e2e tests.
+type LocalServerReadyFunc func(url string)
+
+// DefaultLocalServerReadyFunc is the default noop function.
+var DefaultLocalServerReadyFunc = LocalServerReadyFunc(nil)
 
 type Interface interface {
 	Do(ctx context.Context, in Input) (*Output, error)
-}
-
-// ShowLocalServerURLInterface provides an interface to notify the URL of local server.
-// It is needed for the end-to-end tests.
-type ShowLocalServerURLInterface interface {
-	ShowLocalServerURL(url string)
 }
 
 // Input represents an input DTO of the Authentication use-case.
@@ -72,11 +67,11 @@ const passwordPrompt = "Password: "
 // If the Password is not set, it asks a password by the prompt.
 //
 type Authentication struct {
-	OIDCFactory        oidc.FactoryInterface
-	OIDCDecoder        oidc.DecoderInterface
-	Env                env.Interface
-	Logger             logger.Interface
-	ShowLocalServerURL ShowLocalServerURLInterface
+	OIDCFactory          oidc.FactoryInterface
+	OIDCDecoder          oidc.DecoderInterface
+	Env                  env.Interface
+	Logger               logger.Interface
+	LocalServerReadyFunc LocalServerReadyFunc // only for e2e tests
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -114,9 +109,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 
 	if in.OIDCConfig.RefreshToken != "" {
 		u.Logger.V(1).Infof("refreshing the token")
-		out, err := client.Refresh(ctx, oidc.RefreshIn{
-			RefreshToken: in.OIDCConfig.RefreshToken,
-		})
+		out, err := client.Refresh(ctx, in.OIDCConfig.RefreshToken)
 		if err == nil {
 			return &Output{
 				IDToken:       out.IDToken,
@@ -129,50 +122,74 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	}
 
 	if in.Username == "" {
-		u.Logger.V(1).Infof("performing the authentication code flow")
-		out, err := client.AuthenticateByCode(ctx, oidc.AuthenticateByCodeIn{
-			LocalServerPort:    in.ListenPort,
-			SkipOpenBrowser:    in.SkipOpenBrowser,
-			ShowLocalServerURL: u.ShowLocalServerURL,
-		})
-		if err != nil {
-			return nil, xerrors.Errorf("error while the authorization code flow: %w", err)
-		}
-		return &Output{
-			IDToken:       out.IDToken,
-			RefreshToken:  out.RefreshToken,
-			IDTokenExpiry: out.IDTokenExpiry,
-			IDTokenClaims: out.IDTokenClaims,
-		}, nil
+		return u.doAuthCodeFlow(ctx, in, client)
 	}
+	return u.doPasswordCredentialsFlow(ctx, in, client)
+}
 
+func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oidc.Interface) (*Output, error) {
+	u.Logger.V(1).Infof("performing the authentication code flow")
+	readyChan := make(chan string, 1)
+	var out Output
+	var eg errgroup.Group
+	eg.Go(func() error {
+		select {
+		case url, ok := <-readyChan:
+			if !ok {
+				return nil
+			}
+			u.Logger.Printf("Open %s for authentication", url)
+			if u.LocalServerReadyFunc != nil {
+				u.LocalServerReadyFunc(url)
+			}
+			if in.SkipOpenBrowser {
+				return nil
+			}
+			if err := u.Env.OpenBrowser(url); err != nil {
+				u.Logger.V(1).Infof("could not open the browser: %s", err)
+			}
+			return nil
+		case <-ctx.Done():
+			return nil
+		}
+	})
+	eg.Go(func() error {
+		defer close(readyChan)
+		tokenSet, err := client.AuthenticateByCode(ctx, in.ListenPort, readyChan)
+		if err != nil {
+			return xerrors.Errorf("error while the authorization code flow: %w", err)
+		}
+		out = Output{
+			IDToken:       tokenSet.IDToken,
+			RefreshToken:  tokenSet.RefreshToken,
+			IDTokenExpiry: tokenSet.IDTokenExpiry,
+			IDTokenClaims: tokenSet.IDTokenClaims,
+		}
+		return nil
+	})
+	if err := eg.Wait(); err != nil {
+		return nil, xerrors.Errorf("error while the authorization code flow: %w", err)
+	}
+	return &out, nil
+}
+
+func (u *Authentication) doPasswordCredentialsFlow(ctx context.Context, in Input, client oidc.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the resource owner password credentials flow")
 	if in.Password == "" {
+		var err error
 		in.Password, err = u.Env.ReadPassword(passwordPrompt)
 		if err != nil {
 			return nil, xerrors.Errorf("could not read a password: %w", err)
 		}
 	}
-	out, err := client.AuthenticateByPassword(ctx, oidc.AuthenticateByPasswordIn{
-		Username: in.Username,
-		Password: in.Password,
-	})
+	tokenSet, err := client.AuthenticateByPassword(ctx, in.Username, in.Password)
 	if err != nil {
 		return nil, xerrors.Errorf("error while the resource owner password credentials flow: %w", err)
 	}
 	return &Output{
-		IDToken:       out.IDToken,
-		RefreshToken:  out.RefreshToken,
-		IDTokenExpiry: out.IDTokenExpiry,
-		IDTokenClaims: out.IDTokenClaims,
+		IDToken:       tokenSet.IDToken,
+		RefreshToken:  tokenSet.RefreshToken,
+		IDTokenExpiry: tokenSet.IDTokenExpiry,
+		IDTokenClaims: tokenSet.IDTokenClaims,
 	}, nil
-}
-
-// ShowLocalServerURL just shows the URL of local server to console.
-type ShowLocalServerURL struct {
-	Logger logger.Interface
-}
-
-func (s *ShowLocalServerURL) ShowLocalServerURL(url string) {
-	s.Logger.Printf("Open %s for authentication", url)
 }

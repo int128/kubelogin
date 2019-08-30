@@ -16,36 +16,18 @@ import (
 )
 
 type Interface interface {
-	AuthenticateByCode(ctx context.Context, in AuthenticateByCodeIn) (*AuthenticateOut, error)
-	AuthenticateByPassword(ctx context.Context, in AuthenticateByPasswordIn) (*AuthenticateOut, error)
-	Refresh(ctx context.Context, in RefreshIn) (*AuthenticateOut, error)
+	AuthenticateByCode(ctx context.Context, localServerPort []int, localServerReadyChan chan<- string) (*TokenSet, error)
+	AuthenticateByPassword(ctx context.Context, username, password string) (*TokenSet, error)
+	Refresh(ctx context.Context, refreshToken string) (*TokenSet, error)
 }
 
-// AuthenticateByCodeIn represents an input DTO of Interface.AuthenticateByCode.
-type AuthenticateByCodeIn struct {
-	LocalServerPort    []int // HTTP server port candidates
-	SkipOpenBrowser    bool  // skip opening browser if true
-	ShowLocalServerURL interface{ ShowLocalServerURL(url string) }
-}
-
-// AuthenticateByPasswordIn represents an input DTO of Interface.AuthenticateByPassword.
-type AuthenticateByPasswordIn struct {
-	Username string
-	Password string
-}
-
-// AuthenticateOut represents an output DTO of
+// TokenSet represents an output DTO of
 // Interface.AuthenticateByCode, Interface.AuthenticateByPassword and Interface.Refresh.
-type AuthenticateOut struct {
+type TokenSet struct {
 	IDToken       string
 	RefreshToken  string
 	IDTokenExpiry time.Time
 	IDTokenClaims map[string]string // string representation of claims for logging
-}
-
-// RefreshIn represents an input DTO of Interface.Refresh.
-type RefreshIn struct {
-	RefreshToken string
 }
 
 type client struct {
@@ -63,18 +45,17 @@ func (c *client) wrapContext(ctx context.Context) context.Context {
 }
 
 // AuthenticateByCode performs the authorization code flow.
-func (c *client) AuthenticateByCode(ctx context.Context, in AuthenticateByCodeIn) (*AuthenticateOut, error) {
+func (c *client) AuthenticateByCode(ctx context.Context, localServerPort []int, localServerReadyChan chan<- string) (*TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	nonce, err := newNonce()
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a nonce parameter")
 	}
 	config := oauth2cli.Config{
-		OAuth2Config:       c.oauth2Config,
-		LocalServerPort:    in.LocalServerPort,
-		SkipOpenBrowser:    in.SkipOpenBrowser,
-		AuthCodeOptions:    []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oidc.Nonce(nonce)},
-		ShowLocalServerURL: in.ShowLocalServerURL.ShowLocalServerURL,
+		OAuth2Config:         c.oauth2Config,
+		LocalServerPort:      localServerPort,
+		AuthCodeOptions:      []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oidc.Nonce(nonce)},
+		LocalServerReadyChan: localServerReadyChan,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
@@ -96,7 +77,7 @@ func (c *client) AuthenticateByCode(ctx context.Context, in AuthenticateByCodeIn
 	if err != nil {
 		c.logger.V(1).Infof("incomplete claims of the ID token: %w", err)
 	}
-	return &AuthenticateOut{
+	return &TokenSet{
 		IDToken:       idToken,
 		RefreshToken:  token.RefreshToken,
 		IDTokenExpiry: verifiedIDToken.Expiry,
@@ -113,9 +94,9 @@ func newNonce() (string, error) {
 }
 
 // AuthenticateByPassword performs the resource owner password credentials flow.
-func (c *client) AuthenticateByPassword(ctx context.Context, in AuthenticateByPasswordIn) (*AuthenticateOut, error) {
+func (c *client) AuthenticateByPassword(ctx context.Context, username, password string) (*TokenSet, error) {
 	ctx = c.wrapContext(ctx)
-	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, in.Username, in.Password)
+	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, username, password)
 	if err != nil {
 		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
@@ -132,7 +113,7 @@ func (c *client) AuthenticateByPassword(ctx context.Context, in AuthenticateByPa
 	if err != nil {
 		c.logger.V(1).Infof("incomplete claims of the ID token: %w", err)
 	}
-	return &AuthenticateOut{
+	return &TokenSet{
 		IDToken:       idToken,
 		RefreshToken:  token.RefreshToken,
 		IDTokenExpiry: verifiedIDToken.Expiry,
@@ -141,11 +122,11 @@ func (c *client) AuthenticateByPassword(ctx context.Context, in AuthenticateByPa
 }
 
 // Refresh sends a refresh token request and returns a token set.
-func (c *client) Refresh(ctx context.Context, in RefreshIn) (*AuthenticateOut, error) {
+func (c *client) Refresh(ctx context.Context, refreshToken string) (*TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	currentToken := &oauth2.Token{
 		Expiry:       time.Now(),
-		RefreshToken: in.RefreshToken,
+		RefreshToken: refreshToken,
 	}
 	source := c.oauth2Config.TokenSource(ctx, currentToken)
 	token, err := source.Token()
@@ -165,7 +146,7 @@ func (c *client) Refresh(ctx context.Context, in RefreshIn) (*AuthenticateOut, e
 	if err != nil {
 		c.logger.V(1).Infof("incomplete claims of the ID token: %w", err)
 	}
-	return &AuthenticateOut{
+	return &TokenSet{
 		IDToken:       idToken,
 		RefreshToken:  token.RefreshToken,
 		IDTokenExpiry: verifiedIDToken.Expiry,

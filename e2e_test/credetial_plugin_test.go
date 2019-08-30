@@ -62,21 +62,21 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 				}
 			})
 
-		req := startBrowserRequest(t, ctx, nil)
-		runGetTokenCmd(t, ctx, req, credentialPluginInteraction,
+		runGetTokenCmd(t, ctx,
+			openBrowserOnReadyFunc(t, ctx, nil),
+			credentialPluginInteraction,
 			"--skip-open-browser",
 			"--listen-port", "0",
 			"--token-cache-dir", cacheDir,
 			"--oidc-issuer-url", serverURL,
 			"--oidc-client-id", "kubernetes",
 		)
-		req.wait()
 	})
 }
 
-func runGetTokenCmd(t *testing.T, ctx context.Context, s auth.ShowLocalServerURLInterface, interaction credentialplugin.Interface, args ...string) {
+func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc auth.LocalServerReadyFunc, interaction credentialplugin.Interface, args ...string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(mock_logger.New(t), s, interaction)
+	cmd := di.NewCmdForHeadless(mock_logger.New(t), localServerReadyFunc, interaction)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "get-token", "--v=1"}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)

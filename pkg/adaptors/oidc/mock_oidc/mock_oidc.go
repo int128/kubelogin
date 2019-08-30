@@ -71,35 +71,35 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // AuthenticateByCode mocks base method
-func (m *MockInterface) AuthenticateByCode(arg0 context.Context, arg1 oidc.AuthenticateByCodeIn) (*oidc.AuthenticateOut, error) {
-	ret := m.ctrl.Call(m, "AuthenticateByCode", arg0, arg1)
-	ret0, _ := ret[0].(*oidc.AuthenticateOut)
+func (m *MockInterface) AuthenticateByCode(arg0 context.Context, arg1 []int, arg2 chan<- string) (*oidc.TokenSet, error) {
+	ret := m.ctrl.Call(m, "AuthenticateByCode", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AuthenticateByCode indicates an expected call of AuthenticateByCode
-func (mr *MockInterfaceMockRecorder) AuthenticateByCode(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByCode", reflect.TypeOf((*MockInterface)(nil).AuthenticateByCode), arg0, arg1)
+func (mr *MockInterfaceMockRecorder) AuthenticateByCode(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByCode", reflect.TypeOf((*MockInterface)(nil).AuthenticateByCode), arg0, arg1, arg2)
 }
 
 // AuthenticateByPassword mocks base method
-func (m *MockInterface) AuthenticateByPassword(arg0 context.Context, arg1 oidc.AuthenticateByPasswordIn) (*oidc.AuthenticateOut, error) {
-	ret := m.ctrl.Call(m, "AuthenticateByPassword", arg0, arg1)
-	ret0, _ := ret[0].(*oidc.AuthenticateOut)
+func (m *MockInterface) AuthenticateByPassword(arg0 context.Context, arg1, arg2 string) (*oidc.TokenSet, error) {
+	ret := m.ctrl.Call(m, "AuthenticateByPassword", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AuthenticateByPassword indicates an expected call of AuthenticateByPassword
-func (mr *MockInterfaceMockRecorder) AuthenticateByPassword(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByPassword", reflect.TypeOf((*MockInterface)(nil).AuthenticateByPassword), arg0, arg1)
+func (mr *MockInterfaceMockRecorder) AuthenticateByPassword(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByPassword", reflect.TypeOf((*MockInterface)(nil).AuthenticateByPassword), arg0, arg1, arg2)
 }
 
 // Refresh mocks base method
-func (m *MockInterface) Refresh(arg0 context.Context, arg1 oidc.RefreshIn) (*oidc.AuthenticateOut, error) {
+func (m *MockInterface) Refresh(arg0 context.Context, arg1 string) (*oidc.TokenSet, error) {
 	ret := m.ctrl.Call(m, "Refresh", arg0, arg1)
-	ret0, _ := ret[0].(*oidc.AuthenticateOut)
+	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

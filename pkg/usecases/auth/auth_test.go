@@ -36,11 +36,8 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(ctx, oidc.AuthenticateByCodeIn{
-				LocalServerPort: []int{10000},
-				SkipOpenBrowser: true,
-			}).
-			Return(&oidc.AuthenticateOut{
+			AuthenticateByCode(ctx, []int{10000}, gomock.Any()).
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,
@@ -73,6 +70,56 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 	})
 
+	t.Run("AuthorizationCodeFlow/OpenBrowser", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+		in := Input{
+			ListenPort: []int{10000},
+			OIDCConfig: kubeconfig.OIDCConfig{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+		}
+		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
+		mockOIDCClient.EXPECT().
+			AuthenticateByCode(ctx, []int{10000}, gomock.Any()).
+			Do(func(_ context.Context, _ []int, readyChan chan<- string) {
+				readyChan <- "LOCAL_SERVER_URL"
+			}).
+			Return(&oidc.TokenSet{
+				IDToken:       "YOUR_ID_TOKEN",
+				RefreshToken:  "YOUR_REFRESH_TOKEN",
+				IDTokenExpiry: futureTime,
+				IDTokenClaims: dummyTokenClaims,
+			}, nil)
+		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
+		mockOIDCFactory.EXPECT().
+			New(ctx, oidc.ClientConfig{Config: in.OIDCConfig}).
+			Return(mockOIDCClient, nil)
+		mockEnv := mock_env.NewMockInterface(ctrl)
+		mockEnv.EXPECT().
+			OpenBrowser("LOCAL_SERVER_URL")
+		u := Authentication{
+			OIDCFactory: mockOIDCFactory,
+			Logger:      mock_logger.New(t),
+			Env:         mockEnv,
+		}
+		out, err := u.Do(ctx, in)
+		if err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+		want := &Output{
+			IDToken:       "YOUR_ID_TOKEN",
+			RefreshToken:  "YOUR_REFRESH_TOKEN",
+			IDTokenExpiry: futureTime,
+			IDTokenClaims: dummyTokenClaims,
+		}
+		if diff := deep.Equal(want, out); diff != nil {
+			t.Error(diff)
+		}
+	})
+
 	t.Run("ResourceOwnerPasswordCredentialsFlow/UsePassword", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -89,11 +136,8 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByPassword(ctx, oidc.AuthenticateByPasswordIn{
-				Username: "USER",
-				Password: "PASS",
-			}).
-			Return(&oidc.AuthenticateOut{
+			AuthenticateByPassword(ctx, "USER", "PASS").
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,
@@ -139,11 +183,8 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByPassword(ctx, oidc.AuthenticateByPasswordIn{
-				Username: "USER",
-				Password: "PASS",
-			}).
-			Return(&oidc.AuthenticateOut{
+			AuthenticateByPassword(ctx, "USER", "PASS").
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,
@@ -269,10 +310,8 @@ func TestAuthentication_Do(t *testing.T) {
 			}, nil)
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			Refresh(ctx, oidc.RefreshIn{
-				RefreshToken: "VALID_REFRESH_TOKEN",
-			}).
-			Return(&oidc.AuthenticateOut{
+			Refresh(ctx, "VALID_REFRESH_TOKEN").
+			Return(&oidc.TokenSet{
 				IDToken:       "NEW_ID_TOKEN",
 				RefreshToken:  "NEW_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,
@@ -326,15 +365,11 @@ func TestAuthentication_Do(t *testing.T) {
 			}, nil)
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			Refresh(ctx, oidc.RefreshIn{
-				RefreshToken: "EXPIRED_REFRESH_TOKEN",
-			}).
+			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
 			Return(nil, xerrors.New("token has expired"))
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(ctx, oidc.AuthenticateByCodeIn{
-				LocalServerPort: []int{10000},
-			}).
-			Return(&oidc.AuthenticateOut{
+			AuthenticateByCode(ctx, []int{10000}, gomock.Any()).
+			Return(&oidc.TokenSet{
 				IDToken:       "NEW_ID_TOKEN",
 				RefreshToken:  "NEW_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,

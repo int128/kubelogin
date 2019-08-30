@@ -27,15 +27,13 @@ func NewCmd() cmd.Interface {
 	}
 	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
-	showLocalServerURL := &auth.ShowLocalServerURL{
-		Logger: loggerInterface,
-	}
+	localServerReadyFunc := _wireLocalServerReadyFuncValue
 	authentication := &auth.Authentication{
-		OIDCFactory:        factory,
-		OIDCDecoder:        decoder,
-		Env:                envEnv,
-		Logger:             loggerInterface,
-		ShowLocalServerURL: showLocalServerURL,
+		OIDCFactory:          factory,
+		OIDCDecoder:          decoder,
+		Env:                  envEnv,
+		Logger:               loggerInterface,
+		LocalServerReadyFunc: localServerReadyFunc,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	standaloneStandalone := &standalone.Standalone{
@@ -67,18 +65,22 @@ func NewCmd() cmd.Interface {
 	return cmdCmd
 }
 
-func NewCmdForHeadless(loggerInterface logger.Interface, showLocalServerURLInterface auth.ShowLocalServerURLInterface, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
+var (
+	_wireLocalServerReadyFuncValue = auth.DefaultLocalServerReadyFunc
+)
+
+func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc auth.LocalServerReadyFunc, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
 	factory := &oidc.Factory{
 		Logger: loggerInterface,
 	}
 	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
 	authentication := &auth.Authentication{
-		OIDCFactory:        factory,
-		OIDCDecoder:        decoder,
-		Env:                envEnv,
-		Logger:             loggerInterface,
-		ShowLocalServerURL: showLocalServerURLInterface,
+		OIDCFactory:          factory,
+		OIDCDecoder:          decoder,
+		Env:                  envEnv,
+		Logger:               loggerInterface,
+		LocalServerReadyFunc: localServerReadyFunc,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	standaloneStandalone := &standalone.Standalone{

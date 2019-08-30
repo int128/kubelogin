@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"net/http"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -75,9 +74,9 @@ func TestCmd_Run_Standalone(t *testing.T) {
 			})
 			defer os.Remove(kubeConfigFilename)
 
-			req := startBrowserRequest(t, ctx, p.clientTLSConfig)
-			runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "0")
-			req.wait()
+			runCmd(t, ctx,
+				openBrowserOnReadyFunc(t, ctx, p.clientTLSConfig),
+				"--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "0")
 			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 				IDToken:      idToken,
 				RefreshToken: "YOUR_REFRESH_TOKEN",
@@ -106,7 +105,9 @@ func TestCmd_Run_Standalone(t *testing.T) {
 			})
 			defer os.Remove(kubeConfigFilename)
 
-			runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--username", "USER", "--password", "PASS")
+			runCmd(t, ctx,
+				openBrowserOnReadyFunc(t, ctx, p.clientTLSConfig),
+				"--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--username", "USER", "--password", "PASS")
 			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 				IDToken:      idToken,
 				RefreshToken: "YOUR_REFRESH_TOKEN",
@@ -133,7 +134,9 @@ func TestCmd_Run_Standalone(t *testing.T) {
 			})
 			defer os.Remove(kubeConfigFilename)
 
-			runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+			runCmd(t, ctx,
+				openBrowserOnReadyFunc(t, ctx, p.clientTLSConfig),
+				"--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 				IDToken:      idToken,
 				RefreshToken: "YOUR_REFRESH_TOKEN",
@@ -164,7 +167,9 @@ func TestCmd_Run_Standalone(t *testing.T) {
 			})
 			defer os.Remove(kubeConfigFilename)
 
-			runCmd(t, ctx, &nopBrowserRequest{t}, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+			runCmd(t, ctx,
+				openBrowserOnReadyFunc(t, ctx, p.clientTLSConfig),
+				"--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 				IDToken:      idToken,
 				RefreshToken: "NEW_REFRESH_TOKEN",
@@ -195,8 +200,9 @@ func TestCmd_Run_Standalone(t *testing.T) {
 			})
 			defer os.Remove(kubeConfigFilename)
 
-			req := startBrowserRequest(t, ctx, p.clientTLSConfig)
-			runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser")
+			runCmd(t, ctx,
+				openBrowserOnReadyFunc(t, ctx, p.clientTLSConfig),
+				"--kubeconfig", kubeConfigFilename, "--skip-open-browser")
 			kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 				IDToken:      idToken,
 				RefreshToken: "YOUR_REFRESH_TOKEN",
@@ -228,9 +234,9 @@ func TestCmd_Run_Standalone(t *testing.T) {
 		setenv(t, "KUBECONFIG", kubeConfigFilename+string(os.PathListSeparator)+"kubeconfig/testdata/dummy.yaml")
 		defer unsetenv(t, "KUBECONFIG")
 
-		req := startBrowserRequest(t, ctx, nil)
-		runCmd(t, ctx, req, "--skip-open-browser", "--listen-port", "0")
-		req.wait()
+		runCmd(t, ctx,
+			openBrowserOnReadyFunc(t, ctx, nil),
+			"--skip-open-browser", "--listen-port", "0")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
 			RefreshToken: "YOUR_REFRESH_TOKEN",
@@ -256,9 +262,9 @@ func TestCmd_Run_Standalone(t *testing.T) {
 		})
 		defer os.Remove(kubeConfigFilename)
 
-		req := startBrowserRequest(t, ctx, nil)
-		runCmd(t, ctx, req, "--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "0")
-		req.wait()
+		runCmd(t, ctx,
+			openBrowserOnReadyFunc(t, ctx, nil),
+			"--kubeconfig", kubeConfigFilename, "--skip-open-browser", "--listen-port", "0")
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
 			IDToken:      idToken,
 			RefreshToken: "YOUR_REFRESH_TOKEN",
@@ -306,69 +312,34 @@ func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, server
 		})
 }
 
-func runCmd(t *testing.T, ctx context.Context, s auth.ShowLocalServerURLInterface, args ...string) {
+func runCmd(t *testing.T, ctx context.Context, localServerReadyFunc auth.LocalServerReadyFunc, args ...string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(mock_logger.New(t), s, nil)
+	cmd := di.NewCmdForHeadless(mock_logger.New(t), localServerReadyFunc, nil)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "--v=1"}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)
 	}
 }
 
-type nopBrowserRequest struct {
-	t *testing.T
-}
-
-func (r *nopBrowserRequest) ShowLocalServerURL(url string) {
-	r.t.Errorf("ShowLocalServerURL must not be called")
-}
-
-type browserRequest struct {
-	t     *testing.T
-	urlCh chan<- string
-	wg    *sync.WaitGroup
-}
-
-func (r *browserRequest) ShowLocalServerURL(url string) {
-	defer close(r.urlCh)
-	r.t.Logf("Open %s for authentication", url)
-	r.urlCh <- url
-}
-
-func (r *browserRequest) wait() {
-	r.wg.Wait()
-}
-
-func startBrowserRequest(t *testing.T, ctx context.Context, tlsConfig *tls.Config) *browserRequest {
-	t.Helper()
-	urlCh := make(chan string)
-	var wg sync.WaitGroup
-	go func() {
-		defer wg.Done()
-		select {
-		case url := <-urlCh:
-			client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
-			req, err := http.NewRequest("GET", url, nil)
-			if err != nil {
-				t.Errorf("could not create a request: %s", err)
-				return
-			}
-			req = req.WithContext(ctx)
-			resp, err := client.Do(req)
-			if err != nil {
-				t.Errorf("could not send a request: %s", err)
-				return
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
-			}
-		case err := <-ctx.Done():
-			t.Errorf("context done while waiting for URL prompt: %s", err)
+func openBrowserOnReadyFunc(t *testing.T, ctx context.Context, clientConfig *tls.Config) auth.LocalServerReadyFunc {
+	return func(url string) {
+		client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			t.Errorf("could not create a request: %s", err)
+			return
 		}
-	}()
-	wg.Add(1)
-	return &browserRequest{t, urlCh, &wg}
+		req = req.WithContext(ctx)
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Errorf("could not send a request: %s", err)
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
+		}
+	}
 }
 
 func setenv(t *testing.T, key, value string) {
