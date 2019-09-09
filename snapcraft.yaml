@@ -1,0 +1,16 @@
+name: kubelogin
+version: git
+summary: Log in to the OpenID Connect provider
+description: |
+  This is a kubectl plugin for Kubernetes OpenID Connect (OIDC) authentication.
+confinement: strict
+base: core18
+parts:
+  kubelogin:
+    plugin: go
+    go-importpath: github.com/int128/kubelogin
+    source: .
+    source-type: git
+apps:
+  kubelogin:
+    command: bin/kubelogin
