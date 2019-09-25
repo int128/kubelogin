@@ -1,3 +1,5 @@
+EXPIRY := 3650
+
 all: ca.key ca.crt server.key server.crt jws.key
 
 .PHONY: clean
@@ -17,7 +19,9 @@ ca.csr: openssl.cnf ca.key
 	openssl req -noout -text -in $@
 
 ca.crt: ca.csr ca.key
-	openssl x509 -req \
+	openssl x509 \
+		-req \
+		-days $(EXPIRY) \
 		-signkey ca.key \
 		-in ca.csr \
 		-out $@
@@ -42,6 +46,7 @@ server.crt: openssl.cnf server.csr ca.key ca.crt
 	touch CA/index.txt.attr
 	echo 00 > CA/serial
 	openssl ca -config openssl.cnf \
+		-days $(EXPIRY) \
 		-extensions v3_req \
 		-batch \
 		-cert ca.crt \
