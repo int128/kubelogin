@@ -54,6 +54,8 @@ github.com/int128/oauth2cli v1.4.1 h1:IsaYMafEDS1jyArxYdmksw+nMsNxiYCQzdkPj3QF9B
 github.com/int128/oauth2cli v1.4.1/go.mod h1:CMJjyUSgKiobye1M/9byFACOjtB2LRo2mo7boklEKlI=
 github.com/int128/oauth2cli v1.5.0 h1:EOBMCWfroql1hPqPhP+EtDhgO7y6ClFZ/NwJEpBCo1s=
 github.com/int128/oauth2cli v1.5.0/go.mod h1:ivzuzt+k+bpwLI1Mb1bRq8PiBvwLBsO8L7tX2F9iKKA=
+github.com/int128/oauth2cli v1.6.0 h1:7Aj1rzMU+wqu8y0E7uE9i0cJL/Jk4oAIjWCWaji0yo0=
+github.com/int128/oauth2cli v1.6.0/go.mod h1:CMJjyUSgKiobye1M/9byFACOjtB2LRo2mo7boklEKlI=
 github.com/json-iterator/go v0.0.0-20180701071628-ab8a2e0c74be h1:AHimNtVIpiBjPUhEF5KNCkrUyqTSA5zWUl8sQ2bfGBE=
 github.com/json-iterator/go v0.0.0-20180701071628-ab8a2e0c74be/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
