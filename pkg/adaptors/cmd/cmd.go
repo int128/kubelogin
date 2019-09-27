@@ -16,6 +16,7 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*Cmd)),
 	wire.Struct(new(Root), "*"),
 	wire.Struct(new(GetToken), "*"),
+	wire.Struct(new(Setup), "*"),
 )
 
 type Interface interface {
@@ -38,6 +39,7 @@ var defaultTokenCacheDir = homedir.HomeDir() + "/.kube/cache/oidc-login"
 type Cmd struct {
 	Root     *Root
 	GetToken *GetToken
+	Setup    *Setup
 	Logger   logger.Interface
 }
 
@@ -53,6 +55,9 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 
 	getTokenCmd := cmd.GetToken.New(ctx)
 	rootCmd.AddCommand(getTokenCmd)
+
+	setupCmd := cmd.Setup.New(ctx)
+	rootCmd.AddCommand(setupCmd)
 
 	versionCmd := &cobra.Command{
 		Use:   "version",

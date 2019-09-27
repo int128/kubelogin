@@ -1,17 +1,18 @@
 # Getting Started with Keycloak
 
-## Prerequisite
+Prerequisite:
 
 - You have an administrator role of the Keycloak realm.
 - You have an administrator role of the Kubernetes cluster.
 - You can configure the Kubernetes API server.
 - `kubectl` and `kubelogin` are installed.
 
-## 1. Setup Keycloak
+
+## 1. Set up the OpenID Connect Provider
 
 Open the Keycloak and create an OIDC client as follows:
 
-- Client ID: `kubernetes`
+- Client ID: `YOUR_CLIENT_ID`
 - Valid Redirect URLs:
     - `http://localhost:8000`
     - `http://localhost:18000` (used if the port 8000 is already in use)
@@ -21,105 +22,94 @@ You can associate client roles by adding the following mapper:
 
 - Name: `groups`
 - Mapper Type: `User Client Role`
-- Client ID: `kubernetes`
+- Client ID: `YOUR_CLIENT_ID`
 - Client Role prefix: `kubernetes:`
 - Token Claim Name: `groups`
 - Add to ID token: on
 
 For example, if you have the `admin` role of the client, you will get a JWT with the claim `{"groups": ["kubernetes:admin"]}`.
 
-Now test authentication with the Keycloak.
+
+## 2. Verify authentication
+
+Run the following command:
 
 ```sh
-kubectl oidc-login get-token -v1 \
+kubectl oidc-login setup \
   --oidc-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM \
-  --oidc-client-id=kubernetes \
+  --oidc-client-id=YOUR_CLIENT_ID \
   --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
-You should get claims like:
+It will open the browser and you can log in to the provider.
 
-```
-I0827 12:29:03.086476   23722 get_token.go:59] the ID token has the claim: groups=[kubernetes:admin]
-I0827 12:29:03.086531   23722 get_token.go:59] the ID token has the claim: aud=kubernetes
-I0827 12:29:03.086553   23722 get_token.go:59] the ID token has the claim: iss=https://keycloak.example.com/auth/realms/YOUR_REALM
-I0827 12:29:03.086561   23722 get_token.go:59] the ID token has the claim: sub=f08655e2-901f-48e5-8c64-bb9f7784d5df
-```
 
-## 2. Setup Kubernetes API server
+## 3. Bind a role
 
-Configure your Kubernetes API server accepts [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
-
-```
---oidc-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM
---oidc-client-id=kubernetes
---oidc-groups-claim=groups
-```
-
-If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and add the following spec:
-
-```yaml
-spec:
-  kubeAPIServer:
-    oidcIssuerURL: https://keycloak.example.com/auth/realms/YOUR_REALM
-    oidcClientID: kubernetes
-    oidcGroupsClaim: groups
-```
-
-## 3. Setup Kubernetes cluster
-
-Here assign the `cluster-admin` role to the `kubernetes:admin` group.
+Bind the `cluster-admin` role to you.
+Apply the following manifest:
 
 ```yaml
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: keycloak-admin-group
+  name: oidc-admin-group
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: cluster-admin
 subjects:
-- kind: Group
-  name: kubernetes:admin
+- kind: User
+  name: https://keycloak.example.com/auth/realms/YOUR_REALM#YOUR_SUBJECT
 ```
 
-You can create a custom role and assign it as well.
+As well as you can create a custom role and bind it.
 
-## 4. Setup kubeconfig
 
-Configure the kubeconfig like:
+## 4. Set up the Kubernetes API server
+
+Add the following options to the kube-apiserver:
+
+```
+--oidc-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM
+--oidc-client-id=YOUR_CLIENT_ID
+```
+
+See [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) for details.
+
+If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and append the following settings:
 
 ```yaml
-apiVersion: v1
-clusters:
-- cluster:
-    server: https://api.example.com
-  name: example.k8s.local
-contexts:
-- context:
-    cluster: example.k8s.local
-    user: keycloak
-  name: keycloak@example.k8s.local
-current-context: keycloak@example.k8s.local
-kind: Config
-preferences: {}
+spec:
+  kubeAPIServer:
+    oidcIssuerURL: https://keycloak.example.com/auth/realms/YOUR_REALM
+    oidcClientID: YOUR_CLIENT_ID
+```
+
+
+## 5. Set up the kubeconfig
+
+Add the following user to the kubeconfig:
+
+```yaml
 users:
-- name: keycloak
+- name: google
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubelogin
+      command: kubectl
       args:
+      - oidc-login
       - get-token
       - --oidc-issuer-url=https://keycloak.example.com/auth/realms/YOUR_REALM
-      - --oidc-client-id=kubernetes
+      - --oidc-client-id=YOUR_CLIENT_ID
       - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
 You can share the kubeconfig to your team members for on-boarding.
 
-## 5. Run kubectl
+
+## 6. Verify cluster access
 
 Make sure you can access the Kubernetes cluster.
 
@@ -127,7 +117,6 @@ Make sure you can access the Kubernetes cluster.
 % kubectl get nodes
 Open http://localhost:8000 for authentication
 You got a valid token until 2019-05-16 22:03:13 +0900 JST
-Updated ~/.kubeconfig
 NAME                                    STATUS    ROLES     AGE       VERSION
 ip-1-2-3-4.us-west-2.compute.internal   Ready     node      21d       v1.9.6
 ip-1-2-3-5.us-west-2.compute.internal   Ready     node      20d       v1.9.6

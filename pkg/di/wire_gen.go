@@ -15,6 +15,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/auth"
 	credentialplugin2 "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
 )
 
@@ -57,9 +58,17 @@ func NewCmd() cmd.Interface {
 		GetToken: getToken,
 		Logger:   loggerInterface,
 	}
+	setupSetup := &setup.Setup{
+		Authentication: authentication,
+		Logger:         loggerInterface,
+	}
+	cmdSetup := &cmd.Setup{
+		Setup: setupSetup,
+	}
 	cmdCmd := &cmd.Cmd{
 		Root:     root,
 		GetToken: cmdGetToken,
+		Setup:    cmdSetup,
 		Logger:   loggerInterface,
 	}
 	return cmdCmd
@@ -103,9 +112,17 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 		GetToken: getToken,
 		Logger:   loggerInterface,
 	}
+	setupSetup := &setup.Setup{
+		Authentication: authentication,
+		Logger:         loggerInterface,
+	}
+	cmdSetup := &cmd.Setup{
+		Setup: setupSetup,
+	}
 	cmdCmd := &cmd.Cmd{
 		Root:     root,
 		GetToken: cmdGetToken,
+		Setup:    cmdSetup,
 		Logger:   loggerInterface,
 	}
 	return cmdCmd

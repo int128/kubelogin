@@ -9,7 +9,7 @@ Then kubelogin gets a token from the provider and kubectl access Kubernetes APIs
 
 ## Getting Started
 
-### Setup
+### Install
 
 Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases) as follows:
 
@@ -26,30 +26,19 @@ unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
 
-You need to configure the OIDC provider, Kubernetes API server and role binding.
+### Setup
+
+You need to set up the OIDC provider, role binding, Kubernetes API server and kubeconfig.
 See the following documents for more:
 
-- [Getting Started with Keycloak](docs/keycloak.md)
-- [Getting Started with dex and GitHub](docs/dex.md)
 - [Getting Started with Google Identity Platform](docs/google.md)
+- [Getting Started with dex and GitHub](docs/dex.md)
+- [Getting Started with Keycloak](docs/keycloak.md)
 
-Configure the kubeconfig to run kubelogin as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
-It provides transparent login without manually running kubelogin command.
-For example,
+Run the following command to show the setup instruction.
 
-```yaml
-users:
-- name: keycloak
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubectl
-      args:
-      - oidc-login
-      - get-token
-      - --oidc-issuer-url=https://issuer.example.com
-      - --oidc-client-id=YOUR_CLIENT_ID
-      - --oidc-client-secret=YOUR_CLIENT_SECRET
+```sh
+kubectl oidc-login setup
 ```
 
 ### Run
