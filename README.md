@@ -84,11 +84,6 @@ If the refresh token has expired, kubelogin will perform reauthentication.
 You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
 Kubelogin will perform authentication if the token cache file does not exist.
 
-### Standalone mode
-
-As well as you can update the ID token in the kubeconfig by running the command.
-See [standalone mode](docs/standalone-mode.md) for more.
-
 
 ## Usage
 
@@ -133,7 +128,7 @@ Global Flags:
       --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
 ```
 
-See also the options in [standalone mode](docs/standalone-mode.md).
+See also the options of [standalone mode](docs/standalone-mode.md).
 
 ### Extra scopes
 
