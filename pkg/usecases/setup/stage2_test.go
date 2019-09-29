@@ -43,10 +43,11 @@ func TestSetup_DoStage2(t *testing.T) {
 			SkipTLSVerify:   true,
 		}).
 		Return(&auth.Output{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenExpiry: time.Now().Add(time.Hour),
-			IDTokenClaims: map[string]string{"sub": "YOUR_SUBJECT"},
+			IDToken:        "YOUR_ID_TOKEN",
+			RefreshToken:   "YOUR_REFRESH_TOKEN",
+			IDTokenSubject: "YOUR_SUBJECT",
+			IDTokenExpiry:  time.Now().Add(time.Hour),
+			IDTokenClaims:  map[string]string{"iss": "https://accounts.google.com"},
 		}, nil)
 	u := Setup{
 		Authentication: mockAuthentication,

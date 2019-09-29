@@ -103,7 +103,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 		IssuerURL: in.IssuerURL,
 		ClientID:  in.ClientID,
 		Args:      makeCredentialPluginArgs(in),
-		Subject:   out.IDTokenClaims["sub"], //TODO: extract IDTokenSubject
+		Subject:   out.IDTokenSubject,
 	}
 	var b strings.Builder
 	if err := stage2Tpl.Execute(&b, &v); err != nil {
