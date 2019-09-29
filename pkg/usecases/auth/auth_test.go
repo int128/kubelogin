@@ -38,10 +38,11 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCClient.EXPECT().
 			AuthenticateByCode(ctx, []int{10000}, gomock.Any()).
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:        "YOUR_ID_TOKEN",
+				RefreshToken:   "YOUR_REFRESH_TOKEN",
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  futureTime,
+				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
@@ -60,10 +61,11 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenExpiry: futureTime,
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:        "YOUR_ID_TOKEN",
+			RefreshToken:   "YOUR_REFRESH_TOKEN",
+			IDTokenSubject: "YOUR_SUBJECT",
+			IDTokenExpiry:  futureTime,
+			IDTokenClaims:  dummyTokenClaims,
 		}
 		if diff := deep.Equal(want, out); diff != nil {
 			t.Error(diff)
@@ -88,10 +90,11 @@ func TestAuthentication_Do(t *testing.T) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:        "YOUR_ID_TOKEN",
+				RefreshToken:   "YOUR_REFRESH_TOKEN",
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  futureTime,
+				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
@@ -110,10 +113,11 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenExpiry: futureTime,
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:        "YOUR_ID_TOKEN",
+			RefreshToken:   "YOUR_REFRESH_TOKEN",
+			IDTokenSubject: "YOUR_SUBJECT",
+			IDTokenExpiry:  futureTime,
+			IDTokenClaims:  dummyTokenClaims,
 		}
 		if diff := deep.Equal(want, out); diff != nil {
 			t.Error(diff)
@@ -138,10 +142,11 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCClient.EXPECT().
 			AuthenticateByPassword(ctx, "USER", "PASS").
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:        "YOUR_ID_TOKEN",
+				RefreshToken:   "YOUR_REFRESH_TOKEN",
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  futureTime,
+				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
@@ -160,10 +165,11 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenExpiry: futureTime,
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:        "YOUR_ID_TOKEN",
+			RefreshToken:   "YOUR_REFRESH_TOKEN",
+			IDTokenSubject: "YOUR_SUBJECT",
+			IDTokenExpiry:  futureTime,
+			IDTokenClaims:  dummyTokenClaims,
 		}
 		if diff := deep.Equal(want, out); diff != nil {
 			t.Error(diff)
@@ -185,10 +191,11 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCClient.EXPECT().
 			AuthenticateByPassword(ctx, "USER", "PASS").
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:        "YOUR_ID_TOKEN",
+				RefreshToken:   "YOUR_REFRESH_TOKEN",
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  futureTime,
+				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
@@ -208,10 +215,11 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenExpiry: futureTime,
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:        "YOUR_ID_TOKEN",
+			RefreshToken:   "YOUR_REFRESH_TOKEN",
+			IDTokenSubject: "YOUR_SUBJECT",
+			IDTokenExpiry:  futureTime,
+			IDTokenClaims:  dummyTokenClaims,
 		}
 		if diff := deep.Equal(want, out); diff != nil {
 			t.Error(diff)
@@ -266,8 +274,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCDecoder.EXPECT().
 			DecodeIDToken("VALID_ID_TOKEN").
 			Return(&oidc.DecodedIDToken{
-				IDTokenExpiry: futureTime,
-				IDTokenClaims: dummyTokenClaims,
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  futureTime,
+				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
 		u := Authentication{
 			OIDCFactory: mock_oidc.NewMockFactoryInterface(ctrl),
@@ -281,6 +290,7 @@ func TestAuthentication_Do(t *testing.T) {
 		want := &Output{
 			AlreadyHasValidIDToken: true,
 			IDToken:                "VALID_ID_TOKEN",
+			IDTokenSubject:         "YOUR_SUBJECT",
 			IDTokenExpiry:          futureTime,
 			IDTokenClaims:          dummyTokenClaims,
 		}
@@ -305,17 +315,19 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCDecoder.EXPECT().
 			DecodeIDToken("EXPIRED_ID_TOKEN").
 			Return(&oidc.DecodedIDToken{
-				IDTokenExpiry: pastTime,
-				IDTokenClaims: dummyTokenClaims,
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  pastTime,
+				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "VALID_REFRESH_TOKEN").
 			Return(&oidc.TokenSet{
-				IDToken:       "NEW_ID_TOKEN",
-				RefreshToken:  "NEW_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:        "NEW_ID_TOKEN",
+				RefreshToken:   "NEW_REFRESH_TOKEN",
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  futureTime,
+				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
@@ -333,10 +345,11 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			IDToken:       "NEW_ID_TOKEN",
-			RefreshToken:  "NEW_REFRESH_TOKEN",
-			IDTokenExpiry: futureTime,
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:        "NEW_ID_TOKEN",
+			RefreshToken:   "NEW_REFRESH_TOKEN",
+			IDTokenSubject: "YOUR_SUBJECT",
+			IDTokenExpiry:  futureTime,
+			IDTokenClaims:  dummyTokenClaims,
 		}
 		if diff := deep.Equal(want, out); diff != nil {
 			t.Error(diff)
@@ -360,8 +373,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCDecoder.EXPECT().
 			DecodeIDToken("EXPIRED_ID_TOKEN").
 			Return(&oidc.DecodedIDToken{
-				IDTokenExpiry: pastTime,
-				IDTokenClaims: dummyTokenClaims,
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  pastTime,
+				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -370,10 +384,11 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCClient.EXPECT().
 			AuthenticateByCode(ctx, []int{10000}, gomock.Any()).
 			Return(&oidc.TokenSet{
-				IDToken:       "NEW_ID_TOKEN",
-				RefreshToken:  "NEW_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:        "NEW_ID_TOKEN",
+				RefreshToken:   "NEW_REFRESH_TOKEN",
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  futureTime,
+				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
@@ -391,10 +406,11 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			IDToken:       "NEW_ID_TOKEN",
-			RefreshToken:  "NEW_REFRESH_TOKEN",
-			IDTokenExpiry: futureTime,
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:        "NEW_ID_TOKEN",
+			RefreshToken:   "NEW_REFRESH_TOKEN",
+			IDTokenSubject: "YOUR_SUBJECT",
+			IDTokenExpiry:  futureTime,
+			IDTokenClaims:  dummyTokenClaims,
 		}
 		if diff := deep.Equal(want, out); diff != nil {
 			t.Error(diff)
