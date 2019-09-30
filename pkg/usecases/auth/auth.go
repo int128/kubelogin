@@ -85,18 +85,18 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		if err != nil {
 			return nil, xerrors.Errorf("invalid token and you need to remove the cache: %w", err)
 		}
-		if token.IDTokenExpiry.After(time.Now()) { //TODO: inject time service
-			u.Logger.V(1).Infof("you already have a valid token until %s", token.IDTokenExpiry)
+		if token.Expiry.After(time.Now()) { //TODO: inject time service
+			u.Logger.V(1).Infof("you already have a valid token until %s", token.Expiry)
 			return &Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                in.OIDCConfig.IDToken,
 				RefreshToken:           in.OIDCConfig.RefreshToken,
-				IDTokenSubject:         token.IDTokenSubject,
-				IDTokenExpiry:          token.IDTokenExpiry,
-				IDTokenClaims:          token.IDTokenClaims,
+				IDTokenSubject:         token.Subject,
+				IDTokenExpiry:          token.Expiry,
+				IDTokenClaims:          token.Claims,
 			}, nil
 		}
-		u.Logger.V(1).Infof("you have an expired token at %s", token.IDTokenExpiry)
+		u.Logger.V(1).Infof("you have an expired token at %s", token.Expiry)
 	}
 
 	u.Logger.V(1).Infof("initializing an OIDCFactory client")

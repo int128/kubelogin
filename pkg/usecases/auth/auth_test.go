@@ -274,9 +274,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCDecoder.EXPECT().
 			DecodeIDToken("VALID_ID_TOKEN").
 			Return(&oidc.DecodedIDToken{
-				IDTokenSubject: "YOUR_SUBJECT",
-				IDTokenExpiry:  futureTime,
-				IDTokenClaims:  dummyTokenClaims,
+				Subject: "YOUR_SUBJECT",
+				Expiry:  futureTime,
+				Claims:  dummyTokenClaims,
 			}, nil)
 		u := Authentication{
 			OIDCFactory: mock_oidc.NewMockFactoryInterface(ctrl),
@@ -315,9 +315,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCDecoder.EXPECT().
 			DecodeIDToken("EXPIRED_ID_TOKEN").
 			Return(&oidc.DecodedIDToken{
-				IDTokenSubject: "YOUR_SUBJECT",
-				IDTokenExpiry:  pastTime,
-				IDTokenClaims:  dummyTokenClaims,
+				Subject: "YOUR_SUBJECT",
+				Expiry:  pastTime,
+				Claims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -373,9 +373,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCDecoder.EXPECT().
 			DecodeIDToken("EXPIRED_ID_TOKEN").
 			Return(&oidc.DecodedIDToken{
-				IDTokenSubject: "YOUR_SUBJECT",
-				IDTokenExpiry:  pastTime,
-				IDTokenClaims:  dummyTokenClaims,
+				Subject: "YOUR_SUBJECT",
+				Expiry:  pastTime,
+				Claims:  dummyTokenClaims,
 			}, nil)
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().

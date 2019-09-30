@@ -21,10 +21,10 @@ func TestDecoder_DecodeIDToken(t *testing.T) {
 		if err != nil {
 			t.Fatalf("DecodeIDToken error: %s", err)
 		}
-		if decodedToken.IDTokenExpiry != expiry {
-			t.Errorf("IDTokenExpiry wants %s but %s", expiry, decodedToken.IDTokenExpiry)
+		if decodedToken.Expiry != expiry {
+			t.Errorf("Expiry wants %s but %s", expiry, decodedToken.Expiry)
 		}
-		t.Logf("IDTokenClaims=%+v", decodedToken.IDTokenClaims)
+		t.Logf("Claims=%+v", decodedToken.Claims)
 	})
 	t.Run("InvalidToken", func(t *testing.T) {
 		decodedToken, err := decoder.DecodeIDToken("HEADER.INVALID_TOKEN.SIGNATURE")

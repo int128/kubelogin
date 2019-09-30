@@ -23,15 +23,6 @@ type Interface interface {
 	Run(ctx context.Context, args []string, version string) int
 }
 
-const examples = `  # Login to the provider using the authorization code flow.
-  %[1]s
-
-  # Login to the provider using the resource owner password credentials flow.
-  %[1]s --username USERNAME --password PASSWORD
-
-  # Run as a credential plugin.
-  %[1]s get-token --oidc-issuer-url=https://issuer.example.com`
-
 var defaultListenPort = []int{8000, 18000}
 var defaultTokenCacheDir = homedir.HomeDir() + "/.kube/cache/oidc-login"
 
