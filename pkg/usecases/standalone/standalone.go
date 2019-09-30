@@ -99,13 +99,13 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	return nil
 }
 
-var deprecation = template.Must(template.New("").Parse(
+var deprecationTpl = template.Must(template.New("").Parse(
 	`IMPORTANT NOTICE:
 The credential plugin mode is available since v1.14.0.
 Kubectl will automatically run kubelogin and you do not need to run kubelogin explicitly.
 
 You can switch to the credential plugin mode by setting the following user to
-{{ .kubeconfig }}.
+{{ .Kubeconfig }}.
 ---
 users:
 - name: oidc
@@ -116,13 +116,18 @@ users:
       args:
       - oidc-login
       - get-token
-{{- range .args }}
+{{- range .Args }}
       - {{ . }}
 {{- end }}
 ---
 See https://github.com/int128/kubelogin for more.
 
 `))
+
+type deprecationVars struct {
+	Kubeconfig string
+	Args       []string
+}
 
 func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error {
 	var args []string
@@ -144,12 +149,12 @@ func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error
 		args = append(args, "--username="+in.Username)
 	}
 
-	m := map[string]interface{}{
-		"kubeconfig": p.LocationOfOrigin,
-		"args":       args,
+	v := deprecationVars{
+		Kubeconfig: p.LocationOfOrigin,
+		Args:       args,
 	}
 	var b strings.Builder
-	if err := deprecation.ExecuteTemplate(&b, "", m); err != nil {
+	if err := deprecationTpl.Execute(&b, &v); err != nil {
 		return xerrors.Errorf("could not render the template: %w", err)
 	}
 	u.Logger.Printf("%s", b.String())
