@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
@@ -11,6 +10,16 @@ import (
 	"github.com/spf13/pflag"
 	"golang.org/x/xerrors"
 )
+
+const longDescription = `Login to the OpenID Connect provider.
+
+You need to set up the OIDC provider, role binding, Kubernetes API server and kubeconfig.
+Run the following command to show the setup instruction:
+
+	kubectl oidc-login setup
+
+See https://github.com/int128/kubelogin for more.
+`
 
 // rootOptions represents the options for the root command.
 type rootOptions struct {
@@ -46,10 +55,10 @@ type Root struct {
 func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 	var o rootOptions
 	rootCmd := &cobra.Command{
-		Use:     executable,
-		Short:   "Login to the OpenID Connect provider and update the kubeconfig",
-		Example: fmt.Sprintf(examples, executable),
-		Args:    cobra.NoArgs,
+		Use:   executable,
+		Short: "Login to the OpenID Connect provider",
+		Long:  longDescription,
+		Args:  cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
 			in := standalone.Input{
 				KubeconfigFilename: o.Kubeconfig,

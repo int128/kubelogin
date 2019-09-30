@@ -37,10 +37,8 @@ type Input struct {
 	SkipTLSVerify      bool
 }
 
-const oidcConfigErrorMessage = `NOTE:
-You need to setup the kubeconfig for OpenID Connect authentication.
+const oidcConfigErrorMessage = `You need to set up the kubeconfig for OpenID Connect authentication.
 See https://github.com/int128/kubelogin for more.
-
 `
 
 // Standalone provides the use case of explicit login.

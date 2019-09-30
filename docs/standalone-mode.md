@@ -78,38 +78,36 @@ If the refresh token has expired, kubelogin will proceed the authentication.
 Kubelogin supports the following options:
 
 ```
-% kubelogin -h
-Login to the OpenID Connect provider and update the kubeconfig
+% kubectl oidc-login -h
+Login to the OpenID Connect provider.
+
+You need to set up the OIDC provider, role binding, Kubernetes API server and kubeconfig.
+Run the following command to show the setup instruction:
+
+	kubectl oidc-login setup
+
+See https://github.com/int128/kubelogin for more.
 
 Usage:
-  kubelogin [flags]
-  kubelogin [command]
-
-Examples:
-  # Login to the provider using the authorization code flow.
-  kubelogin
-
-  # Login to the provider using the resource owner password credentials flow.
-  kubelogin --username USERNAME --password PASSWORD
-
-  # Run as a credential plugin.
-  kubelogin get-token --oidc-issuer-url=https://issuer.example.com
+  main [flags]
+  main [command]
 
 Available Commands:
   get-token   Run as a kubectl credential plugin
   help        Help about any command
+  setup       Show the setup instruction
   version     Print the version information
 
 Flags:
       --kubeconfig string                Path to the kubeconfig file
       --context string                   The name of the kubeconfig context to use
       --user string                      The name of the kubeconfig user to use. Prior to --context
-      --certificate-authority string     Path to a cert file for the certificate authority
-      --insecure-skip-tls-verify         If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --listen-port ints                 Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
       --skip-open-browser                If true, it does not open the browser on authentication
       --username string                  If set, perform the resource owner password credentials grant
       --password string                  If set, use the password instead of asking it
+      --certificate-authority string     Path to a cert file for the certificate authority
+      --insecure-skip-tls-verify         If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --add_dir_header                   If true, adds the file directory to the header
       --alsologtostderr                  log to standard error as well as files
       --log_backtrace_at traceLocation   when logging hits line file:N, emit a stack trace (default :0)
@@ -122,8 +120,8 @@ Flags:
       --stderrthreshold severity         logs at or above this threshold go to stderr (default 2)
   -v, --v Level                          number for the log level verbosity
       --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
-  -h, --help                             help for kubelogin
-      --version                          version for kubelogin
+  -h, --help                             help for main
+      --version                          version for main
 ```
 
 ### Kubeconfig

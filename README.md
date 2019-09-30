@@ -82,21 +82,21 @@ If you are looking for a specific version, see [the release tags](https://github
 Kubelogin supports the following options:
 
 ```
-% kubelogin get-token -h
+% kubectl oidc-login get-token -h
 Run as a kubectl credential plugin
 
 Usage:
   kubelogin get-token [flags]
 
 Flags:
-      --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
-      --skip-open-browser              If true, it does not open the browser on authentication
-      --username string                If set, perform the resource owner password credentials grant
-      --password string                If set, use the password instead of asking it
       --oidc-issuer-url string         Issuer URL of the provider (mandatory)
       --oidc-client-id string          Client ID of the provider (mandatory)
       --oidc-client-secret string      Client secret of the provider
       --oidc-extra-scope strings       Scopes to request to the provider
+      --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
+      --skip-open-browser              If true, it does not open the browser on authentication
+      --username string                If set, perform the resource owner password credentials grant
+      --password string                If set, use the password instead of asking it
       --certificate-authority string   Path to a cert file for the certificate authority
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --token-cache-dir string         Path to a directory for caching tokens (default "~/.kube/cache/oidc-login")
