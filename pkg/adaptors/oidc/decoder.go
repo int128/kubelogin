@@ -16,9 +16,9 @@ type DecoderInterface interface {
 }
 
 type DecodedIDToken struct {
-	IDTokenSubject string
-	IDTokenExpiry  time.Time
-	IDTokenClaims  map[string]string // string representation of claims for logging
+	Subject string
+	Expiry  time.Time
+	Claims  map[string]string // string representation of claims for logging
 }
 
 type Decoder struct{}
@@ -43,9 +43,9 @@ func (d *Decoder) DecodeIDToken(t string) (*DecodedIDToken, error) {
 		return nil, xerrors.Errorf("could not decode the json of token: %w", err)
 	}
 	return &DecodedIDToken{
-		IDTokenSubject: claims.Subject,
-		IDTokenExpiry:  time.Unix(claims.ExpiresAt, 0),
-		IDTokenClaims:  dumpRawClaims(rawClaims),
+		Subject: claims.Subject,
+		Expiry:  time.Unix(claims.ExpiresAt, 0),
+		Claims:  dumpRawClaims(rawClaims),
 	}, nil
 }
 
