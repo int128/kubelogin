@@ -23,7 +23,8 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("AuthorizationCodeFlow", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx := context.TODO()
+		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		defer cancel()
 		in := Input{
 			ListenPort:      []int{10000},
 			SkipOpenBrowser: true,
@@ -36,7 +37,10 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(ctx, []int{10000}, gomock.Any()).
+			AuthenticateByCode(gomock.Any(), []int{10000}, gomock.Any()).
+			Do(func(_ context.Context, _ []int, readyChan chan<- string) {
+				readyChan <- "LOCAL_SERVER_URL"
+			}).
 			Return(&oidc.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
@@ -75,7 +79,8 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("AuthorizationCodeFlow/OpenBrowser", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx := context.TODO()
+		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		defer cancel()
 		in := Input{
 			ListenPort: []int{10000},
 			OIDCConfig: kubeconfig.OIDCConfig{
@@ -85,7 +90,7 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(ctx, []int{10000}, gomock.Any()).
+			AuthenticateByCode(gomock.Any(), []int{10000}, gomock.Any()).
 			Do(func(_ context.Context, _ []int, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
@@ -127,7 +132,8 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("ResourceOwnerPasswordCredentialsFlow/UsePassword", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx := context.TODO()
+		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		defer cancel()
 		in := Input{
 			Username:       "USER",
 			Password:       "PASS",
@@ -140,7 +146,7 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByPassword(ctx, "USER", "PASS").
+			AuthenticateByPassword(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
@@ -179,7 +185,8 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("ResourceOwnerPasswordCredentialsFlow/AskPassword", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx := context.TODO()
+		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		defer cancel()
 		in := Input{
 			Username: "USER",
 			OIDCConfig: kubeconfig.OIDCConfig{
@@ -189,7 +196,7 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByPassword(ctx, "USER", "PASS").
+			AuthenticateByPassword(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
@@ -229,7 +236,8 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("ResourceOwnerPasswordCredentialsFlow/AskPasswordError", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx := context.TODO()
+		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		defer cancel()
 		in := Input{
 			Username: "USER",
 			OIDCConfig: kubeconfig.OIDCConfig{
@@ -262,7 +270,8 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("HasValidIDToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx := context.TODO()
+		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		defer cancel()
 		in := Input{
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
@@ -302,7 +311,8 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("HasValidRefreshToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx := context.TODO()
+		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		defer cancel()
 		in := Input{
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
@@ -359,9 +369,11 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("HasExpiredRefreshToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx := context.TODO()
+		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		defer cancel()
 		in := Input{
-			ListenPort: []int{10000},
+			ListenPort:      []int{10000},
+			SkipOpenBrowser: true,
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
@@ -382,7 +394,10 @@ func TestAuthentication_Do(t *testing.T) {
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
 			Return(nil, xerrors.New("token has expired"))
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(ctx, []int{10000}, gomock.Any()).
+			AuthenticateByCode(gomock.Any(), []int{10000}, gomock.Any()).
+			Do(func(_ context.Context, _ []int, readyChan chan<- string) {
+				readyChan <- "LOCAL_SERVER_URL"
+			}).
 			Return(&oidc.TokenSet{
 				IDToken:        "NEW_ID_TOKEN",
 				RefreshToken:   "NEW_REFRESH_TOKEN",
