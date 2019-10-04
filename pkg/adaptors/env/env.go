@@ -36,7 +36,7 @@ type Env struct{}
 
 // ReadPassword reads a password from the stdin without echo back.
 func (*Env) ReadPassword(prompt string) (string, error) {
-	if _, err := fmt.Fprint(os.Stderr, "Password: "); err != nil {
+	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", xerrors.Errorf("could not write the prompt: %w", err)
 	}
 	b, err := terminal.ReadPassword(int(syscall.Stdin))
