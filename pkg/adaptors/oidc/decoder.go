@@ -52,9 +52,9 @@ func (d *Decoder) DecodeIDToken(t string) (*DecodedIDToken, error) {
 func dumpRawClaims(rawClaims map[string]interface{}) map[string]string {
 	claims := make(map[string]string)
 	for k, v := range rawClaims {
-		switch v.(type) {
+		switch v := v.(type) {
 		case float64:
-			claims[k] = fmt.Sprintf("%.f", v.(float64))
+			claims[k] = fmt.Sprintf("%.f", v)
 		default:
 			claims[k] = fmt.Sprintf("%v", v)
 		}
