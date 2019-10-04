@@ -133,8 +133,9 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oidc.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the authentication code flow")
 	readyChan := make(chan string, 1)
+	defer close(readyChan)
 	var out Output
-	var eg errgroup.Group
+	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		select {
 		case url, ok := <-readyChan:
@@ -153,11 +154,10 @@ func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oi
 			}
 			return nil
 		case <-ctx.Done():
-			return nil
+			return xerrors.Errorf("context cancelled while waiting for the local server: %w", ctx.Err())
 		}
 	})
 	eg.Go(func() error {
-		defer close(readyChan)
 		tokenSet, err := client.AuthenticateByCode(ctx, in.ListenPort, readyChan)
 		if err != nil {
 			return xerrors.Errorf("error while the authorization code flow: %w", err)
