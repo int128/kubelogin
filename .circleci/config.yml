@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.12.3
+      - image: circleci/golang:1.13.1
     steps:
       - run: |
           mkdir -p ~/bin
@@ -14,7 +14,7 @@ jobs:
           curl -L -o ~/bin/ghcp https://github.com/int128/ghcp/releases/download/v1.5.0/ghcp_linux_amd64
           chmod +x ~/bin/ghcp
       - run: |
-          curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ~/bin v1.16.0
+          curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ~/bin v1.19.1
       - run: go get github.com/int128/goxzst
       - run: go get github.com/tcnksm/ghr
       - checkout
