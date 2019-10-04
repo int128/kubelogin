@@ -33,7 +33,7 @@ var (
 // 4. Verify the kubeconfig.
 //
 func TestCmd_Run_Standalone(t *testing.T) {
-	timeout := 1 * time.Second
+	timeout := 5 * time.Second
 
 	type testParameter struct {
 		startServer                       func(t *testing.T, h http.Handler) (string, localserver.Shutdowner)

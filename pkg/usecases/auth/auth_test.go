@@ -19,11 +19,12 @@ func TestAuthentication_Do(t *testing.T) {
 	dummyTokenClaims := map[string]string{"sub": "YOUR_SUBJECT"}
 	pastTime := time.Now().Add(-time.Hour)  //TODO: inject time service
 	futureTime := time.Now().Add(time.Hour) //TODO: inject time service
+	timeout := 5 * time.Second
 
 	t.Run("AuthorizationCodeFlow", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			ListenPort:      []int{10000},
@@ -79,7 +80,7 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("AuthorizationCodeFlow/OpenBrowser", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			ListenPort: []int{10000},
@@ -132,7 +133,7 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("ResourceOwnerPasswordCredentialsFlow/UsePassword", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			Username:       "USER",
@@ -185,7 +186,7 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("ResourceOwnerPasswordCredentialsFlow/AskPassword", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			Username: "USER",
@@ -236,7 +237,7 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("ResourceOwnerPasswordCredentialsFlow/AskPasswordError", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			Username: "USER",
@@ -270,7 +271,7 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("HasValidIDToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			OIDCConfig: kubeconfig.OIDCConfig{
@@ -311,7 +312,7 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("HasValidRefreshToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			OIDCConfig: kubeconfig.OIDCConfig{
@@ -369,7 +370,7 @@ func TestAuthentication_Do(t *testing.T) {
 	t.Run("HasExpiredRefreshToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			ListenPort:      []int{10000},
