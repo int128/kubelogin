@@ -32,6 +32,10 @@ release: dist
 	ghcp commit -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -m "$(CIRCLE_TAG)" -C dist/ kubelogin.rb
 	ghcp fork-commit -u kubernetes-sigs -r krew-index -b "oidc-login-$(CIRCLE_TAG)" -m "Bump oidc-login to $(CIRCLE_TAG)" -C dist/ plugins/oidc-login.yaml
 
+# http://blockdiag.com/en/seqdiag/index.html
+%.svg: %.seq
+	seqdiag -a -f /Library/Fonts/Verdana.ttf -T svg $<
+
 .PHONY: clean
 clean:
 	-rm $(TARGET)
