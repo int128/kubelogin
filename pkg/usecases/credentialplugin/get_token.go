@@ -50,7 +50,18 @@ type GetToken struct {
 
 func (u *GetToken) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
+	out, err := u.getTokenFromCacheOrProvider(ctx, in)
+	if err != nil {
+		return xerrors.Errorf("could not get a token from the cache or provider: %w", err)
+	}
+	u.Logger.V(1).Infof("writing the token to client-go")
+	if err := u.Interaction.Write(credentialplugin.Output{Token: out.IDToken, Expiry: out.IDTokenExpiry}); err != nil {
+		return xerrors.Errorf("could not write the token to client-go: %w", err)
+	}
+	return nil
+}
 
+func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*auth.Output, error) {
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
 	cacheKey := tokencache.Key{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
 	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
@@ -58,6 +69,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
 		cache = &tokencache.TokenCache{}
 	}
+
 	out, err := u.Authentication.Do(ctx, auth.Input{
 		OIDCConfig: kubeconfig.OIDCConfig{
 			IDPIssuerURL: in.IssuerURL,
@@ -75,25 +87,23 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		SkipTLSVerify:   in.SkipTLSVerify,
 	})
 	if err != nil {
-		return xerrors.Errorf("error while authentication: %w", err)
+		return nil, xerrors.Errorf("error while authentication: %w", err)
 	}
 	for k, v := range out.IDTokenClaims {
 		u.Logger.V(1).Infof("the ID token has the claim: %s=%v", k, v)
 	}
-	if !out.AlreadyHasValidIDToken {
-		u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)
-		cache := tokencache.TokenCache{
-			IDToken:      out.IDToken,
-			RefreshToken: out.RefreshToken,
-		}
-		if err := u.TokenCacheRepository.Save(in.TokenCacheDir, cacheKey, cache); err != nil {
-			return xerrors.Errorf("could not write the token cache: %w", err)
-		}
+	if out.AlreadyHasValidIDToken {
+		u.Logger.V(1).Infof("you already have a valid token until %s", out.IDTokenExpiry)
+		return out, nil
 	}
 
-	u.Logger.V(1).Infof("writing the token to client-go")
-	if err := u.Interaction.Write(credentialplugin.Output{Token: out.IDToken, Expiry: out.IDTokenExpiry}); err != nil {
-		return xerrors.Errorf("could not write the token to client-go: %w", err)
+	u.Logger.V(1).Infof("you got a valid token until %s", out.IDTokenExpiry)
+	newCache := tokencache.TokenCache{
+		IDToken:      out.IDToken,
+		RefreshToken: out.RefreshToken,
 	}
-	return nil
+	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, cacheKey, newCache); err != nil {
+		return nil, xerrors.Errorf("could not write the token cache: %w", err)
+	}
+	return out, nil
 }
