@@ -33,7 +33,7 @@ var (
 // 4. Verify the kubeconfig.
 //
 func TestCmd_Run_Standalone(t *testing.T) {
-	timeout := 1 * time.Second
+	timeout := 5 * time.Second
 
 	type testParameter struct {
 		startServer                       func(t *testing.T, h http.Handler) (string, localserver.Shutdowner)
@@ -57,7 +57,7 @@ func TestCmd_Run_Standalone(t *testing.T) {
 	runTest := func(t *testing.T, p testParameter) {
 		t.Run("Defaults", func(t *testing.T) {
 			t.Parallel()
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 			defer cancel()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -85,7 +85,7 @@ func TestCmd_Run_Standalone(t *testing.T) {
 
 		t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
 			t.Parallel()
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 			defer cancel()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -116,7 +116,7 @@ func TestCmd_Run_Standalone(t *testing.T) {
 
 		t.Run("HasValidToken", func(t *testing.T) {
 			t.Parallel()
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 			defer cancel()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -145,7 +145,7 @@ func TestCmd_Run_Standalone(t *testing.T) {
 
 		t.Run("HasValidRefreshToken", func(t *testing.T) {
 			t.Parallel()
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 			defer cancel()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -178,7 +178,7 @@ func TestCmd_Run_Standalone(t *testing.T) {
 
 		t.Run("HasExpiredRefreshToken", func(t *testing.T) {
 			t.Parallel()
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 			defer cancel()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -218,7 +218,7 @@ func TestCmd_Run_Standalone(t *testing.T) {
 
 	t.Run("env:KUBECONFIG", func(t *testing.T) {
 		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -245,7 +245,7 @@ func TestCmd_Run_Standalone(t *testing.T) {
 
 	t.Run("ExtraScopes", func(t *testing.T) {
 		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()

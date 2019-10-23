@@ -16,20 +16,12 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*Cmd)),
 	wire.Struct(new(Root), "*"),
 	wire.Struct(new(GetToken), "*"),
+	wire.Struct(new(Setup), "*"),
 )
 
 type Interface interface {
 	Run(ctx context.Context, args []string, version string) int
 }
-
-const examples = `  # Login to the provider using the authorization code flow.
-  %[1]s
-
-  # Login to the provider using the resource owner password credentials flow.
-  %[1]s --username USERNAME --password PASSWORD
-
-  # Run as a credential plugin.
-  %[1]s get-token --oidc-issuer-url=https://issuer.example.com`
 
 var defaultListenPort = []int{8000, 18000}
 var defaultTokenCacheDir = homedir.HomeDir() + "/.kube/cache/oidc-login"
@@ -38,6 +30,7 @@ var defaultTokenCacheDir = homedir.HomeDir() + "/.kube/cache/oidc-login"
 type Cmd struct {
 	Root     *Root
 	GetToken *GetToken
+	Setup    *Setup
 	Logger   logger.Interface
 }
 
@@ -53,6 +46,9 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 
 	getTokenCmd := cmd.GetToken.New(ctx)
 	rootCmd.AddCommand(getTokenCmd)
+
+	setupCmd := cmd.Setup.New(ctx)
+	rootCmd.AddCommand(setupCmd)
 
 	versionCmd := &cobra.Command{
 		Use:   "version",

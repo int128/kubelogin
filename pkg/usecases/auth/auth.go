@@ -45,6 +45,7 @@ type Input struct {
 // Output represents an output DTO of the Authentication use-case.
 type Output struct {
 	AlreadyHasValidIDToken bool
+	IDTokenSubject         string
 	IDTokenExpiry          time.Time
 	IDTokenClaims          map[string]string
 	IDToken                string
@@ -84,17 +85,18 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		if err != nil {
 			return nil, xerrors.Errorf("invalid token and you need to remove the cache: %w", err)
 		}
-		if token.IDTokenExpiry.After(time.Now()) { //TODO: inject time service
-			u.Logger.V(1).Infof("you already have a valid token until %s", token.IDTokenExpiry)
+		if token.Expiry.After(time.Now()) { //TODO: inject time service
+			u.Logger.V(1).Infof("you already have a valid token until %s", token.Expiry)
 			return &Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                in.OIDCConfig.IDToken,
 				RefreshToken:           in.OIDCConfig.RefreshToken,
-				IDTokenExpiry:          token.IDTokenExpiry,
-				IDTokenClaims:          token.IDTokenClaims,
+				IDTokenSubject:         token.Subject,
+				IDTokenExpiry:          token.Expiry,
+				IDTokenClaims:          token.Claims,
 			}, nil
 		}
-		u.Logger.V(1).Infof("you have an expired token at %s", token.IDTokenExpiry)
+		u.Logger.V(1).Infof("you have an expired token at %s", token.Expiry)
 	}
 
 	u.Logger.V(1).Infof("initializing an OIDCFactory client")
@@ -112,10 +114,11 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		out, err := client.Refresh(ctx, in.OIDCConfig.RefreshToken)
 		if err == nil {
 			return &Output{
-				IDToken:       out.IDToken,
-				RefreshToken:  out.RefreshToken,
-				IDTokenExpiry: out.IDTokenExpiry,
-				IDTokenClaims: out.IDTokenClaims,
+				IDToken:        out.IDToken,
+				RefreshToken:   out.RefreshToken,
+				IDTokenSubject: out.IDTokenSubject,
+				IDTokenExpiry:  out.IDTokenExpiry,
+				IDTokenClaims:  out.IDTokenClaims,
 			}, nil
 		}
 		u.Logger.V(1).Infof("could not refresh the token: %s", err)
@@ -130,8 +133,9 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oidc.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the authentication code flow")
 	readyChan := make(chan string, 1)
+	defer close(readyChan)
 	var out Output
-	var eg errgroup.Group
+	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		select {
 		case url, ok := <-readyChan:
@@ -150,20 +154,20 @@ func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oi
 			}
 			return nil
 		case <-ctx.Done():
-			return nil
+			return xerrors.Errorf("context cancelled while waiting for the local server: %w", ctx.Err())
 		}
 	})
 	eg.Go(func() error {
-		defer close(readyChan)
 		tokenSet, err := client.AuthenticateByCode(ctx, in.ListenPort, readyChan)
 		if err != nil {
 			return xerrors.Errorf("error while the authorization code flow: %w", err)
 		}
 		out = Output{
-			IDToken:       tokenSet.IDToken,
-			RefreshToken:  tokenSet.RefreshToken,
-			IDTokenExpiry: tokenSet.IDTokenExpiry,
-			IDTokenClaims: tokenSet.IDTokenClaims,
+			IDToken:        tokenSet.IDToken,
+			RefreshToken:   tokenSet.RefreshToken,
+			IDTokenSubject: tokenSet.IDTokenSubject,
+			IDTokenExpiry:  tokenSet.IDTokenExpiry,
+			IDTokenClaims:  tokenSet.IDTokenClaims,
 		}
 		return nil
 	})
@@ -187,9 +191,10 @@ func (u *Authentication) doPasswordCredentialsFlow(ctx context.Context, in Input
 		return nil, xerrors.Errorf("error while the resource owner password credentials flow: %w", err)
 	}
 	return &Output{
-		IDToken:       tokenSet.IDToken,
-		RefreshToken:  tokenSet.RefreshToken,
-		IDTokenExpiry: tokenSet.IDTokenExpiry,
-		IDTokenClaims: tokenSet.IDTokenClaims,
+		IDToken:        tokenSet.IDToken,
+		RefreshToken:   tokenSet.RefreshToken,
+		IDTokenSubject: tokenSet.IDTokenSubject,
+		IDTokenExpiry:  tokenSet.IDTokenExpiry,
+		IDTokenClaims:  tokenSet.IDTokenClaims,
 	}, nil
 }

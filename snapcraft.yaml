@@ -1,0 +1,19 @@
+name: kubelogin
+version: git
+summary: Log in to the OpenID Connect provider
+description: |
+  This is a kubectl plugin for Kubernetes OpenID Connect (OIDC) authentication.
+confinement: strict
+base: core18
+parts:
+  kubelogin:
+    plugin: nil
+    source: .
+    source-type: git
+    build-snaps: [go]
+    override-build: |
+      make CIRCLE_TAG=$SNAPCRAFT_PROJECT_VERSION
+      cp -av kubelogin $SNAPCRAFT_PART_INSTALL/bin
+apps:
+  kubelogin:
+    command: bin/kubelogin

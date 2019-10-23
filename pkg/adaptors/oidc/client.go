@@ -24,10 +24,11 @@ type Interface interface {
 // TokenSet represents an output DTO of
 // Interface.AuthenticateByCode, Interface.AuthenticateByPassword and Interface.Refresh.
 type TokenSet struct {
-	IDToken       string
-	RefreshToken  string
-	IDTokenExpiry time.Time
-	IDTokenClaims map[string]string // string representation of claims for logging
+	IDToken        string
+	RefreshToken   string
+	IDTokenSubject string
+	IDTokenExpiry  time.Time
+	IDTokenClaims  map[string]string // string representation of claims for logging
 }
 
 type client struct {

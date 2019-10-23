@@ -16,8 +16,9 @@ type DecoderInterface interface {
 }
 
 type DecodedIDToken struct {
-	IDTokenExpiry time.Time
-	IDTokenClaims map[string]string // string representation of claims for logging
+	Subject string
+	Expiry  time.Time
+	Claims  map[string]string // string representation of claims for logging
 }
 
 type Decoder struct{}
@@ -42,17 +43,18 @@ func (d *Decoder) DecodeIDToken(t string) (*DecodedIDToken, error) {
 		return nil, xerrors.Errorf("could not decode the json of token: %w", err)
 	}
 	return &DecodedIDToken{
-		IDTokenExpiry: time.Unix(claims.ExpiresAt, 0),
-		IDTokenClaims: dumpRawClaims(rawClaims),
+		Subject: claims.Subject,
+		Expiry:  time.Unix(claims.ExpiresAt, 0),
+		Claims:  dumpRawClaims(rawClaims),
 	}, nil
 }
 
 func dumpRawClaims(rawClaims map[string]interface{}) map[string]string {
 	claims := make(map[string]string)
 	for k, v := range rawClaims {
-		switch v.(type) {
+		switch v := v.(type) {
 		case float64:
-			claims[k] = fmt.Sprintf("%.f", v.(float64))
+			claims[k] = fmt.Sprintf("%.f", v)
 		default:
 			claims[k] = fmt.Sprintf("%v", v)
 		}

@@ -12,7 +12,7 @@ Take a look at the following diagram:
 
 ## Getting Started
 
-### Setup
+### Install
 
 Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases) as follows:
 
@@ -29,30 +29,19 @@ unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
 
-You need to configure the OIDC provider, Kubernetes API server and role binding.
+### Setup
+
+You need to set up the OIDC provider, role binding, Kubernetes API server and kubeconfig.
 See the following documents for more:
 
-- [Getting Started with Keycloak](docs/keycloak.md)
-- [Getting Started with dex and GitHub](docs/dex.md)
 - [Getting Started with Google Identity Platform](docs/google.md)
+- [Getting Started with dex and GitHub](docs/dex.md)
+- [Getting Started with Keycloak](docs/keycloak.md)
 
-Configure the kubeconfig to run kubelogin as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
-It provides transparent login without manually running kubelogin command.
-For example,
+Run the following command to show the setup instruction.
 
-```yaml
-users:
-- name: keycloak
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubectl
-      args:
-      - oidc-login
-      - get-token
-      - --oidc-issuer-url=https://issuer.example.com
-      - --oidc-client-id=YOUR_CLIENT_ID
-      - --oidc-client-secret=YOUR_CLIENT_SECRET
+```sh
+kubectl oidc-login setup
 ```
 
 ### Run
@@ -87,11 +76,6 @@ If the refresh token has expired, kubelogin will perform reauthentication.
 You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
 Kubelogin will perform authentication if the token cache file does not exist.
 
-### Standalone mode
-
-As well as you can update the ID token in the kubeconfig by running the command.
-See [standalone mode](docs/standalone-mode.md) for more.
-
 
 ## Usage
 
@@ -101,21 +85,21 @@ If you are looking for a specific version, see [the release tags](https://github
 Kubelogin supports the following options:
 
 ```
-% kubelogin get-token -h
+% kubectl oidc-login get-token -h
 Run as a kubectl credential plugin
 
 Usage:
   kubelogin get-token [flags]
 
 Flags:
-      --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
-      --skip-open-browser              If true, it does not open the browser on authentication
-      --username string                If set, perform the resource owner password credentials grant
-      --password string                If set, use the password instead of asking it
       --oidc-issuer-url string         Issuer URL of the provider (mandatory)
       --oidc-client-id string          Client ID of the provider (mandatory)
       --oidc-client-secret string      Client secret of the provider
       --oidc-extra-scope strings       Scopes to request to the provider
+      --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
+      --skip-open-browser              If true, it does not open the browser on authentication
+      --username string                If set, perform the resource owner password credentials grant
+      --password string                If set, use the password instead of asking it
       --certificate-authority string   Path to a cert file for the certificate authority
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --token-cache-dir string         Path to a directory for caching tokens (default "~/.kube/cache/oidc-login")
@@ -136,7 +120,7 @@ Global Flags:
       --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
 ```
 
-See also the options in [standalone mode](docs/standalone-mode.md).
+See also the options of [standalone mode](docs/standalone-mode.md).
 
 ### Extra scopes
 

@@ -12,24 +12,29 @@ import (
 
 // getTokenOptions represents the options for get-token command.
 type getTokenOptions struct {
-	loginOptions
 	IssuerURL            string
 	ClientID             string
 	ClientSecret         string
 	ExtraScopes          []string
+	ListenPort           []int
+	SkipOpenBrowser      bool
+	Username             string
+	Password             string
 	CertificateAuthority string
 	SkipTLSVerify        bool
-	Verbose              int
 	TokenCacheDir        string
 }
 
 func (o *getTokenOptions) register(f *pflag.FlagSet) {
 	f.SortFlags = false
-	o.loginOptions.register(f)
 	f.StringVar(&o.IssuerURL, "oidc-issuer-url", "", "Issuer URL of the provider (mandatory)")
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider (mandatory)")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
+	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
+	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
+	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
+	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
 	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for caching tokens")

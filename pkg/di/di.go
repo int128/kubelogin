@@ -14,6 +14,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/auth"
 	credentialPluginUseCase "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
 )
 
@@ -25,6 +26,7 @@ func NewCmd() cmd.Interface {
 		wire.Value(auth.DefaultLocalServerReadyFunc),
 		standalone.Set,
 		credentialPluginUseCase.Set,
+		setup.Set,
 
 		// adaptors
 		cmd.Set,
@@ -44,6 +46,8 @@ func NewCmdForHeadless(logger.Interface, auth.LocalServerReadyFunc, credentialPl
 		auth.Set,
 		standalone.Set,
 		credentialPluginUseCase.Set,
+		setup.Set,
+
 		cmd.Set,
 		env.Set,
 		kubeconfig.Set,

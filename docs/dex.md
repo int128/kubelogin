@@ -1,12 +1,14 @@
 # Getting Started with dex and GitHub
 
-## Prerequisite
+Prerequisite:
 
 - You have a GitHub account.
+- You have an administrator role of the Kubernetes cluster.
 - You can configure the Kubernetes API server.
 - `kubectl` and `kubelogin` are installed.
 
-## 1. Setup GitHub OAuth
+
+## 1. Set up the OpenID Connect Provider
 
 Open [GitHub OAuth Apps](https://github.com/settings/developers) and create an application with the following setting:
 
@@ -14,9 +16,7 @@ Open [GitHub OAuth Apps](https://github.com/settings/developers) and create an a
 - Homepage URL: `https://dex.example.com`
 - Authorization callback URL: `https://dex.example.com/callback`
 
-## 2. Setup dex
-
-Configure the dex with the following config:
+Deploy the [dex](https://github.com/dexidp/dex) with the following config:
 
 ```yaml
 issuer: https://dex.example.com
@@ -29,89 +29,79 @@ connectors:
     clientSecret: YOUR_GITHUB_CLIENT_SECRET
     redirectURI: https://dex.example.com/callback
 staticClients:
-- id: kubernetes
+- id: YOUR_CLIENT_ID
   name: Kubernetes
   redirectURIs:
-    - http://localhost:8000
-    - http://localhost:18000
+  - http://localhost:8000
+  - http://localhost:18000
   secret: YOUR_DEX_CLIENT_SECRET
 ```
 
-Now test authentication with the dex.
+
+## 2. Verify authentication
+
+Run the following command:
 
 ```sh
-kubectl oidc-login get-token -v1 \
+kubectl oidc-login setup \
   --oidc-issuer-url=https://dex.example.com \
-  --oidc-client-id=kubernetes \
-  --oidc-client-secret=YOUR_DEX_CLIENT_SECRET
+  --oidc-client-id=YOUR_CLIENT_ID \
+  --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
-You should get claims like:
+It will open the browser and you can log in to the provider.
 
-```
-I0827 12:29:03.086531   23722 get_token.go:59] the ID token has the claim: aud=kubernetes
-I0827 12:29:03.086553   23722 get_token.go:59] the ID token has the claim: iss=https://dex.example.com
-I0827 12:29:03.086561   23722 get_token.go:59] the ID token has the claim: sub=YOUR_SUBJECT
-```
 
-## 3. Setup Kubernetes API server
+## 3. Bind a role
 
-Configure your Kubernetes API server accepts [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
-
-```
---oidc-issuer-url=https://dex.example.com
---oidc-client-id=kubernetes
-```
-
-If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and add the following spec:
-
-```yaml
-spec:
-  kubeAPIServer:
-    oidcIssuerURL: https://dex.example.com
-    oidcClientID: kubernetes
-```
-
-## 4. Create a role binding
-
-Here assign the `cluster-admin` role to your subject.
+Bind the `cluster-admin` role to you.
+Apply the following manifest:
 
 ```yaml
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: keycloak-admin-group
+  name: oidc-admin-group
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: cluster-admin
 subjects:
 - kind: User
-  name: YOUR_SUBJECT
+  name: https://dex.example.com#YOUR_SUBJECT
 ```
 
-You can create a custom role and assign it as well.
+As well as you can create a custom role and bind it.
 
-## 5. Setup kubeconfig
 
-Configure the kubeconfig like:
+## 4. Set up the Kubernetes API server
+
+Add the following options to the kube-apiserver:
+
+```
+--oidc-issuer-url=https://dex.example.com
+--oidc-client-id=YOUR_CLIENT_ID
+```
+
+See [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) for details.
+
+If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and append the following settings:
 
 ```yaml
-apiVersion: v1
-clusters:
-- cluster:
-    server: https://api.example.com
-  name: example.k8s.local
-contexts:
-- context:
-    cluster: example.k8s.local
-    user: dex
-  name: dex@example.k8s.local
-current-context: dex@example.k8s.local
-kind: Config
-preferences: {}
+spec:
+  kubeAPIServer:
+    oidcIssuerURL: https://dex.example.com
+    oidcClientID: YOUR_CLIENT_ID
+```
+
+
+## 5. Set up the kubeconfig
+
+Add the following user to the kubeconfig:
+
+```yaml
 users:
-- name: dex
+- name: google
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1beta1
@@ -120,13 +110,14 @@ users:
       - oidc-login
       - get-token
       - --oidc-issuer-url=https://dex.example.com
-      - --oidc-client-id=kubernetes
-      - --oidc-client-secret=YOUR_DEX_CLIENT_SECRET
+      - --oidc-client-id=YOUR_CLIENT_ID
+      - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
 You can share the kubeconfig to your team members for on-boarding.
 
-## 6. Run kubectl
+
+## 6. Verify cluster access
 
 Make sure you can access the Kubernetes cluster.
 
@@ -134,7 +125,6 @@ Make sure you can access the Kubernetes cluster.
 % kubectl get nodes
 Open http://localhost:8000 for authentication
 You got a valid token until 2019-05-16 22:03:13 +0900 JST
-Updated ~/.kubeconfig
 NAME                                    STATUS    ROLES     AGE       VERSION
 ip-1-2-3-4.us-west-2.compute.internal   Ready     node      21d       v1.9.6
 ip-1-2-3-5.us-west-2.compute.internal   Ready     node      20d       v1.9.6

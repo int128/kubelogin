@@ -2,6 +2,8 @@ package standalone
 
 import (
 	"context"
+	"strings"
+	"text/template"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
@@ -35,12 +37,9 @@ type Input struct {
 	SkipTLSVerify      bool
 }
 
-const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubectl for OIDC authentication?
-  kubectl config set-credentials CONTEXT_NAME \
-    --auth-provider oidc \
-    --auth-provider-arg idp-issuer-url=https://issuer.example.com \
-    --auth-provider-arg client-id=YOUR_CLIENT_ID \
-    --auth-provider-arg client-secret=YOUR_CLIENT_SECRET`
+const oidcConfigErrorMessage = `You need to set up the kubeconfig for OpenID Connect authentication.
+See https://github.com/int128/kubelogin for more.
+`
 
 // Standalone provides the use case of explicit login.
 //
@@ -61,6 +60,9 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	if err != nil {
 		u.Logger.Printf(oidcConfigErrorMessage)
 		return xerrors.Errorf("could not find the current authentication provider: %w", err)
+	}
+	if err := u.showDeprecation(in, authProvider); err != nil {
+		return xerrors.Errorf("could not show deprecation message: %w", err)
 	}
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
@@ -92,5 +94,67 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	if err := u.Kubeconfig.UpdateAuthProvider(authProvider); err != nil {
 		return xerrors.Errorf("could not write the token to the kubeconfig: %w", err)
 	}
+	return nil
+}
+
+var deprecationTpl = template.Must(template.New("").Parse(
+	`IMPORTANT NOTICE:
+The credential plugin mode is available since v1.14.0.
+Kubectl will automatically run kubelogin and you do not need to run kubelogin explicitly.
+
+You can switch to the credential plugin mode by setting the following user to
+{{ .Kubeconfig }}.
+---
+users:
+- name: oidc
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: kubectl
+      args:
+      - oidc-login
+      - get-token
+{{- range .Args }}
+      - {{ . }}
+{{- end }}
+---
+See https://github.com/int128/kubelogin for more.
+
+`))
+
+type deprecationVars struct {
+	Kubeconfig string
+	Args       []string
+}
+
+func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error {
+	var args []string
+	args = append(args, "--oidc-issuer-url="+p.OIDCConfig.IDPIssuerURL)
+	args = append(args, "--oidc-client-id="+p.OIDCConfig.ClientID)
+	if p.OIDCConfig.ClientSecret != "" {
+		args = append(args, "--oidc-client-secret="+p.OIDCConfig.ClientSecret)
+	}
+	for _, extraScope := range p.OIDCConfig.ExtraScopes {
+		args = append(args, "--oidc-extra-scope="+extraScope)
+	}
+	if p.OIDCConfig.IDPCertificateAuthority != "" {
+		args = append(args, "--certificate-authority="+p.OIDCConfig.IDPCertificateAuthority)
+	}
+	if in.CACertFilename != "" {
+		args = append(args, "--certificate-authority="+in.CACertFilename)
+	}
+	if in.Username != "" {
+		args = append(args, "--username="+in.Username)
+	}
+
+	v := deprecationVars{
+		Kubeconfig: p.LocationOfOrigin,
+		Args:       args,
+	}
+	var b strings.Builder
+	if err := deprecationTpl.Execute(&b, &v); err != nil {
+		return xerrors.Errorf("could not render the template: %w", err)
+	}
+	u.Logger.Printf("%s", b.String())
 	return nil
 }
