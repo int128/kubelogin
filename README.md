@@ -12,7 +12,7 @@ Take a look at the following diagram:
 
 ## Getting Started
 
-### Install
+### Setup
 
 Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases) as follows:
 
@@ -29,20 +29,9 @@ unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
 
-### Setup
-
 You need to set up the OIDC provider, role binding, Kubernetes API server and kubeconfig.
-See the following documents for more:
+See [the setup guide](docs/setup.md) for more.
 
-- [Getting Started with Google Identity Platform](docs/google.md)
-- [Getting Started with dex and GitHub](docs/dex.md)
-- [Getting Started with Keycloak](docs/keycloak.md)
-
-Run the following command to show the setup instruction.
-
-```sh
-kubectl oidc-login setup
-```
 
 ### Run
 
