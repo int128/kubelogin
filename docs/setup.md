@@ -104,13 +104,18 @@ Variable                | Value
 ### Okta
 
 You can log in with an Okta user.
+Okta supports [the authorization code flow with PKCE](https://developer.okta.com/docs/guides/implement-auth-code-pkce/overview/)
+and this section explains how to set up it.
 
 Open your Okta organization and create an application with the following options:
 
+- Application type: Native
+- Initiate login URI: `http://localhost:8000`
 - Login redirect URIs:
     - `http://localhost:8000`
     - `http://localhost:18000` (used if the port 8000 is already in use)
-- Grant type allowed: Authorization Code
+- Allowed grant types: Authorization Code
+- Client authentication: Use PKCE (for public clients)
 
 Replace the following variables in the later sections.
 
@@ -118,7 +123,8 @@ Variable                | Value
 ------------------------|------
 `ISSUER_URL`            | `https://YOUR_ORGANIZATION.okta.com`
 `YOUR_CLIENT_ID`        | random string
-`YOUR_CLIENT_SECRET`    | random string
+
+You do not need to set `YOUR_CLIENT_SECRET`.
 
 
 ## 2. Verify authentication
