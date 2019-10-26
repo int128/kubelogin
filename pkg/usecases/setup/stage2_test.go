@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
-	"github.com/int128/kubelogin/pkg/usecases/auth/mock_auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 )
 
 func TestSetup_DoStage2(t *testing.T) {
@@ -28,9 +28,9 @@ func TestSetup_DoStage2(t *testing.T) {
 		SkipTLSVerify:   true,
 	}
 
-	mockAuthentication := mock_auth.NewMockInterface(ctrl)
+	mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 	mockAuthentication.EXPECT().
-		Do(ctx, auth.Input{
+		Do(ctx, authentication.Input{
 			OIDCConfig: kubeconfig.OIDCConfig{
 				IDPIssuerURL: "https://accounts.google.com",
 				ClientID:     "YOUR_CLIENT_ID",
@@ -42,7 +42,7 @@ func TestSetup_DoStage2(t *testing.T) {
 			CACertFilename:  "/path/to/cert",
 			SkipTLSVerify:   true,
 		}).
-		Return(&auth.Output{
+		Return(&authentication.Output{
 			IDToken:        "YOUR_ID_TOKEN",
 			RefreshToken:   "YOUR_REFRESH_TOKEN",
 			IDTokenSubject: "YOUR_SUBJECT",

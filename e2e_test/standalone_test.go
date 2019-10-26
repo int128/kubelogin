@@ -17,7 +17,7 @@ import (
 	"github.com/int128/kubelogin/e2e_test/localserver"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/di"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
 
 var (
@@ -312,7 +312,7 @@ func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, server
 		})
 }
 
-func runCmd(t *testing.T, ctx context.Context, localServerReadyFunc auth.LocalServerReadyFunc, args ...string) {
+func runCmd(t *testing.T, ctx context.Context, localServerReadyFunc authentication.LocalServerReadyFunc, args ...string) {
 	t.Helper()
 	cmd := di.NewCmdForHeadless(mock_logger.New(t), localServerReadyFunc, nil)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "--v=1"}, args...), "HEAD")
@@ -321,7 +321,7 @@ func runCmd(t *testing.T, ctx context.Context, localServerReadyFunc auth.LocalSe
 	}
 }
 
-func openBrowserOnReadyFunc(t *testing.T, ctx context.Context, clientConfig *tls.Config) auth.LocalServerReadyFunc {
+func openBrowserOnReadyFunc(t *testing.T, ctx context.Context, clientConfig *tls.Config) authentication.LocalServerReadyFunc {
 	return func(url string) {
 		client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
 		req, err := http.NewRequest("GET", url, nil)

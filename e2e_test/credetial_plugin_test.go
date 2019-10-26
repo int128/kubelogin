@@ -15,7 +15,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/di"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
 
 // Run the integration tests of the credential plugin use-case.
@@ -74,7 +74,7 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 	})
 }
 
-func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc auth.LocalServerReadyFunc, interaction credentialplugin.Interface, args ...string) {
+func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc authentication.LocalServerReadyFunc, interaction credentialplugin.Interface, args ...string) {
 	t.Helper()
 	cmd := di.NewCmdForHeadless(mock_logger.New(t), localServerReadyFunc, interaction)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "get-token", "--v=1"}, args...), "HEAD")

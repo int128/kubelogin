@@ -1,4 +1,4 @@
-package auth
+package authentication
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-//go:generate mockgen -destination mock_auth/mock_auth.go github.com/int128/kubelogin/pkg/usecases/auth Interface
+//go:generate mockgen -destination mock_authentication/mock_authentication.go github.com/int128/kubelogin/pkg/usecases/authentication Interface
 
 // Set provides the use-case of Authentication.
 var Set = wire.NewSet(

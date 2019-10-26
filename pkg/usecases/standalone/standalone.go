@@ -8,7 +8,7 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
 
@@ -48,7 +48,7 @@ See https://github.com/int128/kubelogin for more.
 // Otherwise, update the kubeconfig.
 //
 type Standalone struct {
-	Authentication auth.Interface
+	Authentication authentication.Interface
 	Kubeconfig     kubeconfig.Interface
 	Logger         logger.Interface
 }
@@ -67,7 +67,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
 
-	out, err := u.Authentication.Do(ctx, auth.Input{
+	out, err := u.Authentication.Do(ctx, authentication.Input{
 		OIDCConfig:      authProvider.OIDCConfig,
 		SkipOpenBrowser: in.SkipOpenBrowser,
 		BindAddress:     in.BindAddress,

@@ -12,7 +12,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	credentialPluginUseCase "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
@@ -22,8 +22,8 @@ import (
 func NewCmd() cmd.Interface {
 	wire.Build(
 		// use-cases
-		auth.Set,
-		wire.Value(auth.DefaultLocalServerReadyFunc),
+		authentication.Set,
+		wire.Value(authentication.DefaultLocalServerReadyFunc),
 		standalone.Set,
 		credentialPluginUseCase.Set,
 		setup.Set,
@@ -41,9 +41,9 @@ func NewCmd() cmd.Interface {
 }
 
 // NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
-func NewCmdForHeadless(logger.Interface, auth.LocalServerReadyFunc, credentialPluginAdaptor.Interface) cmd.Interface {
+func NewCmdForHeadless(logger.Interface, authentication.LocalServerReadyFunc, credentialPluginAdaptor.Interface) cmd.Interface {
 	wire.Build(
-		auth.Set,
+		authentication.Set,
 		standalone.Set,
 		credentialPluginUseCase.Set,
 		setup.Set,

@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
 
 var Set = wire.NewSet(
@@ -20,6 +20,6 @@ type Interface interface {
 }
 
 type Setup struct {
-	Authentication auth.Interface
+	Authentication authentication.Interface
 	Logger         logger.Interface
 }

@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
 
@@ -79,7 +79,7 @@ type Stage2Input struct {
 
 func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	u.Logger.Printf(`## 2. Verify authentication`)
-	out, err := u.Authentication.Do(ctx, auth.Input{
+	out, err := u.Authentication.Do(ctx, authentication.Input{
 		OIDCConfig: kubeconfig.OIDCConfig{
 			IDPIssuerURL: in.IssuerURL,
 			ClientID:     in.ClientID,
