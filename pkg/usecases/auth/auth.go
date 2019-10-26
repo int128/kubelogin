@@ -35,7 +35,7 @@ type Interface interface {
 type Input struct {
 	OIDCConfig      kubeconfig.OIDCConfig
 	SkipOpenBrowser bool
-	ListenPort      []int
+	BindAddress     []string
 	Username        string // If set, perform the resource owner password credentials grant
 	Password        string // If empty, read a password using Env.ReadPassword()
 	CACertFilename  string // If set, use the CA cert
@@ -158,7 +158,7 @@ func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oi
 		}
 	})
 	eg.Go(func() error {
-		tokenSet, err := client.AuthenticateByCode(ctx, in.ListenPort, readyChan)
+		tokenSet, err := client.AuthenticateByCode(ctx, in.BindAddress, readyChan)
 		if err != nil {
 			return xerrors.Errorf("error while the authorization code flow: %w", err)
 		}

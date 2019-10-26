@@ -66,7 +66,7 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 				KubeconfigUser:     kubeconfig.UserName(o.User),
 				CACertFilename:     o.CertificateAuthority,
 				SkipTLSVerify:      o.SkipTLSVerify,
-				ListenPort:         o.ListenPort,
+				BindAddress:        translateListenPortToBindAddress(o.ListenPort),
 				SkipOpenBrowser:    o.SkipOpenBrowser,
 				Username:           o.Username,
 				Password:           o.Password,

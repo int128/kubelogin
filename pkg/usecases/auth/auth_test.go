@@ -27,7 +27,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			ListenPort:      []int{10000},
+			BindAddress:     []string{"127.0.0.1:8000"},
 			SkipOpenBrowser: true,
 			CACertFilename:  "/path/to/cert",
 			SkipTLSVerify:   true,
@@ -38,8 +38,8 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(gomock.Any(), []int{10000}, gomock.Any()).
-			Do(func(_ context.Context, _ []int, readyChan chan<- string) {
+			AuthenticateByCode(gomock.Any(), []string{"127.0.0.1:8000"}, gomock.Any()).
+			Do(func(_ context.Context, _ []string, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
@@ -83,7 +83,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			ListenPort: []int{10000},
+			BindAddress: []string{"127.0.0.1:8000"},
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
@@ -91,8 +91,8 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(gomock.Any(), []int{10000}, gomock.Any()).
-			Do(func(_ context.Context, _ []int, readyChan chan<- string) {
+			AuthenticateByCode(gomock.Any(), []string{"127.0.0.1:8000"}, gomock.Any()).
+			Do(func(_ context.Context, _ []string, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
@@ -373,7 +373,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			ListenPort:      []int{10000},
+			BindAddress:     []string{"127.0.0.1:8000"},
 			SkipOpenBrowser: true,
 			OIDCConfig: kubeconfig.OIDCConfig{
 				ClientID:     "YOUR_CLIENT_ID",
@@ -395,8 +395,8 @@ func TestAuthentication_Do(t *testing.T) {
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
 			Return(nil, xerrors.New("token has expired"))
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(gomock.Any(), []int{10000}, gomock.Any()).
-			Do(func(_ context.Context, _ []int, readyChan chan<- string) {
+			AuthenticateByCode(gomock.Any(), []string{"127.0.0.1:8000"}, gomock.Any()).
+			Do(func(_ context.Context, _ []string, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{

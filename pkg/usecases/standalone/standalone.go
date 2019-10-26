@@ -30,7 +30,7 @@ type Input struct {
 	KubeconfigContext  kubeconfig.ContextName // Default to the current context but ignored if KubeconfigUser is set
 	KubeconfigUser     kubeconfig.UserName    // Default to the user of the context
 	SkipOpenBrowser    bool
-	ListenPort         []int
+	BindAddress        []string
 	Username           string // If set, perform the resource owner password credentials grant
 	Password           string // If empty, read a password using Env.ReadPassword()
 	CACertFilename     string // If set, use the CA cert
@@ -70,7 +70,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	out, err := u.Authentication.Do(ctx, auth.Input{
 		OIDCConfig:      authProvider.OIDCConfig,
 		SkipOpenBrowser: in.SkipOpenBrowser,
-		ListenPort:      in.ListenPort,
+		BindAddress:     in.BindAddress,
 		Username:        in.Username,
 		Password:        in.Password,
 		CACertFilename:  in.CACertFilename,

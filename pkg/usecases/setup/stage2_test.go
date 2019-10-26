@@ -23,7 +23,7 @@ func TestSetup_DoStage2(t *testing.T) {
 		ClientSecret:    "YOUR_CLIENT_SECRET",
 		ExtraScopes:     []string{"email"},
 		SkipOpenBrowser: true,
-		ListenPort:      []int{8000},
+		BindAddress:     []string{"127.0.0.1:8000"},
 		CACertFilename:  "/path/to/cert",
 		SkipTLSVerify:   true,
 	}
@@ -38,7 +38,7 @@ func TestSetup_DoStage2(t *testing.T) {
 				ExtraScopes:  []string{"email"},
 			},
 			SkipOpenBrowser: true,
-			ListenPort:      []int{8000},
+			BindAddress:     []string{"127.0.0.1:8000"},
 			CACertFilename:  "/path/to/cert",
 			SkipTLSVerify:   true,
 		}).
