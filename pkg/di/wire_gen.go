@@ -6,6 +6,7 @@
 package di
 
 import (
+	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
@@ -36,11 +37,15 @@ func NewCmd() cmd.Interface {
 		Logger:               loggerInterface,
 		LocalServerReadyFunc: localServerReadyFunc,
 	}
-	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
+	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
+		Logger: loggerInterface,
+	}
+	certpoolFactory := &certpool.Factory{}
 	standaloneStandalone := &standalone.Standalone{
-		Authentication: authenticationAuthentication,
-		Kubeconfig:     kubeconfigKubeconfig,
-		Logger:         loggerInterface,
+		Authentication:  authenticationAuthentication,
+		Kubeconfig:      kubeconfigKubeconfig,
+		CertPoolFactory: certpoolFactory,
+		Logger:          loggerInterface,
 	}
 	root := &cmd.Root{
 		Standalone: standaloneStandalone,
@@ -51,6 +56,7 @@ func NewCmd() cmd.Interface {
 	getToken := &credentialplugin2.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
+		CertPoolFactory:      certpoolFactory,
 		Interaction:          interaction,
 		Logger:               loggerInterface,
 	}
@@ -59,8 +65,9 @@ func NewCmd() cmd.Interface {
 		Logger:   loggerInterface,
 	}
 	setupSetup := &setup.Setup{
-		Authentication: authenticationAuthentication,
-		Logger:         loggerInterface,
+		Authentication:  authenticationAuthentication,
+		CertPoolFactory: certpoolFactory,
+		Logger:          loggerInterface,
 	}
 	cmdSetup := &cmd.Setup{
 		Setup: setupSetup,
@@ -91,11 +98,15 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 		Logger:               loggerInterface,
 		LocalServerReadyFunc: localServerReadyFunc,
 	}
-	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
+	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
+		Logger: loggerInterface,
+	}
+	certpoolFactory := &certpool.Factory{}
 	standaloneStandalone := &standalone.Standalone{
-		Authentication: authenticationAuthentication,
-		Kubeconfig:     kubeconfigKubeconfig,
-		Logger:         loggerInterface,
+		Authentication:  authenticationAuthentication,
+		Kubeconfig:      kubeconfigKubeconfig,
+		CertPoolFactory: certpoolFactory,
+		Logger:          loggerInterface,
 	}
 	root := &cmd.Root{
 		Standalone: standaloneStandalone,
@@ -105,6 +116,7 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 	getToken := &credentialplugin2.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
+		CertPoolFactory:      certpoolFactory,
 		Interaction:          credentialpluginInterface,
 		Logger:               loggerInterface,
 	}
@@ -113,8 +125,9 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 		Logger:   loggerInterface,
 	}
 	setupSetup := &setup.Setup{
-		Authentication: authenticationAuthentication,
-		Logger:         loggerInterface,
+		Authentication:  authenticationAuthentication,
+		CertPoolFactory: certpoolFactory,
+		Logger:          loggerInterface,
 	}
 	cmdSetup := &cmd.Setup{
 		Setup: setupSetup,

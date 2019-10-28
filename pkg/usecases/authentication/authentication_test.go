@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc/mock_oidc"
@@ -26,15 +26,15 @@ func TestAuthentication_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
+		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		in := Input{
 			BindAddress:     []string{"127.0.0.1:8000"},
 			SkipOpenBrowser: true,
-			CACertFilename:  "/path/to/cert",
+			CertPool:        mockCertPool,
 			SkipTLSVerify:   true,
-			OIDCConfig: kubeconfig.OIDCConfig{
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			},
+			IssuerURL:       "https://issuer.example.com",
+			ClientID:        "YOUR_CLIENT_ID",
+			ClientSecret:    "YOUR_CLIENT_SECRET",
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -52,9 +52,11 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
 			New(ctx, oidc.ClientConfig{
-				Config:         in.OIDCConfig,
-				CACertFilename: "/path/to/cert",
-				SkipTLSVerify:  true,
+				IssuerURL:     "https://issuer.example.com",
+				ClientID:      "YOUR_CLIENT_ID",
+				ClientSecret:  "YOUR_CLIENT_SECRET",
+				CertPool:      mockCertPool,
+				SkipTLSVerify: true,
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
@@ -83,11 +85,10 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			BindAddress: []string{"127.0.0.1:8000"},
-			OIDCConfig: kubeconfig.OIDCConfig{
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			},
+			BindAddress:  []string{"127.0.0.1:8000"},
+			IssuerURL:    "https://issuer.example.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -104,7 +105,11 @@ func TestAuthentication_Do(t *testing.T) {
 			}, nil)
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
-			New(ctx, oidc.ClientConfig{Config: in.OIDCConfig}).
+			New(ctx, oidc.ClientConfig{
+				IssuerURL:    "https://issuer.example.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			}).
 			Return(mockOIDCClient, nil)
 		mockEnv := mock_env.NewMockInterface(ctrl)
 		mockEnv.EXPECT().
@@ -136,14 +141,13 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			Username:       "USER",
-			Password:       "PASS",
-			CACertFilename: "/path/to/cert",
-			SkipTLSVerify:  true,
-			OIDCConfig: kubeconfig.OIDCConfig{
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			},
+			Username: "USER",
+			Password: "PASS",
+			//CACertFilename: "/path/to/cert",
+			SkipTLSVerify: true,
+			IssuerURL:     "https://issuer.example.com",
+			ClientID:      "YOUR_CLIENT_ID",
+			ClientSecret:  "YOUR_CLIENT_SECRET",
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -158,9 +162,11 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
 			New(ctx, oidc.ClientConfig{
-				Config:         in.OIDCConfig,
-				CACertFilename: "/path/to/cert",
-				SkipTLSVerify:  true,
+				IssuerURL:    "https://issuer.example.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				//CACertFilename: "/path/to/cert",
+				SkipTLSVerify: true,
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
@@ -189,11 +195,10 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			Username: "USER",
-			OIDCConfig: kubeconfig.OIDCConfig{
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			},
+			Username:     "USER",
+			IssuerURL:    "https://issuer.example.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
 		}
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -208,7 +213,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
 			New(ctx, oidc.ClientConfig{
-				Config: in.OIDCConfig,
+				IssuerURL:    "https://issuer.example.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(mockOIDCClient, nil)
 		mockEnv := mock_env.NewMockInterface(ctrl)
@@ -240,16 +247,17 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			Username: "USER",
-			OIDCConfig: kubeconfig.OIDCConfig{
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			},
+			Username:     "USER",
+			IssuerURL:    "https://issuer.example.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
 		}
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
 			New(ctx, oidc.ClientConfig{
-				Config: in.OIDCConfig,
+				IssuerURL:    "https://issuer.example.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(mock_oidc.NewMockInterface(ctrl), nil)
 		mockEnv := mock_env.NewMockInterface(ctrl)
@@ -274,11 +282,10 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			OIDCConfig: kubeconfig.OIDCConfig{
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-				IDToken:      "VALID_ID_TOKEN",
-			},
+			IssuerURL:    "https://issuer.example.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
+			IDToken:      "VALID_ID_TOKEN",
 		}
 		mockOIDCDecoder := mock_oidc.NewMockDecoderInterface(ctrl)
 		mockOIDCDecoder.EXPECT().
@@ -315,12 +322,11 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			OIDCConfig: kubeconfig.OIDCConfig{
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-				IDToken:      "EXPIRED_ID_TOKEN",
-				RefreshToken: "VALID_REFRESH_TOKEN",
-			},
+			IssuerURL:    "https://issuer.example.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
+			IDToken:      "EXPIRED_ID_TOKEN",
+			RefreshToken: "VALID_REFRESH_TOKEN",
 		}
 		mockOIDCDecoder := mock_oidc.NewMockDecoderInterface(ctrl)
 		mockOIDCDecoder.EXPECT().
@@ -343,7 +349,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
 			New(ctx, oidc.ClientConfig{
-				Config: in.OIDCConfig,
+				IssuerURL:    "https://issuer.example.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
@@ -375,12 +383,11 @@ func TestAuthentication_Do(t *testing.T) {
 		in := Input{
 			BindAddress:     []string{"127.0.0.1:8000"},
 			SkipOpenBrowser: true,
-			OIDCConfig: kubeconfig.OIDCConfig{
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-				IDToken:      "EXPIRED_ID_TOKEN",
-				RefreshToken: "EXPIRED_REFRESH_TOKEN",
-			},
+			IssuerURL:       "https://issuer.example.com",
+			ClientID:        "YOUR_CLIENT_ID",
+			ClientSecret:    "YOUR_CLIENT_SECRET",
+			IDToken:         "EXPIRED_ID_TOKEN",
+			RefreshToken:    "EXPIRED_REFRESH_TOKEN",
 		}
 		mockOIDCDecoder := mock_oidc.NewMockDecoderInterface(ctrl)
 		mockOIDCDecoder.EXPECT().
@@ -409,7 +416,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
 		mockOIDCFactory.EXPECT().
 			New(ctx, oidc.ClientConfig{
-				Config: in.OIDCConfig,
+				IssuerURL:    "https://issuer.example.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{

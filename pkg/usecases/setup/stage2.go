@@ -6,7 +6,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
@@ -79,16 +78,20 @@ type Stage2Input struct {
 
 func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	u.Logger.Printf(`## 2. Verify authentication`)
+	certPool := u.CertPoolFactory.New()
+	if in.CACertFilename != "" {
+		if err := certPool.LoadFromFile(in.CACertFilename); err != nil {
+			return xerrors.Errorf("could not load the certificate: %w", err)
+		}
+	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
-		OIDCConfig: kubeconfig.OIDCConfig{
-			IDPIssuerURL: in.IssuerURL,
-			ClientID:     in.ClientID,
-			ClientSecret: in.ClientSecret,
-			ExtraScopes:  in.ExtraScopes,
-		},
+		IssuerURL:       in.IssuerURL,
+		ClientID:        in.ClientID,
+		ClientSecret:    in.ClientSecret,
+		ExtraScopes:     in.ExtraScopes,
 		SkipOpenBrowser: in.SkipOpenBrowser,
 		BindAddress:     in.BindAddress,
-		CACertFilename:  in.CACertFilename,
+		CertPool:        certPool,
 		SkipTLSVerify:   in.SkipTLSVerify,
 	})
 	if err != nil {

@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
@@ -37,19 +37,24 @@ func TestGetToken_Do(t *testing.T) {
 			CACertFilename:  "/path/to/cert",
 			SkipTLSVerify:   true,
 		}
+		mockCertPool := mock_certpool.NewMockInterface(ctrl)
+		mockCertPool.EXPECT().
+			LoadFromFile("/path/to/cert")
+		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
+		mockCertPoolFactory.EXPECT().
+			New().
+			Return(mockCertPool)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					IDPIssuerURL: "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
+				IssuerURL:       "https://accounts.google.com",
+				ClientID:        "YOUR_CLIENT_ID",
+				ClientSecret:    "YOUR_CLIENT_SECRET",
 				BindAddress:     []string{"127.0.0.1:8000"},
 				SkipOpenBrowser: true,
 				Username:        "USER",
 				Password:        "PASS",
-				CACertFilename:  "/path/to/cert",
+				CertPool:        mockCertPool,
 				SkipTLSVerify:   true,
 			}).
 			Return(&authentication.Output{
@@ -84,6 +89,7 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
+			CertPoolFactory:      mockCertPoolFactory,
 			Interaction:          credentialPluginInteraction,
 			Logger:               mock_logger.New(t),
 		}
@@ -102,15 +108,19 @@ func TestGetToken_Do(t *testing.T) {
 			ClientSecret:  "YOUR_CLIENT_SECRET",
 			TokenCacheDir: "/path/to/token-cache",
 		}
+		mockCertPool := mock_certpool.NewMockInterface(ctrl)
+		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
+		mockCertPoolFactory.EXPECT().
+			New().
+			Return(mockCertPool)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					IDPIssuerURL: "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-					IDToken:      "VALID_ID_TOKEN",
-				},
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				IDToken:      "VALID_ID_TOKEN",
+				CertPool:     mockCertPool,
 			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
@@ -136,6 +146,7 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
+			CertPoolFactory:      mockCertPoolFactory,
 			Interaction:          credentialPluginInteraction,
 			Logger:               mock_logger.New(t),
 		}
@@ -154,14 +165,18 @@ func TestGetToken_Do(t *testing.T) {
 			ClientSecret:  "YOUR_CLIENT_SECRET",
 			TokenCacheDir: "/path/to/token-cache",
 		}
+		mockCertPool := mock_certpool.NewMockInterface(ctrl)
+		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
+		mockCertPoolFactory.EXPECT().
+			New().
+			Return(mockCertPool)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					IDPIssuerURL: "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				CertPool:     mockCertPool,
 			}).
 			Return(nil, xerrors.New("authentication error"))
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
@@ -174,6 +189,7 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
+			CertPoolFactory:      mockCertPoolFactory,
 			Interaction:          mock_credentialplugin.NewMockInterface(ctrl),
 			Logger:               mock_logger.New(t),
 		}

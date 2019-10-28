@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
@@ -48,9 +49,10 @@ See https://github.com/int128/kubelogin for more.
 // Otherwise, update the kubeconfig.
 //
 type Standalone struct {
-	Authentication authentication.Interface
-	Kubeconfig     kubeconfig.Interface
-	Logger         logger.Interface
+	Authentication  authentication.Interface
+	Kubeconfig      kubeconfig.Interface
+	CertPoolFactory certpool.FactoryInterface
+	Logger          logger.Interface
 }
 
 func (u *Standalone) Do(ctx context.Context, in Input) error {
@@ -66,15 +68,35 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	}
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
-
+	certPool := u.CertPoolFactory.New()
+	if authProvider.IDPCertificateAuthority != "" {
+		if err := certPool.LoadFromFile(authProvider.IDPCertificateAuthority); err != nil {
+			return xerrors.Errorf("could not load the certificate of idp-certificate-authority: %w", err)
+		}
+	}
+	if authProvider.IDPCertificateAuthorityData != "" {
+		if err := certPool.LoadBase64(authProvider.IDPCertificateAuthorityData); err != nil {
+			return xerrors.Errorf("could not load the certificate of idp-certificate-authority-data: %w", err)
+		}
+	}
+	if in.CACertFilename != "" {
+		if err := certPool.LoadFromFile(in.CACertFilename); err != nil {
+			return xerrors.Errorf("could not load the certificate: %w", err)
+		}
+	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
-		OIDCConfig:      authProvider.OIDCConfig,
+		IssuerURL:       authProvider.IDPIssuerURL,
+		ClientID:        authProvider.ClientID,
+		ClientSecret:    authProvider.ClientSecret,
+		ExtraScopes:     authProvider.ExtraScopes,
 		SkipOpenBrowser: in.SkipOpenBrowser,
 		BindAddress:     in.BindAddress,
 		Username:        in.Username,
 		Password:        in.Password,
-		CACertFilename:  in.CACertFilename,
+		CertPool:        certPool,
 		SkipTLSVerify:   in.SkipTLSVerify,
+		IDToken:         authProvider.IDToken,
+		RefreshToken:    authProvider.RefreshToken,
 	})
 	if err != nil {
 		return xerrors.Errorf("error while authentication: %w", err)
@@ -88,8 +110,8 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	}
 
 	u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)
-	authProvider.OIDCConfig.IDToken = out.IDToken
-	authProvider.OIDCConfig.RefreshToken = out.RefreshToken
+	authProvider.IDToken = out.IDToken
+	authProvider.RefreshToken = out.RefreshToken
 	u.Logger.V(1).Infof("writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
 	if err := u.Kubeconfig.UpdateAuthProvider(authProvider); err != nil {
 		return xerrors.Errorf("could not write the token to the kubeconfig: %w", err)
@@ -129,16 +151,16 @@ type deprecationVars struct {
 
 func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error {
 	var args []string
-	args = append(args, "--oidc-issuer-url="+p.OIDCConfig.IDPIssuerURL)
-	args = append(args, "--oidc-client-id="+p.OIDCConfig.ClientID)
-	if p.OIDCConfig.ClientSecret != "" {
-		args = append(args, "--oidc-client-secret="+p.OIDCConfig.ClientSecret)
+	args = append(args, "--oidc-issuer-url="+p.IDPIssuerURL)
+	args = append(args, "--oidc-client-id="+p.ClientID)
+	if p.ClientSecret != "" {
+		args = append(args, "--oidc-client-secret="+p.ClientSecret)
 	}
-	for _, extraScope := range p.OIDCConfig.ExtraScopes {
+	for _, extraScope := range p.ExtraScopes {
 		args = append(args, "--oidc-extra-scope="+extraScope)
 	}
-	if p.OIDCConfig.IDPCertificateAuthority != "" {
-		args = append(args, "--certificate-authority="+p.OIDCConfig.IDPCertificateAuthority)
+	if p.IDPCertificateAuthority != "" {
+		args = append(args, "--certificate-authority="+p.IDPCertificateAuthority)
 	}
 	if in.CACertFilename != "" {
 		args = append(args, "--certificate-authority="+in.CACertFilename)

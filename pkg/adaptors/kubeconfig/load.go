@@ -58,20 +58,16 @@ func findCurrentAuthProvider(config *api.Config, contextName ContextName, userNa
 	if userNode.AuthProvider.Config == nil {
 		return nil, xerrors.New("auth-provider.config is missing")
 	}
-	return &AuthProvider{
-		LocationOfOrigin: userNode.LocationOfOrigin,
-		UserName:         userName,
-		ContextName:      contextName,
-		OIDCConfig:       makeOIDCConfig(userNode.AuthProvider.Config),
-	}, nil
-}
 
-func makeOIDCConfig(m map[string]string) OIDCConfig {
+	m := userNode.AuthProvider.Config
 	var extraScopes []string
 	if m["extra-scopes"] != "" {
 		extraScopes = strings.Split(m["extra-scopes"], ",")
 	}
-	return OIDCConfig{
+	return &AuthProvider{
+		LocationOfOrigin:            userNode.LocationOfOrigin,
+		UserName:                    userName,
+		ContextName:                 contextName,
 		IDPIssuerURL:                m["idp-issuer-url"],
 		ClientID:                    m["client-id"],
 		ClientSecret:                m["client-secret"],
@@ -80,5 +76,5 @@ func makeOIDCConfig(m map[string]string) OIDCConfig {
 		ExtraScopes:                 extraScopes,
 		IDToken:                     m["id-token"],
 		RefreshToken:                m["refresh-token"],
-	}
+	}, nil
 }

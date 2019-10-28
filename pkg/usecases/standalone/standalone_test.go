@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
@@ -30,43 +31,56 @@ func TestStandalone_Do(t *testing.T) {
 			SkipOpenBrowser:    true,
 			Username:           "USER",
 			Password:           "PASS",
-			CACertFilename:     "/path/to/cert",
+			CACertFilename:     "/path/to/cert1",
 			SkipTLSVerify:      true,
 		}
 		currentAuthProvider := &kubeconfig.AuthProvider{
-			LocationOfOrigin: "/path/to/kubeconfig",
-			UserName:         "theUser",
-			OIDCConfig: kubeconfig.OIDCConfig{
-				IDPIssuerURL: "https://accounts.google.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			},
+			LocationOfOrigin:            "/path/to/kubeconfig",
+			UserName:                    "theUser",
+			IDPIssuerURL:                "https://accounts.google.com",
+			ClientID:                    "YOUR_CLIENT_ID",
+			ClientSecret:                "YOUR_CLIENT_SECRET",
+			IDPCertificateAuthority:     "/path/to/cert2",
+			IDPCertificateAuthorityData: "BASE64ENCODED",
 		}
+		mockCertPool := mock_certpool.NewMockInterface(ctrl)
+		mockCertPool.EXPECT().
+			LoadFromFile("/path/to/cert1")
+		mockCertPool.EXPECT().
+			LoadFromFile("/path/to/cert2")
+		mockCertPool.EXPECT().
+			LoadBase64("BASE64ENCODED")
+		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
+		mockCertPoolFactory.EXPECT().
+			New().
+			Return(mockCertPool)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
 			Return(currentAuthProvider, nil)
 		mockKubeconfig.EXPECT().
 			UpdateAuthProvider(&kubeconfig.AuthProvider{
-				LocationOfOrigin: "/path/to/kubeconfig",
-				UserName:         "theUser",
-				OIDCConfig: kubeconfig.OIDCConfig{
-					IDPIssuerURL: "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-					IDToken:      "YOUR_ID_TOKEN",
-					RefreshToken: "YOUR_REFRESH_TOKEN",
-				},
+				LocationOfOrigin:            "/path/to/kubeconfig",
+				UserName:                    "theUser",
+				IDPIssuerURL:                "https://accounts.google.com",
+				ClientID:                    "YOUR_CLIENT_ID",
+				ClientSecret:                "YOUR_CLIENT_SECRET",
+				IDPCertificateAuthority:     "/path/to/cert2",
+				IDPCertificateAuthorityData: "BASE64ENCODED",
+				IDToken:                     "YOUR_ID_TOKEN",
+				RefreshToken:                "YOUR_REFRESH_TOKEN",
 			})
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				OIDCConfig:      currentAuthProvider.OIDCConfig,
+				IssuerURL:       "https://accounts.google.com",
+				ClientID:        "YOUR_CLIENT_ID",
+				ClientSecret:    "YOUR_CLIENT_SECRET",
 				BindAddress:     []string{"127.0.0.1:8000"},
 				SkipOpenBrowser: true,
 				Username:        "USER",
 				Password:        "PASS",
-				CACertFilename:  "/path/to/cert",
+				CertPool:        mockCertPool,
 				SkipTLSVerify:   true,
 			}).
 			Return(&authentication.Output{
@@ -76,9 +90,10 @@ func TestStandalone_Do(t *testing.T) {
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_logger.New(t),
+			Authentication:  mockAuthentication,
+			Kubeconfig:      mockKubeconfig,
+			CertPoolFactory: mockCertPoolFactory,
+			Logger:          mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -93,19 +108,29 @@ func TestStandalone_Do(t *testing.T) {
 		currentAuthProvider := &kubeconfig.AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "theUser",
-			OIDCConfig: kubeconfig.OIDCConfig{
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-				IDToken:      "VALID_ID_TOKEN",
-			},
+			IDPIssuerURL:     "https://accounts.google.com",
+			ClientID:         "YOUR_CLIENT_ID",
+			ClientSecret:     "YOUR_CLIENT_SECRET",
+			IDToken:          "VALID_ID_TOKEN",
 		}
+		mockCertPool := mock_certpool.NewMockInterface(ctrl)
+		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
+		mockCertPoolFactory.EXPECT().
+			New().
+			Return(mockCertPool)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, authentication.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
+			Do(ctx, authentication.Input{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				IDToken:      "VALID_ID_TOKEN",
+				CertPool:     mockCertPool,
+			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                "VALID_ID_TOKEN",
@@ -113,9 +138,10 @@ func TestStandalone_Do(t *testing.T) {
 				IDTokenClaims:          dummyTokenClaims,
 			}, nil)
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_logger.New(t),
+			Authentication:  mockAuthentication,
+			Kubeconfig:      mockKubeconfig,
+			CertPoolFactory: mockCertPoolFactory,
+			Logger:          mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -127,15 +153,17 @@ func TestStandalone_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{}
+		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(nil, xerrors.New("no oidc config"))
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_logger.New(t),
+			Authentication:  mockAuthentication,
+			Kubeconfig:      mockKubeconfig,
+			CertPoolFactory: mockCertPoolFactory,
+			Logger:          mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -150,24 +178,33 @@ func TestStandalone_Do(t *testing.T) {
 		currentAuthProvider := &kubeconfig.AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "google",
-			OIDCConfig: kubeconfig.OIDCConfig{
-				IDPIssuerURL: "https://accounts.google.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			},
+			IDPIssuerURL:     "https://accounts.google.com",
+			ClientID:         "YOUR_CLIENT_ID",
+			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
+		mockCertPool := mock_certpool.NewMockInterface(ctrl)
+		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
+		mockCertPoolFactory.EXPECT().
+			New().
+			Return(mockCertPool)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, authentication.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
+			Do(ctx, authentication.Input{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				CertPool:     mockCertPool,
+			}).
 			Return(nil, xerrors.New("authentication error"))
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_logger.New(t),
+			Authentication:  mockAuthentication,
+			Kubeconfig:      mockKubeconfig,
+			CertPoolFactory: mockCertPoolFactory,
+			Logger:          mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -182,12 +219,15 @@ func TestStandalone_Do(t *testing.T) {
 		currentAuthProvider := &kubeconfig.AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "google",
-			OIDCConfig: kubeconfig.OIDCConfig{
-				IDPIssuerURL: "https://accounts.google.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			},
+			IDPIssuerURL:     "https://accounts.google.com",
+			ClientID:         "YOUR_CLIENT_ID",
+			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
+		mockCertPool := mock_certpool.NewMockInterface(ctrl)
+		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
+		mockCertPoolFactory.EXPECT().
+			New().
+			Return(mockCertPool)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
@@ -196,18 +236,21 @@ func TestStandalone_Do(t *testing.T) {
 			UpdateAuthProvider(&kubeconfig.AuthProvider{
 				LocationOfOrigin: "/path/to/kubeconfig",
 				UserName:         "google",
-				OIDCConfig: kubeconfig.OIDCConfig{
-					IDPIssuerURL: "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-					IDToken:      "YOUR_ID_TOKEN",
-					RefreshToken: "YOUR_REFRESH_TOKEN",
-				},
+				IDPIssuerURL:     "https://accounts.google.com",
+				ClientID:         "YOUR_CLIENT_ID",
+				ClientSecret:     "YOUR_CLIENT_SECRET",
+				IDToken:          "YOUR_ID_TOKEN",
+				RefreshToken:     "YOUR_REFRESH_TOKEN",
 			}).
 			Return(xerrors.New("I/O error"))
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, authentication.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
+			Do(ctx, authentication.Input{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				CertPool:     mockCertPool,
+			}).
 			Return(&authentication.Output{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
@@ -215,9 +258,10 @@ func TestStandalone_Do(t *testing.T) {
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_logger.New(t),
+			Authentication:  mockAuthentication,
+			Kubeconfig:      mockKubeconfig,
+			CertPoolFactory: mockCertPoolFactory,
+			Logger:          mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
