@@ -9,8 +9,8 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
-	"github.com/int128/kubelogin/pkg/usecases/auth/mock_auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"golang.org/x/xerrors"
 )
 
@@ -58,9 +58,9 @@ func TestStandalone_Do(t *testing.T) {
 					RefreshToken: "YOUR_REFRESH_TOKEN",
 				},
 			})
-		mockAuthentication := mock_auth.NewMockInterface(ctrl)
+		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, auth.Input{
+			Do(ctx, authentication.Input{
 				OIDCConfig:      currentAuthProvider.OIDCConfig,
 				BindAddress:     []string{"127.0.0.1:8000"},
 				SkipOpenBrowser: true,
@@ -69,7 +69,7 @@ func TestStandalone_Do(t *testing.T) {
 				CACertFilename:  "/path/to/cert",
 				SkipTLSVerify:   true,
 			}).
-			Return(&auth.Output{
+			Return(&authentication.Output{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,
@@ -103,10 +103,10 @@ func TestStandalone_Do(t *testing.T) {
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
-		mockAuthentication := mock_auth.NewMockInterface(ctrl)
+		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, auth.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
-			Return(&auth.Output{
+			Do(ctx, authentication.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
+			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                "VALID_ID_TOKEN",
 				IDTokenExpiry:          futureTime,
@@ -131,7 +131,7 @@ func TestStandalone_Do(t *testing.T) {
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(nil, xerrors.New("no oidc config"))
-		mockAuthentication := mock_auth.NewMockInterface(ctrl)
+		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
@@ -160,9 +160,9 @@ func TestStandalone_Do(t *testing.T) {
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
-		mockAuthentication := mock_auth.NewMockInterface(ctrl)
+		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, auth.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
+			Do(ctx, authentication.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
 			Return(nil, xerrors.New("authentication error"))
 		u := Standalone{
 			Authentication: mockAuthentication,
@@ -205,10 +205,10 @@ func TestStandalone_Do(t *testing.T) {
 				},
 			}).
 			Return(xerrors.New("I/O error"))
-		mockAuthentication := mock_auth.NewMockInterface(ctrl)
+		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
-			Do(ctx, auth.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
-			Return(&auth.Output{
+			Do(ctx, authentication.Input{OIDCConfig: currentAuthProvider.OIDCConfig}).
+			Return(&authentication.Output{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenExpiry: futureTime,

@@ -11,7 +11,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
 
@@ -42,7 +42,7 @@ type Input struct {
 }
 
 type GetToken struct {
-	Authentication       auth.Interface
+	Authentication       authentication.Interface
 	TokenCacheRepository tokencache.Interface
 	Interaction          credentialplugin.Interface
 	Logger               logger.Interface
@@ -61,7 +61,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	return nil
 }
 
-func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*auth.Output, error) {
+func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*authentication.Output, error) {
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
 	cacheKey := tokencache.Key{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
 	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
@@ -70,7 +70,7 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		cache = &tokencache.TokenCache{}
 	}
 
-	out, err := u.Authentication.Do(ctx, auth.Input{
+	out, err := u.Authentication.Do(ctx, authentication.Input{
 		OIDCConfig: kubeconfig.OIDCConfig{
 			IDPIssuerURL: in.IssuerURL,
 			ClientID:     in.ClientID,

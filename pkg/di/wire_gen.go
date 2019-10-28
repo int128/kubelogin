@@ -13,7 +13,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	credentialplugin2 "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
@@ -29,7 +29,7 @@ func NewCmd() cmd.Interface {
 	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
 	localServerReadyFunc := _wireLocalServerReadyFuncValue
-	authentication := &auth.Authentication{
+	authenticationAuthentication := &authentication.Authentication{
 		OIDCFactory:          factory,
 		OIDCDecoder:          decoder,
 		Env:                  envEnv,
@@ -38,7 +38,7 @@ func NewCmd() cmd.Interface {
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	standaloneStandalone := &standalone.Standalone{
-		Authentication: authentication,
+		Authentication: authenticationAuthentication,
 		Kubeconfig:     kubeconfigKubeconfig,
 		Logger:         loggerInterface,
 	}
@@ -49,7 +49,7 @@ func NewCmd() cmd.Interface {
 	repository := &tokencache.Repository{}
 	interaction := &credentialplugin.Interaction{}
 	getToken := &credentialplugin2.GetToken{
-		Authentication:       authentication,
+		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
 		Interaction:          interaction,
 		Logger:               loggerInterface,
@@ -59,7 +59,7 @@ func NewCmd() cmd.Interface {
 		Logger:   loggerInterface,
 	}
 	setupSetup := &setup.Setup{
-		Authentication: authentication,
+		Authentication: authenticationAuthentication,
 		Logger:         loggerInterface,
 	}
 	cmdSetup := &cmd.Setup{
@@ -75,16 +75,16 @@ func NewCmd() cmd.Interface {
 }
 
 var (
-	_wireLocalServerReadyFuncValue = auth.DefaultLocalServerReadyFunc
+	_wireLocalServerReadyFuncValue = authentication.DefaultLocalServerReadyFunc
 )
 
-func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc auth.LocalServerReadyFunc, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
+func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc authentication.LocalServerReadyFunc, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
 	factory := &oidc.Factory{
 		Logger: loggerInterface,
 	}
 	decoder := &oidc.Decoder{}
 	envEnv := &env.Env{}
-	authentication := &auth.Authentication{
+	authenticationAuthentication := &authentication.Authentication{
 		OIDCFactory:          factory,
 		OIDCDecoder:          decoder,
 		Env:                  envEnv,
@@ -93,7 +93,7 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{}
 	standaloneStandalone := &standalone.Standalone{
-		Authentication: authentication,
+		Authentication: authenticationAuthentication,
 		Kubeconfig:     kubeconfigKubeconfig,
 		Logger:         loggerInterface,
 	}
@@ -103,7 +103,7 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 	}
 	repository := &tokencache.Repository{}
 	getToken := &credentialplugin2.GetToken{
-		Authentication:       authentication,
+		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
 		Interaction:          credentialpluginInterface,
 		Logger:               loggerInterface,
@@ -113,7 +113,7 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 		Logger:   loggerInterface,
 	}
 	setupSetup := &setup.Setup{
-		Authentication: authentication,
+		Authentication: authenticationAuthentication,
 		Logger:         loggerInterface,
 	}
 	cmdSetup := &cmd.Setup{
