@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestCertPool_LoadFromFile(t *testing.T) {
+func TestCertPool_AddFile(t *testing.T) {
 	t.Run("Valid", func(t *testing.T) {
 		var f Factory
 		p := f.New()
@@ -27,7 +27,7 @@ func TestCertPool_LoadFromFile(t *testing.T) {
 	})
 }
 
-func TestCertPool_LoadBase64(t *testing.T) {
+func TestCertPool_AddBase64Encoded(t *testing.T) {
 	var f Factory
 	p := f.New()
 	if err := p.AddBase64Encoded(readFile(t, "testdata/ca2.crt.base64")); err != nil {
