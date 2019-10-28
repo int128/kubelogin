@@ -33,12 +33,11 @@ type Factory struct {
 
 // New returns an instance of adaptors.Interface with the given configuration.
 func (f *Factory) New(ctx context.Context, config ClientConfig) (Interface, error) {
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: config.SkipTLSVerify,
-		RootCAs:            config.CertPool.GetX509OrNil(),
-	}
+	var tlsConfig tls.Config
+	tlsConfig.InsecureSkipVerify = config.SkipTLSVerify
+	config.CertPool.SetRootCAs(&tlsConfig)
 	baseTransport := &http.Transport{
-		TLSClientConfig: tlsConfig,
+		TLSClientConfig: &tlsConfig,
 		Proxy:           http.ProxyFromEnvironment,
 	}
 	loggingTransport := &logging.Transport{

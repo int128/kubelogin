@@ -5,7 +5,7 @@
 package mock_certpool
 
 import (
-	x509 "crypto/x509"
+	tls "crypto/tls"
 	gomock "github.com/golang/mock/gomock"
 	certpool "github.com/int128/kubelogin/pkg/adaptors/certpool"
 	reflect "reflect"
@@ -99,16 +99,14 @@ func (mr *MockInterfaceMockRecorder) AddFile(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFile", reflect.TypeOf((*MockInterface)(nil).AddFile), arg0)
 }
 
-// GetX509OrNil mocks base method
-func (m *MockInterface) GetX509OrNil() *x509.CertPool {
+// SetRootCAs mocks base method
+func (m *MockInterface) SetRootCAs(arg0 *tls.Config) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetX509OrNil")
-	ret0, _ := ret[0].(*x509.CertPool)
-	return ret0
+	m.ctrl.Call(m, "SetRootCAs", arg0)
 }
 
-// GetX509OrNil indicates an expected call of GetX509OrNil
-func (mr *MockInterfaceMockRecorder) GetX509OrNil() *gomock.Call {
+// SetRootCAs indicates an expected call of SetRootCAs
+func (mr *MockInterfaceMockRecorder) SetRootCAs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetX509OrNil", reflect.TypeOf((*MockInterface)(nil).GetX509OrNil))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRootCAs", reflect.TypeOf((*MockInterface)(nil).SetRootCAs), arg0)
 }

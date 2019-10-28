@@ -1,6 +1,7 @@
 package certpool
 
 import (
+	"crypto/tls"
 	"io/ioutil"
 	"testing"
 )
@@ -12,8 +13,9 @@ func TestCertPool_AddFile(t *testing.T) {
 		if err := p.AddFile("testdata/ca1.crt"); err != nil {
 			t.Errorf("AddFile error: %s", err)
 		}
-		n := len(p.GetX509OrNil().Subjects())
-		if n != 1 {
+		var cfg tls.Config
+		p.SetRootCAs(&cfg)
+		if n := len(cfg.RootCAs.Subjects()); n != 1 {
 			t.Errorf("n wants 1 but was %d", n)
 		}
 	})
@@ -33,9 +35,20 @@ func TestCertPool_AddBase64Encoded(t *testing.T) {
 	if err := p.AddBase64Encoded(readFile(t, "testdata/ca2.crt.base64")); err != nil {
 		t.Errorf("AddBase64Encoded error: %s", err)
 	}
-	n := len(p.GetX509OrNil().Subjects())
-	if n != 1 {
+	var cfg tls.Config
+	p.SetRootCAs(&cfg)
+	if n := len(cfg.RootCAs.Subjects()); n != 1 {
 		t.Errorf("n wants 1 but was %d", n)
+	}
+}
+
+func TestCertPool_SetRootCAs(t *testing.T) {
+	var f Factory
+	p := f.New()
+	var cfg tls.Config
+	p.SetRootCAs(&cfg)
+	if cfg.RootCAs != nil {
+		t.Errorf("cfg.RootCAs wants nil but was %+v", cfg.RootCAs)
 	}
 }
 

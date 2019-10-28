@@ -2,6 +2,7 @@
 package certpool
 
 import (
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"io/ioutil"
@@ -34,7 +35,7 @@ func (f *Factory) New() Interface {
 type Interface interface {
 	AddFile(filename string) error
 	AddBase64Encoded(s string) error
-	GetX509OrNil() *x509.CertPool // returns nil if it has no certificate
+	SetRootCAs(cfg *tls.Config)
 }
 
 // CertPool represents a pool of certificates.
@@ -42,13 +43,12 @@ type CertPool struct {
 	pool *x509.CertPool
 }
 
-// GetX509OrNil returns x509.CertPool.
-// It returns nil if it has no certificate.
-func (p *CertPool) GetX509OrNil() *x509.CertPool {
+// SetRootCAs sets cfg.RootCAs if it has any certificate.
+// Otherwise do nothing.
+func (p *CertPool) SetRootCAs(cfg *tls.Config) {
 	if len(p.pool.Subjects()) > 0 {
-		return p.pool
+		cfg.RootCAs = p.pool
 	}
-	return nil
 }
 
 // AddFile loads the certificate from the file.
