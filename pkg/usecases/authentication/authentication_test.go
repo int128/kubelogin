@@ -9,6 +9,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
+	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
+	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder/mock_jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc/mock_oidc"
@@ -287,17 +289,17 @@ func TestAuthentication_Do(t *testing.T) {
 			ClientSecret: "YOUR_CLIENT_SECRET",
 			IDToken:      "VALID_ID_TOKEN",
 		}
-		mockOIDCDecoder := mock_oidc.NewMockDecoderInterface(ctrl)
-		mockOIDCDecoder.EXPECT().
-			DecodeIDToken("VALID_ID_TOKEN").
-			Return(&oidc.DecodedIDToken{
+		mockDecoder := mock_jwtdecoder.NewMockInterface(ctrl)
+		mockDecoder.EXPECT().
+			Decode("VALID_ID_TOKEN").
+			Return(&jwtdecoder.Claims{
 				Subject: "YOUR_SUBJECT",
 				Expiry:  futureTime,
-				Claims:  dummyTokenClaims,
+				Pretty:  dummyTokenClaims,
 			}, nil)
 		u := Authentication{
 			OIDCFactory: mock_oidc.NewMockFactoryInterface(ctrl),
-			OIDCDecoder: mockOIDCDecoder,
+			JWTDecoder:  mockDecoder,
 			Logger:      mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
@@ -328,13 +330,13 @@ func TestAuthentication_Do(t *testing.T) {
 			IDToken:      "EXPIRED_ID_TOKEN",
 			RefreshToken: "VALID_REFRESH_TOKEN",
 		}
-		mockOIDCDecoder := mock_oidc.NewMockDecoderInterface(ctrl)
-		mockOIDCDecoder.EXPECT().
-			DecodeIDToken("EXPIRED_ID_TOKEN").
-			Return(&oidc.DecodedIDToken{
+		mockDecoder := mock_jwtdecoder.NewMockInterface(ctrl)
+		mockDecoder.EXPECT().
+			Decode("EXPIRED_ID_TOKEN").
+			Return(&jwtdecoder.Claims{
 				Subject: "YOUR_SUBJECT",
 				Expiry:  pastTime,
-				Claims:  dummyTokenClaims,
+				Pretty:  dummyTokenClaims,
 			}, nil)
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -356,7 +358,7 @@ func TestAuthentication_Do(t *testing.T) {
 			Return(mockOIDCClient, nil)
 		u := Authentication{
 			OIDCFactory: mockOIDCFactory,
-			OIDCDecoder: mockOIDCDecoder,
+			JWTDecoder:  mockDecoder,
 			Logger:      mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
@@ -389,13 +391,13 @@ func TestAuthentication_Do(t *testing.T) {
 			IDToken:         "EXPIRED_ID_TOKEN",
 			RefreshToken:    "EXPIRED_REFRESH_TOKEN",
 		}
-		mockOIDCDecoder := mock_oidc.NewMockDecoderInterface(ctrl)
-		mockOIDCDecoder.EXPECT().
-			DecodeIDToken("EXPIRED_ID_TOKEN").
-			Return(&oidc.DecodedIDToken{
+		mockDecoder := mock_jwtdecoder.NewMockInterface(ctrl)
+		mockDecoder.EXPECT().
+			Decode("EXPIRED_ID_TOKEN").
+			Return(&jwtdecoder.Claims{
 				Subject: "YOUR_SUBJECT",
 				Expiry:  pastTime,
-				Claims:  dummyTokenClaims,
+				Pretty:  dummyTokenClaims,
 			}, nil)
 		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -423,7 +425,7 @@ func TestAuthentication_Do(t *testing.T) {
 			Return(mockOIDCClient, nil)
 		u := Authentication{
 			OIDCFactory: mockOIDCFactory,
-			OIDCDecoder: mockOIDCDecoder,
+			JWTDecoder:  mockDecoder,
 			Logger:      mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)

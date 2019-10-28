@@ -160,3 +160,16 @@ func dumpClaims(token *oidc.IDToken) (map[string]string, error) {
 	err := token.Claims(&rawClaims)
 	return dumpRawClaims(rawClaims), err
 }
+
+func dumpRawClaims(rawClaims map[string]interface{}) map[string]string {
+	claims := make(map[string]string)
+	for k, v := range rawClaims {
+		switch v := v.(type) {
+		case float64:
+			claims[k] = fmt.Sprintf("%.f", v)
+		default:
+			claims[k] = fmt.Sprintf("%v", v)
+		}
+	}
+	return claims
+}

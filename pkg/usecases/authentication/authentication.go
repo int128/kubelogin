@@ -7,6 +7,7 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
+	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"golang.org/x/sync/errgroup"
@@ -74,7 +75,7 @@ const passwordPrompt = "Password: "
 //
 type Authentication struct {
 	OIDCFactory          oidc.FactoryInterface
-	OIDCDecoder          oidc.DecoderInterface
+	JWTDecoder           jwtdecoder.Interface
 	Env                  env.Interface
 	Logger               logger.Interface
 	LocalServerReadyFunc LocalServerReadyFunc // only for e2e tests
@@ -86,22 +87,22 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		// Skip verification of the token to reduce time of a discovery request.
 		// Here it trusts the signature and claims and checks only expiration,
 		// because the token has been verified before caching.
-		token, err := u.OIDCDecoder.DecodeIDToken(in.IDToken)
+		claims, err := u.JWTDecoder.Decode(in.IDToken)
 		if err != nil {
 			return nil, xerrors.Errorf("invalid token and you need to remove the cache: %w", err)
 		}
-		if token.Expiry.After(time.Now()) { //TODO: inject time service
-			u.Logger.V(1).Infof("you already have a valid token until %s", token.Expiry)
+		if claims.Expiry.After(time.Now()) { //TODO: inject time service
+			u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
 			return &Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                in.IDToken,
 				RefreshToken:           in.RefreshToken,
-				IDTokenSubject:         token.Subject,
-				IDTokenExpiry:          token.Expiry,
-				IDTokenClaims:          token.Claims,
+				IDTokenSubject:         claims.Subject,
+				IDTokenExpiry:          claims.Expiry,
+				IDTokenClaims:          claims.Pretty,
 			}, nil
 		}
-		u.Logger.V(1).Infof("you have an expired token at %s", token.Expiry)
+		u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
 	}
 
 	u.Logger.V(1).Infof("initializing an OIDCFactory client")

@@ -1,4 +1,4 @@
-package oidc
+package jwtdecoder
 
 import (
 	"crypto/rsa"
@@ -11,23 +11,23 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func TestDecoder_DecodeIDToken(t *testing.T) {
+func TestDecoder_Decode(t *testing.T) {
 	var decoder Decoder
 
 	t.Run("ValidToken", func(t *testing.T) {
 		expiry := time.Now().Round(time.Second)
 		idToken := newIDToken(t, "https://issuer.example.com", expiry)
-		decodedToken, err := decoder.DecodeIDToken(idToken)
+		decodedToken, err := decoder.Decode(idToken)
 		if err != nil {
-			t.Fatalf("DecodeIDToken error: %s", err)
+			t.Fatalf("Decode error: %s", err)
 		}
 		if decodedToken.Expiry != expiry {
 			t.Errorf("Expiry wants %s but %s", expiry, decodedToken.Expiry)
 		}
-		t.Logf("Claims=%+v", decodedToken.Claims)
+		t.Logf("Pretty=%+v", decodedToken.Pretty)
 	})
 	t.Run("InvalidToken", func(t *testing.T) {
-		decodedToken, err := decoder.DecodeIDToken("HEADER.INVALID_TOKEN.SIGNATURE")
+		decodedToken, err := decoder.Decode("HEADER.INVALID_TOKEN.SIGNATURE")
 		if err == nil {
 			t.Errorf("error wants non-nil but nil")
 		} else {
