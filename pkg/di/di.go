@@ -5,6 +5,7 @@ package di
 
 import (
 	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	credentialPluginAdaptor "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
@@ -35,6 +36,7 @@ func NewCmd() cmd.Interface {
 		tokencache.Set,
 		credentialPluginAdaptor.Set,
 		oidc.Set,
+		certpool.Set,
 		logger.Set,
 	)
 	return nil
@@ -53,6 +55,7 @@ func NewCmdForHeadless(logger.Interface, authentication.LocalServerReadyFunc, cr
 		kubeconfig.Set,
 		tokencache.Set,
 		oidc.Set,
+		certpool.Set,
 	)
 	return nil
 }

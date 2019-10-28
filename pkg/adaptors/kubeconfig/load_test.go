@@ -106,19 +106,17 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 			t.Fatalf("Could not find the current auth: %s", err)
 		}
 		want := &AuthProvider{
-			LocationOfOrigin: "/path/to/kubeconfig",
-			UserName:         "theUser",
-			ContextName:      "theContext",
-			OIDCConfig: OIDCConfig{
-				IDPIssuerURL:                "https://accounts.google.com",
-				ClientID:                    "GOOGLE_CLIENT_ID",
-				ClientSecret:                "GOOGLE_CLIENT_SECRET",
-				IDPCertificateAuthority:     "/path/to/cert",
-				IDPCertificateAuthorityData: "BASE64",
-				ExtraScopes:                 []string{"email", "profile"},
-				IDToken:                     "YOUR_ID_TOKEN",
-				RefreshToken:                "YOUR_REFRESH_TOKEN",
-			},
+			LocationOfOrigin:            "/path/to/kubeconfig",
+			UserName:                    "theUser",
+			ContextName:                 "theContext",
+			IDPIssuerURL:                "https://accounts.google.com",
+			ClientID:                    "GOOGLE_CLIENT_ID",
+			ClientSecret:                "GOOGLE_CLIENT_SECRET",
+			IDPCertificateAuthority:     "/path/to/cert",
+			IDPCertificateAuthorityData: "BASE64",
+			ExtraScopes:                 []string{"email", "profile"},
+			IDToken:                     "YOUR_ID_TOKEN",
+			RefreshToken:                "YOUR_REFRESH_TOKEN",
 		}
 		if diff := deep.Equal(want, auth); diff != nil {
 			t.Error(diff)
@@ -151,9 +149,7 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "theUser",
 			ContextName:      "theContext",
-			OIDCConfig: OIDCConfig{
-				IDPIssuerURL: "https://accounts.google.com",
-			},
+			IDPIssuerURL:     "https://accounts.google.com",
 		}
 		if diff := deep.Equal(want, auth); diff != nil {
 			t.Error(diff)
@@ -180,9 +176,7 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 		want := &AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "theUser",
-			OIDCConfig: OIDCConfig{
-				IDPIssuerURL: "https://accounts.google.com",
-			},
+			IDPIssuerURL:     "https://accounts.google.com",
 		}
 		if diff := deep.Equal(want, auth); diff != nil {
 			t.Error(diff)

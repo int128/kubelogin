@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
 	"golang.org/x/sync/errgroup"
@@ -33,13 +33,18 @@ type Interface interface {
 
 // Input represents an input DTO of the Authentication use-case.
 type Input struct {
-	OIDCConfig      kubeconfig.OIDCConfig
+	IssuerURL       string
+	ClientID        string
+	ClientSecret    string
+	ExtraScopes     []string // optional
 	SkipOpenBrowser bool
 	BindAddress     []string
 	Username        string // If set, perform the resource owner password credentials grant
 	Password        string // If empty, read a password using Env.ReadPassword()
-	CACertFilename  string // If set, use the CA cert
+	CertPool        certpool.Interface
 	SkipTLSVerify   bool
+	IDToken         string // optional
+	RefreshToken    string // optional
 }
 
 // Output represents an output DTO of the Authentication use-case.
@@ -76,12 +81,12 @@ type Authentication struct {
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
-	if in.OIDCConfig.IDToken != "" {
+	if in.IDToken != "" {
 		u.Logger.V(1).Infof("checking expiration of the existing token")
 		// Skip verification of the token to reduce time of a discovery request.
 		// Here it trusts the signature and claims and checks only expiration,
 		// because the token has been verified before caching.
-		token, err := u.OIDCDecoder.DecodeIDToken(in.OIDCConfig.IDToken)
+		token, err := u.OIDCDecoder.DecodeIDToken(in.IDToken)
 		if err != nil {
 			return nil, xerrors.Errorf("invalid token and you need to remove the cache: %w", err)
 		}
@@ -89,8 +94,8 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 			u.Logger.V(1).Infof("you already have a valid token until %s", token.Expiry)
 			return &Output{
 				AlreadyHasValidIDToken: true,
-				IDToken:                in.OIDCConfig.IDToken,
-				RefreshToken:           in.OIDCConfig.RefreshToken,
+				IDToken:                in.IDToken,
+				RefreshToken:           in.RefreshToken,
 				IDTokenSubject:         token.Subject,
 				IDTokenExpiry:          token.Expiry,
 				IDTokenClaims:          token.Claims,
@@ -101,17 +106,20 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 
 	u.Logger.V(1).Infof("initializing an OIDCFactory client")
 	client, err := u.OIDCFactory.New(ctx, oidc.ClientConfig{
-		Config:         in.OIDCConfig,
-		CACertFilename: in.CACertFilename,
-		SkipTLSVerify:  in.SkipTLSVerify,
+		IssuerURL:     in.IssuerURL,
+		ClientID:      in.ClientID,
+		ClientSecret:  in.ClientSecret,
+		ExtraScopes:   in.ExtraScopes,
+		CertPool:      in.CertPool,
+		SkipTLSVerify: in.SkipTLSVerify,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("could not create an OIDCFactory client: %w", err)
 	}
 
-	if in.OIDCConfig.RefreshToken != "" {
+	if in.RefreshToken != "" {
 		u.Logger.V(1).Infof("refreshing the token")
-		out, err := client.Refresh(ctx, in.OIDCConfig.RefreshToken)
+		out, err := client.Refresh(ctx, in.RefreshToken)
 		if err == nil {
 			return &Output{
 				IDToken:        out.IDToken,

@@ -7,8 +7,8 @@ import (
 	"context"
 
 	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
@@ -44,6 +44,7 @@ type Input struct {
 type GetToken struct {
 	Authentication       authentication.Interface
 	TokenCacheRepository tokencache.Interface
+	CertPoolFactory      certpool.FactoryInterface
 	Interaction          credentialplugin.Interface
 	Logger               logger.Interface
 }
@@ -69,21 +70,24 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
 		cache = &tokencache.TokenCache{}
 	}
-
+	certPool := u.CertPoolFactory.New()
+	if in.CACertFilename != "" {
+		if err := certPool.AddFile(in.CACertFilename); err != nil {
+			return nil, xerrors.Errorf("could not load the certificate: %w", err)
+		}
+	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
-		OIDCConfig: kubeconfig.OIDCConfig{
-			IDPIssuerURL: in.IssuerURL,
-			ClientID:     in.ClientID,
-			ClientSecret: in.ClientSecret,
-			ExtraScopes:  in.ExtraScopes,
-			IDToken:      cache.IDToken,
-			RefreshToken: cache.RefreshToken,
-		},
+		IssuerURL:       in.IssuerURL,
+		ClientID:        in.ClientID,
+		ClientSecret:    in.ClientSecret,
+		ExtraScopes:     in.ExtraScopes,
+		IDToken:         cache.IDToken,
+		RefreshToken:    cache.RefreshToken,
 		SkipOpenBrowser: in.SkipOpenBrowser,
 		BindAddress:     in.BindAddress,
 		Username:        in.Username,
 		Password:        in.Password,
-		CACertFilename:  in.CACertFilename,
+		CertPool:        certPool,
 		SkipTLSVerify:   in.SkipTLSVerify,
 	})
 	if err != nil {

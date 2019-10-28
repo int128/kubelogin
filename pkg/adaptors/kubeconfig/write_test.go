@@ -19,13 +19,11 @@ func TestKubeconfig_UpdateAuth(t *testing.T) {
 		if err := k.UpdateAuthProvider(&AuthProvider{
 			LocationOfOrigin: f.Name(),
 			UserName:         "google",
-			OIDCConfig: OIDCConfig{
-				IDPIssuerURL: "https://accounts.google.com",
-				ClientID:     "GOOGLE_CLIENT_ID",
-				ClientSecret: "GOOGLE_CLIENT_SECRET",
-				IDToken:      "YOUR_ID_TOKEN",
-				RefreshToken: "YOUR_REFRESH_TOKEN",
-			},
+			IDPIssuerURL:     "https://accounts.google.com",
+			ClientID:         "GOOGLE_CLIENT_ID",
+			ClientSecret:     "GOOGLE_CLIENT_SECRET",
+			IDToken:          "YOUR_ID_TOKEN",
+			RefreshToken:     "YOUR_REFRESH_TOKEN",
 		}); err != nil {
 			t.Fatalf("Could not update auth: %s", err)
 		}
@@ -65,18 +63,16 @@ users:
 			}
 		}()
 		if err := k.UpdateAuthProvider(&AuthProvider{
-			LocationOfOrigin: f.Name(),
-			UserName:         "google",
-			OIDCConfig: OIDCConfig{
-				IDPIssuerURL:                "https://accounts.google.com",
-				ClientID:                    "GOOGLE_CLIENT_ID",
-				ClientSecret:                "GOOGLE_CLIENT_SECRET",
-				IDPCertificateAuthority:     "/path/to/cert",
-				IDPCertificateAuthorityData: "BASE64",
-				ExtraScopes:                 []string{"email", "profile"},
-				IDToken:                     "YOUR_ID_TOKEN",
-				RefreshToken:                "YOUR_REFRESH_TOKEN",
-			},
+			LocationOfOrigin:            f.Name(),
+			UserName:                    "google",
+			IDPIssuerURL:                "https://accounts.google.com",
+			ClientID:                    "GOOGLE_CLIENT_ID",
+			ClientSecret:                "GOOGLE_CLIENT_SECRET",
+			IDPCertificateAuthority:     "/path/to/cert",
+			IDPCertificateAuthorityData: "BASE64",
+			ExtraScopes:                 []string{"email", "profile"},
+			IDToken:                     "YOUR_ID_TOKEN",
+			RefreshToken:                "YOUR_REFRESH_TOKEN",
 		}); err != nil {
 			t.Fatalf("Could not update auth: %s", err)
 		}

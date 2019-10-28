@@ -7,14 +7,14 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func (*Kubeconfig) UpdateAuthProvider(auth *AuthProvider) error {
-	config, err := clientcmd.LoadFromFile(auth.LocationOfOrigin)
+func (*Kubeconfig) UpdateAuthProvider(p *AuthProvider) error {
+	config, err := clientcmd.LoadFromFile(p.LocationOfOrigin)
 	if err != nil {
-		return xerrors.Errorf("could not load %s: %w", auth.LocationOfOrigin, err)
+		return xerrors.Errorf("could not load %s: %w", p.LocationOfOrigin, err)
 	}
-	userNode, ok := config.AuthInfos[string(auth.UserName)]
+	userNode, ok := config.AuthInfos[string(p.UserName)]
 	if !ok {
-		return xerrors.Errorf("user %s does not exist", auth.UserName)
+		return xerrors.Errorf("user %s does not exist", p.UserName)
 	}
 	if userNode.AuthProvider == nil {
 		return xerrors.Errorf("auth-provider is missing")
@@ -22,23 +22,23 @@ func (*Kubeconfig) UpdateAuthProvider(auth *AuthProvider) error {
 	if userNode.AuthProvider.Name != "oidc" {
 		return xerrors.Errorf("auth-provider must be oidc but is %s", userNode.AuthProvider.Name)
 	}
-	copyOIDCConfig(auth.OIDCConfig, userNode.AuthProvider.Config)
-	if err := clientcmd.WriteToFile(*config, auth.LocationOfOrigin); err != nil {
-		return xerrors.Errorf("could not update %s: %w", auth.LocationOfOrigin, err)
+	copyAuthProviderConfig(p, userNode.AuthProvider.Config)
+	if err := clientcmd.WriteToFile(*config, p.LocationOfOrigin); err != nil {
+		return xerrors.Errorf("could not update %s: %w", p.LocationOfOrigin, err)
 	}
 	return nil
 }
 
-func copyOIDCConfig(config OIDCConfig, m map[string]string) {
-	setOrDeleteKey(m, "idp-issuer-url", config.IDPIssuerURL)
-	setOrDeleteKey(m, "client-id", config.ClientID)
-	setOrDeleteKey(m, "client-secret", config.ClientSecret)
-	setOrDeleteKey(m, "idp-certificate-authority", config.IDPCertificateAuthority)
-	setOrDeleteKey(m, "idp-certificate-authority-data", config.IDPCertificateAuthorityData)
-	extraScopes := strings.Join(config.ExtraScopes, ",")
+func copyAuthProviderConfig(p *AuthProvider, m map[string]string) {
+	setOrDeleteKey(m, "idp-issuer-url", p.IDPIssuerURL)
+	setOrDeleteKey(m, "client-id", p.ClientID)
+	setOrDeleteKey(m, "client-secret", p.ClientSecret)
+	setOrDeleteKey(m, "idp-certificate-authority", p.IDPCertificateAuthority)
+	setOrDeleteKey(m, "idp-certificate-authority-data", p.IDPCertificateAuthorityData)
+	extraScopes := strings.Join(p.ExtraScopes, ",")
 	setOrDeleteKey(m, "extra-scopes", extraScopes)
-	setOrDeleteKey(m, "id-token", config.IDToken)
-	setOrDeleteKey(m, "refresh-token", config.RefreshToken)
+	setOrDeleteKey(m, "id-token", p.IDToken)
+	setOrDeleteKey(m, "refresh-token", p.RefreshToken)
 }
 
 func setOrDeleteKey(m map[string]string, key, value string) {
