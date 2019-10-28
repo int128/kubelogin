@@ -33,7 +33,7 @@ type Input struct {
 	ClientSecret    string
 	ExtraScopes     []string // optional
 	SkipOpenBrowser bool
-	ListenPort      []int
+	BindAddress     []string
 	Username        string // If set, perform the resource owner password credentials grant
 	Password        string // If empty, read a password using Env.ReadPassword()
 	CACertFilename  string // If set, use the CA cert
@@ -80,7 +80,7 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 			RefreshToken: cache.RefreshToken,
 		},
 		SkipOpenBrowser: in.SkipOpenBrowser,
-		ListenPort:      in.ListenPort,
+		BindAddress:     in.BindAddress,
 		Username:        in.Username,
 		Password:        in.Password,
 		CACertFilename:  in.CACertFilename,

@@ -70,7 +70,7 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 				ExtraScopes:     o.ExtraScopes,
 				CACertFilename:  o.CertificateAuthority,
 				SkipTLSVerify:   o.SkipTLSVerify,
-				ListenPort:      o.ListenPort,
+				BindAddress:     translateListenPortToBindAddress(o.ListenPort),
 				SkipOpenBrowser: o.SkipOpenBrowser,
 				Username:        o.Username,
 				Password:        o.Password,

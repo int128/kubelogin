@@ -26,7 +26,7 @@ func TestStandalone_Do(t *testing.T) {
 			KubeconfigFilename: "/path/to/kubeconfig",
 			KubeconfigContext:  "theContext",
 			KubeconfigUser:     "theUser",
-			ListenPort:         []int{10000},
+			BindAddress:        []string{"127.0.0.1:8000"},
 			SkipOpenBrowser:    true,
 			Username:           "USER",
 			Password:           "PASS",
@@ -62,7 +62,7 @@ func TestStandalone_Do(t *testing.T) {
 		mockAuthentication.EXPECT().
 			Do(ctx, auth.Input{
 				OIDCConfig:      currentAuthProvider.OIDCConfig,
-				ListenPort:      []int{10000},
+				BindAddress:     []string{"127.0.0.1:8000"},
 				SkipOpenBrowser: true,
 				Username:        "USER",
 				Password:        "PASS",

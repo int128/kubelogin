@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/spf13/cobra"
@@ -44,17 +43,19 @@ func (cmd *Setup) New(ctx context.Context) *cobra.Command {
 		Use:   "setup",
 		Short: "Show the setup instruction",
 		Args:  cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
+		RunE: func(c *cobra.Command, _ []string) error {
 			in := setup.Stage2Input{
 				IssuerURL:       o.IssuerURL,
 				ClientID:        o.ClientID,
 				ClientSecret:    o.ClientSecret,
 				ExtraScopes:     o.ExtraScopes,
 				SkipOpenBrowser: o.SkipOpenBrowser,
-				ListenPort:      o.ListenPort,
-				ListenPortIsSet: !reflect.DeepEqual(o.ListenPort, defaultListenPort),
+				BindAddress:     translateListenPortToBindAddress(o.ListenPort),
 				CACertFilename:  o.CertificateAuthority,
 				SkipTLSVerify:   o.SkipTLSVerify,
+			}
+			if c.Flags().Lookup("listen-port").Changed {
+				in.ListenPortArgs = o.ListenPort
 			}
 			if in.IssuerURL == "" || in.ClientID == "" {
 				cmd.Setup.DoStage1()

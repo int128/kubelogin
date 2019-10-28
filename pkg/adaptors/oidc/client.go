@@ -16,7 +16,7 @@ import (
 )
 
 type Interface interface {
-	AuthenticateByCode(ctx context.Context, localServerPort []int, localServerReadyChan chan<- string) (*TokenSet, error)
+	AuthenticateByCode(ctx context.Context, bindAddress []string, localServerReadyChan chan<- string) (*TokenSet, error)
 	AuthenticateByPassword(ctx context.Context, username, password string) (*TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*TokenSet, error)
 }
@@ -46,17 +46,17 @@ func (c *client) wrapContext(ctx context.Context) context.Context {
 }
 
 // AuthenticateByCode performs the authorization code flow.
-func (c *client) AuthenticateByCode(ctx context.Context, localServerPort []int, localServerReadyChan chan<- string) (*TokenSet, error) {
+func (c *client) AuthenticateByCode(ctx context.Context, bindAddress []string, localServerReadyChan chan<- string) (*TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	nonce, err := newNonce()
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a nonce parameter")
 	}
 	config := oauth2cli.Config{
-		OAuth2Config:         c.oauth2Config,
-		LocalServerPort:      localServerPort,
-		AuthCodeOptions:      []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oidc.Nonce(nonce)},
-		LocalServerReadyChan: localServerReadyChan,
+		OAuth2Config:           c.oauth2Config,
+		LocalServerBindAddress: bindAddress,
+		AuthCodeOptions:        []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oidc.Nonce(nonce)},
+		LocalServerReadyChan:   localServerReadyChan,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {

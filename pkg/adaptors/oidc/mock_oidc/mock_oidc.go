@@ -36,6 +36,7 @@ func (m *MockFactoryInterface) EXPECT() *MockFactoryInterfaceMockRecorder {
 
 // New mocks base method
 func (m *MockFactoryInterface) New(arg0 context.Context, arg1 oidc.ClientConfig) (oidc.Interface, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "New", arg0, arg1)
 	ret0, _ := ret[0].(oidc.Interface)
 	ret1, _ := ret[1].(error)
@@ -44,6 +45,7 @@ func (m *MockFactoryInterface) New(arg0 context.Context, arg1 oidc.ClientConfig)
 
 // New indicates an expected call of New
 func (mr *MockFactoryInterfaceMockRecorder) New(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockFactoryInterface)(nil).New), arg0, arg1)
 }
 
@@ -71,7 +73,8 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // AuthenticateByCode mocks base method
-func (m *MockInterface) AuthenticateByCode(arg0 context.Context, arg1 []int, arg2 chan<- string) (*oidc.TokenSet, error) {
+func (m *MockInterface) AuthenticateByCode(arg0 context.Context, arg1 []string, arg2 chan<- string) (*oidc.TokenSet, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AuthenticateByCode", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
@@ -80,11 +83,13 @@ func (m *MockInterface) AuthenticateByCode(arg0 context.Context, arg1 []int, arg
 
 // AuthenticateByCode indicates an expected call of AuthenticateByCode
 func (mr *MockInterfaceMockRecorder) AuthenticateByCode(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByCode", reflect.TypeOf((*MockInterface)(nil).AuthenticateByCode), arg0, arg1, arg2)
 }
 
 // AuthenticateByPassword mocks base method
 func (m *MockInterface) AuthenticateByPassword(arg0 context.Context, arg1, arg2 string) (*oidc.TokenSet, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AuthenticateByPassword", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
@@ -93,11 +98,13 @@ func (m *MockInterface) AuthenticateByPassword(arg0 context.Context, arg1, arg2 
 
 // AuthenticateByPassword indicates an expected call of AuthenticateByPassword
 func (mr *MockInterfaceMockRecorder) AuthenticateByPassword(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByPassword", reflect.TypeOf((*MockInterface)(nil).AuthenticateByPassword), arg0, arg1, arg2)
 }
 
 // Refresh mocks base method
 func (m *MockInterface) Refresh(arg0 context.Context, arg1 string) (*oidc.TokenSet, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Refresh", arg0, arg1)
 	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
@@ -106,6 +113,7 @@ func (m *MockInterface) Refresh(arg0 context.Context, arg1 string) (*oidc.TokenS
 
 // Refresh indicates an expected call of Refresh
 func (mr *MockInterfaceMockRecorder) Refresh(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Refresh", reflect.TypeOf((*MockInterface)(nil).Refresh), arg0, arg1)
 }
 
@@ -134,6 +142,7 @@ func (m *MockDecoderInterface) EXPECT() *MockDecoderInterfaceMockRecorder {
 
 // DecodeIDToken mocks base method
 func (m *MockDecoderInterface) DecodeIDToken(arg0 string) (*oidc.DecodedIDToken, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DecodeIDToken", arg0)
 	ret0, _ := ret[0].(*oidc.DecodedIDToken)
 	ret1, _ := ret[1].(error)
@@ -142,5 +151,6 @@ func (m *MockDecoderInterface) DecodeIDToken(arg0 string) (*oidc.DecodedIDToken,
 
 // DecodeIDToken indicates an expected call of DecodeIDToken
 func (mr *MockDecoderInterfaceMockRecorder) DecodeIDToken(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecodeIDToken", reflect.TypeOf((*MockDecoderInterface)(nil).DecodeIDToken), arg0)
 }

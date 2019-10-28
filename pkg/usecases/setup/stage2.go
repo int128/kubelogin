@@ -71,8 +71,8 @@ type Stage2Input struct {
 	ClientSecret    string
 	ExtraScopes     []string // optional
 	SkipOpenBrowser bool
-	ListenPort      []int
-	ListenPortIsSet bool   // true if it is set by the command arg
+	BindAddress     []string
+	ListenPortArgs  []int  // non-nil if set by the command arg
 	CACertFilename  string // If set, use the CA cert
 	SkipTLSVerify   bool
 }
@@ -87,7 +87,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 			ExtraScopes:  in.ExtraScopes,
 		},
 		SkipOpenBrowser: in.SkipOpenBrowser,
-		ListenPort:      in.ListenPort,
+		BindAddress:     in.BindAddress,
 		CACertFilename:  in.CACertFilename,
 		SkipTLSVerify:   in.SkipTLSVerify,
 	})
@@ -126,10 +126,8 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 	if in.SkipOpenBrowser {
 		args = append(args, "--skip-open-browser")
 	}
-	if in.ListenPortIsSet {
-		for _, port := range in.ListenPort {
-			args = append(args, fmt.Sprintf("--listen-port=%d", port))
-		}
+	for _, port := range in.ListenPortArgs {
+		args = append(args, fmt.Sprintf("--listen-port=%d", port))
 	}
 	if in.CACertFilename != "" {
 		args = append(args, "--certificate-authority="+in.CACertFilename)

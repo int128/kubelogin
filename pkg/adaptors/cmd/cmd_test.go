@@ -24,7 +24,7 @@ func TestCmd_Run(t *testing.T) {
 		mockStandalone := mock_standalone.NewMockInterface(ctrl)
 		mockStandalone.EXPECT().
 			Do(ctx, standalone.Input{
-				ListenPort: defaultListenPort,
+				BindAddress: []string{"127.0.0.1:8000", "127.0.0.1:18000"},
 			})
 
 		cmd := Cmd{
@@ -53,7 +53,7 @@ func TestCmd_Run(t *testing.T) {
 				KubeconfigUser:     "google",
 				CACertFilename:     "/path/to/cacert",
 				SkipTLSVerify:      true,
-				ListenPort:         []int{10080, 20080},
+				BindAddress:        []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 				SkipOpenBrowser:    true,
 				Username:           "USER",
 				Password:           "PASS",
@@ -108,7 +108,7 @@ func TestCmd_Run(t *testing.T) {
 		getToken := mock_credentialplugin.NewMockInterface(ctrl)
 		getToken.EXPECT().
 			Do(ctx, credentialplugin.Input{
-				ListenPort:    defaultListenPort,
+				BindAddress:   []string{"127.0.0.1:8000", "127.0.0.1:18000"},
 				TokenCacheDir: defaultTokenCacheDir,
 				IssuerURL:     "https://issuer.example.com",
 				ClientID:      "YOUR_CLIENT_ID",
@@ -149,7 +149,7 @@ func TestCmd_Run(t *testing.T) {
 				ExtraScopes:     []string{"email", "profile"},
 				CACertFilename:  "/path/to/cacert",
 				SkipTLSVerify:   true,
-				ListenPort:      []int{10080, 20080},
+				BindAddress:     []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 				SkipOpenBrowser: true,
 				Username:        "USER",
 				Password:        "PASS",
