@@ -35,7 +35,7 @@ type Factory struct {
 func (f *Factory) New(ctx context.Context, config ClientConfig) (Interface, error) {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: config.SkipTLSVerify,
-		RootCAs:            config.CertPool.GetX509CertPool(),
+		RootCAs:            config.CertPool.GetX509OrNil(),
 	}
 	baseTransport := &http.Transport{
 		TLSClientConfig: tlsConfig,

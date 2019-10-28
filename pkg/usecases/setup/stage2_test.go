@@ -30,7 +30,7 @@ func TestSetup_DoStage2(t *testing.T) {
 
 	mockCertPool := mock_certpool.NewMockInterface(ctrl)
 	mockCertPool.EXPECT().
-		LoadFromFile("/path/to/cert")
+		AddFile("/path/to/cert")
 	mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
 	mockCertPoolFactory.EXPECT().
 		New().

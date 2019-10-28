@@ -71,44 +71,44 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 	return m.recorder
 }
 
-// GetX509CertPool mocks base method
-func (m *MockInterface) GetX509CertPool() *x509.CertPool {
+// AddBase64Encoded mocks base method
+func (m *MockInterface) AddBase64Encoded(arg0 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetX509CertPool")
+	ret := m.ctrl.Call(m, "AddBase64Encoded", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddBase64Encoded indicates an expected call of AddBase64Encoded
+func (mr *MockInterfaceMockRecorder) AddBase64Encoded(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBase64Encoded", reflect.TypeOf((*MockInterface)(nil).AddBase64Encoded), arg0)
+}
+
+// AddFile mocks base method
+func (m *MockInterface) AddFile(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddFile", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddFile indicates an expected call of AddFile
+func (mr *MockInterfaceMockRecorder) AddFile(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFile", reflect.TypeOf((*MockInterface)(nil).AddFile), arg0)
+}
+
+// GetX509OrNil mocks base method
+func (m *MockInterface) GetX509OrNil() *x509.CertPool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetX509OrNil")
 	ret0, _ := ret[0].(*x509.CertPool)
 	return ret0
 }
 
-// GetX509CertPool indicates an expected call of GetX509CertPool
-func (mr *MockInterfaceMockRecorder) GetX509CertPool() *gomock.Call {
+// GetX509OrNil indicates an expected call of GetX509OrNil
+func (mr *MockInterfaceMockRecorder) GetX509OrNil() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetX509CertPool", reflect.TypeOf((*MockInterface)(nil).GetX509CertPool))
-}
-
-// LoadBase64 mocks base method
-func (m *MockInterface) LoadBase64(arg0 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LoadBase64", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// LoadBase64 indicates an expected call of LoadBase64
-func (mr *MockInterfaceMockRecorder) LoadBase64(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadBase64", reflect.TypeOf((*MockInterface)(nil).LoadBase64), arg0)
-}
-
-// LoadFromFile mocks base method
-func (m *MockInterface) LoadFromFile(arg0 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LoadFromFile", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// LoadFromFile indicates an expected call of LoadFromFile
-func (mr *MockInterfaceMockRecorder) LoadFromFile(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadFromFile", reflect.TypeOf((*MockInterface)(nil).LoadFromFile), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetX509OrNil", reflect.TypeOf((*MockInterface)(nil).GetX509OrNil))
 }

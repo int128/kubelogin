@@ -45,11 +45,11 @@ func TestStandalone_Do(t *testing.T) {
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockCertPool.EXPECT().
-			LoadFromFile("/path/to/cert1")
+			AddFile("/path/to/cert1")
 		mockCertPool.EXPECT().
-			LoadFromFile("/path/to/cert2")
+			AddFile("/path/to/cert2")
 		mockCertPool.EXPECT().
-			LoadBase64("BASE64ENCODED")
+			AddBase64Encoded("BASE64ENCODED")
 		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
 		mockCertPoolFactory.EXPECT().
 			New().

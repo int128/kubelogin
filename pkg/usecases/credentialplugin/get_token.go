@@ -72,7 +72,7 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 	}
 	certPool := u.CertPoolFactory.New()
 	if in.CACertFilename != "" {
-		if err := certPool.LoadFromFile(in.CACertFilename); err != nil {
+		if err := certPool.AddFile(in.CACertFilename); err != nil {
 			return nil, xerrors.Errorf("could not load the certificate: %w", err)
 		}
 	}

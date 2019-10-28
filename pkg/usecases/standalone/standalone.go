@@ -70,17 +70,17 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
 	certPool := u.CertPoolFactory.New()
 	if authProvider.IDPCertificateAuthority != "" {
-		if err := certPool.LoadFromFile(authProvider.IDPCertificateAuthority); err != nil {
+		if err := certPool.AddFile(authProvider.IDPCertificateAuthority); err != nil {
 			return xerrors.Errorf("could not load the certificate of idp-certificate-authority: %w", err)
 		}
 	}
 	if authProvider.IDPCertificateAuthorityData != "" {
-		if err := certPool.LoadBase64(authProvider.IDPCertificateAuthorityData); err != nil {
+		if err := certPool.AddBase64Encoded(authProvider.IDPCertificateAuthorityData); err != nil {
 			return xerrors.Errorf("could not load the certificate of idp-certificate-authority-data: %w", err)
 		}
 	}
 	if in.CACertFilename != "" {
-		if err := certPool.LoadFromFile(in.CACertFilename); err != nil {
+		if err := certPool.AddFile(in.CACertFilename); err != nil {
 			return xerrors.Errorf("could not load the certificate: %w", err)
 		}
 	}
