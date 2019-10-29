@@ -1,4 +1,5 @@
-package oidc
+// Package oidcclient provides a client of OpenID Connect.
+package oidcclient
 
 import (
 	"context"
@@ -8,17 +9,17 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidc/logging"
+	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/logging"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
 )
 
 type FactoryInterface interface {
-	New(ctx context.Context, config ClientConfig) (Interface, error)
+	New(ctx context.Context, config Config) (Interface, error)
 }
 
-// ClientConfig represents a configuration of an Interface to create.
-type ClientConfig struct {
+// Config represents a configuration of OpenID Connect client.
+type Config struct {
 	IssuerURL     string
 	ClientID      string
 	ClientSecret  string
@@ -32,7 +33,7 @@ type Factory struct {
 }
 
 // New returns an instance of adaptors.Interface with the given configuration.
-func (f *Factory) New(ctx context.Context, config ClientConfig) (Interface, error) {
+func (f *Factory) New(ctx context.Context, config Config) (Interface, error) {
 	var tlsConfig tls.Config
 	tlsConfig.InsecureSkipVerify = config.SkipTLSVerify
 	config.CertPool.SetRootCAs(&tlsConfig)
@@ -51,7 +52,7 @@ func (f *Factory) New(ctx context.Context, config ClientConfig) (Interface, erro
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	provider, err := oidc.NewProvider(ctx, config.IssuerURL)
 	if err != nil {
-		return nil, xerrors.Errorf("could not discovery the OIDCFactory issuer: %w", err)
+		return nil, xerrors.Errorf("could not discovery the OIDCClientFactory issuer: %w", err)
 	}
 	return &client{
 		httpClient: httpClient,

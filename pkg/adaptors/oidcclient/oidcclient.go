@@ -1,4 +1,4 @@
-package oidc
+package oidcclient
 
 import (
 	"context"
@@ -9,10 +9,19 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc"
+	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/oauth2cli"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
+)
+
+//go:generate mockgen -destination mock_oidcclient/mock_oidcclient.go github.com/int128/kubelogin/pkg/adaptors/oidcclient FactoryInterface,Interface
+
+// Set provides an implementation and interface for OIDC.
+var Set = wire.NewSet(
+	wire.Struct(new(Factory), "*"),
+	wire.Bind(new(FactoryInterface), new(*Factory)),
 )
 
 type Interface interface {

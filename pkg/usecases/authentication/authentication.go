@@ -9,7 +9,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidc"
+	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
@@ -74,7 +74,7 @@ const passwordPrompt = "Password: "
 // If the Password is not set, it asks a password by the prompt.
 //
 type Authentication struct {
-	OIDCFactory          oidc.FactoryInterface
+	OIDCClientFactory    oidcclient.FactoryInterface
 	JWTDecoder           jwtdecoder.Interface
 	Env                  env.Interface
 	Logger               logger.Interface
@@ -105,8 +105,8 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
 	}
 
-	u.Logger.V(1).Infof("initializing an OIDCFactory client")
-	client, err := u.OIDCFactory.New(ctx, oidc.ClientConfig{
+	u.Logger.V(1).Infof("initializing an OpenID Connect client")
+	client, err := u.OIDCClientFactory.New(ctx, oidcclient.Config{
 		IssuerURL:     in.IssuerURL,
 		ClientID:      in.ClientID,
 		ClientSecret:  in.ClientSecret,
@@ -115,7 +115,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		SkipTLSVerify: in.SkipTLSVerify,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("could not create an OIDCFactory client: %w", err)
+		return nil, xerrors.Errorf("could not create an OpenID Connect client: %w", err)
 	}
 
 	if in.RefreshToken != "" {
@@ -139,7 +139,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	return u.doPasswordCredentialsFlow(ctx, in, client)
 }
 
-func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oidc.Interface) (*Output, error) {
+func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oidcclient.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the authentication code flow")
 	readyChan := make(chan string, 1)
 	defer close(readyChan)
@@ -186,7 +186,7 @@ func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oi
 	return &out, nil
 }
 
-func (u *Authentication) doPasswordCredentialsFlow(ctx context.Context, in Input, client oidc.Interface) (*Output, error) {
+func (u *Authentication) doPasswordCredentialsFlow(ctx context.Context, in Input, client oidcclient.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the resource owner password credentials flow")
 	if in.Password == "" {
 		var err error

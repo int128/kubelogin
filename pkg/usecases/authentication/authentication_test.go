@@ -12,8 +12,8 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder/mock_jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidc"
-	"github.com/int128/kubelogin/pkg/adaptors/oidc/mock_oidc"
+	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
+	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"golang.org/x/xerrors"
 )
 
@@ -38,22 +38,22 @@ func TestAuthentication_Do(t *testing.T) {
 			ClientID:        "YOUR_CLIENT_ID",
 			ClientSecret:    "YOUR_CLIENT_SECRET",
 		}
-		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
+		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			AuthenticateByCode(gomock.Any(), []string{"127.0.0.1:8000"}, gomock.Any()).
 			Do(func(_ context.Context, _ []string, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
-			Return(&oidc.TokenSet{
+			Return(&oidcclient.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
 				IDTokenSubject: "YOUR_SUBJECT",
 				IDTokenExpiry:  futureTime,
 				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
-		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
-		mockOIDCFactory.EXPECT().
-			New(ctx, oidc.ClientConfig{
+		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
+		mockOIDCClientFactory.EXPECT().
+			New(ctx, oidcclient.Config{
 				IssuerURL:     "https://issuer.example.com",
 				ClientID:      "YOUR_CLIENT_ID",
 				ClientSecret:  "YOUR_CLIENT_SECRET",
@@ -62,8 +62,8 @@ func TestAuthentication_Do(t *testing.T) {
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDCFactory: mockOIDCFactory,
-			Logger:      mock_logger.New(t),
+			OIDCClientFactory: mockOIDCClientFactory,
+			Logger:            mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -92,22 +92,22 @@ func TestAuthentication_Do(t *testing.T) {
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
 		}
-		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
+		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			AuthenticateByCode(gomock.Any(), []string{"127.0.0.1:8000"}, gomock.Any()).
 			Do(func(_ context.Context, _ []string, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
-			Return(&oidc.TokenSet{
+			Return(&oidcclient.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
 				IDTokenSubject: "YOUR_SUBJECT",
 				IDTokenExpiry:  futureTime,
 				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
-		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
-		mockOIDCFactory.EXPECT().
-			New(ctx, oidc.ClientConfig{
+		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
+		mockOIDCClientFactory.EXPECT().
+			New(ctx, oidcclient.Config{
 				IssuerURL:    "https://issuer.example.com",
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
@@ -117,9 +117,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockEnv.EXPECT().
 			OpenBrowser("LOCAL_SERVER_URL")
 		u := Authentication{
-			OIDCFactory: mockOIDCFactory,
-			Logger:      mock_logger.New(t),
-			Env:         mockEnv,
+			OIDCClientFactory: mockOIDCClientFactory,
+			Logger:            mock_logger.New(t),
+			Env:               mockEnv,
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -151,19 +151,19 @@ func TestAuthentication_Do(t *testing.T) {
 			ClientID:      "YOUR_CLIENT_ID",
 			ClientSecret:  "YOUR_CLIENT_SECRET",
 		}
-		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
+		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			AuthenticateByPassword(gomock.Any(), "USER", "PASS").
-			Return(&oidc.TokenSet{
+			Return(&oidcclient.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
 				IDTokenSubject: "YOUR_SUBJECT",
 				IDTokenExpiry:  futureTime,
 				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
-		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
-		mockOIDCFactory.EXPECT().
-			New(ctx, oidc.ClientConfig{
+		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
+		mockOIDCClientFactory.EXPECT().
+			New(ctx, oidcclient.Config{
 				IssuerURL:    "https://issuer.example.com",
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
@@ -172,8 +172,8 @@ func TestAuthentication_Do(t *testing.T) {
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDCFactory: mockOIDCFactory,
-			Logger:      mock_logger.New(t),
+			OIDCClientFactory: mockOIDCClientFactory,
+			Logger:            mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -202,19 +202,19 @@ func TestAuthentication_Do(t *testing.T) {
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
 		}
-		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
+		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			AuthenticateByPassword(gomock.Any(), "USER", "PASS").
-			Return(&oidc.TokenSet{
+			Return(&oidcclient.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
 				IDTokenSubject: "YOUR_SUBJECT",
 				IDTokenExpiry:  futureTime,
 				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
-		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
-		mockOIDCFactory.EXPECT().
-			New(ctx, oidc.ClientConfig{
+		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
+		mockOIDCClientFactory.EXPECT().
+			New(ctx, oidcclient.Config{
 				IssuerURL:    "https://issuer.example.com",
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
@@ -223,9 +223,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockEnv := mock_env.NewMockInterface(ctrl)
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
 		u := Authentication{
-			OIDCFactory: mockOIDCFactory,
-			Env:         mockEnv,
-			Logger:      mock_logger.New(t),
+			OIDCClientFactory: mockOIDCClientFactory,
+			Env:               mockEnv,
+			Logger:            mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -254,20 +254,20 @@ func TestAuthentication_Do(t *testing.T) {
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
 		}
-		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
-		mockOIDCFactory.EXPECT().
-			New(ctx, oidc.ClientConfig{
+		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
+		mockOIDCClientFactory.EXPECT().
+			New(ctx, oidcclient.Config{
 				IssuerURL:    "https://issuer.example.com",
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
-			Return(mock_oidc.NewMockInterface(ctrl), nil)
+			Return(mock_oidcclient.NewMockInterface(ctrl), nil)
 		mockEnv := mock_env.NewMockInterface(ctrl)
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", xerrors.New("error"))
 		u := Authentication{
-			OIDCFactory: mockOIDCFactory,
-			Env:         mockEnv,
-			Logger:      mock_logger.New(t),
+			OIDCClientFactory: mockOIDCClientFactory,
+			Env:               mockEnv,
+			Logger:            mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err == nil {
@@ -298,9 +298,9 @@ func TestAuthentication_Do(t *testing.T) {
 				Pretty:  dummyTokenClaims,
 			}, nil)
 		u := Authentication{
-			OIDCFactory: mock_oidc.NewMockFactoryInterface(ctrl),
-			JWTDecoder:  mockDecoder,
-			Logger:      mock_logger.New(t),
+			OIDCClientFactory: mock_oidcclient.NewMockFactoryInterface(ctrl),
+			JWTDecoder:        mockDecoder,
+			Logger:            mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -338,28 +338,28 @@ func TestAuthentication_Do(t *testing.T) {
 				Expiry:  pastTime,
 				Pretty:  dummyTokenClaims,
 			}, nil)
-		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
+		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "VALID_REFRESH_TOKEN").
-			Return(&oidc.TokenSet{
+			Return(&oidcclient.TokenSet{
 				IDToken:        "NEW_ID_TOKEN",
 				RefreshToken:   "NEW_REFRESH_TOKEN",
 				IDTokenSubject: "YOUR_SUBJECT",
 				IDTokenExpiry:  futureTime,
 				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
-		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
-		mockOIDCFactory.EXPECT().
-			New(ctx, oidc.ClientConfig{
+		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
+		mockOIDCClientFactory.EXPECT().
+			New(ctx, oidcclient.Config{
 				IssuerURL:    "https://issuer.example.com",
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDCFactory: mockOIDCFactory,
-			JWTDecoder:  mockDecoder,
-			Logger:      mock_logger.New(t),
+			OIDCClientFactory: mockOIDCClientFactory,
+			JWTDecoder:        mockDecoder,
+			Logger:            mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
@@ -399,7 +399,7 @@ func TestAuthentication_Do(t *testing.T) {
 				Expiry:  pastTime,
 				Pretty:  dummyTokenClaims,
 			}, nil)
-		mockOIDCClient := mock_oidc.NewMockInterface(ctrl)
+		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
 			Return(nil, xerrors.New("token has expired"))
@@ -408,25 +408,25 @@ func TestAuthentication_Do(t *testing.T) {
 			Do(func(_ context.Context, _ []string, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
-			Return(&oidc.TokenSet{
+			Return(&oidcclient.TokenSet{
 				IDToken:        "NEW_ID_TOKEN",
 				RefreshToken:   "NEW_REFRESH_TOKEN",
 				IDTokenSubject: "YOUR_SUBJECT",
 				IDTokenExpiry:  futureTime,
 				IDTokenClaims:  dummyTokenClaims,
 			}, nil)
-		mockOIDCFactory := mock_oidc.NewMockFactoryInterface(ctrl)
-		mockOIDCFactory.EXPECT().
-			New(ctx, oidc.ClientConfig{
+		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
+		mockOIDCClientFactory.EXPECT().
+			New(ctx, oidcclient.Config{
 				IssuerURL:    "https://issuer.example.com",
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDCFactory: mockOIDCFactory,
-			JWTDecoder:  mockDecoder,
-			Logger:      mock_logger.New(t),
+			OIDCClientFactory: mockOIDCClientFactory,
+			JWTDecoder:        mockDecoder,
+			Logger:            mock_logger.New(t),
 		}
 		out, err := u.Do(ctx, in)
 		if err != nil {
