@@ -1,4 +1,5 @@
-package oidc
+// Package jwtdecoder provides decoding a JWT.
+package jwtdecoder
 
 import (
 	"bytes"
@@ -8,25 +9,35 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/wire"
 	"golang.org/x/xerrors"
 )
 
-type DecoderInterface interface {
-	DecodeIDToken(t string) (*DecodedIDToken, error)
+//go:generate mockgen -destination mock_jwtdecoder/mock_jwtdecoder.go github.com/int128/kubelogin/pkg/adaptors/jwtdecoder Interface
+
+// Set provides an implementation and interface.
+var Set = wire.NewSet(
+	wire.Struct(new(Decoder), "*"),
+	wire.Bind(new(Interface), new(*Decoder)),
+)
+
+type Interface interface {
+	Decode(s string) (*Claims, error)
 }
 
-type DecodedIDToken struct {
+// Claims represents claims of a token.
+type Claims struct {
 	Subject string
 	Expiry  time.Time
-	Claims  map[string]string // string representation of claims for logging
+	Pretty  map[string]string // string representation for debug and logging
 }
 
 type Decoder struct{}
 
-// DecodeIDToken returns the claims of the ID token.
+// Decode returns the claims of the JWT.
 // Note that this method does not verify the signature and always trust it.
-func (d *Decoder) DecodeIDToken(t string) (*DecodedIDToken, error) {
-	parts := strings.Split(t, ".")
+func (d *Decoder) Decode(s string) (*Claims, error) {
+	parts := strings.Split(s, ".")
 	if len(parts) != 3 {
 		return nil, xerrors.Errorf("token contains an invalid number of segments")
 	}
@@ -42,10 +53,10 @@ func (d *Decoder) DecodeIDToken(t string) (*DecodedIDToken, error) {
 	if err := json.NewDecoder(bytes.NewBuffer(b)).Decode(&rawClaims); err != nil {
 		return nil, xerrors.Errorf("could not decode the json of token: %w", err)
 	}
-	return &DecodedIDToken{
+	return &Claims{
 		Subject: claims.Subject,
 		Expiry:  time.Unix(claims.ExpiresAt, 0),
-		Claims:  dumpRawClaims(rawClaims),
+		Pretty:  dumpRawClaims(rawClaims),
 	}, nil
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	credentialPluginAdaptor "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
+	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidc"
@@ -36,6 +37,7 @@ func NewCmd() cmd.Interface {
 		tokencache.Set,
 		credentialPluginAdaptor.Set,
 		oidc.Set,
+		jwtdecoder.Set,
 		certpool.Set,
 		logger.Set,
 	)
@@ -55,6 +57,7 @@ func NewCmdForHeadless(logger.Interface, authentication.LocalServerReadyFunc, cr
 		kubeconfig.Set,
 		tokencache.Set,
 		oidc.Set,
+		jwtdecoder.Set,
 		certpool.Set,
 	)
 	return nil
