@@ -13,7 +13,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidc"
+	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	credentialplugin2 "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
@@ -25,14 +25,14 @@ import (
 
 func NewCmd() cmd.Interface {
 	loggerInterface := logger.New()
-	factory := &oidc.Factory{
+	factory := &oidcclient.Factory{
 		Logger: loggerInterface,
 	}
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
 	localServerReadyFunc := _wireLocalServerReadyFuncValue
 	authenticationAuthentication := &authentication.Authentication{
-		OIDCFactory:          factory,
+		OIDCClientFactory:    factory,
 		JWTDecoder:           decoder,
 		Env:                  envEnv,
 		Logger:               loggerInterface,
@@ -87,13 +87,13 @@ var (
 )
 
 func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc authentication.LocalServerReadyFunc, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
-	factory := &oidc.Factory{
+	factory := &oidcclient.Factory{
 		Logger: loggerInterface,
 	}
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
 	authenticationAuthentication := &authentication.Authentication{
-		OIDCFactory:          factory,
+		OIDCClientFactory:    factory,
 		JWTDecoder:           decoder,
 		Env:                  envEnv,
 		Logger:               loggerInterface,
