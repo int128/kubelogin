@@ -85,13 +85,14 @@ Flags:
       --oidc-client-id string          Client ID of the provider (mandatory)
       --oidc-client-secret string      Client secret of the provider
       --oidc-extra-scope strings       Scopes to request to the provider
+      --certificate-authority string   Path to a cert file for the certificate authority
+      --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+      --token-cache-dir string         Path to a directory for caching tokens (default "~/.kube/cache/oidc-login")
+      --grant-type string              The authorization grant type to use. One of (auto|authcode|password) (default "auto")
       --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
       --skip-open-browser              If true, it does not open the browser on authentication
       --username string                If set, perform the resource owner password credentials grant
       --password string                If set, use the password instead of asking it
-      --certificate-authority string   Path to a cert file for the certificate authority
-      --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-      --token-cache-dir string         Path to a directory for caching tokens (default "~/.kube/cache/oidc-login")
   -h, --help                           help for get-token
 
 Global Flags:
@@ -155,21 +156,39 @@ You can change the ports by the option:
 
 #### Resource owner password credentials grant flow
 
-As well as you can use the resource owner password credentials grant flow.
-Keycloak supports this flow but you need to explicitly enable the "Direct Access Grants" feature in the client settings.
-Most OIDC providers do not support this flow.
+Kubelogin performs the resource owner password credentials grant flow
+when `--grant-type=password` or `--username` is set.
 
-You can pass the username and password:
+Note that most OIDC providers do not support this flow.
+Keycloak supports this flow but you need to explicitly enable the "Direct Access Grants" feature in the client settings.
+
+You can set the username and password.
 
 ```yaml
       - --username USERNAME
       - --password PASSWORD
 ```
 
-If the password is not set, kubelogin will show the prompt.
+If the password is not set, kubelogin will show the prompt for the password.
+
+```yaml
+      - --username USERNAME
+```
 
 ```
-% kubelogin --username USER
+% kubectl get pods
+Password:
+```
+
+If the username is not set, kubelogin will show the prompt for the username and password.
+
+```yaml
+      - --grant-type=password
+```
+
+```
+% kubectl get pods
+Username: foo
 Password:
 ```
 

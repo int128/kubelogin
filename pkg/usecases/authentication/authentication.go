@@ -67,6 +67,7 @@ type Output struct {
 	RefreshToken           string
 }
 
+const usernamePrompt = "Username: "
 const passwordPrompt = "Password: "
 
 // Authentication provides the internal use-case of authentication.
@@ -200,6 +201,13 @@ func (u *Authentication) doAuthCodeFlow(ctx context.Context, in *AuthCodeOption,
 
 func (u *Authentication) doPasswordCredentialsFlow(ctx context.Context, in *ROPCOption, client oidcclient.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the resource owner password credentials flow")
+	if in.Username == "" {
+		var err error
+		in.Username, err = u.Env.ReadString(usernamePrompt)
+		if err != nil {
+			return nil, xerrors.Errorf("could not get the username: %w", err)
+		}
+	}
 	if in.Password == "" {
 		var err error
 		in.Password, err = u.Env.ReadPassword(passwordPrompt)

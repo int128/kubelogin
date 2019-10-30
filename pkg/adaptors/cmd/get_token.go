@@ -57,7 +57,10 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(*cobra.Command, []string) error {
-			authCodeOption, ropcOption := o.authenticationOptions.toUseCaseOptions()
+			authCodeOption, ropcOption, err := o.authenticationOptions.toUseCaseOptions()
+			if err != nil {
+				return xerrors.Errorf("error: %w", err)
+			}
 			in := credentialplugin.Input{
 				IssuerURL:      o.IssuerURL,
 				ClientID:       o.ClientID,

@@ -43,6 +43,7 @@ func (o *rootOptions) register(f *pflag.FlagSet) {
 }
 
 type authenticationOptions struct {
+	GrantType       string
 	ListenPort      []int
 	SkipOpenBrowser bool
 	Username        string
@@ -50,26 +51,27 @@ type authenticationOptions struct {
 }
 
 func (o *authenticationOptions) register(f *pflag.FlagSet) {
+	f.StringVar(&o.GrantType, "grant-type", "auto", "The authorization grant type to use. One of (auto|authcode|password)")
 	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
 }
 
-func (o *authenticationOptions) toUseCaseOptions() (authCodeOption *authentication.AuthCodeOption, ropcOption *authentication.ROPCOption) {
-	switch {
-	case o.Username != "":
-		ropcOption = &authentication.ROPCOption{
-			Username: o.Username,
-			Password: o.Password,
-		}
-	default:
-		authCodeOption = &authentication.AuthCodeOption{
+func (o *authenticationOptions) toUseCaseOptions() (*authentication.AuthCodeOption, *authentication.ROPCOption, error) {
+	if o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == "") {
+		return &authentication.AuthCodeOption{
 			BindAddress:     translateListenPortToBindAddress(o.ListenPort),
 			SkipOpenBrowser: o.SkipOpenBrowser,
-		}
+		}, nil, nil
 	}
-	return
+	if o.GrantType == "password" || (o.GrantType == "auto" && o.Username != "") {
+		return nil, &authentication.ROPCOption{
+			Username: o.Username,
+			Password: o.Password,
+		}, nil
+	}
+	return nil, nil, xerrors.Errorf("grant-type must be one of (auto|authcode|password)")
 }
 
 type Root struct {
@@ -85,7 +87,10 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 		Long:  longDescription,
 		Args:  cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
-			authCodeOption, ropcOption := o.authenticationOptions.toUseCaseOptions()
+			authCodeOption, ropcOption, err := o.authenticationOptions.toUseCaseOptions()
+			if err != nil {
+				return xerrors.Errorf("invalid option: %w", err)
+			}
 			in := standalone.Input{
 				KubeconfigFilename: o.Kubeconfig,
 				KubeconfigContext:  kubeconfig.ContextName(o.Context),

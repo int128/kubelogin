@@ -34,6 +34,7 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 
 // OpenBrowser mocks base method
 func (m *MockInterface) OpenBrowser(arg0 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "OpenBrowser", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -41,11 +42,13 @@ func (m *MockInterface) OpenBrowser(arg0 string) error {
 
 // OpenBrowser indicates an expected call of OpenBrowser
 func (mr *MockInterfaceMockRecorder) OpenBrowser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenBrowser", reflect.TypeOf((*MockInterface)(nil).OpenBrowser), arg0)
 }
 
 // ReadPassword mocks base method
 func (m *MockInterface) ReadPassword(arg0 string) (string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadPassword", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
@@ -54,5 +57,21 @@ func (m *MockInterface) ReadPassword(arg0 string) (string, error) {
 
 // ReadPassword indicates an expected call of ReadPassword
 func (mr *MockInterfaceMockRecorder) ReadPassword(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadPassword", reflect.TypeOf((*MockInterface)(nil).ReadPassword), arg0)
+}
+
+// ReadString mocks base method
+func (m *MockInterface) ReadString(arg0 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadString", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadString indicates an expected call of ReadString
+func (mr *MockInterfaceMockRecorder) ReadString(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadString", reflect.TypeOf((*MockInterface)(nil).ReadString), arg0)
 }

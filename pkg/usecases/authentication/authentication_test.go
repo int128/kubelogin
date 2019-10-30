@@ -141,6 +141,59 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 	})
 
+	t.Run("ResourceOwnerPasswordCredentialsFlow/AskUsernameAndPassword", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		in := Input{
+			ROPCOption:   &ROPCOption{},
+			IssuerURL:    "https://issuer.example.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
+		}
+		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
+		mockOIDCClient.EXPECT().
+			AuthenticateByPassword(gomock.Any(), "USER", "PASS").
+			Return(&oidcclient.TokenSet{
+				IDToken:        "YOUR_ID_TOKEN",
+				RefreshToken:   "YOUR_REFRESH_TOKEN",
+				IDTokenSubject: "YOUR_SUBJECT",
+				IDTokenExpiry:  futureTime,
+				IDTokenClaims:  dummyTokenClaims,
+			}, nil)
+		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
+		mockOIDCClientFactory.EXPECT().
+			New(ctx, oidcclient.Config{
+				IssuerURL:    "https://issuer.example.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			}).
+			Return(mockOIDCClient, nil)
+		mockEnv := mock_env.NewMockInterface(ctrl)
+		mockEnv.EXPECT().ReadString(usernamePrompt).Return("USER", nil)
+		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
+		u := Authentication{
+			OIDCClientFactory: mockOIDCClientFactory,
+			Env:               mockEnv,
+			Logger:            mock_logger.New(t),
+		}
+		out, err := u.Do(ctx, in)
+		if err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+		want := &Output{
+			IDToken:        "YOUR_ID_TOKEN",
+			RefreshToken:   "YOUR_REFRESH_TOKEN",
+			IDTokenSubject: "YOUR_SUBJECT",
+			IDTokenExpiry:  futureTime,
+			IDTokenClaims:  dummyTokenClaims,
+		}
+		if diff := deep.Equal(want, out); diff != nil {
+			t.Error(diff)
+		}
+	})
+
 	t.Run("ResourceOwnerPasswordCredentialsFlow/UsePassword", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
