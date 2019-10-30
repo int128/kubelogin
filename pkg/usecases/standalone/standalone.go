@@ -30,12 +30,11 @@ type Input struct {
 	KubeconfigFilename string                 // Default to the environment variable or global config as kubectl
 	KubeconfigContext  kubeconfig.ContextName // Default to the current context but ignored if KubeconfigUser is set
 	KubeconfigUser     kubeconfig.UserName    // Default to the user of the context
-	SkipOpenBrowser    bool
-	BindAddress        []string
-	Username           string // If set, perform the resource owner password credentials grant
-	Password           string // If empty, read a password using Env.ReadPassword()
-	CACertFilename     string // If set, use the CA cert
+	CACertFilename     string                 // If set, use the CA cert
 	SkipTLSVerify      bool
+
+	AuthCodeOption *authentication.AuthCodeOption
+	ROPCOption     *authentication.ROPCOption
 }
 
 const oidcConfigErrorMessage = `You need to set up the kubeconfig for OpenID Connect authentication.
@@ -85,18 +84,16 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
-		IssuerURL:       authProvider.IDPIssuerURL,
-		ClientID:        authProvider.ClientID,
-		ClientSecret:    authProvider.ClientSecret,
-		ExtraScopes:     authProvider.ExtraScopes,
-		SkipOpenBrowser: in.SkipOpenBrowser,
-		BindAddress:     in.BindAddress,
-		Username:        in.Username,
-		Password:        in.Password,
-		CertPool:        certPool,
-		SkipTLSVerify:   in.SkipTLSVerify,
-		IDToken:         authProvider.IDToken,
-		RefreshToken:    authProvider.RefreshToken,
+		IssuerURL:      authProvider.IDPIssuerURL,
+		ClientID:       authProvider.ClientID,
+		ClientSecret:   authProvider.ClientSecret,
+		ExtraScopes:    authProvider.ExtraScopes,
+		CertPool:       certPool,
+		SkipTLSVerify:  in.SkipTLSVerify,
+		IDToken:        authProvider.IDToken,
+		RefreshToken:   authProvider.RefreshToken,
+		AuthCodeOption: in.AuthCodeOption,
+		ROPCOption:     in.ROPCOption,
 	})
 	if err != nil {
 		return xerrors.Errorf("error while authentication: %w", err)
@@ -165,8 +162,10 @@ func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error
 	if in.CACertFilename != "" {
 		args = append(args, "--certificate-authority="+in.CACertFilename)
 	}
-	if in.Username != "" {
-		args = append(args, "--username="+in.Username)
+	if in.ROPCOption != nil {
+		if in.ROPCOption.Username != "" {
+			args = append(args, "--username="+in.ROPCOption.Username)
+		}
 	}
 
 	v := deprecationVars{

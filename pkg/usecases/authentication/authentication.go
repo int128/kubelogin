@@ -34,18 +34,27 @@ type Interface interface {
 
 // Input represents an input DTO of the Authentication use-case.
 type Input struct {
-	IssuerURL       string
-	ClientID        string
-	ClientSecret    string
-	ExtraScopes     []string // optional
+	IssuerURL     string
+	ClientID      string
+	ClientSecret  string
+	ExtraScopes   []string // optional
+	CertPool      certpool.Interface
+	SkipTLSVerify bool
+	IDToken       string // optional
+	RefreshToken  string // optional
+
+	AuthCodeOption *AuthCodeOption
+	ROPCOption     *ROPCOption
+}
+
+type AuthCodeOption struct {
 	SkipOpenBrowser bool
 	BindAddress     []string
-	Username        string // If set, perform the resource owner password credentials grant
-	Password        string // If empty, read a password using Env.ReadPassword()
-	CertPool        certpool.Interface
-	SkipTLSVerify   bool
-	IDToken         string // optional
-	RefreshToken    string // optional
+}
+
+type ROPCOption struct {
+	Username string
+	Password string // If empty, read a password using Env.ReadPassword()
 }
 
 // Output represents an output DTO of the Authentication use-case.
@@ -133,13 +142,16 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		u.Logger.V(1).Infof("could not refresh the token: %s", err)
 	}
 
-	if in.Username == "" {
-		return u.doAuthCodeFlow(ctx, in, client)
+	if in.AuthCodeOption != nil {
+		return u.doAuthCodeFlow(ctx, in.AuthCodeOption, client)
 	}
-	return u.doPasswordCredentialsFlow(ctx, in, client)
+	if in.ROPCOption != nil {
+		return u.doPasswordCredentialsFlow(ctx, in.ROPCOption, client)
+	}
+	return nil, xerrors.Errorf("any authorization grant must be set")
 }
 
-func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oidcclient.Interface) (*Output, error) {
+func (u *Authentication) doAuthCodeFlow(ctx context.Context, in *AuthCodeOption, client oidcclient.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the authentication code flow")
 	readyChan := make(chan string, 1)
 	defer close(readyChan)
@@ -186,7 +198,7 @@ func (u *Authentication) doAuthCodeFlow(ctx context.Context, in Input, client oi
 	return &out, nil
 }
 
-func (u *Authentication) doPasswordCredentialsFlow(ctx context.Context, in Input, client oidcclient.Interface) (*Output, error) {
+func (u *Authentication) doPasswordCredentialsFlow(ctx context.Context, in *ROPCOption, client oidcclient.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the resource owner password credentials flow")
 	if in.Password == "" {
 		var err error

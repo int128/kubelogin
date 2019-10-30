@@ -12,17 +12,14 @@ import (
 
 // getTokenOptions represents the options for get-token command.
 type getTokenOptions struct {
-	IssuerURL            string
-	ClientID             string
-	ClientSecret         string
-	ExtraScopes          []string
-	ListenPort           []int
-	SkipOpenBrowser      bool
-	Username             string
-	Password             string
-	CertificateAuthority string
-	SkipTLSVerify        bool
-	TokenCacheDir        string
+	IssuerURL             string
+	ClientID              string
+	ClientSecret          string
+	ExtraScopes           []string
+	CertificateAuthority  string
+	SkipTLSVerify         bool
+	TokenCacheDir         string
+	authenticationOptions authenticationOptions
 }
 
 func (o *getTokenOptions) register(f *pflag.FlagSet) {
@@ -31,13 +28,10 @@ func (o *getTokenOptions) register(f *pflag.FlagSet) {
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider (mandatory)")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
-	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
-	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
-	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
-	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
 	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for caching tokens")
+	o.authenticationOptions.register(f)
 }
 
 type GetToken struct {
@@ -63,18 +57,17 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(*cobra.Command, []string) error {
+			authCodeOption, ropcOption := o.authenticationOptions.toUseCaseOptions()
 			in := credentialplugin.Input{
-				IssuerURL:       o.IssuerURL,
-				ClientID:        o.ClientID,
-				ClientSecret:    o.ClientSecret,
-				ExtraScopes:     o.ExtraScopes,
-				CACertFilename:  o.CertificateAuthority,
-				SkipTLSVerify:   o.SkipTLSVerify,
-				BindAddress:     translateListenPortToBindAddress(o.ListenPort),
-				SkipOpenBrowser: o.SkipOpenBrowser,
-				Username:        o.Username,
-				Password:        o.Password,
-				TokenCacheDir:   o.TokenCacheDir,
+				IssuerURL:      o.IssuerURL,
+				ClientID:       o.ClientID,
+				ClientSecret:   o.ClientSecret,
+				ExtraScopes:    o.ExtraScopes,
+				CACertFilename: o.CertificateAuthority,
+				SkipTLSVerify:  o.SkipTLSVerify,
+				TokenCacheDir:  o.TokenCacheDir,
+				AuthCodeOption: authCodeOption,
+				ROPCOption:     ropcOption,
 			}
 			if err := cmd.GetToken.Do(ctx, in); err != nil {
 				return xerrors.Errorf("error: %w", err)

@@ -30,13 +30,15 @@ func TestAuthentication_Do(t *testing.T) {
 		defer cancel()
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		in := Input{
-			BindAddress:     []string{"127.0.0.1:8000"},
-			SkipOpenBrowser: true,
-			CertPool:        mockCertPool,
-			SkipTLSVerify:   true,
-			IssuerURL:       "https://issuer.example.com",
-			ClientID:        "YOUR_CLIENT_ID",
-			ClientSecret:    "YOUR_CLIENT_SECRET",
+			AuthCodeOption: &AuthCodeOption{
+				BindAddress:     []string{"127.0.0.1:8000"},
+				SkipOpenBrowser: true,
+			},
+			CertPool:      mockCertPool,
+			SkipTLSVerify: true,
+			IssuerURL:     "https://issuer.example.com",
+			ClientID:      "YOUR_CLIENT_ID",
+			ClientSecret:  "YOUR_CLIENT_SECRET",
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -87,7 +89,9 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			BindAddress:  []string{"127.0.0.1:8000"},
+			AuthCodeOption: &AuthCodeOption{
+				BindAddress: []string{"127.0.0.1:8000"},
+			},
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
@@ -143,9 +147,10 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			Username: "USER",
-			Password: "PASS",
-			//CACertFilename: "/path/to/cert",
+			ROPCOption: &ROPCOption{
+				Username: "USER",
+				Password: "PASS",
+			},
 			SkipTLSVerify: true,
 			IssuerURL:     "https://issuer.example.com",
 			ClientID:      "YOUR_CLIENT_ID",
@@ -164,10 +169,9 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
 		mockOIDCClientFactory.EXPECT().
 			New(ctx, oidcclient.Config{
-				IssuerURL:    "https://issuer.example.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-				//CACertFilename: "/path/to/cert",
+				IssuerURL:     "https://issuer.example.com",
+				ClientID:      "YOUR_CLIENT_ID",
+				ClientSecret:  "YOUR_CLIENT_SECRET",
 				SkipTLSVerify: true,
 			}).
 			Return(mockOIDCClient, nil)
@@ -197,7 +201,9 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			Username:     "USER",
+			ROPCOption: &ROPCOption{
+				Username: "USER",
+			},
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
@@ -249,7 +255,9 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			Username:     "USER",
+			ROPCOption: &ROPCOption{
+				Username: "USER",
+			},
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
@@ -383,13 +391,15 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			BindAddress:     []string{"127.0.0.1:8000"},
-			SkipOpenBrowser: true,
-			IssuerURL:       "https://issuer.example.com",
-			ClientID:        "YOUR_CLIENT_ID",
-			ClientSecret:    "YOUR_CLIENT_SECRET",
-			IDToken:         "EXPIRED_ID_TOKEN",
-			RefreshToken:    "EXPIRED_REFRESH_TOKEN",
+			AuthCodeOption: &AuthCodeOption{
+				BindAddress:     []string{"127.0.0.1:8000"},
+				SkipOpenBrowser: true,
+			},
+			IssuerURL:    "https://issuer.example.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
+			IDToken:      "EXPIRED_ID_TOKEN",
+			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		}
 		mockDecoder := mock_jwtdecoder.NewMockInterface(ctrl)
 		mockDecoder.EXPECT().
