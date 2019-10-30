@@ -11,6 +11,7 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/pkce"
 	"github.com/int128/oauth2cli"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
@@ -61,10 +62,22 @@ func (c *client) AuthenticateByCode(ctx context.Context, bindAddress []string, l
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a nonce parameter")
 	}
+	p, err := pkce.New()
+	if err != nil {
+		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
+	}
 	config := oauth2cli.Config{
-		OAuth2Config:           c.oauth2Config,
+		OAuth2Config: c.oauth2Config,
+		AuthCodeOptions: []oauth2.AuthCodeOption{
+			oauth2.AccessTypeOffline,
+			oidc.Nonce(nonce),
+			pkce.CodeChallenge(p.CodeChallenge),
+			pkce.CodeChallengeMethod(p.CodeChallengeMethod),
+		},
+		TokenRequestOptions: []oauth2.AuthCodeOption{
+			pkce.CodeVerifier(p.CodeVerifier),
+		},
 		LocalServerBindAddress: bindAddress,
-		AuthCodeOptions:        []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oidc.Nonce(nonce)},
 		LocalServerReadyChan:   localServerReadyChan,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
