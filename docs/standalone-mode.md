@@ -102,12 +102,13 @@ Flags:
       --kubeconfig string                Path to the kubeconfig file
       --context string                   The name of the kubeconfig context to use
       --user string                      The name of the kubeconfig user to use. Prior to --context
+      --certificate-authority string     Path to a cert file for the certificate authority
+      --insecure-skip-tls-verify         If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+      --grant-type string                The authorization grant type to use. One of (auto|authcode|password) (default "auto")
       --listen-port ints                 Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
       --skip-open-browser                If true, it does not open the browser on authentication
       --username string                  If set, perform the resource owner password credentials grant
       --password string                  If set, use the password instead of asking it
-      --certificate-authority string     Path to a cert file for the certificate authority
-      --insecure-skip-tls-verify         If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --add_dir_header                   If true, adds the file directory to the header
       --alsologtostderr                  log to standard error as well as files
       --log_backtrace_at traceLocation   when logging hits line file:N, emit a stack trace (default :0)

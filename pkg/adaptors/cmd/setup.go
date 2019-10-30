@@ -42,7 +42,10 @@ func (cmd *Setup) New(ctx context.Context) *cobra.Command {
 		Short: "Show the setup instruction",
 		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
-			authCodeOption, ropcOption := o.authenticationOptions.toUseCaseOptions()
+			authCodeOption, ropcOption, err := o.authenticationOptions.toUseCaseOptions()
+			if err != nil {
+				return xerrors.Errorf("error: %w", err)
+			}
 			in := setup.Stage2Input{
 				IssuerURL:      o.IssuerURL,
 				ClientID:       o.ClientID,
