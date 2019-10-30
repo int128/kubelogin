@@ -13,19 +13,21 @@ import (
 )
 
 func TestSetup_DoStage2(t *testing.T) {
+	var authCodeOption authentication.AuthCodeOption
+	var ropcOption authentication.ROPCOption
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
 
 	in := Stage2Input{
-		IssuerURL:       "https://accounts.google.com",
-		ClientID:        "YOUR_CLIENT_ID",
-		ClientSecret:    "YOUR_CLIENT_SECRET",
-		ExtraScopes:     []string{"email"},
-		SkipOpenBrowser: true,
-		BindAddress:     []string{"127.0.0.1:8000"},
-		CACertFilename:  "/path/to/cert",
-		SkipTLSVerify:   true,
+		IssuerURL:      "https://accounts.google.com",
+		ClientID:       "YOUR_CLIENT_ID",
+		ClientSecret:   "YOUR_CLIENT_SECRET",
+		ExtraScopes:    []string{"email"},
+		CACertFilename: "/path/to/cert",
+		SkipTLSVerify:  true,
+		AuthCodeOption: &authCodeOption,
+		ROPCOption:     &ropcOption,
 	}
 
 	mockCertPool := mock_certpool.NewMockInterface(ctrl)
@@ -38,14 +40,14 @@ func TestSetup_DoStage2(t *testing.T) {
 	mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 	mockAuthentication.EXPECT().
 		Do(ctx, authentication.Input{
-			IssuerURL:       "https://accounts.google.com",
-			ClientID:        "YOUR_CLIENT_ID",
-			ClientSecret:    "YOUR_CLIENT_SECRET",
-			ExtraScopes:     []string{"email"},
-			SkipOpenBrowser: true,
-			BindAddress:     []string{"127.0.0.1:8000"},
-			CertPool:        mockCertPool,
-			SkipTLSVerify:   true,
+			IssuerURL:      "https://accounts.google.com",
+			ClientID:       "YOUR_CLIENT_ID",
+			ClientSecret:   "YOUR_CLIENT_SECRET",
+			ExtraScopes:    []string{"email"},
+			CertPool:       mockCertPool,
+			SkipTLSVerify:  true,
+			AuthCodeOption: &authCodeOption,
+			ROPCOption:     &ropcOption,
 		}).
 		Return(&authentication.Output{
 			IDToken:        "YOUR_ID_TOKEN",

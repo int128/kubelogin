@@ -65,15 +65,16 @@ type stage2Vars struct {
 
 // Stage2Input represents an input DTO of the stage2.
 type Stage2Input struct {
-	IssuerURL       string
-	ClientID        string
-	ClientSecret    string
-	ExtraScopes     []string // optional
-	SkipOpenBrowser bool
-	BindAddress     []string
-	ListenPortArgs  []int  // non-nil if set by the command arg
-	CACertFilename  string // If set, use the CA cert
-	SkipTLSVerify   bool
+	IssuerURL      string
+	ClientID       string
+	ClientSecret   string
+	ExtraScopes    []string // optional
+	CACertFilename string   // If set, use the CA cert
+	SkipTLSVerify  bool
+	ListenPortArgs []int // non-nil if set by the command arg
+
+	AuthCodeOption *authentication.AuthCodeOption
+	ROPCOption     *authentication.ROPCOption
 }
 
 func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
@@ -85,14 +86,14 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
-		IssuerURL:       in.IssuerURL,
-		ClientID:        in.ClientID,
-		ClientSecret:    in.ClientSecret,
-		ExtraScopes:     in.ExtraScopes,
-		SkipOpenBrowser: in.SkipOpenBrowser,
-		BindAddress:     in.BindAddress,
-		CertPool:        certPool,
-		SkipTLSVerify:   in.SkipTLSVerify,
+		IssuerURL:      in.IssuerURL,
+		ClientID:       in.ClientID,
+		ClientSecret:   in.ClientSecret,
+		ExtraScopes:    in.ExtraScopes,
+		CertPool:       certPool,
+		SkipTLSVerify:  in.SkipTLSVerify,
+		AuthCodeOption: in.AuthCodeOption,
+		ROPCOption:     in.ROPCOption,
 	})
 	if err != nil {
 		return xerrors.Errorf("error while authentication: %w", err)
@@ -126,17 +127,25 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 	for _, extraScope := range in.ExtraScopes {
 		args = append(args, "--oidc-extra-scope="+extraScope)
 	}
-	if in.SkipOpenBrowser {
-		args = append(args, "--skip-open-browser")
-	}
-	for _, port := range in.ListenPortArgs {
-		args = append(args, fmt.Sprintf("--listen-port=%d", port))
-	}
 	if in.CACertFilename != "" {
 		args = append(args, "--certificate-authority="+in.CACertFilename)
 	}
 	if in.SkipTLSVerify {
 		args = append(args, "--insecure-skip-tls-verify")
+	}
+
+	if in.AuthCodeOption != nil {
+		if in.AuthCodeOption.SkipOpenBrowser {
+			args = append(args, "--skip-open-browser")
+		}
+	}
+	for _, port := range in.ListenPortArgs {
+		args = append(args, fmt.Sprintf("--listen-port=%d", port))
+	}
+	if in.ROPCOption != nil {
+		if in.ROPCOption.Username != "" {
+			args = append(args, "--username="+in.ROPCOption.Username)
+		}
 	}
 	return args
 }

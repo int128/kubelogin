@@ -5,6 +5,7 @@ import (
 
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -23,15 +24,12 @@ See https://github.com/int128/kubelogin for more.
 
 // rootOptions represents the options for the root command.
 type rootOptions struct {
-	Kubeconfig           string
-	Context              string
-	User                 string
-	ListenPort           []int
-	SkipOpenBrowser      bool
-	Username             string
-	Password             string
-	CertificateAuthority string
-	SkipTLSVerify        bool
+	Kubeconfig            string
+	Context               string
+	User                  string
+	CertificateAuthority  string
+	SkipTLSVerify         bool
+	authenticationOptions authenticationOptions
 }
 
 func (o *rootOptions) register(f *pflag.FlagSet) {
@@ -39,12 +37,39 @@ func (o *rootOptions) register(f *pflag.FlagSet) {
 	f.StringVar(&o.Kubeconfig, "kubeconfig", "", "Path to the kubeconfig file")
 	f.StringVar(&o.Context, "context", "", "The name of the kubeconfig context to use")
 	f.StringVar(&o.User, "user", "", "The name of the kubeconfig user to use. Prior to --context")
+	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
+	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
+	o.authenticationOptions.register(f)
+}
+
+type authenticationOptions struct {
+	ListenPort      []int
+	SkipOpenBrowser bool
+	Username        string
+	Password        string
+}
+
+func (o *authenticationOptions) register(f *pflag.FlagSet) {
 	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
-	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
-	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
+}
+
+func (o *authenticationOptions) toUseCaseOptions() (authCodeOption *authentication.AuthCodeOption, ropcOption *authentication.ROPCOption) {
+	switch {
+	case o.Username != "":
+		ropcOption = &authentication.ROPCOption{
+			Username: o.Username,
+			Password: o.Password,
+		}
+	default:
+		authCodeOption = &authentication.AuthCodeOption{
+			BindAddress:     translateListenPortToBindAddress(o.ListenPort),
+			SkipOpenBrowser: o.SkipOpenBrowser,
+		}
+	}
+	return
 }
 
 type Root struct {
@@ -60,16 +85,15 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 		Long:  longDescription,
 		Args:  cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
+			authCodeOption, ropcOption := o.authenticationOptions.toUseCaseOptions()
 			in := standalone.Input{
 				KubeconfigFilename: o.Kubeconfig,
 				KubeconfigContext:  kubeconfig.ContextName(o.Context),
 				KubeconfigUser:     kubeconfig.UserName(o.User),
 				CACertFilename:     o.CertificateAuthority,
 				SkipTLSVerify:      o.SkipTLSVerify,
-				BindAddress:        translateListenPortToBindAddress(o.ListenPort),
-				SkipOpenBrowser:    o.SkipOpenBrowser,
-				Username:           o.Username,
-				Password:           o.Password,
+				AuthCodeOption:     authCodeOption,
+				ROPCOption:         ropcOption,
 			}
 			if err := cmd.Standalone.Do(ctx, in); err != nil {
 				return xerrors.Errorf("error: %w", err)

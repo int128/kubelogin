@@ -22,20 +22,20 @@ func TestGetToken_Do(t *testing.T) {
 	futureTime := time.Now().Add(time.Hour) //TODO: inject time service
 
 	t.Run("FullOptions", func(t *testing.T) {
+		var authCodeOption authentication.AuthCodeOption
+		var ropcOption authentication.ROPCOption
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{
-			IssuerURL:       "https://accounts.google.com",
-			ClientID:        "YOUR_CLIENT_ID",
-			ClientSecret:    "YOUR_CLIENT_SECRET",
-			TokenCacheDir:   "/path/to/token-cache",
-			BindAddress:     []string{"127.0.0.1:8000"},
-			SkipOpenBrowser: true,
-			Username:        "USER",
-			Password:        "PASS",
-			CACertFilename:  "/path/to/cert",
-			SkipTLSVerify:   true,
+			IssuerURL:      "https://accounts.google.com",
+			ClientID:       "YOUR_CLIENT_ID",
+			ClientSecret:   "YOUR_CLIENT_SECRET",
+			TokenCacheDir:  "/path/to/token-cache",
+			CACertFilename: "/path/to/cert",
+			SkipTLSVerify:  true,
+			AuthCodeOption: &authCodeOption,
+			ROPCOption:     &ropcOption,
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockCertPool.EXPECT().
@@ -47,15 +47,13 @@ func TestGetToken_Do(t *testing.T) {
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				IssuerURL:       "https://accounts.google.com",
-				ClientID:        "YOUR_CLIENT_ID",
-				ClientSecret:    "YOUR_CLIENT_SECRET",
-				BindAddress:     []string{"127.0.0.1:8000"},
-				SkipOpenBrowser: true,
-				Username:        "USER",
-				Password:        "PASS",
-				CertPool:        mockCertPool,
-				SkipTLSVerify:   true,
+				IssuerURL:      "https://accounts.google.com",
+				ClientID:       "YOUR_CLIENT_ID",
+				ClientSecret:   "YOUR_CLIENT_SECRET",
+				CertPool:       mockCertPool,
+				SkipTLSVerify:  true,
+				AuthCodeOption: &authCodeOption,
+				ROPCOption:     &ropcOption,
 			}).
 			Return(&authentication.Output{
 				IDToken:       "YOUR_ID_TOKEN",

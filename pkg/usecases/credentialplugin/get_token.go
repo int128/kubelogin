@@ -28,17 +28,16 @@ type Interface interface {
 
 // Input represents an input DTO of the GetToken use-case.
 type Input struct {
-	IssuerURL       string
-	ClientID        string
-	ClientSecret    string
-	ExtraScopes     []string // optional
-	SkipOpenBrowser bool
-	BindAddress     []string
-	Username        string // If set, perform the resource owner password credentials grant
-	Password        string // If empty, read a password using Env.ReadPassword()
-	CACertFilename  string // If set, use the CA cert
-	SkipTLSVerify   bool
-	TokenCacheDir   string
+	IssuerURL      string
+	ClientID       string
+	ClientSecret   string
+	ExtraScopes    []string // optional
+	CACertFilename string   // If set, use the CA cert
+	SkipTLSVerify  bool
+	TokenCacheDir  string
+
+	AuthCodeOption *authentication.AuthCodeOption
+	ROPCOption     *authentication.ROPCOption
 }
 
 type GetToken struct {
@@ -77,18 +76,16 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
-		IssuerURL:       in.IssuerURL,
-		ClientID:        in.ClientID,
-		ClientSecret:    in.ClientSecret,
-		ExtraScopes:     in.ExtraScopes,
-		IDToken:         cache.IDToken,
-		RefreshToken:    cache.RefreshToken,
-		SkipOpenBrowser: in.SkipOpenBrowser,
-		BindAddress:     in.BindAddress,
-		Username:        in.Username,
-		Password:        in.Password,
-		CertPool:        certPool,
-		SkipTLSVerify:   in.SkipTLSVerify,
+		IssuerURL:      in.IssuerURL,
+		ClientID:       in.ClientID,
+		ClientSecret:   in.ClientSecret,
+		ExtraScopes:    in.ExtraScopes,
+		CertPool:       certPool,
+		SkipTLSVerify:  in.SkipTLSVerify,
+		IDToken:        cache.IDToken,
+		RefreshToken:   cache.RefreshToken,
+		AuthCodeOption: in.AuthCodeOption,
+		ROPCOption:     in.ROPCOption,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("error while authentication: %w", err)
