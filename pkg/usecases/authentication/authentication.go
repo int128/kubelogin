@@ -34,15 +34,18 @@ type Interface interface {
 
 // Input represents an input DTO of the Authentication use-case.
 type Input struct {
-	IssuerURL     string
-	ClientID      string
-	ClientSecret  string
-	ExtraScopes   []string // optional
-	CertPool      certpool.Interface
-	SkipTLSVerify bool
-	IDToken       string // optional
-	RefreshToken  string // optional
+	IssuerURL      string
+	ClientID       string
+	ClientSecret   string
+	ExtraScopes    []string // optional
+	CertPool       certpool.Interface
+	SkipTLSVerify  bool
+	IDToken        string // optional
+	RefreshToken   string // optional
+	GrantOptionSet GrantOptionSet
+}
 
+type GrantOptionSet struct {
 	AuthCodeOption *AuthCodeOption
 	ROPCOption     *ROPCOption
 }
@@ -143,11 +146,11 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		u.Logger.V(1).Infof("could not refresh the token: %s", err)
 	}
 
-	if in.AuthCodeOption != nil {
-		return u.doAuthCodeFlow(ctx, in.AuthCodeOption, client)
+	if in.GrantOptionSet.AuthCodeOption != nil {
+		return u.doAuthCodeFlow(ctx, in.GrantOptionSet.AuthCodeOption, client)
 	}
-	if in.ROPCOption != nil {
-		return u.doPasswordCredentialsFlow(ctx, in.ROPCOption, client)
+	if in.GrantOptionSet.ROPCOption != nil {
+		return u.doPasswordCredentialsFlow(ctx, in.GrantOptionSet.ROPCOption, client)
 	}
 	return nil, xerrors.Errorf("any authorization grant must be set")
 }

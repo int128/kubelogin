@@ -13,8 +13,7 @@ import (
 )
 
 func TestSetup_DoStage2(t *testing.T) {
-	var authCodeOption authentication.AuthCodeOption
-	var ropcOption authentication.ROPCOption
+	var grantOptionSet authentication.GrantOptionSet
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
@@ -26,8 +25,7 @@ func TestSetup_DoStage2(t *testing.T) {
 		ExtraScopes:    []string{"email"},
 		CACertFilename: "/path/to/cert",
 		SkipTLSVerify:  true,
-		AuthCodeOption: &authCodeOption,
-		ROPCOption:     &ropcOption,
+		GrantOptionSet: grantOptionSet,
 	}
 
 	mockCertPool := mock_certpool.NewMockInterface(ctrl)
@@ -46,8 +44,7 @@ func TestSetup_DoStage2(t *testing.T) {
 			ExtraScopes:    []string{"email"},
 			CertPool:       mockCertPool,
 			SkipTLSVerify:  true,
-			AuthCodeOption: &authCodeOption,
-			ROPCOption:     &ropcOption,
+			GrantOptionSet: grantOptionSet,
 		}).
 		Return(&authentication.Output{
 			IDToken:        "YOUR_ID_TOKEN",
