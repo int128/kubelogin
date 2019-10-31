@@ -35,6 +35,7 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 
 // FindByKey mocks base method
 func (m *MockInterface) FindByKey(arg0 string, arg1 tokencache.Key) (*tokencache.TokenCache, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByKey", arg0, arg1)
 	ret0, _ := ret[0].(*tokencache.TokenCache)
 	ret1, _ := ret[1].(error)
@@ -43,11 +44,13 @@ func (m *MockInterface) FindByKey(arg0 string, arg1 tokencache.Key) (*tokencache
 
 // FindByKey indicates an expected call of FindByKey
 func (mr *MockInterfaceMockRecorder) FindByKey(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByKey", reflect.TypeOf((*MockInterface)(nil).FindByKey), arg0, arg1)
 }
 
 // Save mocks base method
 func (m *MockInterface) Save(arg0 string, arg1 tokencache.Key, arg2 tokencache.TokenCache) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -55,5 +58,6 @@ func (m *MockInterface) Save(arg0 string, arg1 tokencache.Key, arg2 tokencache.T
 
 // Save indicates an expected call of Save
 func (mr *MockInterfaceMockRecorder) Save(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockInterface)(nil).Save), arg0, arg1, arg2)
 }

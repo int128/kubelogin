@@ -35,6 +35,7 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 
 // Write mocks base method
 func (m *MockInterface) Write(arg0 credentialplugin.Output) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Write", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -42,5 +43,6 @@ func (m *MockInterface) Write(arg0 credentialplugin.Output) error {
 
 // Write indicates an expected call of Write
 func (mr *MockInterfaceMockRecorder) Write(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockInterface)(nil).Write), arg0)
 }
