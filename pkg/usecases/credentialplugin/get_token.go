@@ -35,9 +35,7 @@ type Input struct {
 	CACertFilename string   // If set, use the CA cert
 	SkipTLSVerify  bool
 	TokenCacheDir  string
-
-	AuthCodeOption *authentication.AuthCodeOption
-	ROPCOption     *authentication.ROPCOption
+	GrantOptionSet authentication.GrantOptionSet
 }
 
 type GetToken struct {
@@ -84,8 +82,7 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		SkipTLSVerify:  in.SkipTLSVerify,
 		IDToken:        cache.IDToken,
 		RefreshToken:   cache.RefreshToken,
-		AuthCodeOption: in.AuthCodeOption,
-		ROPCOption:     in.ROPCOption,
+		GrantOptionSet: in.GrantOptionSet,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("error while authentication: %w", err)

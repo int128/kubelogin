@@ -58,20 +58,22 @@ func (o *authenticationOptions) register(f *pflag.FlagSet) {
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
 }
 
-func (o *authenticationOptions) toUseCaseOptions() (*authentication.AuthCodeOption, *authentication.ROPCOption, error) {
-	if o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == "") {
-		return &authentication.AuthCodeOption{
+func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {
+	switch {
+	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == ""):
+		s.AuthCodeOption = &authentication.AuthCodeOption{
 			BindAddress:     translateListenPortToBindAddress(o.ListenPort),
 			SkipOpenBrowser: o.SkipOpenBrowser,
-		}, nil, nil
-	}
-	if o.GrantType == "password" || (o.GrantType == "auto" && o.Username != "") {
-		return nil, &authentication.ROPCOption{
+		}
+	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):
+		s.ROPCOption = &authentication.ROPCOption{
 			Username: o.Username,
 			Password: o.Password,
-		}, nil
+		}
+	default:
+		err = xerrors.Errorf("grant-type must be one of (auto|authcode|password)")
 	}
-	return nil, nil, xerrors.Errorf("grant-type must be one of (auto|authcode|password)")
+	return
 }
 
 type Root struct {
@@ -87,7 +89,7 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 		Long:  longDescription,
 		Args:  cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
-			authCodeOption, ropcOption, err := o.authenticationOptions.toUseCaseOptions()
+			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
 				return xerrors.Errorf("invalid option: %w", err)
 			}
@@ -97,8 +99,7 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 				KubeconfigUser:     kubeconfig.UserName(o.User),
 				CACertFilename:     o.CertificateAuthority,
 				SkipTLSVerify:      o.SkipTLSVerify,
-				AuthCodeOption:     authCodeOption,
-				ROPCOption:         ropcOption,
+				GrantOptionSet:     grantOptionSet,
 			}
 			if err := cmd.Standalone.Do(ctx, in); err != nil {
 				return xerrors.Errorf("error: %w", err)

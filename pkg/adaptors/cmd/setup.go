@@ -42,7 +42,7 @@ func (cmd *Setup) New(ctx context.Context) *cobra.Command {
 		Short: "Show the setup instruction",
 		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
-			authCodeOption, ropcOption, err := o.authenticationOptions.toUseCaseOptions()
+			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
 				return xerrors.Errorf("error: %w", err)
 			}
@@ -53,8 +53,7 @@ func (cmd *Setup) New(ctx context.Context) *cobra.Command {
 				ExtraScopes:    o.ExtraScopes,
 				CACertFilename: o.CertificateAuthority,
 				SkipTLSVerify:  o.SkipTLSVerify,
-				AuthCodeOption: authCodeOption,
-				ROPCOption:     ropcOption,
+				GrantOptionSet: grantOptionSet,
 			}
 			if c.Flags().Lookup("listen-port").Changed {
 				in.ListenPortArgs = o.authenticationOptions.ListenPort

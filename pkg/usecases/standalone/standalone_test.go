@@ -20,8 +20,7 @@ func TestStandalone_Do(t *testing.T) {
 	futureTime := time.Now().Add(time.Hour) //TODO: inject time service
 
 	t.Run("FullOptions", func(t *testing.T) {
-		var authCodeOption authentication.AuthCodeOption
-		var ropcOption authentication.ROPCOption
+		var grantOptionSet authentication.GrantOptionSet
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
@@ -31,8 +30,7 @@ func TestStandalone_Do(t *testing.T) {
 			KubeconfigUser:     "theUser",
 			CACertFilename:     "/path/to/cert1",
 			SkipTLSVerify:      true,
-			AuthCodeOption:     &authCodeOption,
-			ROPCOption:         &ropcOption,
+			GrantOptionSet:     grantOptionSet,
 		}
 		currentAuthProvider := &kubeconfig.AuthProvider{
 			LocationOfOrigin:            "/path/to/kubeconfig",
@@ -78,8 +76,7 @@ func TestStandalone_Do(t *testing.T) {
 				ClientSecret:   "YOUR_CLIENT_SECRET",
 				CertPool:       mockCertPool,
 				SkipTLSVerify:  true,
-				AuthCodeOption: &authCodeOption,
-				ROPCOption:     &ropcOption,
+				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{
 				IDToken:       "YOUR_ID_TOKEN",

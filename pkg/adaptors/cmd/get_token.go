@@ -57,7 +57,7 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(*cobra.Command, []string) error {
-			authCodeOption, ropcOption, err := o.authenticationOptions.toUseCaseOptions()
+			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
 				return xerrors.Errorf("error: %w", err)
 			}
@@ -69,8 +69,7 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 				CACertFilename: o.CertificateAuthority,
 				SkipTLSVerify:  o.SkipTLSVerify,
 				TokenCacheDir:  o.TokenCacheDir,
-				AuthCodeOption: authCodeOption,
-				ROPCOption:     ropcOption,
+				GrantOptionSet: grantOptionSet,
 			}
 			if err := cmd.GetToken.Do(ctx, in); err != nil {
 				return xerrors.Errorf("error: %w", err)

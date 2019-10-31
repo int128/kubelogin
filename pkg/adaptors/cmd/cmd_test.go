@@ -25,8 +25,10 @@ func TestCmd_Run(t *testing.T) {
 			"Defaults": {
 				args: []string{executable},
 				in: standalone.Input{
-					AuthCodeOption: &authentication.AuthCodeOption{
-						BindAddress: []string{"127.0.0.1:8000", "127.0.0.1:18000"},
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeOption: &authentication.AuthCodeOption{
+							BindAddress: []string{"127.0.0.1:8000", "127.0.0.1:18000"},
+						},
 					},
 				},
 			},
@@ -51,9 +53,11 @@ func TestCmd_Run(t *testing.T) {
 					KubeconfigUser:     "google",
 					CACertFilename:     "/path/to/cacert",
 					SkipTLSVerify:      true,
-					AuthCodeOption: &authentication.AuthCodeOption{
-						BindAddress:     []string{"127.0.0.1:10080", "127.0.0.1:20080"},
-						SkipOpenBrowser: true,
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeOption: &authentication.AuthCodeOption{
+							BindAddress:     []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							SkipOpenBrowser: true,
+						},
 					},
 				},
 			},
@@ -66,9 +70,11 @@ func TestCmd_Run(t *testing.T) {
 					"--password", "PASS",
 				},
 				in: standalone.Input{
-					ROPCOption: &authentication.ROPCOption{
-						Username: "USER",
-						Password: "PASS",
+					GrantOptionSet: authentication.GrantOptionSet{
+						ROPCOption: &authentication.ROPCOption{
+							Username: "USER",
+							Password: "PASS",
+						},
 					},
 				},
 			},
@@ -80,9 +86,11 @@ func TestCmd_Run(t *testing.T) {
 					"--password", "PASS",
 				},
 				in: standalone.Input{
-					ROPCOption: &authentication.ROPCOption{
-						Username: "USER",
-						Password: "PASS",
+					GrantOptionSet: authentication.GrantOptionSet{
+						ROPCOption: &authentication.ROPCOption{
+							Username: "USER",
+							Password: "PASS",
+						},
 					},
 				},
 			},
@@ -141,8 +149,10 @@ func TestCmd_Run(t *testing.T) {
 					TokenCacheDir: defaultTokenCacheDir,
 					IssuerURL:     "https://issuer.example.com",
 					ClientID:      "YOUR_CLIENT_ID",
-					AuthCodeOption: &authentication.AuthCodeOption{
-						BindAddress: []string{"127.0.0.1:8000", "127.0.0.1:18000"},
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeOption: &authentication.AuthCodeOption{
+							BindAddress: []string{"127.0.0.1:8000", "127.0.0.1:18000"},
+						},
 					},
 				},
 			},
@@ -172,9 +182,11 @@ func TestCmd_Run(t *testing.T) {
 					ExtraScopes:    []string{"email", "profile"},
 					CACertFilename: "/path/to/cacert",
 					SkipTLSVerify:  true,
-					AuthCodeOption: &authentication.AuthCodeOption{
-						BindAddress:     []string{"127.0.0.1:10080", "127.0.0.1:20080"},
-						SkipOpenBrowser: true,
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeOption: &authentication.AuthCodeOption{
+							BindAddress:     []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							SkipOpenBrowser: true,
+						},
 					},
 				},
 			},
@@ -193,9 +205,11 @@ func TestCmd_Run(t *testing.T) {
 					TokenCacheDir: defaultTokenCacheDir,
 					IssuerURL:     "https://issuer.example.com",
 					ClientID:      "YOUR_CLIENT_ID",
-					ROPCOption: &authentication.ROPCOption{
-						Username: "USER",
-						Password: "PASS",
+					GrantOptionSet: authentication.GrantOptionSet{
+						ROPCOption: &authentication.ROPCOption{
+							Username: "USER",
+							Password: "PASS",
+						},
 					},
 				},
 			},
@@ -213,9 +227,11 @@ func TestCmd_Run(t *testing.T) {
 					TokenCacheDir: defaultTokenCacheDir,
 					IssuerURL:     "https://issuer.example.com",
 					ClientID:      "YOUR_CLIENT_ID",
-					ROPCOption: &authentication.ROPCOption{
-						Username: "USER",
-						Password: "PASS",
+					GrantOptionSet: authentication.GrantOptionSet{
+						ROPCOption: &authentication.ROPCOption{
+							Username: "USER",
+							Password: "PASS",
+						},
 					},
 				},
 			},

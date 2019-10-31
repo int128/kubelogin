@@ -72,9 +72,7 @@ type Stage2Input struct {
 	CACertFilename string   // If set, use the CA cert
 	SkipTLSVerify  bool
 	ListenPortArgs []int // non-nil if set by the command arg
-
-	AuthCodeOption *authentication.AuthCodeOption
-	ROPCOption     *authentication.ROPCOption
+	GrantOptionSet authentication.GrantOptionSet
 }
 
 func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
@@ -92,8 +90,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 		ExtraScopes:    in.ExtraScopes,
 		CertPool:       certPool,
 		SkipTLSVerify:  in.SkipTLSVerify,
-		AuthCodeOption: in.AuthCodeOption,
-		ROPCOption:     in.ROPCOption,
+		GrantOptionSet: in.GrantOptionSet,
 	})
 	if err != nil {
 		return xerrors.Errorf("error while authentication: %w", err)
@@ -134,17 +131,17 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 		args = append(args, "--insecure-skip-tls-verify")
 	}
 
-	if in.AuthCodeOption != nil {
-		if in.AuthCodeOption.SkipOpenBrowser {
+	if in.GrantOptionSet.AuthCodeOption != nil {
+		if in.GrantOptionSet.AuthCodeOption.SkipOpenBrowser {
 			args = append(args, "--skip-open-browser")
 		}
 	}
 	for _, port := range in.ListenPortArgs {
 		args = append(args, fmt.Sprintf("--listen-port=%d", port))
 	}
-	if in.ROPCOption != nil {
-		if in.ROPCOption.Username != "" {
-			args = append(args, "--username="+in.ROPCOption.Username)
+	if in.GrantOptionSet.ROPCOption != nil {
+		if in.GrantOptionSet.ROPCOption.Username != "" {
+			args = append(args, "--username="+in.GrantOptionSet.ROPCOption.Username)
 		}
 	}
 	return args

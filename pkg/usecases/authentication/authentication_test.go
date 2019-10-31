@@ -30,9 +30,11 @@ func TestAuthentication_Do(t *testing.T) {
 		defer cancel()
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		in := Input{
-			AuthCodeOption: &AuthCodeOption{
-				BindAddress:     []string{"127.0.0.1:8000"},
-				SkipOpenBrowser: true,
+			GrantOptionSet: GrantOptionSet{
+				AuthCodeOption: &AuthCodeOption{
+					BindAddress:     []string{"127.0.0.1:8000"},
+					SkipOpenBrowser: true,
+				},
 			},
 			CertPool:      mockCertPool,
 			SkipTLSVerify: true,
@@ -89,8 +91,10 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			AuthCodeOption: &AuthCodeOption{
-				BindAddress: []string{"127.0.0.1:8000"},
+			GrantOptionSet: GrantOptionSet{
+				AuthCodeOption: &AuthCodeOption{
+					BindAddress: []string{"127.0.0.1:8000"},
+				},
 			},
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
@@ -147,7 +151,9 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			ROPCOption:   &ROPCOption{},
+			GrantOptionSet: GrantOptionSet{
+				ROPCOption: &ROPCOption{},
+			},
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
@@ -200,9 +206,11 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			ROPCOption: &ROPCOption{
-				Username: "USER",
-				Password: "PASS",
+			GrantOptionSet: GrantOptionSet{
+				ROPCOption: &ROPCOption{
+					Username: "USER",
+					Password: "PASS",
+				},
 			},
 			SkipTLSVerify: true,
 			IssuerURL:     "https://issuer.example.com",
@@ -254,8 +262,10 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			ROPCOption: &ROPCOption{
-				Username: "USER",
+			GrantOptionSet: GrantOptionSet{
+				ROPCOption: &ROPCOption{
+					Username: "USER",
+				},
 			},
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
@@ -308,8 +318,10 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			ROPCOption: &ROPCOption{
-				Username: "USER",
+			GrantOptionSet: GrantOptionSet{
+				ROPCOption: &ROPCOption{
+					Username: "USER",
+				},
 			},
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
@@ -444,9 +456,11 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			AuthCodeOption: &AuthCodeOption{
-				BindAddress:     []string{"127.0.0.1:8000"},
-				SkipOpenBrowser: true,
+			GrantOptionSet: GrantOptionSet{
+				AuthCodeOption: &AuthCodeOption{
+					BindAddress:     []string{"127.0.0.1:8000"},
+					SkipOpenBrowser: true,
+				},
 			},
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",

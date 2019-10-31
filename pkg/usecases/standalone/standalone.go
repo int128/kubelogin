@@ -32,9 +32,7 @@ type Input struct {
 	KubeconfigUser     kubeconfig.UserName    // Default to the user of the context
 	CACertFilename     string                 // If set, use the CA cert
 	SkipTLSVerify      bool
-
-	AuthCodeOption *authentication.AuthCodeOption
-	ROPCOption     *authentication.ROPCOption
+	GrantOptionSet     authentication.GrantOptionSet
 }
 
 const oidcConfigErrorMessage = `You need to set up the kubeconfig for OpenID Connect authentication.
@@ -92,8 +90,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 		SkipTLSVerify:  in.SkipTLSVerify,
 		IDToken:        authProvider.IDToken,
 		RefreshToken:   authProvider.RefreshToken,
-		AuthCodeOption: in.AuthCodeOption,
-		ROPCOption:     in.ROPCOption,
+		GrantOptionSet: in.GrantOptionSet,
 	})
 	if err != nil {
 		return xerrors.Errorf("error while authentication: %w", err)
@@ -162,9 +159,9 @@ func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error
 	if in.CACertFilename != "" {
 		args = append(args, "--certificate-authority="+in.CACertFilename)
 	}
-	if in.ROPCOption != nil {
-		if in.ROPCOption.Username != "" {
-			args = append(args, "--username="+in.ROPCOption.Username)
+	if in.GrantOptionSet.ROPCOption != nil {
+		if in.GrantOptionSet.ROPCOption.Username != "" {
+			args = append(args, "--username="+in.GrantOptionSet.ROPCOption.Username)
 		}
 	}
 
