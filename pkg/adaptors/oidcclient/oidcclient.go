@@ -84,7 +84,7 @@ func (c *client) AuthenticateByCode(ctx context.Context, bindAddress []string, l
 	if err != nil {
 		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
-	return c.parseToken(ctx, token)
+	return c.verifyToken(ctx, token, nonce)
 }
 
 func newNonce() (string, error) {
@@ -102,7 +102,7 @@ func (c *client) AuthenticateByPassword(ctx context.Context, username, password 
 	if err != nil {
 		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
-	return c.parseToken(ctx, token)
+	return c.verifyToken(ctx, token, "")
 }
 
 // Refresh sends a refresh token request and returns a token set.
@@ -117,27 +117,32 @@ func (c *client) Refresh(ctx context.Context, refreshToken string) (*TokenSet, e
 	if err != nil {
 		return nil, xerrors.Errorf("could not refresh the token: %w", err)
 	}
-	return c.parseToken(ctx, token)
+	return c.verifyToken(ctx, token, "")
 }
 
-func (c *client) parseToken(ctx context.Context, token *oauth2.Token) (*TokenSet, error) {
-	idToken, ok := token.Extra("id_token").(string)
+// verifyToken verifies the token with the certificates of the provider and the nonce.
+// If the nonce is an empty string, it does not verify the nonce.
+func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce string) (*TokenSet, error) {
+	idTokenString, ok := token.Extra("id_token").(string)
 	if !ok {
 		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
 	}
 	verifier := c.provider.Verifier(&oidc.Config{ClientID: c.oauth2Config.ClientID})
-	verifiedIDToken, err := verifier.Verify(ctx, idToken)
+	idToken, err := verifier.Verify(ctx, idTokenString)
 	if err != nil {
-		return nil, xerrors.Errorf("could not verify the id_token: %w", err)
+		return nil, xerrors.Errorf("could not verify the ID token: %w", err)
 	}
-	claims, err := dumpClaims(verifiedIDToken)
+	if nonce != "" && nonce != idToken.Nonce {
+		return nil, xerrors.Errorf("nonce did not match (wants %s but was %s)", nonce, idToken.Nonce)
+	}
+	claims, err := dumpClaims(idToken)
 	if err != nil {
 		c.logger.V(1).Infof("incomplete claims of the ID token: %w", err)
 	}
 	return &TokenSet{
-		IDToken:       idToken,
+		IDToken:       idTokenString,
 		RefreshToken:  token.RefreshToken,
-		IDTokenExpiry: verifiedIDToken.Expiry,
+		IDTokenExpiry: idToken.Expiry,
 		IDTokenClaims: claims,
 	}, nil
 }
