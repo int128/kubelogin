@@ -29,8 +29,8 @@ func TestAuthCode_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(gomock.Any(), []string{"127.0.0.1:8000"}, gomock.Any()).
-			Do(func(_ context.Context, _ []string, readyChan chan<- string) {
+			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(_ context.Context, _ oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidcclient.TokenSet{
@@ -69,8 +69,8 @@ func TestAuthCode_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(gomock.Any(), []string{"127.0.0.1:8000"}, gomock.Any()).
-			Do(func(_ context.Context, _ []string, readyChan chan<- string) {
+			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(_ context.Context, _ oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidcclient.TokenSet{

@@ -2,8 +2,6 @@ package oidcclient
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/binary"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,7 +9,6 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/pkce"
 	"github.com/int128/oauth2cli"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
@@ -28,8 +25,8 @@ var Set = wire.NewSet(
 type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string
 	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*TokenSet, error)
-	AuthenticateByCode(ctx context.Context, bindAddress []string, localServerReadyChan chan<- string) (*TokenSet, error)
-	AuthenticateByPassword(ctx context.Context, username, password string) (*TokenSet, error)
+	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*TokenSet, error)
+	GetTokenByROPC(ctx context.Context, username, password string) (*TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*TokenSet, error)
 }
 
@@ -48,8 +45,16 @@ type ExchangeAuthCodeInput struct {
 	RedirectURI  string
 }
 
+type GetTokenByAuthCodeInput struct {
+	BindAddress         []string
+	Nonce               string
+	CodeChallenge       string
+	CodeChallengeMethod string
+	CodeVerifier        string
+}
+
 // TokenSet represents an output DTO of
-// Interface.AuthenticateByCode, Interface.AuthenticateByPassword and Interface.Refresh.
+// Interface.GetTokenByAuthCode, Interface.GetTokenByROPC and Interface.Refresh.
 type TokenSet struct {
 	IDToken        string
 	RefreshToken   string
@@ -72,36 +77,28 @@ func (c *client) wrapContext(ctx context.Context) context.Context {
 	return ctx
 }
 
-// AuthenticateByCode performs the authorization code flow.
-func (c *client) AuthenticateByCode(ctx context.Context, bindAddress []string, localServerReadyChan chan<- string) (*TokenSet, error) {
+// GetTokenByAuthCode performs the authorization code flow.
+func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*TokenSet, error) {
 	ctx = c.wrapContext(ctx)
-	nonce, err := newNonce()
-	if err != nil {
-		return nil, xerrors.Errorf("could not generate a nonce parameter: %w", err)
-	}
-	p, err := pkce.New()
-	if err != nil {
-		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
-	}
 	config := oauth2cli.Config{
 		OAuth2Config: c.oauth2Config,
 		AuthCodeOptions: []oauth2.AuthCodeOption{
 			oauth2.AccessTypeOffline,
-			oidc.Nonce(nonce),
-			pkce.CodeChallenge(p.CodeChallenge),
-			pkce.CodeChallengeMethod(p.CodeChallengeMethod),
+			oidc.Nonce(in.Nonce),
+			oauth2.SetAuthURLParam("code_challenge", in.CodeChallenge),
+			oauth2.SetAuthURLParam("code_challenge_method", in.CodeChallengeMethod),
 		},
 		TokenRequestOptions: []oauth2.AuthCodeOption{
-			pkce.CodeVerifier(p.CodeVerifier),
+			oauth2.SetAuthURLParam("code_verifier", in.CodeVerifier),
 		},
-		LocalServerBindAddress: bindAddress,
+		LocalServerBindAddress: in.BindAddress,
 		LocalServerReadyChan:   localServerReadyChan,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
 		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
-	return c.verifyToken(ctx, token, nonce)
+	return c.verifyToken(ctx, token, in.Nonce)
 }
 
 // GetAuthCodeURL returns the URL of authentication request for the authorization code flow.
@@ -111,8 +108,8 @@ func (c *client) GetAuthCodeURL(in AuthCodeURLInput) string {
 	return cfg.AuthCodeURL(in.State,
 		oauth2.AccessTypeOffline,
 		oidc.Nonce(in.Nonce),
-		pkce.CodeChallenge(in.CodeChallenge),
-		pkce.CodeChallengeMethod(in.CodeChallengeMethod),
+		oauth2.SetAuthURLParam("code_challenge", in.CodeChallenge),
+		oauth2.SetAuthURLParam("code_challenge_method", in.CodeChallengeMethod),
 	)
 }
 
@@ -121,23 +118,15 @@ func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput)
 	ctx = c.wrapContext(ctx)
 	cfg := c.oauth2Config
 	cfg.RedirectURL = in.RedirectURI
-	token, err := cfg.Exchange(ctx, in.Code, pkce.CodeVerifier(in.CodeVerifier))
+	token, err := cfg.Exchange(ctx, in.Code, oauth2.SetAuthURLParam("code_verifier", in.CodeVerifier))
 	if err != nil {
 		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)
 	}
 	return c.verifyToken(ctx, token, in.Nonce)
 }
 
-func newNonce() (string, error) {
-	var n uint64
-	if err := binary.Read(rand.Reader, binary.LittleEndian, &n); err != nil {
-		return "", xerrors.Errorf("error while reading random: %w", err)
-	}
-	return fmt.Sprintf("%x", n), nil
-}
-
-// AuthenticateByPassword performs the resource owner password credentials flow.
-func (c *client) AuthenticateByPassword(ctx context.Context, username, password string) (*TokenSet, error) {
+// GetTokenByROPC performs the resource owner password credentials flow.
+func (c *client) GetTokenByROPC(ctx context.Context, username, password string) (*TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, username, password)
 	if err != nil {

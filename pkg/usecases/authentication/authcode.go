@@ -6,6 +6,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
@@ -17,8 +18,23 @@ type AuthCode struct {
 	LocalServerReadyFunc LocalServerReadyFunc // only for e2e tests
 }
 
-func (u *AuthCode) Do(ctx context.Context, in *AuthCodeOption, client oidcclient.Interface) (*Output, error) {
+func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the authentication code flow")
+	nonce, err := oidc.NewNonce()
+	if err != nil {
+		return nil, xerrors.Errorf("could not generate a nonce: %w", err)
+	}
+	p, err := oidc.NewPKCEParams()
+	if err != nil {
+		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
+	}
+	in := oidcclient.GetTokenByAuthCodeInput{
+		BindAddress:         o.BindAddress,
+		Nonce:               nonce,
+		CodeChallenge:       p.CodeChallenge,
+		CodeChallengeMethod: p.CodeChallengeMethod,
+		CodeVerifier:        p.CodeVerifier,
+	}
 	readyChan := make(chan string, 1)
 	defer close(readyChan)
 	var out Output
@@ -33,7 +49,7 @@ func (u *AuthCode) Do(ctx context.Context, in *AuthCodeOption, client oidcclient
 			if u.LocalServerReadyFunc != nil {
 				u.LocalServerReadyFunc(url)
 			}
-			if in.SkipOpenBrowser {
+			if o.SkipOpenBrowser {
 				return nil
 			}
 			if err := u.Env.OpenBrowser(url); err != nil {
@@ -45,7 +61,7 @@ func (u *AuthCode) Do(ctx context.Context, in *AuthCodeOption, client oidcclient
 		}
 	})
 	eg.Go(func() error {
-		tokenSet, err := client.AuthenticateByCode(ctx, in.BindAddress, readyChan)
+		tokenSet, err := client.GetTokenByAuthCode(ctx, in, readyChan)
 		if err != nil {
 			return xerrors.Errorf("error while the authorization code flow: %w", err)
 		}

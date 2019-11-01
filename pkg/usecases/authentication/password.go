@@ -31,7 +31,7 @@ func (u *ROPC) Do(ctx context.Context, in *ROPCOption, client oidcclient.Interfa
 			return nil, xerrors.Errorf("could not read a password: %w", err)
 		}
 	}
-	tokenSet, err := client.AuthenticateByPassword(ctx, in.Username, in.Password)
+	tokenSet, err := client.GetTokenByROPC(ctx, in.Username, in.Password)
 	if err != nil {
 		return nil, xerrors.Errorf("error while the resource owner password credentials flow: %w", err)
 	}

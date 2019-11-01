@@ -151,8 +151,8 @@ func TestAuthentication_Do(t *testing.T) {
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
 			Return(nil, xerrors.New("token has expired"))
 		mockOIDCClient.EXPECT().
-			AuthenticateByCode(gomock.Any(), []string{"127.0.0.1:8000"}, gomock.Any()).
-			Do(func(_ context.Context, _ []string, readyChan chan<- string) {
+			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(_ context.Context, _ oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidcclient.TokenSet{
@@ -212,7 +212,7 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByPassword(gomock.Any(), "USER", "PASS").
+			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidcclient.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",

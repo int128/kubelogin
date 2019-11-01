@@ -27,7 +27,7 @@ func TestROPC_Do(t *testing.T) {
 		o := &ROPCOption{}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByPassword(gomock.Any(), "USER", "PASS").
+			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidcclient.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
@@ -69,7 +69,7 @@ func TestROPC_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByPassword(gomock.Any(), "USER", "PASS").
+			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidcclient.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
@@ -106,7 +106,7 @@ func TestROPC_Do(t *testing.T) {
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
-			AuthenticateByPassword(gomock.Any(), "USER", "PASS").
+			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidcclient.TokenSet{
 				IDToken:        "YOUR_ID_TOKEN",
 				RefreshToken:   "YOUR_REFRESH_TOKEN",
