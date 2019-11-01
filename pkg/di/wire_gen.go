@@ -31,17 +31,26 @@ func NewCmd() cmd.Interface {
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
 	localServerReadyFunc := _wireLocalServerReadyFuncValue
+	authCode := &authentication.AuthCode{
+		Env:                  envEnv,
+		Logger:               loggerInterface,
+		LocalServerReadyFunc: localServerReadyFunc,
+	}
 	authCodeKeyboard := &authentication.AuthCodeKeyboard{
 		Env:    envEnv,
 		Logger: loggerInterface,
 	}
+	ropc := &authentication.ROPC{
+		Env:    envEnv,
+		Logger: loggerInterface,
+	}
 	authenticationAuthentication := &authentication.Authentication{
-		OIDCClientFactory:    factory,
-		JWTDecoder:           decoder,
-		Env:                  envEnv,
-		Logger:               loggerInterface,
-		LocalServerReadyFunc: localServerReadyFunc,
-		AuthCodeKeyboard:     authCodeKeyboard,
+		OIDCClientFactory: factory,
+		JWTDecoder:        decoder,
+		Logger:            loggerInterface,
+		AuthCode:          authCode,
+		AuthCodeKeyboard:  authCodeKeyboard,
+		ROPC:              ropc,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,
@@ -97,17 +106,26 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 	}
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
+	authCode := &authentication.AuthCode{
+		Env:                  envEnv,
+		Logger:               loggerInterface,
+		LocalServerReadyFunc: localServerReadyFunc,
+	}
 	authCodeKeyboard := &authentication.AuthCodeKeyboard{
 		Env:    envEnv,
 		Logger: loggerInterface,
 	}
+	ropc := &authentication.ROPC{
+		Env:    envEnv,
+		Logger: loggerInterface,
+	}
 	authenticationAuthentication := &authentication.Authentication{
-		OIDCClientFactory:    factory,
-		JWTDecoder:           decoder,
-		Env:                  envEnv,
-		Logger:               loggerInterface,
-		LocalServerReadyFunc: localServerReadyFunc,
-		AuthCodeKeyboard:     authCodeKeyboard,
+		OIDCClientFactory: factory,
+		JWTDecoder:        decoder,
+		Logger:            loggerInterface,
+		AuthCode:          authCode,
+		AuthCodeKeyboard:  authCodeKeyboard,
+		ROPC:              ropc,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,
