@@ -29,7 +29,24 @@ unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
 
-You need to set up the OIDC provider, role binding, Kubernetes API server and kubeconfig.
+You need to set up the OIDC provider, cluster role binding, Kubernetes API server and kubeconfig.
+The kubeconfig looks like:
+
+```yaml
+users:
+- name: oidc
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: kubectl
+      args:
+      - oidc-login
+      - get-token
+      - --oidc-issuer-url=ISSUER_URL
+      - --oidc-client-id=YOUR_CLIENT_ID
+      - --oidc-client-secret=YOUR_CLIENT_SECRET
+```
+
 See [the setup guide](docs/setup.md) for more.
 
 
@@ -150,8 +167,8 @@ You need to register the following redirect URIs to the provider:
 You can change the ports by the option:
 
 ```yaml
-      - --listen-port 12345
-      - --listen-port 23456
+      - --listen-port=12345
+      - --listen-port=23456
 ```
 
 #### Authorization code flow with keyboard interactive
@@ -185,14 +202,14 @@ Keycloak supports this flow but you need to explicitly enable the "Direct Access
 You can set the username and password.
 
 ```yaml
-      - --username USERNAME
-      - --password PASSWORD
+      - --username=USERNAME
+      - --password=PASSWORD
 ```
 
 If the password is not set, kubelogin will show the prompt for the password.
 
 ```yaml
-      - --username USERNAME
+      - --username=USERNAME
 ```
 
 ```
