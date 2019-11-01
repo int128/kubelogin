@@ -61,6 +61,16 @@ func TestCmd_Run(t *testing.T) {
 					},
 				},
 			},
+			"GrantType=authcode-keyboard": {
+				args: []string{executable,
+					"--grant-type", "authcode-keyboard",
+				},
+				in: standalone.Input{
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeKeyboardOption: &authentication.AuthCodeKeyboardOption{},
+					},
+				},
+			},
 			"GrantType=password": {
 				args: []string{executable,
 					"--grant-type", "password",
@@ -187,6 +197,22 @@ func TestCmd_Run(t *testing.T) {
 							BindAddress:     []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 							SkipOpenBrowser: true,
 						},
+					},
+				},
+			},
+			"GrantType=authcode-keyboard": {
+				args: []string{executable,
+					"get-token",
+					"--oidc-issuer-url", "https://issuer.example.com",
+					"--oidc-client-id", "YOUR_CLIENT_ID",
+					"--grant-type", "authcode-keyboard",
+				},
+				in: credentialplugin.Input{
+					TokenCacheDir: defaultTokenCacheDir,
+					IssuerURL:     "https://issuer.example.com",
+					ClientID:      "YOUR_CLIENT_ID",
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeKeyboardOption: &authentication.AuthCodeKeyboardOption{},
 					},
 				},
 			},

@@ -104,7 +104,7 @@ Flags:
       --user string                      The name of the kubeconfig user to use. Prior to --context
       --certificate-authority string     Path to a cert file for the certificate authority
       --insecure-skip-tls-verify         If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-      --grant-type string                The authorization grant type to use. One of (auto|authcode|password) (default "auto")
+      --grant-type string                The authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
       --listen-port ints                 Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
       --skip-open-browser                If true, it does not open the browser on authentication
       --username string                  If set, perform the resource owner password credentials grant
