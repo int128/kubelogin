@@ -6,11 +6,9 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
 
@@ -20,7 +18,9 @@ import (
 var Set = wire.NewSet(
 	wire.Struct(new(Authentication), "*"),
 	wire.Bind(new(Interface), new(*Authentication)),
+	wire.Struct(new(AuthCode), "*"),
 	wire.Struct(new(AuthCodeKeyboard), "*"),
+	wire.Struct(new(ROPC), "*"),
 )
 
 // LocalServerReadyFunc provides an extension point for e2e tests.
@@ -91,12 +91,12 @@ const passwordPrompt = "Password: "
 // If the Password is not set, it asks a password by the prompt.
 //
 type Authentication struct {
-	OIDCClientFactory    oidcclient.FactoryInterface
-	JWTDecoder           jwtdecoder.Interface
-	Env                  env.Interface
-	Logger               logger.Interface
-	LocalServerReadyFunc LocalServerReadyFunc // only for e2e tests
-	AuthCodeKeyboard     *AuthCodeKeyboard
+	OIDCClientFactory oidcclient.FactoryInterface
+	JWTDecoder        jwtdecoder.Interface
+	Logger            logger.Interface
+	AuthCode          *AuthCode
+	AuthCodeKeyboard  *AuthCodeKeyboard
+	ROPC              *ROPC
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -152,89 +152,13 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	}
 
 	if in.GrantOptionSet.AuthCodeOption != nil {
-		return u.doAuthCodeFlow(ctx, in.GrantOptionSet.AuthCodeOption, client)
+		return u.AuthCode.Do(ctx, in.GrantOptionSet.AuthCodeOption, client)
 	}
 	if in.GrantOptionSet.AuthCodeKeyboardOption != nil {
 		return u.AuthCodeKeyboard.Do(ctx, in.GrantOptionSet.AuthCodeKeyboardOption, client)
 	}
 	if in.GrantOptionSet.ROPCOption != nil {
-		return u.doPasswordCredentialsFlow(ctx, in.GrantOptionSet.ROPCOption, client)
+		return u.ROPC.Do(ctx, in.GrantOptionSet.ROPCOption, client)
 	}
 	return nil, xerrors.Errorf("any authorization grant must be set")
-}
-
-func (u *Authentication) doAuthCodeFlow(ctx context.Context, in *AuthCodeOption, client oidcclient.Interface) (*Output, error) {
-	u.Logger.V(1).Infof("performing the authentication code flow")
-	readyChan := make(chan string, 1)
-	defer close(readyChan)
-	var out Output
-	eg, ctx := errgroup.WithContext(ctx)
-	eg.Go(func() error {
-		select {
-		case url, ok := <-readyChan:
-			if !ok {
-				return nil
-			}
-			u.Logger.Printf("Open %s for authentication", url)
-			if u.LocalServerReadyFunc != nil {
-				u.LocalServerReadyFunc(url)
-			}
-			if in.SkipOpenBrowser {
-				return nil
-			}
-			if err := u.Env.OpenBrowser(url); err != nil {
-				u.Logger.V(1).Infof("could not open the browser: %s", err)
-			}
-			return nil
-		case <-ctx.Done():
-			return xerrors.Errorf("context cancelled while waiting for the local server: %w", ctx.Err())
-		}
-	})
-	eg.Go(func() error {
-		tokenSet, err := client.AuthenticateByCode(ctx, in.BindAddress, readyChan)
-		if err != nil {
-			return xerrors.Errorf("error while the authorization code flow: %w", err)
-		}
-		out = Output{
-			IDToken:        tokenSet.IDToken,
-			RefreshToken:   tokenSet.RefreshToken,
-			IDTokenSubject: tokenSet.IDTokenSubject,
-			IDTokenExpiry:  tokenSet.IDTokenExpiry,
-			IDTokenClaims:  tokenSet.IDTokenClaims,
-		}
-		return nil
-	})
-	if err := eg.Wait(); err != nil {
-		return nil, xerrors.Errorf("error while the authorization code flow: %w", err)
-	}
-	return &out, nil
-}
-
-func (u *Authentication) doPasswordCredentialsFlow(ctx context.Context, in *ROPCOption, client oidcclient.Interface) (*Output, error) {
-	u.Logger.V(1).Infof("performing the resource owner password credentials flow")
-	if in.Username == "" {
-		var err error
-		in.Username, err = u.Env.ReadString(usernamePrompt)
-		if err != nil {
-			return nil, xerrors.Errorf("could not get the username: %w", err)
-		}
-	}
-	if in.Password == "" {
-		var err error
-		in.Password, err = u.Env.ReadPassword(passwordPrompt)
-		if err != nil {
-			return nil, xerrors.Errorf("could not read a password: %w", err)
-		}
-	}
-	tokenSet, err := client.AuthenticateByPassword(ctx, in.Username, in.Password)
-	if err != nil {
-		return nil, xerrors.Errorf("error while the resource owner password credentials flow: %w", err)
-	}
-	return &Output{
-		IDToken:        tokenSet.IDToken,
-		RefreshToken:   tokenSet.RefreshToken,
-		IDTokenSubject: tokenSet.IDTokenSubject,
-		IDTokenExpiry:  tokenSet.IDTokenExpiry,
-		IDTokenClaims:  tokenSet.IDTokenClaims,
-	}, nil
 }

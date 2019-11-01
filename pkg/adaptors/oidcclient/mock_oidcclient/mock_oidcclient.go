@@ -72,36 +72,6 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 	return m.recorder
 }
 
-// AuthenticateByCode mocks base method
-func (m *MockInterface) AuthenticateByCode(arg0 context.Context, arg1 []string, arg2 chan<- string) (*oidcclient.TokenSet, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AuthenticateByCode", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*oidcclient.TokenSet)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// AuthenticateByCode indicates an expected call of AuthenticateByCode
-func (mr *MockInterfaceMockRecorder) AuthenticateByCode(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByCode", reflect.TypeOf((*MockInterface)(nil).AuthenticateByCode), arg0, arg1, arg2)
-}
-
-// AuthenticateByPassword mocks base method
-func (m *MockInterface) AuthenticateByPassword(arg0 context.Context, arg1, arg2 string) (*oidcclient.TokenSet, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AuthenticateByPassword", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*oidcclient.TokenSet)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// AuthenticateByPassword indicates an expected call of AuthenticateByPassword
-func (mr *MockInterfaceMockRecorder) AuthenticateByPassword(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateByPassword", reflect.TypeOf((*MockInterface)(nil).AuthenticateByPassword), arg0, arg1, arg2)
-}
-
 // ExchangeAuthCode mocks base method
 func (m *MockInterface) ExchangeAuthCode(arg0 context.Context, arg1 oidcclient.ExchangeAuthCodeInput) (*oidcclient.TokenSet, error) {
 	m.ctrl.T.Helper()
@@ -129,6 +99,36 @@ func (m *MockInterface) GetAuthCodeURL(arg0 oidcclient.AuthCodeURLInput) string 
 func (mr *MockInterfaceMockRecorder) GetAuthCodeURL(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthCodeURL", reflect.TypeOf((*MockInterface)(nil).GetAuthCodeURL), arg0)
+}
+
+// GetTokenByAuthCode mocks base method
+func (m *MockInterface) GetTokenByAuthCode(arg0 context.Context, arg1 oidcclient.GetTokenByAuthCodeInput, arg2 chan<- string) (*oidcclient.TokenSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTokenByAuthCode", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*oidcclient.TokenSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTokenByAuthCode indicates an expected call of GetTokenByAuthCode
+func (mr *MockInterfaceMockRecorder) GetTokenByAuthCode(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenByAuthCode", reflect.TypeOf((*MockInterface)(nil).GetTokenByAuthCode), arg0, arg1, arg2)
+}
+
+// GetTokenByROPC mocks base method
+func (m *MockInterface) GetTokenByROPC(arg0 context.Context, arg1, arg2 string) (*oidcclient.TokenSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTokenByROPC", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*oidcclient.TokenSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTokenByROPC indicates an expected call of GetTokenByROPC
+func (mr *MockInterfaceMockRecorder) GetTokenByROPC(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenByROPC", reflect.TypeOf((*MockInterface)(nil).GetTokenByROPC), arg0, arg1, arg2)
 }
 
 // Refresh mocks base method
