@@ -5,7 +5,7 @@ Let's see the following steps:
 
 1. Set up the OIDC provider
 1. Verify authentication
-1. Bind a role
+1. Bind a cluster role
 1. Set up the Kubernetes API server
 1. Set up the kubeconfig
 1. Verify cluster access
@@ -142,9 +142,9 @@ It will open the browser and you can log in to the provider.
 Then it will show the instruction.
 
 
-## 3. Bind a role
+## 3. Bind a cluster role
 
-Bind the `cluster-admin` role to you.
+In this tutorial, bind the `cluster-admin` role to you.
 Apply the following manifest:
 
 ```yaml
@@ -165,7 +165,7 @@ subjects:
 kubectl apply -f oidc-cluster-admin.yaml
 ```
 
-As well as you can create a custom role and bind it.
+As well as you can create a custom cluster role and bind it.
 
 
 ## 4. Set up the Kubernetes API server
@@ -188,6 +188,15 @@ spec:
     oidcClientID: YOUR_CLIENT_ID
 ```
 
+If you are using [kube-aws](https://github.com/kubernetes-incubator/kube-aws), append the following settings to the `cluster.yaml`:
+
+```yaml
+       oidc:
+         enabled: true
+         issuerUrl: ISSUER_URL
+         clientId: YOUR_CLIENT_ID
+```
+
 
 ## 5. Set up the kubeconfig
 
@@ -195,7 +204,7 @@ Add the following user to the kubeconfig:
 
 ```yaml
 users:
-- name: google
+- name: oidc
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1beta1
