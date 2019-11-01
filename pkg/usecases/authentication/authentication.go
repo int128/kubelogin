@@ -20,6 +20,7 @@ import (
 var Set = wire.NewSet(
 	wire.Struct(new(Authentication), "*"),
 	wire.Bind(new(Interface), new(*Authentication)),
+	wire.Struct(new(AuthCodeKeyboard), "*"),
 )
 
 // LocalServerReadyFunc provides an extension point for e2e tests.
@@ -46,14 +47,17 @@ type Input struct {
 }
 
 type GrantOptionSet struct {
-	AuthCodeOption *AuthCodeOption
-	ROPCOption     *ROPCOption
+	AuthCodeOption         *AuthCodeOption
+	AuthCodeKeyboardOption *AuthCodeKeyboardOption
+	ROPCOption             *ROPCOption
 }
 
 type AuthCodeOption struct {
 	SkipOpenBrowser bool
 	BindAddress     []string
 }
+
+type AuthCodeKeyboardOption struct{}
 
 type ROPCOption struct {
 	Username string
@@ -92,6 +96,7 @@ type Authentication struct {
 	Env                  env.Interface
 	Logger               logger.Interface
 	LocalServerReadyFunc LocalServerReadyFunc // only for e2e tests
+	AuthCodeKeyboard     *AuthCodeKeyboard
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -148,6 +153,9 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 
 	if in.GrantOptionSet.AuthCodeOption != nil {
 		return u.doAuthCodeFlow(ctx, in.GrantOptionSet.AuthCodeOption, client)
+	}
+	if in.GrantOptionSet.AuthCodeKeyboardOption != nil {
+		return u.AuthCodeKeyboard.Do(ctx, in.GrantOptionSet.AuthCodeKeyboardOption, client)
 	}
 	if in.GrantOptionSet.ROPCOption != nil {
 		return u.doPasswordCredentialsFlow(ctx, in.GrantOptionSet.ROPCOption, client)

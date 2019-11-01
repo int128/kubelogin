@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
@@ -50,8 +52,15 @@ type authenticationOptions struct {
 	Password        string
 }
 
+var allGrantType = strings.Join([]string{
+	"auto",
+	"authcode",
+	"authcode-keyboard",
+	"password",
+}, "|")
+
 func (o *authenticationOptions) register(f *pflag.FlagSet) {
-	f.StringVar(&o.GrantType, "grant-type", "auto", "The authorization grant type to use. One of (auto|authcode|password)")
+	f.StringVar(&o.GrantType, "grant-type", "auto", fmt.Sprintf("The authorization grant type to use. One of (%s)", allGrantType))
 	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
@@ -65,13 +74,15 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			BindAddress:     translateListenPortToBindAddress(o.ListenPort),
 			SkipOpenBrowser: o.SkipOpenBrowser,
 		}
+	case o.GrantType == "authcode-keyboard":
+		s.AuthCodeKeyboardOption = &authentication.AuthCodeKeyboardOption{}
 	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):
 		s.ROPCOption = &authentication.ROPCOption{
 			Username: o.Username,
 			Password: o.Password,
 		}
 	default:
-		err = xerrors.Errorf("grant-type must be one of (auto|authcode|password)")
+		err = xerrors.Errorf("grant-type must be one of (%s)", allGrantType)
 	}
 	return
 }

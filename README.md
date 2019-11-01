@@ -88,7 +88,7 @@ Flags:
       --certificate-authority string   Path to a cert file for the certificate authority
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --token-cache-dir string         Path to a directory for caching tokens (default "~/.kube/cache/oidc-login")
-      --grant-type string              The authorization grant type to use. One of (auto|authcode|password) (default "auto")
+      --grant-type string              The authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
       --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
       --skip-open-browser              If true, it does not open the browser on authentication
       --username string                If set, perform the resource owner password credentials grant
@@ -153,6 +153,26 @@ You can change the ports by the option:
       - --listen-port 12345
       - --listen-port 23456
 ```
+
+#### Authorization code flow with keyboard interactive
+
+If you cannot access the browser, instead use the authorization code flow with keyboard interactive.
+
+```yaml
+      - --grant-type=authcode-keyboard
+```
+
+Kubelogin will show the URL and prompt.
+Open the URL in the browser and then copy the code shown.
+
+```
+% kubectl get pods
+Open https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&client_id=...
+Enter code: YOUR_CODE
+```
+
+Note that this flow uses the redirect URI `urn:ietf:wg:oauth:2.0:oob` and
+some OIDC providers do not support it.
 
 #### Resource owner password credentials grant flow
 

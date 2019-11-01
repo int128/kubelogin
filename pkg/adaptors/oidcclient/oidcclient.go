@@ -26,9 +26,26 @@ var Set = wire.NewSet(
 )
 
 type Interface interface {
+	GetAuthCodeURL(in AuthCodeURLInput) string
+	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*TokenSet, error)
 	AuthenticateByCode(ctx context.Context, bindAddress []string, localServerReadyChan chan<- string) (*TokenSet, error)
 	AuthenticateByPassword(ctx context.Context, username, password string) (*TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*TokenSet, error)
+}
+
+type AuthCodeURLInput struct {
+	State               string
+	Nonce               string
+	CodeChallenge       string
+	CodeChallengeMethod string
+	RedirectURI         string
+}
+
+type ExchangeAuthCodeInput struct {
+	Code         string
+	CodeVerifier string
+	Nonce        string
+	RedirectURI  string
 }
 
 // TokenSet represents an output DTO of
@@ -60,7 +77,7 @@ func (c *client) AuthenticateByCode(ctx context.Context, bindAddress []string, l
 	ctx = c.wrapContext(ctx)
 	nonce, err := newNonce()
 	if err != nil {
-		return nil, xerrors.Errorf("could not generate a nonce parameter")
+		return nil, xerrors.Errorf("could not generate a nonce parameter: %w", err)
 	}
 	p, err := pkce.New()
 	if err != nil {
@@ -85,6 +102,30 @@ func (c *client) AuthenticateByCode(ctx context.Context, bindAddress []string, l
 		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
 	return c.verifyToken(ctx, token, nonce)
+}
+
+// GetAuthCodeURL returns the URL of authentication request for the authorization code flow.
+func (c *client) GetAuthCodeURL(in AuthCodeURLInput) string {
+	cfg := c.oauth2Config
+	cfg.RedirectURL = in.RedirectURI
+	return cfg.AuthCodeURL(in.State,
+		oauth2.AccessTypeOffline,
+		oidc.Nonce(in.Nonce),
+		pkce.CodeChallenge(in.CodeChallenge),
+		pkce.CodeChallengeMethod(in.CodeChallengeMethod),
+	)
+}
+
+// ExchangeAuthCode exchanges the authorization code and token.
+func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*TokenSet, error) {
+	ctx = c.wrapContext(ctx)
+	cfg := c.oauth2Config
+	cfg.RedirectURL = in.RedirectURI
+	token, err := cfg.Exchange(ctx, in.Code, pkce.CodeVerifier(in.CodeVerifier))
+	if err != nil {
+		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)
+	}
+	return c.verifyToken(ctx, token, in.Nonce)
 }
 
 func newNonce() (string, error) {

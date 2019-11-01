@@ -31,12 +31,17 @@ func NewCmd() cmd.Interface {
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
 	localServerReadyFunc := _wireLocalServerReadyFuncValue
+	authCodeKeyboard := &authentication.AuthCodeKeyboard{
+		Env:    envEnv,
+		Logger: loggerInterface,
+	}
 	authenticationAuthentication := &authentication.Authentication{
 		OIDCClientFactory:    factory,
 		JWTDecoder:           decoder,
 		Env:                  envEnv,
 		Logger:               loggerInterface,
 		LocalServerReadyFunc: localServerReadyFunc,
+		AuthCodeKeyboard:     authCodeKeyboard,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,
@@ -92,12 +97,17 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 	}
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
+	authCodeKeyboard := &authentication.AuthCodeKeyboard{
+		Env:    envEnv,
+		Logger: loggerInterface,
+	}
 	authenticationAuthentication := &authentication.Authentication{
 		OIDCClientFactory:    factory,
 		JWTDecoder:           decoder,
 		Env:                  envEnv,
 		Logger:               loggerInterface,
 		LocalServerReadyFunc: localServerReadyFunc,
+		AuthCodeKeyboard:     authCodeKeyboard,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,
