@@ -2,12 +2,15 @@
 
 This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens), also known as `kubectl oidc-login`.
 
-This is designed to run as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
-When you run kubectl, kubelogin opens the browser and you can log in to the provider.
-Then kubelogin gets a token from the provider and kubectl access Kubernetes APIs with the token.
-Take a look at the following diagram:
+It is designed to run as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
 
 ![Diagram of the credential plugin](docs/credential-plugin-diagram.svg)
+
+When you run kubectl, kubelogin opens the browser and you can log in to the provider.
+Then kubelogin gets a token from the provider and kubectl access Kubernetes APIs with the token.
+Take a loot at the screencast:
+
+<img alt="screencast" src="https://user-images.githubusercontent.com/321266/68352462-dcfc8b00-0149-11ea-8896-1632858a43c0.gif" width="650" height="470">
 
 
 ## Getting Started
