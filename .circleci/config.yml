@@ -21,6 +21,7 @@ jobs:
       - run: make check
       - run: bash <(curl -s https://codecov.io/bash)
       - run: make run
+      - run: make dist
       - run: |
           if [ "$CIRCLE_TAG" ]; then
             make release
