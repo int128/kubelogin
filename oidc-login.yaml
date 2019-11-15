@@ -30,8 +30,10 @@ spec:
       sha256: "{{ sha256 .linux_amd64_archive }}"
       bin: kubelogin
       files:
-        - from: "kubelogin"
-          to: "."
+        - from: kubelogin
+          to: .
+        - from: LICENSE
+          to: .
       selector:
         matchLabels:
           os: linux
@@ -40,8 +42,10 @@ spec:
       sha256: "{{ sha256 .darwin_amd64_archive }}"
       bin: kubelogin
       files:
-        - from: "kubelogin"
-          to: "."
+        - from: kubelogin
+          to: .
+        - from: LICENSE
+          to: .
       selector:
         matchLabels:
           os: darwin
@@ -50,8 +54,10 @@ spec:
       sha256: "{{ sha256 .windows_amd64_archive }}"
       bin: kubelogin.exe
       files:
-        - from: "kubelogin.exe"
-          to: "."
+        - from: kubelogin.exe
+          to: .
+        - from: LICENSE
+          to: .
       selector:
         matchLabels:
           os: windows
