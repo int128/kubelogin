@@ -2,7 +2,7 @@ package kubeconfig
 
 import (
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger"
 )
 
 //go:generate mockgen -destination mock_kubeconfig/mock_kubeconfig.go github.com/int128/kubelogin/pkg/adaptors/kubeconfig Interface

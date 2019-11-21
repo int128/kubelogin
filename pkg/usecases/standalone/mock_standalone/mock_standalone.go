@@ -7,7 +7,7 @@ package mock_standalone
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	standalone "github.com/int128/kubelogin/pkg/usecases/standalone"
+	standalone "github.com/pipedrive/kubelogin/pkg/usecases/standalone"
 	reflect "reflect"
 )
 

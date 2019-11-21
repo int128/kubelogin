@@ -3,7 +3,7 @@ package mock_logger
 import (
 	"fmt"
 
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger"
 	"github.com/spf13/pflag"
 )
 

@@ -8,8 +8,8 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/oauth2cli"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger"
+	"github.com/pipedrive/oauth2cli"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
 )
@@ -79,14 +79,19 @@ func (c *client) wrapContext(ctx context.Context) context.Context {
 
 // GetTokenByAuthCode performs the authorization code flow.
 func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*TokenSet, error) {
+
 	ctx = c.wrapContext(ctx)
+	fmt.Println("Got it here before config")
+
 	config := oauth2cli.Config{
 		OAuth2Config: c.oauth2Config,
 		AuthCodeOptions: []oauth2.AuthCodeOption{
-			oauth2.AccessTypeOffline,
+			oauth2.AccessTypeOnline,
 			oidc.Nonce(in.Nonce),
 			oauth2.SetAuthURLParam("code_challenge", in.CodeChallenge),
 			oauth2.SetAuthURLParam("code_challenge_method", in.CodeChallengeMethod),
+			oauth2.SetAuthURLParam("response_type", "id_token"),
+			oauth2.SetAuthURLParam("response_mode", "form_post"),
 		},
 		TokenRequestOptions: []oauth2.AuthCodeOption{
 			oauth2.SetAuthURLParam("code_verifier", in.CodeVerifier),
@@ -94,10 +99,12 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		LocalServerBindAddress: in.BindAddress,
 		LocalServerReadyChan:   localServerReadyChan,
 	}
+
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
 		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
+
 	return c.verifyToken(ctx, token, in.Nonce)
 }
 
@@ -114,15 +121,17 @@ func (c *client) GetAuthCodeURL(in AuthCodeURLInput) string {
 }
 
 // ExchangeAuthCode exchanges the authorization code and token.
+
 func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	cfg := c.oauth2Config
 	cfg.RedirectURL = in.RedirectURI
 	token, err := cfg.Exchange(ctx, in.Code, oauth2.SetAuthURLParam("code_verifier", in.CodeVerifier))
+	id_token := token.AccessToken
 	if err != nil {
 		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)
 	}
-	return c.verifyToken(ctx, token, in.Nonce)
+	return c.verifyToken(ctx, id_token, in.Nonce)
 }
 
 // GetTokenByROPC performs the resource owner password credentials flow.
@@ -132,10 +141,11 @@ func (c *client) GetTokenByROPC(ctx context.Context, username, password string) 
 	if err != nil {
 		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
-	return c.verifyToken(ctx, token, "")
+	return c.verifyToken(ctx, token.AccessToken, "")
 }
 
 // Refresh sends a refresh token request and returns a token set.
+
 func (c *client) Refresh(ctx context.Context, refreshToken string) (*TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	currentToken := &oauth2.Token{
@@ -147,16 +157,12 @@ func (c *client) Refresh(ctx context.Context, refreshToken string) (*TokenSet, e
 	if err != nil {
 		return nil, xerrors.Errorf("could not refresh the token: %w", err)
 	}
-	return c.verifyToken(ctx, token, "")
+	return c.verifyToken(ctx, token.AccessToken, "")
 }
 
 // verifyToken verifies the token with the certificates of the provider and the nonce.
 // If the nonce is an empty string, it does not verify the nonce.
-func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce string) (*TokenSet, error) {
-	idTokenString, ok := token.Extra("id_token").(string)
-	if !ok {
-		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
-	}
+func (c *client) verifyToken(ctx context.Context, idTokenString string, nonce string) (*TokenSet, error) {
 	verifier := c.provider.Verifier(&oidc.Config{ClientID: c.oauth2Config.ClientID})
 	idToken, err := verifier.Verify(ctx, idTokenString)
 	if err != nil {
@@ -171,7 +177,6 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 	}
 	return &TokenSet{
 		IDToken:       idTokenString,
-		RefreshToken:  token.RefreshToken,
 		IDTokenExpiry: idToken.Expiry,
 		IDTokenClaims: claims,
 	}, nil

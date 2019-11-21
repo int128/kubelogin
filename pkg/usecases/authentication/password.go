@@ -3,9 +3,9 @@ package authentication
 import (
 	"context"
 
-	"github.com/int128/kubelogin/pkg/adaptors/env"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/env"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/oidcclient"
 	"golang.org/x/xerrors"
 )
 

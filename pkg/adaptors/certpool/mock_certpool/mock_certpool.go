@@ -7,7 +7,7 @@ package mock_certpool
 import (
 	tls "crypto/tls"
 	gomock "github.com/golang/mock/gomock"
-	certpool "github.com/int128/kubelogin/pkg/adaptors/certpool"
+	certpool "github.com/pipedrive/kubelogin/pkg/adaptors/certpool"
 	reflect "reflect"
 )
 

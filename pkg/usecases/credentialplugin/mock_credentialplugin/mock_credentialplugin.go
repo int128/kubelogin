@@ -7,7 +7,7 @@ package mock_credentialplugin
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	credentialplugin "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	credentialplugin "github.com/pipedrive/kubelogin/pkg/usecases/credentialplugin"
 	reflect "reflect"
 )
 

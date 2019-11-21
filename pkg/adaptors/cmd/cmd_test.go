@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/usecases/authentication"
-	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
-	"github.com/int128/kubelogin/pkg/usecases/credentialplugin/mock_credentialplugin"
-	"github.com/int128/kubelogin/pkg/usecases/standalone"
-	"github.com/int128/kubelogin/pkg/usecases/standalone/mock_standalone"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger/mock_logger"
+	"github.com/pipedrive/kubelogin/pkg/usecases/authentication"
+	"github.com/pipedrive/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/pipedrive/kubelogin/pkg/usecases/credentialplugin/mock_credentialplugin"
+	"github.com/pipedrive/kubelogin/pkg/usecases/standalone"
+	"github.com/pipedrive/kubelogin/pkg/usecases/standalone/mock_standalone"
 )
 
 func TestCmd_Run(t *testing.T) {

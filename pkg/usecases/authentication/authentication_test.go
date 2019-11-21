@@ -7,11 +7,11 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
-	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder/mock_jwtdecoder"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/jwtdecoder"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/jwtdecoder/mock_jwtdecoder"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger/mock_logger"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/oidcclient"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"golang.org/x/xerrors"
 )
 

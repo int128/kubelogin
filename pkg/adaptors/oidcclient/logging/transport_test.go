@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger/mock_logger"
 )
 
 type mockTransport struct {

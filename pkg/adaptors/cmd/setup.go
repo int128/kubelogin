@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	"github.com/int128/kubelogin/pkg/usecases/setup"
+	"github.com/pipedrive/kubelogin/pkg/usecases/setup"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/xerrors"

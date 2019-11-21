@@ -7,9 +7,9 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/logging"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/certpool"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/oidcclient/logging"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
 )

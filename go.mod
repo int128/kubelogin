@@ -1,6 +1,6 @@
-module github.com/int128/kubelogin
+module github.com/pipedrive/kubelogin
 
-go 1.12
+go 1.13
 
 require (
 	github.com/coreos/go-oidc v2.1.0+incompatible
@@ -8,7 +8,7 @@ require (
 	github.com/go-test/deep v1.0.4
 	github.com/golang/mock v1.3.1
 	github.com/google/wire v0.3.0
-	github.com/int128/oauth2cli v1.8.1
+	github.com/pipedrive/oauth2cli v1.8.2-pipedrive
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/spf13/cobra v0.0.5
@@ -17,7 +17,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
-	gopkg.in/square/go-jose.v2 v2.3.1 // indirect
+	gopkg.in/square/go-jose.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v2 v2.2.5
 	k8s.io/apimachinery v0.0.0-20190612205821-1799e75a0719
 	k8s.io/client-go v0.0.0-20190620085101-78d2af792bab

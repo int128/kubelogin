@@ -6,7 +6,7 @@ package mock_tokencache
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	tokencache "github.com/int128/kubelogin/pkg/adaptors/tokencache"
+	tokencache "github.com/pipedrive/kubelogin/pkg/adaptors/tokencache"
 	reflect "reflect"
 )
 

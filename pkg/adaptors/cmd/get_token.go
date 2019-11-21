@@ -3,8 +3,8 @@ package cmd
 import (
 	"context"
 
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger"
+	"github.com/pipedrive/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/xerrors"

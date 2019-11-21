@@ -6,7 +6,7 @@ package mock_kubeconfig
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	kubeconfig "github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
+	kubeconfig "github.com/pipedrive/kubelogin/pkg/adaptors/kubeconfig"
 	reflect "reflect"
 )
 

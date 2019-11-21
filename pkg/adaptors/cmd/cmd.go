@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/homedir"
 )

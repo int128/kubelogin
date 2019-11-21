@@ -6,7 +6,7 @@ package mock_jwtdecoder
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	jwtdecoder "github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
+	jwtdecoder "github.com/pipedrive/kubelogin/pkg/adaptors/jwtdecoder"
 	reflect "reflect"
 )
 

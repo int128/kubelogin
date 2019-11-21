@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/pipedrive/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
 

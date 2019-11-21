@@ -5,19 +5,19 @@ package di
 
 import (
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/cmd"
-	credentialPluginAdaptor "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/env"
-	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/usecases/authentication"
-	credentialPluginUseCase "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
-	"github.com/int128/kubelogin/pkg/usecases/setup"
-	"github.com/int128/kubelogin/pkg/usecases/standalone"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/certpool"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/cmd"
+	credentialPluginAdaptor "github.com/pipedrive/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/env"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/jwtdecoder"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/kubeconfig"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/oidcclient"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/tokencache"
+	"github.com/pipedrive/kubelogin/pkg/usecases/authentication"
+	credentialPluginUseCase "github.com/pipedrive/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/pipedrive/kubelogin/pkg/usecases/setup"
+	"github.com/pipedrive/kubelogin/pkg/usecases/standalone"
 )
 
 // NewCmd returns an instance of adaptors.Cmd.

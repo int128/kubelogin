@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/int128/kubelogin/pkg/di"
+	"github.com/pipedrive/kubelogin/pkg/di"
 )
 
 var version = "HEAD"

@@ -7,7 +7,7 @@ package mock_authentication
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	authentication "github.com/int128/kubelogin/pkg/usecases/authentication"
+	authentication "github.com/pipedrive/kubelogin/pkg/usecases/authentication"
 	reflect "reflect"
 )
 

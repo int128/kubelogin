@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/usecases/authentication"
-	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/certpool/mock_certpool"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/kubeconfig"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger/mock_logger"
+	"github.com/pipedrive/kubelogin/pkg/usecases/authentication"
+	"github.com/pipedrive/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"golang.org/x/xerrors"
 )
 

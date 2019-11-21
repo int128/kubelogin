@@ -7,11 +7,11 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/certpool"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/tokencache"
+	"github.com/pipedrive/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
 

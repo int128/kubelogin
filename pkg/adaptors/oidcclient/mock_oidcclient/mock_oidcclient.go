@@ -7,7 +7,7 @@ package mock_oidcclient
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	oidcclient "github.com/int128/kubelogin/pkg/adaptors/oidcclient"
+	oidcclient "github.com/pipedrive/kubelogin/pkg/adaptors/oidcclient"
 	reflect "reflect"
 )
 

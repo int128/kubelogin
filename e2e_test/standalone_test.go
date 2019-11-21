@@ -10,14 +10,14 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/e2e_test/idp"
-	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
-	"github.com/int128/kubelogin/e2e_test/keys"
-	"github.com/int128/kubelogin/e2e_test/kubeconfig"
-	"github.com/int128/kubelogin/e2e_test/localserver"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/di"
-	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/pipedrive/kubelogin/e2e_test/idp"
+	"github.com/pipedrive/kubelogin/e2e_test/idp/mock_idp"
+	"github.com/pipedrive/kubelogin/e2e_test/keys"
+	"github.com/pipedrive/kubelogin/e2e_test/kubeconfig"
+	"github.com/pipedrive/kubelogin/e2e_test/localserver"
+	"github.com/pipedrive/kubelogin/pkg/adaptors/logger/mock_logger"
+	"github.com/pipedrive/kubelogin/pkg/di"
+	"github.com/pipedrive/kubelogin/pkg/usecases/authentication"
 )
 
 var (
