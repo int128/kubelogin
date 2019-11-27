@@ -1,7 +1,7 @@
 class Kubelogin < Formula
   desc "A kubectl plugin for Kubernetes OpenID Connect authentication"
-  homepage "https://github.com/int128/kubelogin"
-  url "https://github.com/int128/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_darwin_amd64.zip"
+  homepage "https://github.com/pipedrive/kubelogin"
+  url "https://github.com/pipedrive/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_darwin_amd64.zip"
   version "{{ env "VERSION" }}"
   sha256 "{{ sha256 .darwin_amd64_archive }}"
   def install
