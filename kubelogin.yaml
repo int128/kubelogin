@@ -1,0 +1,48 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: kubelogin # plugin name must match your manifest file name (e.g. foo.yaml)
+spec:
+  homepage: https://github.com/pipedrive/kubelogin
+  shortDescription: >-
+    Log in to the OpenID Connect provider
+  description: |
+    Kubectl plugin for Kubernetes OpenID Connect authentication 
+    (kubectl kubelogin)
+
+  caveats: |
+    You need to setup the OIDC provider, Kubernetes API server, role binding and kubeconfig.
+    See https://github.com/pipedrive/kubelogin for more.
+
+  version: {{ env "VERSION" }}
+  platforms:
+    - uri: https://github.com/pipedrive/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_linux_amd64.zip
+      sha256: "{{ sha256 .linux_amd64_archive }}"
+      bin: kubelogin
+      files:
+        - from: "kubelogin"
+          to: "."
+      selector:
+        matchLabels:
+          os: linux
+          arch: amd64
+    - uri: https://github.com/pipedrive/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_darwin_amd64.zip
+      sha256: "{{ sha256 .darwin_amd64_archive }}"
+      bin: kubelogin
+      files:
+        - from: "kubelogin"
+          to: "."
+      selector:
+        matchLabels:
+          os: darwin
+          arch: amd64
+    - uri: https://github.com/pipedrive/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_windows_amd64.zip
+      sha256: "{{ sha256 .windows_amd64_archive }}"
+      bin: kubelogin.exe
+      files:
+        - from: "kubelogin.exe"
+          to: "."
+      selector:
+        matchLabels:
+          os: windows
+          arch: amd64
