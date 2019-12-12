@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/e2e_test/idp"
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
 	"github.com/int128/kubelogin/e2e_test/keys"
@@ -15,6 +16,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
+	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
@@ -98,6 +100,130 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
 	})
 
+	t.Run("HasValidToken", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		service := mock_idp.NewMockService(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		defer server.Shutdown(t, ctx)
+		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
+		setupTokenCache(t, cacheDir, tokencache.Key{
+			IssuerURL: serverURL,
+			ClientID:  "kubernetes",
+		}, tokencache.TokenCache{
+			IDToken:      idToken,
+			RefreshToken: "YOUR_REFRESH_TOKEN",
+		})
+		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
+		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
+
+		args := []string{
+			"--token-cache-dir", cacheDir,
+			"--oidc-issuer-url", serverURL,
+			"--oidc-client-id", "kubernetes",
+		}
+		args = append(args, extraArgs...)
+		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
+		assertTokenCache(t, cacheDir, tokencache.Key{
+			IssuerURL: serverURL,
+			ClientID:  "kubernetes",
+		}, tokencache.TokenCache{
+			IDToken:      idToken,
+			RefreshToken: "YOUR_REFRESH_TOKEN",
+		})
+	})
+
+	t.Run("HasValidRefreshToken", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		service := mock_idp.NewMockService(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		defer server.Shutdown(t, ctx)
+		validIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
+		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
+
+		setupMockIDPForDiscovery(service, serverURL)
+		service.EXPECT().Refresh("VALID_REFRESH_TOKEN").
+			Return(idp.NewTokenResponse(validIDToken, "NEW_REFRESH_TOKEN"), nil)
+
+		setupTokenCache(t, cacheDir, tokencache.Key{
+			IssuerURL: serverURL,
+			ClientID:  "kubernetes",
+		}, tokencache.TokenCache{
+			IDToken:      expiredIDToken,
+			RefreshToken: "VALID_REFRESH_TOKEN",
+		})
+		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
+		assertCredentialPluginOutput(t, credentialPluginInteraction, &validIDToken)
+
+		args := []string{
+			"--token-cache-dir", cacheDir,
+			"--oidc-issuer-url", serverURL,
+			"--oidc-client-id", "kubernetes",
+		}
+		args = append(args, extraArgs...)
+		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
+		assertTokenCache(t, cacheDir, tokencache.Key{
+			IssuerURL: serverURL,
+			ClientID:  "kubernetes",
+		}, tokencache.TokenCache{
+			IDToken:      validIDToken,
+			RefreshToken: "NEW_REFRESH_TOKEN",
+		})
+	})
+
+	t.Run("HasExpiredRefreshToken", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		service := mock_idp.NewMockService(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		defer server.Shutdown(t, ctx)
+		validIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
+		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
+
+		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &validIDToken)
+		service.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
+			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
+			MaxTimes(2) // package oauth2 will retry refreshing the token
+
+		setupTokenCache(t, cacheDir, tokencache.Key{
+			IssuerURL: serverURL,
+			ClientID:  "kubernetes",
+		}, tokencache.TokenCache{
+			IDToken:      expiredIDToken,
+			RefreshToken: "EXPIRED_REFRESH_TOKEN",
+		})
+		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
+		assertCredentialPluginOutput(t, credentialPluginInteraction, &validIDToken)
+
+		args := []string{
+			"--token-cache-dir", cacheDir,
+			"--oidc-issuer-url", serverURL,
+			"--oidc-client-id", "kubernetes",
+		}
+		args = append(args, extraArgs...)
+		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
+		assertTokenCache(t, cacheDir, tokencache.Key{
+			IssuerURL: serverURL,
+			ClientID:  "kubernetes",
+		}, tokencache.TokenCache{
+			IDToken:      validIDToken,
+			RefreshToken: "YOUR_REFRESH_TOKEN",
+		})
+	})
+
 	t.Run("ExtraScopes", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
@@ -150,5 +276,24 @@ func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc auth
 	}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)
+	}
+}
+
+func setupTokenCache(t *testing.T, cacheDir string, k tokencache.Key, v tokencache.TokenCache) {
+	var r tokencache.Repository
+	err := r.Save(cacheDir, k, v)
+	if err != nil {
+		t.Errorf("could not set up the token cache: %s", err)
+	}
+}
+
+func assertTokenCache(t *testing.T, cacheDir string, k tokencache.Key, want tokencache.TokenCache) {
+	var r tokencache.Repository
+	v, err := r.FindByKey(cacheDir, k)
+	if err != nil {
+		t.Errorf("could not set up the token cache: %s", err)
+	}
+	if diff := cmp.Diff(&want, v); diff != "" {
+		t.Errorf("token cache mismatch: %s", diff)
 	}
 }
