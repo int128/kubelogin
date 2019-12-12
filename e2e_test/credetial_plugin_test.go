@@ -65,6 +65,34 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 		)
 	})
 
+	t.Run("CertificateAuthority", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		service := mock_idp.NewMockService(ctrl)
+		serverURL, server := localserver.StartTLS(t, keys.TLSServerCert, keys.TLSServerKey, idp.NewHandler(t, service))
+		defer server.Shutdown(t, ctx)
+		var idToken string
+		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
+
+		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
+		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
+
+		runGetTokenCmd(t, ctx,
+			openBrowserOnReadyFunc(t, ctx, keys.TLSCACertAsConfig),
+			credentialPluginInteraction,
+			"--skip-open-browser",
+			"--listen-port", "0",
+			"--token-cache-dir", cacheDir,
+			"--oidc-issuer-url", serverURL,
+			"--oidc-client-id", "kubernetes",
+			"--certificate-authority", keys.TLSCACert,
+		)
+	})
+
 	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
