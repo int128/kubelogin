@@ -52,16 +52,7 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
 
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		credentialPluginInteraction.EXPECT().
-			Write(gomock.Any()).
-			Do(func(out credentialplugin.Output) {
-				if out.Token != idToken {
-					t.Errorf("Token wants %s but %s", idToken, out.Token)
-				}
-				if out.Expiry != tokenExpiryFuture {
-					t.Errorf("Expiry wants %v but %v", tokenExpiryFuture, out.Expiry)
-				}
-			})
+		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
 
 		runGetTokenCmd(t, ctx,
 			openBrowserOnReadyFunc(t, ctx, nil),
@@ -88,16 +79,7 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 		setupMockIDPForROPC(service, serverURL, "openid", "USER", "PASS", idToken)
 
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		credentialPluginInteraction.EXPECT().
-			Write(gomock.Any()).
-			Do(func(out credentialplugin.Output) {
-				if out.Token != idToken {
-					t.Errorf("Token wants %s but %s", idToken, out.Token)
-				}
-				if out.Expiry != tokenExpiryFuture {
-					t.Errorf("Expiry wants %v but %v", tokenExpiryFuture, out.Expiry)
-				}
-			})
+		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
 
 		runGetTokenCmd(t, ctx,
 			openBrowserOnReadyFunc(t, ctx, nil),
@@ -125,16 +107,7 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 		setupMockIDPForCodeFlow(t, service, serverURL, "email profile openid", &idToken)
 
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		credentialPluginInteraction.EXPECT().
-			Write(gomock.Any()).
-			Do(func(out credentialplugin.Output) {
-				if out.Token != idToken {
-					t.Errorf("Token wants %s but %s", idToken, out.Token)
-				}
-				if out.Expiry != tokenExpiryFuture {
-					t.Errorf("Expiry wants %v but %v", tokenExpiryFuture, out.Expiry)
-				}
-			})
+		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
 
 		runGetTokenCmd(t, ctx,
 			openBrowserOnReadyFunc(t, ctx, nil),
@@ -148,6 +121,19 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 			"--oidc-extra-scope", "profile",
 		)
 	})
+}
+
+func assertCredentialPluginOutput(t *testing.T, credentialPluginInteraction *mock_credentialplugin.MockInterface, idToken *string) {
+	credentialPluginInteraction.EXPECT().
+		Write(gomock.Any()).
+		Do(func(out credentialplugin.Output) {
+			if out.Token != *idToken {
+				t.Errorf("Token wants %s but %s", *idToken, out.Token)
+			}
+			if out.Expiry != tokenExpiryFuture {
+				t.Errorf("Expiry wants %v but %v", tokenExpiryFuture, out.Expiry)
+			}
+		})
 }
 
 func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc authentication.LocalServerReadyFunc, interaction credentialplugin.Interface, args ...string) {
