@@ -26,8 +26,7 @@ import (
 // 3. Open a request for the local server.
 // 4. Verify the output.
 //
-func TestCmd_Run_CredentialPlugin(t *testing.T) {
-	timeout := 1 * time.Second
+func TestCredentialPlugin(t *testing.T) {
 	cacheDir, err := ioutil.TempDir("", "kube")
 	if err != nil {
 		t.Fatalf("could not create a cache dir: %s", err)
@@ -38,98 +37,76 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 		}
 	}()
 
+	t.Run("NoTLS", func(t *testing.T) {
+		testCredentialPlugin(t, cacheDir, keys.None, nil)
+	})
+	t.Run("TLS", func(t *testing.T) {
+		testCredentialPlugin(t, cacheDir, keys.Server, []string{"--certificate-authority", keys.Server.CACertPath})
+	})
+}
+
+func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extraArgs []string) {
+	timeout := 1 * time.Second
+
 	t.Run("Defaults", func(t *testing.T) {
 		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
 		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
 		defer server.Shutdown(t, ctx)
 		var idToken string
 		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
-
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
 
-		runGetTokenCmd(t, ctx,
-			openBrowserOnReadyFunc(t, ctx, nil),
-			credentialPluginInteraction,
-			"--skip-open-browser",
-			"--listen-port", "0",
+		args := []string{
 			"--token-cache-dir", cacheDir,
 			"--oidc-issuer-url", serverURL,
 			"--oidc-client-id", "kubernetes",
-		)
-	})
-
-	t.Run("CertificateAuthority", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.StartTLS(t, keys.TLSServerCert, keys.TLSServerKey, idp.NewHandler(t, service))
-		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
-
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
-
-		runGetTokenCmd(t, ctx,
-			openBrowserOnReadyFunc(t, ctx, keys.TLSCACertAsConfig),
-			credentialPluginInteraction,
-			"--skip-open-browser",
-			"--listen-port", "0",
-			"--token-cache-dir", cacheDir,
-			"--oidc-issuer-url", serverURL,
-			"--oidc-client-id", "kubernetes",
-			"--certificate-authority", keys.TLSCACert,
-		)
+		}
+		args = append(args, extraArgs...)
+		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
 	})
 
 	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
 		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
 		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
 		defer server.Shutdown(t, ctx)
 		idToken := newIDToken(t, serverURL, "", tokenExpiryFuture)
 		setupMockIDPForROPC(service, serverURL, "openid", "USER", "PASS", idToken)
-
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
 
-		runGetTokenCmd(t, ctx,
-			openBrowserOnReadyFunc(t, ctx, nil),
-			credentialPluginInteraction,
-			"--skip-open-browser",
+		args := []string{
 			"--token-cache-dir", cacheDir,
 			"--oidc-issuer-url", serverURL,
 			"--oidc-client-id", "kubernetes",
 			"--username", "USER",
 			"--password", "PASS",
-		)
+		}
+		args = append(args, extraArgs...)
+		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
 	})
 
 	t.Run("ExtraScopes", func(t *testing.T) {
 		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
 		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
 		defer server.Shutdown(t, ctx)
 		var idToken string
 		setupMockIDPForCodeFlow(t, service, serverURL, "email profile openid", &idToken)
@@ -137,17 +114,15 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
 
-		runGetTokenCmd(t, ctx,
-			openBrowserOnReadyFunc(t, ctx, nil),
-			credentialPluginInteraction,
-			"--skip-open-browser",
-			"--listen-port", "0",
+		args := []string{
 			"--token-cache-dir", cacheDir,
 			"--oidc-issuer-url", serverURL,
 			"--oidc-client-id", "kubernetes",
 			"--oidc-extra-scope", "email",
 			"--oidc-extra-scope", "profile",
-		)
+		}
+		args = append(args, extraArgs...)
+		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
 	})
 }
 
@@ -164,10 +139,15 @@ func assertCredentialPluginOutput(t *testing.T, credentialPluginInteraction *moc
 		})
 }
 
-func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc authentication.LocalServerReadyFunc, interaction credentialplugin.Interface, args ...string) {
+func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc authentication.LocalServerReadyFunc, interaction credentialplugin.Interface, args []string) {
 	t.Helper()
 	cmd := di.NewCmdForHeadless(mock_logger.New(t), localServerReadyFunc, interaction)
-	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "get-token", "--v=1"}, args...), "HEAD")
+	exitCode := cmd.Run(ctx, append([]string{
+		"kubelogin", "get-token",
+		"--v=1",
+		"--skip-open-browser",
+		"--listen-port", "0",
+	}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)
 	}

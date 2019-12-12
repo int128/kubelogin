@@ -2,7 +2,6 @@ package e2e_test
 
 import (
 	"context"
-	"crypto/tls"
 	"net/http"
 	"testing"
 	"time"
@@ -67,9 +66,9 @@ func setupMockIDPForROPC(service *mock_idp.MockService, serverURL, scope, userna
 		Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
 }
 
-func openBrowserOnReadyFunc(t *testing.T, ctx context.Context, clientConfig *tls.Config) authentication.LocalServerReadyFunc {
+func openBrowserOnReadyFunc(t *testing.T, ctx context.Context, k keys.Keys) authentication.LocalServerReadyFunc {
 	return func(url string) {
-		client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
+		client := http.Client{Transport: &http.Transport{TLSClientConfig: k.TLSConfig}}
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			t.Errorf("could not create a request: %s", err)
