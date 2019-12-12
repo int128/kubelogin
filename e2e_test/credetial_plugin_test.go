@@ -172,26 +172,3 @@ func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc auth
 		t.Errorf("exit status wants 0 but %d", exitCode)
 	}
 }
-
-func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, serverURL, scope string, idToken *string) {
-	var nonce string
-	service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-	service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-	service.EXPECT().AuthenticateCode(scope, gomock.Any()).
-		DoAndReturn(func(_, gotNonce string) (string, error) {
-			nonce = gotNonce
-			return "YOUR_AUTH_CODE", nil
-		})
-	service.EXPECT().Exchange("YOUR_AUTH_CODE").
-		DoAndReturn(func(string) (*idp.TokenResponse, error) {
-			*idToken = newIDToken(t, serverURL, nonce, tokenExpiryFuture)
-			return idp.NewTokenResponse(*idToken, "YOUR_REFRESH_TOKEN"), nil
-		})
-}
-
-func setupMockIDPForROPC(service *mock_idp.MockService, serverURL, scope, username, password, idToken string) {
-	service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-	service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-	service.EXPECT().AuthenticatePassword(username, password, scope).
-		Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
-}

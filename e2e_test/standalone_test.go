@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/e2e_test/idp"
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
@@ -18,11 +17,6 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
-)
-
-var (
-	tokenExpiryFuture = time.Now().Add(time.Hour).Round(time.Second)
-	tokenExpiryPast   = time.Now().Add(-time.Hour).Round(time.Second)
 )
 
 // Run the integration tests of the Login use-case.
@@ -269,57 +263,12 @@ func TestCmd_Run_Standalone(t *testing.T) {
 	})
 }
 
-func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
-	t.Helper()
-	var claims struct {
-		jwt.StandardClaims
-		Nonce  string   `json:"nonce"`
-		Groups []string `json:"groups"`
-	}
-	claims.StandardClaims = jwt.StandardClaims{
-		Issuer:    issuer,
-		Audience:  "kubernetes",
-		Subject:   "SUBJECT",
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: expiry.Unix(),
-	}
-	claims.Nonce = nonce
-	claims.Groups = []string{"admin", "users"}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	s, err := token.SignedString(keys.JWSKeyPair)
-	if err != nil {
-		t.Fatalf("Could not sign the claims: %s", err)
-	}
-	return s
-}
-
 func runCmd(t *testing.T, ctx context.Context, localServerReadyFunc authentication.LocalServerReadyFunc, args ...string) {
 	t.Helper()
 	cmd := di.NewCmdForHeadless(mock_logger.New(t), localServerReadyFunc, nil)
 	exitCode := cmd.Run(ctx, append([]string{"kubelogin", "--v=1"}, args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)
-	}
-}
-
-func openBrowserOnReadyFunc(t *testing.T, ctx context.Context, clientConfig *tls.Config) authentication.LocalServerReadyFunc {
-	return func(url string) {
-		client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			t.Errorf("could not create a request: %s", err)
-			return
-		}
-		req = req.WithContext(ctx)
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Errorf("could not send a request: %s", err)
-			return
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != 200 {
-			t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
-		}
 	}
 }
 
