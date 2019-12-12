@@ -72,7 +72,6 @@ After authentication, kubelogin returns the credentials to kubectl and finally k
 ```
 % kubectl get pods
 Open http://localhost:8000 for authentication
-You got a valid token until 2019-05-18 10:28:51 +0900 JST
 NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
@@ -83,8 +82,24 @@ If the cached ID token is valid, kubelogin just returns it.
 If the cached ID token has expired, kubelogin will refresh the token using the refresh token.
 If the refresh token has expired, kubelogin will perform reauthentication.
 
+
+### Troubleshoot
+
 You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
 Kubelogin will perform authentication if the token cache file does not exist.
+
+You can dump the claims of token by passing `-v1` option.
+
+```
+I1212 10:14:17.754394    2517 get_token.go:91] the ID token has the claim: sub=********
+I1212 10:14:17.754434    2517 get_token.go:91] the ID token has the claim: at_hash=********
+I1212 10:14:17.754449    2517 get_token.go:91] the ID token has the claim: nonce=********
+I1212 10:14:17.754459    2517 get_token.go:91] the ID token has the claim: iat=1576113256
+I1212 10:14:17.754467    2517 get_token.go:91] the ID token has the claim: exp=1576116856
+I1212 10:14:17.754484    2517 get_token.go:91] the ID token has the claim: iss=https://accounts.google.com
+I1212 10:14:17.754497    2517 get_token.go:91] the ID token has the claim: azp=********.apps.googleusercontent.com
+I1212 10:14:17.754506    2517 get_token.go:91] the ID token has the claim: aud=********.apps.googleusercontent.com
+```
 
 
 ## Usage
@@ -248,7 +263,7 @@ Feel free to open issues and pull requests for improving code and documents.
 
 ### Development
 
-Go 1.12 or later is required.
+Go 1.13 or later is required.
 
 ```sh
 # Run lint and tests
