@@ -10,6 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/e2e_test/idp"
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
+	"github.com/int128/kubelogin/e2e_test/keys"
 	"github.com/int128/kubelogin/e2e_test/localserver"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
@@ -72,6 +73,81 @@ func TestCmd_Run_CredentialPlugin(t *testing.T) {
 			"--oidc-client-id", "kubernetes",
 		)
 	})
+
+	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		service := mock_idp.NewMockService(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
+		defer server.Shutdown(t, ctx)
+		idToken := newIDToken(t, serverURL, "", tokenExpiryFuture)
+		setupMockIDPForROPC(service, serverURL, "openid", "USER", "PASS", idToken)
+
+		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
+		credentialPluginInteraction.EXPECT().
+			Write(gomock.Any()).
+			Do(func(out credentialplugin.Output) {
+				if out.Token != idToken {
+					t.Errorf("Token wants %s but %s", idToken, out.Token)
+				}
+				if out.Expiry != tokenExpiryFuture {
+					t.Errorf("Expiry wants %v but %v", tokenExpiryFuture, out.Expiry)
+				}
+			})
+
+		runGetTokenCmd(t, ctx,
+			openBrowserOnReadyFunc(t, ctx, nil),
+			credentialPluginInteraction,
+			"--skip-open-browser",
+			"--token-cache-dir", cacheDir,
+			"--oidc-issuer-url", serverURL,
+			"--oidc-client-id", "kubernetes",
+			"--username", "USER",
+			"--password", "PASS",
+		)
+	})
+
+	t.Run("ExtraScopes", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		service := mock_idp.NewMockService(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, service))
+		defer server.Shutdown(t, ctx)
+		var idToken string
+		setupMockIDPForCodeFlow(t, service, serverURL, "email profile openid", &idToken)
+
+		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
+		credentialPluginInteraction.EXPECT().
+			Write(gomock.Any()).
+			Do(func(out credentialplugin.Output) {
+				if out.Token != idToken {
+					t.Errorf("Token wants %s but %s", idToken, out.Token)
+				}
+				if out.Expiry != tokenExpiryFuture {
+					t.Errorf("Expiry wants %v but %v", tokenExpiryFuture, out.Expiry)
+				}
+			})
+
+		runGetTokenCmd(t, ctx,
+			openBrowserOnReadyFunc(t, ctx, nil),
+			credentialPluginInteraction,
+			"--skip-open-browser",
+			"--listen-port", "0",
+			"--token-cache-dir", cacheDir,
+			"--oidc-issuer-url", serverURL,
+			"--oidc-client-id", "kubernetes",
+			"--oidc-extra-scope", "email",
+			"--oidc-extra-scope", "profile",
+		)
+	})
 }
 
 func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc authentication.LocalServerReadyFunc, interaction credentialplugin.Interface, args ...string) {
@@ -81,4 +157,27 @@ func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc auth
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)
 	}
+}
+
+func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, serverURL, scope string, idToken *string) {
+	var nonce string
+	service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+	service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+	service.EXPECT().AuthenticateCode(scope, gomock.Any()).
+		DoAndReturn(func(_, gotNonce string) (string, error) {
+			nonce = gotNonce
+			return "YOUR_AUTH_CODE", nil
+		})
+	service.EXPECT().Exchange("YOUR_AUTH_CODE").
+		DoAndReturn(func(string) (*idp.TokenResponse, error) {
+			*idToken = newIDToken(t, serverURL, nonce, tokenExpiryFuture)
+			return idp.NewTokenResponse(*idToken, "YOUR_REFRESH_TOKEN"), nil
+		})
+}
+
+func setupMockIDPForROPC(service *mock_idp.MockService, serverURL, scope, username, password, idToken string) {
+	service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+	service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+	service.EXPECT().AuthenticatePassword(username, password, scope).
+		Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
 }

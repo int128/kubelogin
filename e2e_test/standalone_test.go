@@ -94,10 +94,7 @@ func TestCmd_Run_Standalone(t *testing.T) {
 			serverURL, server := p.startServer(t, idp.NewHandler(t, service))
 			defer server.Shutdown(t, ctx)
 			idToken := newIDToken(t, serverURL, "", tokenExpiryFuture)
-			service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-			service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-			service.EXPECT().AuthenticatePassword("USER", "PASS", "openid").
-				Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
+			setupMockIDPForROPC(service, serverURL, "openid", "USER", "PASS", idToken)
 
 			kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 				Issuer:                  serverURL,
@@ -294,22 +291,6 @@ func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 		t.Fatalf("Could not sign the claims: %s", err)
 	}
 	return s
-}
-
-func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, serverURL, scope string, idToken *string) {
-	var nonce string
-	service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-	service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-	service.EXPECT().AuthenticateCode(scope, gomock.Any()).
-		DoAndReturn(func(_, gotNonce string) (string, error) {
-			nonce = gotNonce
-			return "YOUR_AUTH_CODE", nil
-		})
-	service.EXPECT().Exchange("YOUR_AUTH_CODE").
-		DoAndReturn(func(string) (*idp.TokenResponse, error) {
-			*idToken = newIDToken(t, serverURL, nonce, tokenExpiryFuture)
-			return idp.NewTokenResponse(*idToken, "YOUR_REFRESH_TOKEN"), nil
-		})
 }
 
 func runCmd(t *testing.T, ctx context.Context, localServerReadyFunc authentication.LocalServerReadyFunc, args ...string) {
