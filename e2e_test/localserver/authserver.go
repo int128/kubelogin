@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/http"
 	"testing"
+
+	"github.com/int128/kubelogin/e2e_test/keys"
 )
 
 type Shutdowner interface {
@@ -28,7 +30,15 @@ func (s *shutdowner) Shutdown(t *testing.T, ctx context.Context) {
 }
 
 // Start starts an authentication server.
-func Start(t *testing.T, h http.Handler) (string, Shutdowner) {
+// If k is non-nil, it starts a TLS server.
+func Start(t *testing.T, h http.Handler, k keys.Keys) (string, Shutdowner) {
+	if k == keys.None {
+		return startNoTLS(t, h)
+	}
+	return startTLS(t, h, k)
+}
+
+func startNoTLS(t *testing.T, h http.Handler) (string, Shutdowner) {
 	t.Helper()
 	l, port := newLocalhostListener(t)
 	url := "http://localhost:" + port
@@ -44,8 +54,7 @@ func Start(t *testing.T, h http.Handler) (string, Shutdowner) {
 	return url, &shutdowner{l, s}
 }
 
-// Start starts an authentication server with TLS.
-func StartTLS(t *testing.T, cert string, key string, h http.Handler) (string, Shutdowner) {
+func startTLS(t *testing.T, h http.Handler, k keys.Keys) (string, Shutdowner) {
 	t.Helper()
 	l, port := newLocalhostListener(t)
 	url := "https://localhost:" + port
@@ -53,7 +62,7 @@ func StartTLS(t *testing.T, cert string, key string, h http.Handler) (string, Sh
 		Handler: h,
 	}
 	go func() {
-		err := s.ServeTLS(l, cert, key)
+		err := s.ServeTLS(l, k.CertPath, k.KeyPath)
 		if err != nil && err != http.ErrServerClosed {
 			t.Error(err)
 		}
