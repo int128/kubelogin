@@ -4,7 +4,7 @@ This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](h
 
 Here is an example of Kubernetes authentication with the Google Identity Platform:
 
-<img alt="screencast" src="https://user-images.githubusercontent.com/321266/68352462-dcfc8b00-0149-11ea-8896-1632858a43c0.gif" width="650" height="470">
+<img alt="screencast" src="https://user-images.githubusercontent.com/321266/70971501-7bcebc80-20e4-11ea-8afc-539dcaea0aa8.gif" width="652" height="455">
 
 Kubelogin is designed to run as a [client-go credential plugin](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins).
 When you run kubectl, kubelogin opens the browser and you can log in to the provider.
