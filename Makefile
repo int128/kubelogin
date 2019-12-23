@@ -22,7 +22,7 @@ run: $(TARGET_PLUGIN)
 
 dist:
     # make the zip files for GitHub Releases
-	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -i "LICENSE" -o "$(TARGET)" -t "kubelogin.rb oidc-login.yaml" -- -ldflags "$(LDFLAGS)"
+	VERSION=$(CIRCLE_TAG) CGO_ENABLED=0 goxzst -d dist/gh/ -i "LICENSE" -o "$(TARGET)" -t "kubelogin.rb oidc-login.yaml" -- -ldflags "$(LDFLAGS)"
 	zipinfo dist/gh/kubelogin_linux_amd64.zip
 	# make the Homebrew formula
 	mv dist/gh/kubelogin.rb dist/
