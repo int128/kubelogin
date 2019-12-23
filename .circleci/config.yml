@@ -10,9 +10,6 @@ jobs:
           mkdir -p ~/bin
           echo 'export PATH="$HOME/bin:$PATH"' >> $BASH_ENV
       - run: |
-          curl -L -o ~/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.14.0/bin/linux/amd64/kubectl
-          chmod +x ~/bin/kubectl
-      - run: |
           curl -L -o ~/bin/ghcp https://github.com/int128/ghcp/releases/download/v1.5.0/ghcp_linux_amd64
           chmod +x ~/bin/ghcp
       - run: |
@@ -22,7 +19,6 @@ jobs:
       - checkout
       - run: make check
       - run: bash <(curl -s https://codecov.io/bash)
-      - run: make run
       - run: make dist
       - run: |
           unzip dist/gh/kubelogin_linux_amd64.zip -d /tmp

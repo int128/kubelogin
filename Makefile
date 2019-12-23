@@ -1,5 +1,4 @@
 TARGET := kubelogin
-TARGET_PLUGIN := kubectl-oidc_login
 CIRCLE_TAG ?= HEAD
 LDFLAGS := -X main.version=$(CIRCLE_TAG)
 
@@ -12,13 +11,6 @@ check:
 
 $(TARGET): $(wildcard *.go)
 	go build -o $@ -ldflags "$(LDFLAGS)"
-
-$(TARGET_PLUGIN): $(TARGET)
-	ln -sf $(TARGET) $@
-
-.PHONY: run
-run: $(TARGET_PLUGIN)
-	-PATH=.:$(PATH) kubectl oidc-login --help
 
 dist:
     # make the zip files for GitHub Releases
@@ -42,5 +34,4 @@ release: dist
 .PHONY: clean
 clean:
 	-rm $(TARGET)
-	-rm $(TARGET_PLUGIN)
 	-rm -r dist/
