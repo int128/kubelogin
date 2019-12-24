@@ -111,13 +111,15 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
 		defer server.Shutdown(t, ctx)
 		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
-		setupTokenCache(t, cacheDir, tokencache.Key{
-			IssuerURL: serverURL,
-			ClientID:  "kubernetes",
-		}, tokencache.TokenCache{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
+		setupTokenCache(t, cacheDir,
+			tokencache.Key{
+				IssuerURL:      serverURL,
+				ClientID:       "kubernetes",
+				CACertFilename: idpTLS.CACertPath,
+			}, tokencache.TokenCache{
+				IDToken:      idToken,
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			})
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
 
@@ -128,13 +130,15 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		}
 		args = append(args, extraArgs...)
 		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
-		assertTokenCache(t, cacheDir, tokencache.Key{
-			IssuerURL: serverURL,
-			ClientID:  "kubernetes",
-		}, tokencache.TokenCache{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
+		assertTokenCache(t, cacheDir,
+			tokencache.Key{
+				IssuerURL:      serverURL,
+				ClientID:       "kubernetes",
+				CACertFilename: idpTLS.CACertPath,
+			}, tokencache.TokenCache{
+				IDToken:      idToken,
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			})
 	})
 
 	t.Run("HasValidRefreshToken", func(t *testing.T) {
@@ -154,13 +158,15 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		service.EXPECT().Refresh("VALID_REFRESH_TOKEN").
 			Return(idp.NewTokenResponse(validIDToken, "NEW_REFRESH_TOKEN"), nil)
 
-		setupTokenCache(t, cacheDir, tokencache.Key{
-			IssuerURL: serverURL,
-			ClientID:  "kubernetes",
-		}, tokencache.TokenCache{
-			IDToken:      expiredIDToken,
-			RefreshToken: "VALID_REFRESH_TOKEN",
-		})
+		setupTokenCache(t, cacheDir,
+			tokencache.Key{
+				IssuerURL:      serverURL,
+				ClientID:       "kubernetes",
+				CACertFilename: idpTLS.CACertPath,
+			}, tokencache.TokenCache{
+				IDToken:      expiredIDToken,
+				RefreshToken: "VALID_REFRESH_TOKEN",
+			})
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		assertCredentialPluginOutput(t, credentialPluginInteraction, &validIDToken)
 
@@ -171,13 +177,15 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		}
 		args = append(args, extraArgs...)
 		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
-		assertTokenCache(t, cacheDir, tokencache.Key{
-			IssuerURL: serverURL,
-			ClientID:  "kubernetes",
-		}, tokencache.TokenCache{
-			IDToken:      validIDToken,
-			RefreshToken: "NEW_REFRESH_TOKEN",
-		})
+		assertTokenCache(t, cacheDir,
+			tokencache.Key{
+				IssuerURL:      serverURL,
+				ClientID:       "kubernetes",
+				CACertFilename: idpTLS.CACertPath,
+			}, tokencache.TokenCache{
+				IDToken:      validIDToken,
+				RefreshToken: "NEW_REFRESH_TOKEN",
+			})
 	})
 
 	t.Run("HasExpiredRefreshToken", func(t *testing.T) {
@@ -198,13 +206,15 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
 			MaxTimes(2) // package oauth2 will retry refreshing the token
 
-		setupTokenCache(t, cacheDir, tokencache.Key{
-			IssuerURL: serverURL,
-			ClientID:  "kubernetes",
-		}, tokencache.TokenCache{
-			IDToken:      expiredIDToken,
-			RefreshToken: "EXPIRED_REFRESH_TOKEN",
-		})
+		setupTokenCache(t, cacheDir,
+			tokencache.Key{
+				IssuerURL:      serverURL,
+				ClientID:       "kubernetes",
+				CACertFilename: idpTLS.CACertPath,
+			}, tokencache.TokenCache{
+				IDToken:      expiredIDToken,
+				RefreshToken: "EXPIRED_REFRESH_TOKEN",
+			})
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		assertCredentialPluginOutput(t, credentialPluginInteraction, &validIDToken)
 
@@ -215,13 +225,15 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		}
 		args = append(args, extraArgs...)
 		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
-		assertTokenCache(t, cacheDir, tokencache.Key{
-			IssuerURL: serverURL,
-			ClientID:  "kubernetes",
-		}, tokencache.TokenCache{
-			IDToken:      validIDToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
+		assertTokenCache(t, cacheDir,
+			tokencache.Key{
+				IssuerURL:      serverURL,
+				ClientID:       "kubernetes",
+				CACertFilename: idpTLS.CACertPath,
+			}, tokencache.TokenCache{
+				IDToken:      validIDToken,
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			})
 	})
 
 	t.Run("ExtraScopes", func(t *testing.T) {

@@ -60,16 +60,23 @@ func TestGetToken_Do(t *testing.T) {
 			}, nil)
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokencache.Key{
-				IssuerURL: "https://accounts.google.com",
-				ClientID:  "YOUR_CLIENT_ID",
-			}).
+			FindByKey("/path/to/token-cache",
+				tokencache.Key{
+					IssuerURL:      "https://accounts.google.com",
+					ClientID:       "YOUR_CLIENT_ID",
+					ClientSecret:   "YOUR_CLIENT_SECRET",
+					CACertFilename: "/path/to/cert",
+					SkipTLSVerify:  true,
+				}).
 			Return(nil, xerrors.New("file not found"))
 		tokenCacheRepository.EXPECT().
 			Save("/path/to/token-cache",
 				tokencache.Key{
-					IssuerURL: "https://accounts.google.com",
-					ClientID:  "YOUR_CLIENT_ID",
+					IssuerURL:      "https://accounts.google.com",
+					ClientID:       "YOUR_CLIENT_ID",
+					ClientSecret:   "YOUR_CLIENT_SECRET",
+					CACertFilename: "/path/to/cert",
+					SkipTLSVerify:  true,
 				},
 				tokencache.TokenCache{
 					IDToken:      "YOUR_ID_TOKEN",
@@ -126,8 +133,9 @@ func TestGetToken_Do(t *testing.T) {
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
-				IssuerURL: "https://accounts.google.com",
-				ClientID:  "YOUR_CLIENT_ID",
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(&tokencache.TokenCache{
 				IDToken: "VALID_ID_TOKEN",
@@ -177,8 +185,9 @@ func TestGetToken_Do(t *testing.T) {
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
-				IssuerURL: "https://accounts.google.com",
-				ClientID:  "YOUR_CLIENT_ID",
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(nil, xerrors.New("file not found"))
 		u := GetToken{
