@@ -61,7 +61,14 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 
 func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*authentication.Output, error) {
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
-	cacheKey := tokencache.Key{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
+	cacheKey := tokencache.Key{
+		IssuerURL:      in.IssuerURL,
+		ClientID:       in.ClientID,
+		ClientSecret:   in.ClientSecret,
+		ExtraScopes:    in.ExtraScopes,
+		CACertFilename: in.CACertFilename,
+		SkipTLSVerify:  in.SkipTLSVerify,
+	}
 	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)

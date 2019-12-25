@@ -23,12 +23,20 @@ func TestRepository_FindByKey(t *testing.T) {
 			}
 		}()
 		key := Key{
-			IssuerURL: "YOUR_ISSUER",
-			ClientID:  "YOUR_CLIENT_ID",
+			IssuerURL:      "YOUR_ISSUER",
+			ClientID:       "YOUR_CLIENT_ID",
+			ClientSecret:   "YOUR_CLIENT_SECRET",
+			ExtraScopes:    []string{"openid", "email"},
+			CACertFilename: "/path/to/cert",
+			SkipTLSVerify:  false,
 		}
 		json := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}`
-		filename := filepath.Join(dir, computeFilename(key))
-		if err := ioutil.WriteFile(filename, []byte(json), 0600); err != nil {
+		filename, err := computeFilename(key)
+		if err != nil {
+			t.Errorf("could not compute the key: %s", err)
+		}
+		p := filepath.Join(dir, filename)
+		if err := ioutil.WriteFile(p, []byte(json), 0600); err != nil {
 			t.Fatalf("could not write to the temp file: %s", err)
 		}
 
@@ -58,16 +66,24 @@ func TestRepository_Save(t *testing.T) {
 		}()
 
 		key := Key{
-			IssuerURL: "YOUR_ISSUER",
-			ClientID:  "YOUR_CLIENT_ID",
+			IssuerURL:      "YOUR_ISSUER",
+			ClientID:       "YOUR_CLIENT_ID",
+			ClientSecret:   "YOUR_CLIENT_SECRET",
+			ExtraScopes:    []string{"openid", "email"},
+			CACertFilename: "/path/to/cert",
+			SkipTLSVerify:  false,
 		}
 		tokenCache := TokenCache{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
 		if err := r.Save(dir, key, tokenCache); err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
 
-		filename := filepath.Join(dir, computeFilename(key))
-		b, err := ioutil.ReadFile(filename)
+		filename, err := computeFilename(key)
+		if err != nil {
+			t.Errorf("could not compute the key: %s", err)
+		}
+		p := filepath.Join(dir, filename)
+		b, err := ioutil.ReadFile(p)
 		if err != nil {
 			t.Fatalf("could not read the token cache file: %s", err)
 		}
