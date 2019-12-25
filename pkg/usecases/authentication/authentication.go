@@ -133,7 +133,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		SkipTLSVerify: in.SkipTLSVerify,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("could not create an OpenID Connect client: %w", err)
+		return nil, xerrors.Errorf("could not initialize the OpenID Connect client: %w", err)
 	}
 
 	if in.RefreshToken != "" {
