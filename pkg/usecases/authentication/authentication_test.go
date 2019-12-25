@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-test/deep"
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder/mock_jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
@@ -45,7 +45,7 @@ func TestAuthentication_Do(t *testing.T) {
 			JWTDecoder:        mockDecoder,
 			Logger:            mock_logger.New(t),
 		}
-		out, err := u.Do(ctx, in)
+		got, err := u.Do(ctx, in)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -56,8 +56,8 @@ func TestAuthentication_Do(t *testing.T) {
 			IDTokenExpiry:          futureTime,
 			IDTokenClaims:          dummyTokenClaims,
 		}
-		if diff := deep.Equal(want, out); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 
@@ -104,7 +104,7 @@ func TestAuthentication_Do(t *testing.T) {
 			JWTDecoder:        mockDecoder,
 			Logger:            mock_logger.New(t),
 		}
-		out, err := u.Do(ctx, in)
+		got, err := u.Do(ctx, in)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -115,8 +115,8 @@ func TestAuthentication_Do(t *testing.T) {
 			IDTokenExpiry:  futureTime,
 			IDTokenClaims:  dummyTokenClaims,
 		}
-		if diff := deep.Equal(want, out); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 
@@ -178,7 +178,7 @@ func TestAuthentication_Do(t *testing.T) {
 				Logger: mock_logger.New(t),
 			},
 		}
-		out, err := u.Do(ctx, in)
+		got, err := u.Do(ctx, in)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -189,8 +189,8 @@ func TestAuthentication_Do(t *testing.T) {
 			IDTokenExpiry:  futureTime,
 			IDTokenClaims:  dummyTokenClaims,
 		}
-		if diff := deep.Equal(want, out); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 
@@ -235,7 +235,7 @@ func TestAuthentication_Do(t *testing.T) {
 				Logger: mock_logger.New(t),
 			},
 		}
-		out, err := u.Do(ctx, in)
+		got, err := u.Do(ctx, in)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -246,8 +246,8 @@ func TestAuthentication_Do(t *testing.T) {
 			IDTokenExpiry:  futureTime,
 			IDTokenClaims:  dummyTokenClaims,
 		}
-		if diff := deep.Equal(want, out); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 }

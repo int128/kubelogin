@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/go-test/deep"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestRepository_FindByKey(t *testing.T) {
@@ -45,8 +45,8 @@ func TestRepository_FindByKey(t *testing.T) {
 			t.Errorf("err wants nil but %+v", err)
 		}
 		want := &Value{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
-		if diff := deep.Equal(value, want); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, value); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
@@ -89,8 +89,9 @@ func TestRepository_Save(t *testing.T) {
 		}
 		want := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}
 `
-		if diff := deep.Equal(string(b), want); diff != nil {
-			t.Error(diff)
+		got := string(b)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 }

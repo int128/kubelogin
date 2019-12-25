@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/go-test/deep"
+	"github.com/google/go-cmp/cmp"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
@@ -76,7 +76,7 @@ func unsetenv(t *testing.T, key string) {
 
 func Test_findCurrentAuthProvider(t *testing.T) {
 	t.Run("CurrentContext", func(t *testing.T) {
-		auth, err := findCurrentAuthProvider(&api.Config{
+		got, err := findCurrentAuthProvider(&api.Config{
 			CurrentContext: "theContext",
 			Contexts: map[string]*api.Context{
 				"theContext": {
@@ -118,13 +118,13 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 			IDToken:                     "YOUR_ID_TOKEN",
 			RefreshToken:                "YOUR_REFRESH_TOKEN",
 		}
-		if diff := deep.Equal(want, auth); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("ByContextName", func(t *testing.T) {
-		auth, err := findCurrentAuthProvider(&api.Config{
+		got, err := findCurrentAuthProvider(&api.Config{
 			Contexts: map[string]*api.Context{
 				"theContext": {
 					AuthInfo: "theUser",
@@ -151,13 +151,13 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 			ContextName:      "theContext",
 			IDPIssuerURL:     "https://accounts.google.com",
 		}
-		if diff := deep.Equal(want, auth); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("ByUserName", func(t *testing.T) {
-		auth, err := findCurrentAuthProvider(&api.Config{
+		got, err := findCurrentAuthProvider(&api.Config{
 			AuthInfos: map[string]*api.AuthInfo{
 				"theUser": {
 					LocationOfOrigin: "/path/to/kubeconfig",
@@ -178,8 +178,8 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 			UserName:         "theUser",
 			IDPIssuerURL:     "https://accounts.google.com",
 		}
-		if diff := deep.Equal(want, auth); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 

@@ -5,7 +5,6 @@ go 1.12
 require (
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/dgrijalva/jwt-go v0.0.0-20160705203006-01aeca54ebda
-	github.com/go-test/deep v1.0.4
 	github.com/golang/mock v1.3.1
 	github.com/google/go-cmp v0.3.1
 	github.com/google/wire v0.4.0

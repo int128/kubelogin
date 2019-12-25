@@ -301,11 +301,11 @@ func setupTokenCache(t *testing.T, cacheDir string, k tokencache.Key, v tokencac
 
 func assertTokenCache(t *testing.T, cacheDir string, k tokencache.Key, want tokencache.Value) {
 	var r tokencache.Repository
-	v, err := r.FindByKey(cacheDir, k)
+	got, err := r.FindByKey(cacheDir, k)
 	if err != nil {
 		t.Errorf("could not set up the token cache: %s", err)
 	}
-	if diff := cmp.Diff(&want, v); diff != "" {
-		t.Errorf("token cache mismatch: %s", diff)
+	if diff := cmp.Diff(&want, got); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 }
