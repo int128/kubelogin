@@ -61,7 +61,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 
 func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*authentication.Output, error) {
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
-	cacheKey := tokencache.Key{
+	tokenCacheKey := tokencache.Key{
 		IssuerURL:      in.IssuerURL,
 		ClientID:       in.ClientID,
 		ClientSecret:   in.ClientSecret,
@@ -69,10 +69,10 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		CACertFilename: in.CACertFilename,
 		SkipTLSVerify:  in.SkipTLSVerify,
 	}
-	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
+	tokenCacheValue, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
-		cache = &tokencache.TokenCache{}
+		tokenCacheValue = &tokencache.Value{}
 	}
 	certPool := u.CertPoolFactory.New()
 	if in.CACertFilename != "" {
@@ -87,8 +87,8 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		ExtraScopes:    in.ExtraScopes,
 		CertPool:       certPool,
 		SkipTLSVerify:  in.SkipTLSVerify,
-		IDToken:        cache.IDToken,
-		RefreshToken:   cache.RefreshToken,
+		IDToken:        tokenCacheValue.IDToken,
+		RefreshToken:   tokenCacheValue.RefreshToken,
 		GrantOptionSet: in.GrantOptionSet,
 	})
 	if err != nil {
@@ -103,11 +103,11 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 	}
 
 	u.Logger.V(1).Infof("you got a valid token until %s", out.IDTokenExpiry)
-	newCache := tokencache.TokenCache{
+	newTokenCacheValue := tokencache.Value{
 		IDToken:      out.IDToken,
 		RefreshToken: out.RefreshToken,
 	}
-	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, cacheKey, newCache); err != nil {
+	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, newTokenCacheValue); err != nil {
 		return nil, xerrors.Errorf("could not write the token cache: %w", err)
 	}
 	return out, nil

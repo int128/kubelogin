@@ -21,8 +21,8 @@ var Set = wire.NewSet(
 )
 
 type Interface interface {
-	FindByKey(dir string, key Key) (*TokenCache, error)
-	Save(dir string, key Key, cache TokenCache) error
+	FindByKey(dir string, key Key) (*Value, error)
+	Save(dir string, key Key, value Value) error
 }
 
 // Key represents a key of a token cache.
@@ -35,8 +35,8 @@ type Key struct {
 	SkipTLSVerify  bool
 }
 
-// TokenCache represents a token cache.
-type TokenCache struct {
+// Value represents a value of a token cache.
+type Value struct {
 	IDToken      string `json:"id_token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 }
@@ -45,7 +45,7 @@ type TokenCache struct {
 // Filename of a token cache is sha256 digest of the issuer, zero-character and client ID.
 type Repository struct{}
 
-func (r *Repository) FindByKey(dir string, key Key) (*TokenCache, error) {
+func (r *Repository) FindByKey(dir string, key Key) (*Value, error) {
 	filename, err := computeFilename(key)
 	if err != nil {
 		return nil, xerrors.Errorf("could not compute the key: %w", err)
@@ -57,14 +57,14 @@ func (r *Repository) FindByKey(dir string, key Key) (*TokenCache, error) {
 	}
 	defer f.Close()
 	d := json.NewDecoder(f)
-	var c TokenCache
+	var c Value
 	if err := d.Decode(&c); err != nil {
 		return nil, xerrors.Errorf("could not decode json file %s: %w", p, err)
 	}
 	return &c, nil
 }
 
-func (r *Repository) Save(dir string, key Key, cache TokenCache) error {
+func (r *Repository) Save(dir string, key Key, value Value) error {
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return xerrors.Errorf("could not create directory %s: %w", dir, err)
 	}
@@ -79,7 +79,7 @@ func (r *Repository) Save(dir string, key Key, cache TokenCache) error {
 	}
 	defer f.Close()
 	e := json.NewEncoder(f)
-	if err := e.Encode(&cache); err != nil {
+	if err := e.Encode(&value); err != nil {
 		return xerrors.Errorf("could not encode json to file %s: %w", p, err)
 	}
 	return nil

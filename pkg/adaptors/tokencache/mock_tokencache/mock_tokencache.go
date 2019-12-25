@@ -34,10 +34,10 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // FindByKey mocks base method
-func (m *MockInterface) FindByKey(arg0 string, arg1 tokencache.Key) (*tokencache.TokenCache, error) {
+func (m *MockInterface) FindByKey(arg0 string, arg1 tokencache.Key) (*tokencache.Value, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByKey", arg0, arg1)
-	ret0, _ := ret[0].(*tokencache.TokenCache)
+	ret0, _ := ret[0].(*tokencache.Value)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -49,7 +49,7 @@ func (mr *MockInterfaceMockRecorder) FindByKey(arg0, arg1 interface{}) *gomock.C
 }
 
 // Save mocks base method
-func (m *MockInterface) Save(arg0 string, arg1 tokencache.Key, arg2 tokencache.TokenCache) error {
+func (m *MockInterface) Save(arg0 string, arg1 tokencache.Key, arg2 tokencache.Value) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
