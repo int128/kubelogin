@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/go-test/deep"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestRepository_FindByKey(t *testing.T) {
@@ -40,13 +40,13 @@ func TestRepository_FindByKey(t *testing.T) {
 			t.Fatalf("could not write to the temp file: %s", err)
 		}
 
-		tokenCache, err := r.FindByKey(dir, key)
+		value, err := r.FindByKey(dir, key)
 		if err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
-		want := &TokenCache{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
-		if diff := deep.Equal(tokenCache, want); diff != nil {
-			t.Error(diff)
+		want := &Value{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
+		if diff := cmp.Diff(want, value); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
@@ -73,8 +73,8 @@ func TestRepository_Save(t *testing.T) {
 			CACertFilename: "/path/to/cert",
 			SkipTLSVerify:  false,
 		}
-		tokenCache := TokenCache{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
-		if err := r.Save(dir, key, tokenCache); err != nil {
+		value := Value{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
+		if err := r.Save(dir, key, value); err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
 
@@ -89,8 +89,9 @@ func TestRepository_Save(t *testing.T) {
 		}
 		want := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}
 `
-		if diff := deep.Equal(string(b), want); diff != nil {
-			t.Error(diff)
+		got := string(b)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 }

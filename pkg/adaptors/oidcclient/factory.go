@@ -52,7 +52,7 @@ func (f *Factory) New(ctx context.Context, config Config) (Interface, error) {
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	provider, err := oidc.NewProvider(ctx, config.IssuerURL)
 	if err != nil {
-		return nil, xerrors.Errorf("could not discovery the OIDCClientFactory issuer: %w", err)
+		return nil, xerrors.Errorf("could not discovery the issuer: %w", err)
 	}
 	return &client{
 		httpClient: httpClient,

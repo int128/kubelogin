@@ -116,7 +116,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 				IssuerURL:      serverURL,
 				ClientID:       "kubernetes",
 				CACertFilename: idpTLS.CACertPath,
-			}, tokencache.TokenCache{
+			}, tokencache.Value{
 				IDToken:      idToken,
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			})
@@ -135,7 +135,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 				IssuerURL:      serverURL,
 				ClientID:       "kubernetes",
 				CACertFilename: idpTLS.CACertPath,
-			}, tokencache.TokenCache{
+			}, tokencache.Value{
 				IDToken:      idToken,
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			})
@@ -163,7 +163,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 				IssuerURL:      serverURL,
 				ClientID:       "kubernetes",
 				CACertFilename: idpTLS.CACertPath,
-			}, tokencache.TokenCache{
+			}, tokencache.Value{
 				IDToken:      expiredIDToken,
 				RefreshToken: "VALID_REFRESH_TOKEN",
 			})
@@ -182,7 +182,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 				IssuerURL:      serverURL,
 				ClientID:       "kubernetes",
 				CACertFilename: idpTLS.CACertPath,
-			}, tokencache.TokenCache{
+			}, tokencache.Value{
 				IDToken:      validIDToken,
 				RefreshToken: "NEW_REFRESH_TOKEN",
 			})
@@ -211,7 +211,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 				IssuerURL:      serverURL,
 				ClientID:       "kubernetes",
 				CACertFilename: idpTLS.CACertPath,
-			}, tokencache.TokenCache{
+			}, tokencache.Value{
 				IDToken:      expiredIDToken,
 				RefreshToken: "EXPIRED_REFRESH_TOKEN",
 			})
@@ -230,7 +230,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 				IssuerURL:      serverURL,
 				ClientID:       "kubernetes",
 				CACertFilename: idpTLS.CACertPath,
-			}, tokencache.TokenCache{
+			}, tokencache.Value{
 				IDToken:      validIDToken,
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			})
@@ -291,7 +291,7 @@ func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc auth
 	}
 }
 
-func setupTokenCache(t *testing.T, cacheDir string, k tokencache.Key, v tokencache.TokenCache) {
+func setupTokenCache(t *testing.T, cacheDir string, k tokencache.Key, v tokencache.Value) {
 	var r tokencache.Repository
 	err := r.Save(cacheDir, k, v)
 	if err != nil {
@@ -299,13 +299,13 @@ func setupTokenCache(t *testing.T, cacheDir string, k tokencache.Key, v tokencac
 	}
 }
 
-func assertTokenCache(t *testing.T, cacheDir string, k tokencache.Key, want tokencache.TokenCache) {
+func assertTokenCache(t *testing.T, cacheDir string, k tokencache.Key, want tokencache.Value) {
 	var r tokencache.Repository
-	v, err := r.FindByKey(cacheDir, k)
+	got, err := r.FindByKey(cacheDir, k)
 	if err != nil {
 		t.Errorf("could not set up the token cache: %s", err)
 	}
-	if diff := cmp.Diff(&want, v); diff != "" {
-		t.Errorf("token cache mismatch: %s", diff)
+	if diff := cmp.Diff(&want, got); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 }

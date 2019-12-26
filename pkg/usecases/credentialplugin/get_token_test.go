@@ -78,7 +78,7 @@ func TestGetToken_Do(t *testing.T) {
 					CACertFilename: "/path/to/cert",
 					SkipTLSVerify:  true,
 				},
-				tokencache.TokenCache{
+				tokencache.Value{
 					IDToken:      "YOUR_ID_TOKEN",
 					RefreshToken: "YOUR_REFRESH_TOKEN",
 				})
@@ -137,7 +137,7 @@ func TestGetToken_Do(t *testing.T) {
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
-			Return(&tokencache.TokenCache{
+			Return(&tokencache.Value{
 				IDToken: "VALID_ID_TOKEN",
 			}, nil)
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)

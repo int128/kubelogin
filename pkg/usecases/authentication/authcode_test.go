@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-test/deep"
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
@@ -43,7 +43,7 @@ func TestAuthCode_Do(t *testing.T) {
 		u := AuthCode{
 			Logger: mock_logger.New(t),
 		}
-		out, err := u.Do(ctx, o, mockOIDCClient)
+		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -54,8 +54,8 @@ func TestAuthCode_Do(t *testing.T) {
 			IDTokenExpiry:  futureTime,
 			IDTokenClaims:  dummyTokenClaims,
 		}
-		if diff := deep.Equal(want, out); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 
@@ -87,7 +87,7 @@ func TestAuthCode_Do(t *testing.T) {
 			Logger: mock_logger.New(t),
 			Env:    mockEnv,
 		}
-		out, err := u.Do(ctx, o, mockOIDCClient)
+		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -98,8 +98,8 @@ func TestAuthCode_Do(t *testing.T) {
 			IDTokenExpiry:  futureTime,
 			IDTokenClaims:  dummyTokenClaims,
 		}
-		if diff := deep.Equal(want, out); diff != nil {
-			t.Error(diff)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
