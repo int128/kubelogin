@@ -10,14 +10,18 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"golang.org/x/xerrors"
 )
 
 func TestStandalone_Do(t *testing.T) {
-	dummyTokenClaims := map[string]string{"sub": "YOUR_SUBJECT"}
-	futureTime := time.Now().Add(time.Hour) //TODO: inject time service
+	dummyTokenClaims := oidc.Claims{
+		Subject: "YOUR_SUBJECT",
+		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
+		Pretty:  map[string]string{"sub": "YOUR_SUBJECT"},
+	}
 
 	t.Run("FullOptions", func(t *testing.T) {
 		var grantOptionSet authentication.GrantOptionSet
@@ -81,7 +85,6 @@ func TestStandalone_Do(t *testing.T) {
 			Return(&authentication.Output{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		u := Standalone{
@@ -129,7 +132,6 @@ func TestStandalone_Do(t *testing.T) {
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                "VALID_ID_TOKEN",
-				IDTokenExpiry:          futureTime,
 				IDTokenClaims:          dummyTokenClaims,
 			}, nil)
 		u := Standalone{
@@ -249,7 +251,6 @@ func TestStandalone_Do(t *testing.T) {
 			Return(&authentication.Output{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		u := Standalone{

@@ -9,6 +9,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"golang.org/x/xerrors"
 )
 
@@ -67,10 +68,8 @@ type ROPCOption struct {
 // Output represents an output DTO of the Authentication use-case.
 type Output struct {
 	AlreadyHasValidIDToken bool
-	IDTokenSubject         string
-	IDTokenExpiry          time.Time
-	IDTokenClaims          map[string]string
 	IDToken                string
+	IDTokenClaims          oidc.Claims
 	RefreshToken           string
 }
 
@@ -115,9 +114,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 				AlreadyHasValidIDToken: true,
 				IDToken:                in.IDToken,
 				RefreshToken:           in.RefreshToken,
-				IDTokenSubject:         claims.Subject,
-				IDTokenExpiry:          claims.Expiry,
-				IDTokenClaims:          claims.Pretty,
+				IDTokenClaims:          *claims,
 			}, nil
 		}
 		u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
@@ -141,11 +138,9 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		out, err := client.Refresh(ctx, in.RefreshToken)
 		if err == nil {
 			return &Output{
-				IDToken:        out.IDToken,
-				RefreshToken:   out.RefreshToken,
-				IDTokenSubject: out.IDTokenSubject,
-				IDTokenExpiry:  out.IDTokenExpiry,
-				IDTokenClaims:  out.IDTokenClaims,
+				IDToken:       out.IDToken,
+				IDTokenClaims: out.IDTokenClaims,
+				RefreshToken:  out.RefreshToken,
 			}, nil
 		}
 		u.Logger.V(1).Infof("could not refresh the token: %s", err)

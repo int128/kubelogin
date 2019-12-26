@@ -56,10 +56,8 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 		return nil, xerrors.Errorf("could not get the token: %w", err)
 	}
 	return &Output{
-		IDToken:        tokenSet.IDToken,
-		RefreshToken:   tokenSet.RefreshToken,
-		IDTokenSubject: tokenSet.IDTokenSubject,
-		IDTokenExpiry:  tokenSet.IDTokenExpiry,
-		IDTokenClaims:  tokenSet.IDTokenClaims,
+		IDToken:       tokenSet.IDToken,
+		IDTokenClaims: tokenSet.IDTokenClaims,
+		RefreshToken:  tokenSet.RefreshToken,
 	}, nil
 }

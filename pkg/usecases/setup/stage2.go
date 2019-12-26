@@ -96,7 +96,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 		return xerrors.Errorf("error while authentication: %w", err)
 	}
 	u.Logger.Printf("You got the following claims in the token:")
-	for k, v := range out.IDTokenClaims {
+	for k, v := range out.IDTokenClaims.Pretty {
 		u.Logger.Printf("\t%s=%s", k, v)
 	}
 
@@ -104,7 +104,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 		IssuerURL: in.IssuerURL,
 		ClientID:  in.ClientID,
 		Args:      makeCredentialPluginArgs(in),
-		Subject:   out.IDTokenSubject,
+		Subject:   out.IDTokenClaims.Subject,
 	}
 	var b strings.Builder
 	if err := stage2Tpl.Execute(&b, &v); err != nil {
