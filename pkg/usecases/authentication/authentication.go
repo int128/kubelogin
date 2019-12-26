@@ -2,10 +2,10 @@ package authentication
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
+	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
@@ -93,6 +93,7 @@ type Authentication struct {
 	OIDCClientFactory oidcclient.FactoryInterface
 	JWTDecoder        jwtdecoder.Interface
 	Logger            logger.Interface
+	Env               env.Interface
 	AuthCode          *AuthCode
 	AuthCodeKeyboard  *AuthCodeKeyboard
 	ROPC              *ROPC
@@ -108,7 +109,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		if err != nil {
 			return nil, xerrors.Errorf("invalid token and you need to remove the cache: %w", err)
 		}
-		if claims.Expiry.After(time.Now()) { //TODO: inject time service
+		if !claims.IsExpired(u.Env) {
 			u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
 			return &Output{
 				AlreadyHasValidIDToken: true,
