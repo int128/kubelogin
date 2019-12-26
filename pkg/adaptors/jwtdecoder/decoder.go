@@ -10,6 +10,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"golang.org/x/xerrors"
 )
 
@@ -22,21 +23,14 @@ var Set = wire.NewSet(
 )
 
 type Interface interface {
-	Decode(s string) (*Claims, error)
-}
-
-// Claims represents claims of a token.
-type Claims struct {
-	Subject string
-	Expiry  time.Time
-	Pretty  map[string]string // string representation for debug and logging
+	Decode(s string) (*oidc.Claims, error)
 }
 
 type Decoder struct{}
 
 // Decode returns the claims of the JWT.
 // Note that this method does not verify the signature and always trust it.
-func (d *Decoder) Decode(s string) (*Claims, error) {
+func (d *Decoder) Decode(s string) (*oidc.Claims, error) {
 	parts := strings.Split(s, ".")
 	if len(parts) != 3 {
 		return nil, xerrors.Errorf("token contains an invalid number of segments")
@@ -53,7 +47,7 @@ func (d *Decoder) Decode(s string) (*Claims, error) {
 	if err := json.NewDecoder(bytes.NewBuffer(b)).Decode(&rawClaims); err != nil {
 		return nil, xerrors.Errorf("could not decode the json of token: %w", err)
 	}
-	return &Claims{
+	return &oidc.Claims{
 		Subject: claims.Subject,
 		Expiry:  time.Unix(claims.ExpiresAt, 0),
 		Pretty:  dumpRawClaims(rawClaims),

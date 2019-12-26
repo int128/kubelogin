@@ -12,14 +12,18 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"golang.org/x/xerrors"
 )
 
 func TestGetToken_Do(t *testing.T) {
-	dummyTokenClaims := map[string]string{"sub": "YOUR_SUBJECT"}
-	futureTime := time.Now().Add(time.Hour) //TODO: inject time service
+	dummyTokenClaims := oidc.Claims{
+		Subject: "YOUR_SUBJECT",
+		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
+		Pretty:  map[string]string{"sub": "YOUR_SUBJECT"},
+	}
 
 	t.Run("FullOptions", func(t *testing.T) {
 		var grantOptionSet authentication.GrantOptionSet
@@ -55,7 +59,6 @@ func TestGetToken_Do(t *testing.T) {
 			Return(&authentication.Output{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
@@ -86,7 +89,7 @@ func TestGetToken_Do(t *testing.T) {
 		credentialPluginInteraction.EXPECT().
 			Write(credentialplugin.Output{
 				Token:  "YOUR_ID_TOKEN",
-				Expiry: futureTime,
+				Expiry: dummyTokenClaims.Expiry,
 			})
 		u := GetToken{
 			Authentication:       mockAuthentication,
@@ -127,7 +130,6 @@ func TestGetToken_Do(t *testing.T) {
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
 				IDToken:                "VALID_ID_TOKEN",
-				IDTokenExpiry:          futureTime,
 				IDTokenClaims:          dummyTokenClaims,
 			}, nil)
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
@@ -144,7 +146,7 @@ func TestGetToken_Do(t *testing.T) {
 		credentialPluginInteraction.EXPECT().
 			Write(credentialplugin.Output{
 				Token:  "VALID_ID_TOKEN",
-				Expiry: futureTime,
+				Expiry: dummyTokenClaims.Expiry,
 			})
 		u := GetToken{
 			Authentication:       mockAuthentication,

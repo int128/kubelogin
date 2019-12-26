@@ -66,11 +66,9 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 			return xerrors.Errorf("error while the authorization code flow: %w", err)
 		}
 		out = Output{
-			IDToken:        tokenSet.IDToken,
-			RefreshToken:   tokenSet.RefreshToken,
-			IDTokenSubject: tokenSet.IDTokenSubject,
-			IDTokenExpiry:  tokenSet.IDTokenExpiry,
-			IDTokenClaims:  tokenSet.IDTokenClaims,
+			IDToken:       tokenSet.IDToken,
+			IDTokenClaims: tokenSet.IDTokenClaims,
+			RefreshToken:  tokenSet.RefreshToken,
 		}
 		return nil
 	})

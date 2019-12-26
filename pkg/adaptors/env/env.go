@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/google/wire"
 	"github.com/pkg/browser"
@@ -33,6 +34,7 @@ type Interface interface {
 	ReadString(prompt string) (string, error)
 	ReadPassword(prompt string) (string, error)
 	OpenBrowser(url string) error
+	Now() time.Time
 }
 
 // Env provides environment specific facilities.
@@ -73,4 +75,9 @@ func (env *Env) OpenBrowser(url string) error {
 		return xerrors.Errorf("could not open the browser: %w", err)
 	}
 	return nil
+}
+
+// Now returns the current time.
+func (*Env) Now() time.Time {
+	return time.Now()
 }

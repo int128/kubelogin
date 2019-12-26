@@ -9,6 +9,7 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	oidcModel "github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/oauth2cli"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
@@ -56,11 +57,9 @@ type GetTokenByAuthCodeInput struct {
 // TokenSet represents an output DTO of
 // Interface.GetTokenByAuthCode, Interface.GetTokenByROPC and Interface.Refresh.
 type TokenSet struct {
-	IDToken        string
-	RefreshToken   string
-	IDTokenSubject string
-	IDTokenExpiry  time.Time
-	IDTokenClaims  map[string]string // string representation of claims for logging
+	IDToken       string
+	RefreshToken  string
+	IDTokenClaims oidcModel.Claims
 }
 
 type client struct {
@@ -171,16 +170,20 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 	}
 	return &TokenSet{
 		IDToken:       idTokenString,
-		RefreshToken:  token.RefreshToken,
-		IDTokenExpiry: idToken.Expiry,
 		IDTokenClaims: claims,
+		RefreshToken:  token.RefreshToken,
 	}, nil
 }
 
-func dumpClaims(token *oidc.IDToken) (map[string]string, error) {
+func dumpClaims(token *oidc.IDToken) (oidcModel.Claims, error) {
 	var rawClaims map[string]interface{}
 	err := token.Claims(&rawClaims)
-	return dumpRawClaims(rawClaims), err
+	pretty := dumpRawClaims(rawClaims)
+	return oidcModel.Claims{
+		Subject: token.Subject,
+		Expiry:  token.Expiry,
+		Pretty:  pretty,
+	}, err
 }
 
 func dumpRawClaims(rawClaims map[string]interface{}) map[string]string {

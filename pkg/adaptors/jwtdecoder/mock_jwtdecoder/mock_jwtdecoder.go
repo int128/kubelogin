@@ -6,7 +6,7 @@ package mock_jwtdecoder
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	jwtdecoder "github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
+	oidc "github.com/int128/kubelogin/pkg/domain/oidc"
 	reflect "reflect"
 )
 
@@ -34,10 +34,10 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // Decode mocks base method
-func (m *MockInterface) Decode(arg0 string) (*jwtdecoder.Claims, error) {
+func (m *MockInterface) Decode(arg0 string) (*oidc.Claims, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Decode", arg0)
-	ret0, _ := ret[0].(*jwtdecoder.Claims)
+	ret0, _ := ret[0].(*oidc.Claims)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
