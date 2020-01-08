@@ -6,7 +6,7 @@ require (
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/dgrijalva/jwt-go v0.0.0-20160705203006-01aeca54ebda
 	github.com/golang/mock v1.3.1
-	github.com/google/go-cmp v0.3.1
+	github.com/google/go-cmp v0.4.0
 	github.com/google/wire v0.4.0
 	github.com/int128/oauth2cli v1.8.1
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
