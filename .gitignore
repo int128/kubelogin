@@ -2,8 +2,9 @@
 
 /.kubeconfig*
 
-/dist
+/dist/output
 /coverage.out
+/gotest.log
 
 /kubelogin
 /kubectl-oidc_login
