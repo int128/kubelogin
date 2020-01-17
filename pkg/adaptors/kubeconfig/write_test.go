@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestKubeconfig_UpdateAuth(t *testing.T) {
@@ -32,9 +34,10 @@ func TestKubeconfig_UpdateAuth(t *testing.T) {
 			t.Fatalf("Could not read kubeconfig: %s", err)
 		}
 
+		got := string(b)
 		want := `apiVersion: v1
-clusters: []
-contexts: []
+clusters: null
+contexts: null
 current-context: ""
 kind: Config
 preferences: {}
@@ -50,8 +53,8 @@ users:
         refresh-token: YOUR_REFRESH_TOKEN
       name: oidc
 `
-		if want != string(b) {
-			t.Errorf("---- kubeconfig wants ----\n%s\n---- but ----\n%s", want, string(b))
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("kubeconfig mismatch (-want +got):\n%s", diff)
 		}
 	})
 
@@ -81,9 +84,10 @@ users:
 			t.Fatalf("Could not read kubeconfig: %s", err)
 		}
 
+		got := string(b)
 		want := `apiVersion: v1
-clusters: []
-contexts: []
+clusters: null
+contexts: null
 current-context: ""
 kind: Config
 preferences: {}
@@ -102,8 +106,8 @@ users:
         refresh-token: YOUR_REFRESH_TOKEN
       name: oidc
 `
-		if want != string(b) {
-			t.Errorf("---- kubeconfig wants ----\n%s\n---- but ----\n%s", want, string(b))
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("kubeconfig mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
