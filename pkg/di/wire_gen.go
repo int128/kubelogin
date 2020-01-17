@@ -24,81 +24,15 @@ import (
 // Injectors from di.go:
 
 func NewCmd() cmd.Interface {
-	newFunc := _wireNewFuncValue
-	decoder := &jwtdecoder.Decoder{}
 	loggerInterface := logger.New()
-	envEnv := &env.Env{}
 	localServerReadyFunc := _wireLocalServerReadyFuncValue
-	authCode := &authentication.AuthCode{
-		Env:                  envEnv,
-		Logger:               loggerInterface,
-		LocalServerReadyFunc: localServerReadyFunc,
-	}
-	authCodeKeyboard := &authentication.AuthCodeKeyboard{
-		Env:    envEnv,
-		Logger: loggerInterface,
-	}
-	ropc := &authentication.ROPC{
-		Env:    envEnv,
-		Logger: loggerInterface,
-	}
-	authenticationAuthentication := &authentication.Authentication{
-		NewOIDCClient:    newFunc,
-		JWTDecoder:       decoder,
-		Logger:           loggerInterface,
-		Env:              envEnv,
-		AuthCode:         authCode,
-		AuthCodeKeyboard: authCodeKeyboard,
-		ROPC:             ropc,
-	}
-	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
-		Logger: loggerInterface,
-	}
-	certpoolNewFunc := _wireCertpoolNewFuncValue
-	standaloneStandalone := &standalone.Standalone{
-		Authentication: authenticationAuthentication,
-		Kubeconfig:     kubeconfigKubeconfig,
-		NewCertPool:    certpoolNewFunc,
-		Logger:         loggerInterface,
-	}
-	root := &cmd.Root{
-		Standalone: standaloneStandalone,
-		Logger:     loggerInterface,
-	}
-	repository := &tokencache.Repository{}
 	interaction := &credentialplugin.Interaction{}
-	getToken := &credentialplugin2.GetToken{
-		Authentication:       authenticationAuthentication,
-		TokenCacheRepository: repository,
-		NewCertPool:          certpoolNewFunc,
-		Interaction:          interaction,
-		Logger:               loggerInterface,
-	}
-	cmdGetToken := &cmd.GetToken{
-		GetToken: getToken,
-		Logger:   loggerInterface,
-	}
-	setupSetup := &setup.Setup{
-		Authentication: authenticationAuthentication,
-		NewCertPool:    certpoolNewFunc,
-		Logger:         loggerInterface,
-	}
-	cmdSetup := &cmd.Setup{
-		Setup: setupSetup,
-	}
-	cmdCmd := &cmd.Cmd{
-		Root:     root,
-		GetToken: cmdGetToken,
-		Setup:    cmdSetup,
-		Logger:   loggerInterface,
-	}
-	return cmdCmd
+	cmdInterface := NewCmdForHeadless(loggerInterface, localServerReadyFunc, interaction)
+	return cmdInterface
 }
 
 var (
-	_wireNewFuncValue              = oidcclient.NewFunc(oidcclient.New)
 	_wireLocalServerReadyFuncValue = authentication.DefaultLocalServerReadyFunc
-	_wireCertpoolNewFuncValue      = certpool.NewFunc(certpool.New)
 )
 
 func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc authentication.LocalServerReadyFunc, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
@@ -169,3 +103,8 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 	}
 	return cmdCmd
 }
+
+var (
+	_wireNewFuncValue         = oidcclient.NewFunc(oidcclient.New)
+	_wireCertpoolNewFuncValue = certpool.NewFunc(certpool.New)
+)
