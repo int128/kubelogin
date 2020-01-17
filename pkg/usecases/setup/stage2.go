@@ -76,7 +76,7 @@ type Stage2Input struct {
 
 func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	u.Logger.Printf(`## 2. Verify authentication`)
-	certPool := u.CertPoolFactory.New()
+	certPool := u.NewCertPool()
 	if in.CACertFilename != "" {
 		if err := certPool.AddFile(in.CACertFilename); err != nil {
 			return xerrors.Errorf("could not load the certificate: %w", err)

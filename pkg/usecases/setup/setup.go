@@ -21,7 +21,7 @@ type Interface interface {
 }
 
 type Setup struct {
-	Authentication  authentication.Interface
-	CertPoolFactory certpool.FactoryInterface
-	Logger          logger.Interface
+	Authentication authentication.Interface
+	NewCertPool    certpool.NewFunc
+	Logger         logger.Interface
 }

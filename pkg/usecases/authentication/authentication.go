@@ -90,13 +90,13 @@ const passwordPrompt = "Password: "
 // If the Password is not set, it asks a password by the prompt.
 //
 type Authentication struct {
-	OIDCClientFactory oidcclient.FactoryInterface
-	JWTDecoder        jwtdecoder.Interface
-	Logger            logger.Interface
-	Env               env.Interface
-	AuthCode          *AuthCode
-	AuthCodeKeyboard  *AuthCodeKeyboard
-	ROPC              *ROPC
+	NewOIDCClient    oidcclient.NewFunc
+	JWTDecoder       jwtdecoder.Interface
+	Logger           logger.Interface
+	Env              env.Interface
+	AuthCode         *AuthCode
+	AuthCodeKeyboard *AuthCodeKeyboard
+	ROPC             *ROPC
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -122,13 +122,14 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	}
 
 	u.Logger.V(1).Infof("initializing an OpenID Connect client")
-	client, err := u.OIDCClientFactory.New(ctx, oidcclient.Config{
+	client, err := u.NewOIDCClient(ctx, oidcclient.Config{
 		IssuerURL:     in.IssuerURL,
 		ClientID:      in.ClientID,
 		ClientSecret:  in.ClientSecret,
 		ExtraScopes:   in.ExtraScopes,
 		CertPool:      in.CertPool,
 		SkipTLSVerify: in.SkipTLSVerify,
+		Logger:        u.Logger,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("could not initialize the OpenID Connect client: %w", err)

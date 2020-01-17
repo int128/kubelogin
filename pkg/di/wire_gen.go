@@ -24,11 +24,9 @@ import (
 // Injectors from di.go:
 
 func NewCmd() cmd.Interface {
-	loggerInterface := logger.New()
-	factory := &oidcclient.Factory{
-		Logger: loggerInterface,
-	}
+	newFunc := _wireNewFuncValue
 	decoder := &jwtdecoder.Decoder{}
+	loggerInterface := logger.New()
 	envEnv := &env.Env{}
 	localServerReadyFunc := _wireLocalServerReadyFuncValue
 	authCode := &authentication.AuthCode{
@@ -45,23 +43,23 @@ func NewCmd() cmd.Interface {
 		Logger: loggerInterface,
 	}
 	authenticationAuthentication := &authentication.Authentication{
-		OIDCClientFactory: factory,
-		JWTDecoder:        decoder,
-		Logger:            loggerInterface,
-		Env:               envEnv,
-		AuthCode:          authCode,
-		AuthCodeKeyboard:  authCodeKeyboard,
-		ROPC:              ropc,
+		NewOIDCClient:    newFunc,
+		JWTDecoder:       decoder,
+		Logger:           loggerInterface,
+		Env:              envEnv,
+		AuthCode:         authCode,
+		AuthCodeKeyboard: authCodeKeyboard,
+		ROPC:             ropc,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,
 	}
-	certpoolFactory := &certpool.Factory{}
+	certpoolNewFunc := _wireCertpoolNewFuncValue
 	standaloneStandalone := &standalone.Standalone{
-		Authentication:  authenticationAuthentication,
-		Kubeconfig:      kubeconfigKubeconfig,
-		CertPoolFactory: certpoolFactory,
-		Logger:          loggerInterface,
+		Authentication: authenticationAuthentication,
+		Kubeconfig:     kubeconfigKubeconfig,
+		NewCertPool:    certpoolNewFunc,
+		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
 		Standalone: standaloneStandalone,
@@ -72,7 +70,7 @@ func NewCmd() cmd.Interface {
 	getToken := &credentialplugin2.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
-		CertPoolFactory:      certpoolFactory,
+		NewCertPool:          certpoolNewFunc,
 		Interaction:          interaction,
 		Logger:               loggerInterface,
 	}
@@ -81,9 +79,9 @@ func NewCmd() cmd.Interface {
 		Logger:   loggerInterface,
 	}
 	setupSetup := &setup.Setup{
-		Authentication:  authenticationAuthentication,
-		CertPoolFactory: certpoolFactory,
-		Logger:          loggerInterface,
+		Authentication: authenticationAuthentication,
+		NewCertPool:    certpoolNewFunc,
+		Logger:         loggerInterface,
 	}
 	cmdSetup := &cmd.Setup{
 		Setup: setupSetup,
@@ -98,13 +96,13 @@ func NewCmd() cmd.Interface {
 }
 
 var (
+	_wireNewFuncValue              = oidcclient.NewFunc(oidcclient.New)
 	_wireLocalServerReadyFuncValue = authentication.DefaultLocalServerReadyFunc
+	_wireCertpoolNewFuncValue      = certpool.NewFunc(certpool.New)
 )
 
 func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc authentication.LocalServerReadyFunc, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
-	factory := &oidcclient.Factory{
-		Logger: loggerInterface,
-	}
+	newFunc := _wireNewFuncValue
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
 	authCode := &authentication.AuthCode{
@@ -121,23 +119,23 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 		Logger: loggerInterface,
 	}
 	authenticationAuthentication := &authentication.Authentication{
-		OIDCClientFactory: factory,
-		JWTDecoder:        decoder,
-		Logger:            loggerInterface,
-		Env:               envEnv,
-		AuthCode:          authCode,
-		AuthCodeKeyboard:  authCodeKeyboard,
-		ROPC:              ropc,
+		NewOIDCClient:    newFunc,
+		JWTDecoder:       decoder,
+		Logger:           loggerInterface,
+		Env:              envEnv,
+		AuthCode:         authCode,
+		AuthCodeKeyboard: authCodeKeyboard,
+		ROPC:             ropc,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,
 	}
-	certpoolFactory := &certpool.Factory{}
+	certpoolNewFunc := _wireCertpoolNewFuncValue
 	standaloneStandalone := &standalone.Standalone{
-		Authentication:  authenticationAuthentication,
-		Kubeconfig:      kubeconfigKubeconfig,
-		CertPoolFactory: certpoolFactory,
-		Logger:          loggerInterface,
+		Authentication: authenticationAuthentication,
+		Kubeconfig:     kubeconfigKubeconfig,
+		NewCertPool:    certpoolNewFunc,
+		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
 		Standalone: standaloneStandalone,
@@ -147,7 +145,7 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 	getToken := &credentialplugin2.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
-		CertPoolFactory:      certpoolFactory,
+		NewCertPool:          certpoolNewFunc,
 		Interaction:          credentialpluginInterface,
 		Logger:               loggerInterface,
 	}
@@ -156,9 +154,9 @@ func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc au
 		Logger:   loggerInterface,
 	}
 	setupSetup := &setup.Setup{
-		Authentication:  authenticationAuthentication,
-		CertPoolFactory: certpoolFactory,
-		Logger:          loggerInterface,
+		Authentication: authenticationAuthentication,
+		NewCertPool:    certpoolNewFunc,
+		Logger:         loggerInterface,
 	}
 	cmdSetup := &cmd.Setup{
 		Setup: setupSetup,

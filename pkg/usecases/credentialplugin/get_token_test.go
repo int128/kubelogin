@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
@@ -42,10 +43,6 @@ func TestGetToken_Do(t *testing.T) {
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockCertPool.EXPECT().
 			AddFile("/path/to/cert")
-		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
-		mockCertPoolFactory.EXPECT().
-			New().
-			Return(mockCertPool)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
@@ -94,7 +91,7 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
-			CertPoolFactory:      mockCertPoolFactory,
+			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Interaction:          credentialPluginInteraction,
 			Logger:               mock_logger.New(t),
 		}
@@ -114,10 +111,6 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheDir: "/path/to/token-cache",
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
-		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
-		mockCertPoolFactory.EXPECT().
-			New().
-			Return(mockCertPool)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
@@ -151,7 +144,7 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
-			CertPoolFactory:      mockCertPoolFactory,
+			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Interaction:          credentialPluginInteraction,
 			Logger:               mock_logger.New(t),
 		}
@@ -171,10 +164,6 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheDir: "/path/to/token-cache",
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
-		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
-		mockCertPoolFactory.EXPECT().
-			New().
-			Return(mockCertPool)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
@@ -195,7 +184,7 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
-			CertPoolFactory:      mockCertPoolFactory,
+			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Interaction:          mock_credentialplugin.NewMockInterface(ctrl),
 			Logger:               mock_logger.New(t),
 		}

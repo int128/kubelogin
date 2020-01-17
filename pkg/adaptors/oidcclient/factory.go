@@ -14,9 +14,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-type FactoryInterface interface {
-	New(ctx context.Context, config Config) (Interface, error)
-}
+type NewFunc func(ctx context.Context, config Config) (Interface, error)
 
 // Config represents a configuration of OpenID Connect client.
 type Config struct {
@@ -26,14 +24,11 @@ type Config struct {
 	ExtraScopes   []string // optional
 	CertPool      certpool.Interface
 	SkipTLSVerify bool
-}
-
-type Factory struct {
-	Logger logger.Interface
+	Logger        logger.Interface
 }
 
 // New returns an instance of adaptors.Interface with the given configuration.
-func (f *Factory) New(ctx context.Context, config Config) (Interface, error) {
+func New(ctx context.Context, config Config) (Interface, error) {
 	var tlsConfig tls.Config
 	tlsConfig.InsecureSkipVerify = config.SkipTLSVerify
 	config.CertPool.SetRootCAs(&tlsConfig)
@@ -43,7 +38,7 @@ func (f *Factory) New(ctx context.Context, config Config) (Interface, error) {
 	}
 	loggingTransport := &logging.Transport{
 		Base:   baseTransport,
-		Logger: f.Logger,
+		Logger: config.Logger,
 	}
 	httpClient := &http.Client{
 		Transport: loggingTransport,
@@ -63,6 +58,6 @@ func (f *Factory) New(ctx context.Context, config Config) (Interface, error) {
 			ClientSecret: config.ClientSecret,
 			Scopes:       append(config.ExtraScopes, oidc.ScopeOpenID),
 		},
-		logger: f.Logger,
+		logger: config.Logger,
 	}, nil
 }
