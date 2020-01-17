@@ -8,8 +8,7 @@ import (
 
 func TestCertPool_AddFile(t *testing.T) {
 	t.Run("Valid", func(t *testing.T) {
-		var f Factory
-		p := f.New()
+		p := New()
 		if err := p.AddFile("testdata/ca1.crt"); err != nil {
 			t.Errorf("AddFile error: %s", err)
 		}
@@ -20,8 +19,7 @@ func TestCertPool_AddFile(t *testing.T) {
 		}
 	})
 	t.Run("Invalid", func(t *testing.T) {
-		var f Factory
-		p := f.New()
+		p := New()
 		err := p.AddFile("testdata/Makefile")
 		if err == nil {
 			t.Errorf("AddFile wants an error but was nil")
@@ -30,8 +28,7 @@ func TestCertPool_AddFile(t *testing.T) {
 }
 
 func TestCertPool_AddBase64Encoded(t *testing.T) {
-	var f Factory
-	p := f.New()
+	p := New()
 	if err := p.AddBase64Encoded(readFile(t, "testdata/ca2.crt.base64")); err != nil {
 		t.Errorf("AddBase64Encoded error: %s", err)
 	}
@@ -43,8 +40,7 @@ func TestCertPool_AddBase64Encoded(t *testing.T) {
 }
 
 func TestCertPool_SetRootCAs(t *testing.T) {
-	var f Factory
-	p := f.New()
+	p := New()
 	var cfg tls.Config
 	p.SetRootCAs(&cfg)
 	if cfg.RootCAs != nil {

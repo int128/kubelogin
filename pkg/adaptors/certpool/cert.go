@@ -11,24 +11,19 @@ import (
 	"golang.org/x/xerrors"
 )
 
-//go:generate mockgen -destination mock_certpool/mock_certpool.go github.com/int128/kubelogin/pkg/adaptors/certpool FactoryInterface,Interface
+//go:generate mockgen -destination mock_certpool/mock_certpool.go github.com/int128/kubelogin/pkg/adaptors/certpool Interface
 
 // Set provides an implementation and interface.
 var Set = wire.NewSet(
-	wire.Struct(new(Factory), "*"),
-	wire.Bind(new(FactoryInterface), new(*Factory)),
+	wire.Value(NewFunc(New)),
 	wire.Struct(new(CertPool), "*"),
 	wire.Bind(new(Interface), new(*CertPool)),
 )
 
-type FactoryInterface interface {
-	New() Interface
-}
-
-type Factory struct{}
+type NewFunc func() Interface
 
 // New returns an instance which implements the Interface.
-func (f *Factory) New() Interface {
+func New() Interface {
 	return &CertPool{pool: x509.NewCertPool()}
 }
 

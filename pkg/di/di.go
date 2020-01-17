@@ -23,23 +23,12 @@ import (
 // NewCmd returns an instance of adaptors.Cmd.
 func NewCmd() cmd.Interface {
 	wire.Build(
-		// use-cases
-		authentication.Set,
-		wire.Value(authentication.DefaultLocalServerReadyFunc),
-		standalone.Set,
-		credentialPluginUseCase.Set,
-		setup.Set,
+		NewCmdForHeadless,
 
-		// adaptors
-		cmd.Set,
-		env.Set,
-		kubeconfig.Set,
-		tokencache.Set,
-		credentialPluginAdaptor.Set,
-		oidcclient.Set,
-		jwtdecoder.Set,
-		certpool.Set,
+		// dependencies for production
 		logger.Set,
+		wire.Value(authentication.DefaultLocalServerReadyFunc),
+		credentialPluginAdaptor.Set,
 	)
 	return nil
 }
@@ -47,11 +36,13 @@ func NewCmd() cmd.Interface {
 // NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
 func NewCmdForHeadless(logger.Interface, authentication.LocalServerReadyFunc, credentialPluginAdaptor.Interface) cmd.Interface {
 	wire.Build(
+		// use-cases
 		authentication.Set,
 		standalone.Set,
 		credentialPluginUseCase.Set,
 		setup.Set,
 
+		// adaptors
 		cmd.Set,
 		env.Set,
 		kubeconfig.Set,

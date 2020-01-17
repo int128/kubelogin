@@ -41,7 +41,7 @@ type Input struct {
 type GetToken struct {
 	Authentication       authentication.Interface
 	TokenCacheRepository tokencache.Interface
-	CertPoolFactory      certpool.FactoryInterface
+	NewCertPool          certpool.NewFunc
 	Interaction          credentialplugin.Interface
 	Logger               logger.Interface
 }
@@ -74,7 +74,7 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
 		tokenCacheValue = &tokencache.Value{}
 	}
-	certPool := u.CertPoolFactory.New()
+	certPool := u.NewCertPool()
 	if in.CACertFilename != "" {
 		if err := certPool.AddFile(in.CACertFilename); err != nil {
 			return nil, xerrors.Errorf("could not load the certificate: %w", err)

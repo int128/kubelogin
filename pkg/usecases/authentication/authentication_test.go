@@ -7,14 +7,18 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder/mock_jwtdecoder"
+	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"golang.org/x/xerrors"
 )
+
+var cmpIgnoreLogger = cmpopts.IgnoreInterfaces(struct{ logger.Interface }{})
 
 func TestAuthentication_Do(t *testing.T) {
 	dummyTokenClaims := oidc.Claims{
@@ -25,6 +29,7 @@ func TestAuthentication_Do(t *testing.T) {
 	timeBeforeExpiry := time.Date(2019, 1, 2, 1, 0, 0, 0, time.UTC)
 	timeAfterExpiry := time.Date(2019, 1, 2, 4, 0, 0, 0, time.UTC)
 	timeout := 5 * time.Second
+	testingLogger := mock_logger.New(t)
 
 	t.Run("HasValidIDToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
@@ -46,10 +51,9 @@ func TestAuthentication_Do(t *testing.T) {
 			Decode("VALID_ID_TOKEN").
 			Return(&dummyTokenClaims, nil)
 		u := Authentication{
-			OIDCClientFactory: mock_oidcclient.NewMockFactoryInterface(ctrl),
-			JWTDecoder:        mockDecoder,
-			Logger:            mock_logger.New(t),
-			Env:               mockEnv,
+			JWTDecoder: mockDecoder,
+			Logger:     testingLogger,
+			Env:        mockEnv,
 		}
 		got, err := u.Do(ctx, in)
 		if err != nil {
@@ -93,19 +97,21 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken:  "NEW_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
-		mockOIDCClientFactory.EXPECT().
-			New(ctx, oidcclient.Config{
-				IssuerURL:    "https://issuer.example.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			}).
-			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDCClientFactory: mockOIDCClientFactory,
-			JWTDecoder:        mockDecoder,
-			Logger:            mock_logger.New(t),
-			Env:               mockEnv,
+			NewOIDCClient: func(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
+				want := oidcclient.Config{
+					IssuerURL:    "https://issuer.example.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
+				}
+				if diff := cmp.Diff(want, got, cmpIgnoreLogger); diff != "" {
+					t.Errorf("mismatch (-want +got):\n%s", diff)
+				}
+				return mockOIDCClient, nil
+			},
+			JWTDecoder: mockDecoder,
+			Logger:     testingLogger,
+			Env:        mockEnv,
 		}
 		got, err := u.Do(ctx, in)
 		if err != nil {
@@ -161,21 +167,23 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken:  "NEW_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
-		mockOIDCClientFactory.EXPECT().
-			New(ctx, oidcclient.Config{
-				IssuerURL:    "https://issuer.example.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			}).
-			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDCClientFactory: mockOIDCClientFactory,
-			JWTDecoder:        mockDecoder,
-			Logger:            mock_logger.New(t),
-			Env:               mockEnv,
+			NewOIDCClient: func(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
+				want := oidcclient.Config{
+					IssuerURL:    "https://issuer.example.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
+				}
+				if diff := cmp.Diff(want, got, cmpIgnoreLogger); diff != "" {
+					t.Errorf("mismatch (-want +got):\n%s", diff)
+				}
+				return mockOIDCClient, nil
+			},
+			JWTDecoder: mockDecoder,
+			Logger:     testingLogger,
+			Env:        mockEnv,
 			AuthCode: &AuthCode{
-				Logger: mock_logger.New(t),
+				Logger: testingLogger,
 			},
 		}
 		got, err := u.Do(ctx, in)
@@ -216,19 +224,21 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
-		mockOIDCClientFactory.EXPECT().
-			New(ctx, oidcclient.Config{
-				IssuerURL:    "https://issuer.example.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-			}).
-			Return(mockOIDCClient, nil)
 		u := Authentication{
-			OIDCClientFactory: mockOIDCClientFactory,
-			Logger:            mock_logger.New(t),
+			NewOIDCClient: func(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
+				want := oidcclient.Config{
+					IssuerURL:    "https://issuer.example.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
+				}
+				if diff := cmp.Diff(want, got, cmpIgnoreLogger); diff != "" {
+					t.Errorf("mismatch (-want +got):\n%s", diff)
+				}
+				return mockOIDCClient, nil
+			},
+			Logger: testingLogger,
 			ROPC: &ROPC{
-				Logger: mock_logger.New(t),
+				Logger: testingLogger,
 			},
 		}
 		got, err := u.Do(ctx, in)

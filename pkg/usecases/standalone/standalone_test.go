@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
@@ -52,10 +53,6 @@ func TestStandalone_Do(t *testing.T) {
 			AddFile("/path/to/cert2")
 		mockCertPool.EXPECT().
 			AddBase64Encoded("BASE64ENCODED")
-		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
-		mockCertPoolFactory.EXPECT().
-			New().
-			Return(mockCertPool)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
@@ -88,10 +85,10 @@ func TestStandalone_Do(t *testing.T) {
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		u := Standalone{
-			Authentication:  mockAuthentication,
-			Kubeconfig:      mockKubeconfig,
-			CertPoolFactory: mockCertPoolFactory,
-			Logger:          mock_logger.New(t),
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			NewCertPool:    func() certpool.Interface { return mockCertPool },
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -112,10 +109,6 @@ func TestStandalone_Do(t *testing.T) {
 			IDToken:          "VALID_ID_TOKEN",
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
-		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
-		mockCertPoolFactory.EXPECT().
-			New().
-			Return(mockCertPool)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
@@ -135,10 +128,10 @@ func TestStandalone_Do(t *testing.T) {
 				IDTokenClaims:          dummyTokenClaims,
 			}, nil)
 		u := Standalone{
-			Authentication:  mockAuthentication,
-			Kubeconfig:      mockKubeconfig,
-			CertPoolFactory: mockCertPoolFactory,
-			Logger:          mock_logger.New(t),
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			NewCertPool:    func() certpool.Interface { return mockCertPool },
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -150,17 +143,15 @@ func TestStandalone_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{}
-		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(nil, xerrors.New("no oidc config"))
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		u := Standalone{
-			Authentication:  mockAuthentication,
-			Kubeconfig:      mockKubeconfig,
-			CertPoolFactory: mockCertPoolFactory,
-			Logger:          mock_logger.New(t),
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -180,10 +171,6 @@ func TestStandalone_Do(t *testing.T) {
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
-		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
-		mockCertPoolFactory.EXPECT().
-			New().
-			Return(mockCertPool)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
@@ -198,10 +185,10 @@ func TestStandalone_Do(t *testing.T) {
 			}).
 			Return(nil, xerrors.New("authentication error"))
 		u := Standalone{
-			Authentication:  mockAuthentication,
-			Kubeconfig:      mockKubeconfig,
-			CertPoolFactory: mockCertPoolFactory,
-			Logger:          mock_logger.New(t),
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			NewCertPool:    func() certpool.Interface { return mockCertPool },
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -221,10 +208,6 @@ func TestStandalone_Do(t *testing.T) {
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
-		mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
-		mockCertPoolFactory.EXPECT().
-			New().
-			Return(mockCertPool)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
@@ -254,10 +237,10 @@ func TestStandalone_Do(t *testing.T) {
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		u := Standalone{
-			Authentication:  mockAuthentication,
-			Kubeconfig:      mockKubeconfig,
-			CertPoolFactory: mockCertPoolFactory,
-			Logger:          mock_logger.New(t),
+			Authentication: mockAuthentication,
+			Kubeconfig:     mockKubeconfig,
+			NewCertPool:    func() certpool.Interface { return mockCertPool },
+			Logger:         mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")

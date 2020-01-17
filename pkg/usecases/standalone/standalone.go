@@ -46,10 +46,10 @@ See https://github.com/int128/kubelogin for more.
 // Otherwise, update the kubeconfig.
 //
 type Standalone struct {
-	Authentication  authentication.Interface
-	Kubeconfig      kubeconfig.Interface
-	CertPoolFactory certpool.FactoryInterface
-	Logger          logger.Interface
+	Authentication authentication.Interface
+	Kubeconfig     kubeconfig.Interface
+	NewCertPool    certpool.NewFunc
+	Logger         logger.Interface
 }
 
 func (u *Standalone) Do(ctx context.Context, in Input) error {
@@ -65,7 +65,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	}
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
-	certPool := u.CertPoolFactory.New()
+	certPool := u.NewCertPool()
 	if authProvider.IDPCertificateAuthority != "" {
 		if err := certPool.AddFile(authProvider.IDPCertificateAuthority); err != nil {
 			return xerrors.Errorf("could not load the certificate of idp-certificate-authority: %w", err)

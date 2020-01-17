@@ -25,12 +25,20 @@ import (
 
 func NewCmd() cmd.Interface {
 	loggerInterface := logger.New()
-	factory := &oidcclient.Factory{
-		Logger: loggerInterface,
-	}
+	localServerReadyFunc := _wireLocalServerReadyFuncValue
+	interaction := &credentialplugin.Interaction{}
+	cmdInterface := NewCmdForHeadless(loggerInterface, localServerReadyFunc, interaction)
+	return cmdInterface
+}
+
+var (
+	_wireLocalServerReadyFuncValue = authentication.DefaultLocalServerReadyFunc
+)
+
+func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc authentication.LocalServerReadyFunc, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
+	newFunc := _wireNewFuncValue
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
-	localServerReadyFunc := _wireLocalServerReadyFuncValue
 	authCode := &authentication.AuthCode{
 		Env:                  envEnv,
 		Logger:               loggerInterface,
@@ -45,35 +53,34 @@ func NewCmd() cmd.Interface {
 		Logger: loggerInterface,
 	}
 	authenticationAuthentication := &authentication.Authentication{
-		OIDCClientFactory: factory,
-		JWTDecoder:        decoder,
-		Logger:            loggerInterface,
-		Env:               envEnv,
-		AuthCode:          authCode,
-		AuthCodeKeyboard:  authCodeKeyboard,
-		ROPC:              ropc,
+		NewOIDCClient:    newFunc,
+		JWTDecoder:       decoder,
+		Logger:           loggerInterface,
+		Env:              envEnv,
+		AuthCode:         authCode,
+		AuthCodeKeyboard: authCodeKeyboard,
+		ROPC:             ropc,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,
 	}
-	certpoolFactory := &certpool.Factory{}
+	certpoolNewFunc := _wireCertpoolNewFuncValue
 	standaloneStandalone := &standalone.Standalone{
-		Authentication:  authenticationAuthentication,
-		Kubeconfig:      kubeconfigKubeconfig,
-		CertPoolFactory: certpoolFactory,
-		Logger:          loggerInterface,
+		Authentication: authenticationAuthentication,
+		Kubeconfig:     kubeconfigKubeconfig,
+		NewCertPool:    certpoolNewFunc,
+		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
 		Standalone: standaloneStandalone,
 		Logger:     loggerInterface,
 	}
 	repository := &tokencache.Repository{}
-	interaction := &credentialplugin.Interaction{}
 	getToken := &credentialplugin2.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
-		CertPoolFactory:      certpoolFactory,
-		Interaction:          interaction,
+		NewCertPool:          certpoolNewFunc,
+		Interaction:          credentialpluginInterface,
 		Logger:               loggerInterface,
 	}
 	cmdGetToken := &cmd.GetToken{
@@ -81,9 +88,9 @@ func NewCmd() cmd.Interface {
 		Logger:   loggerInterface,
 	}
 	setupSetup := &setup.Setup{
-		Authentication:  authenticationAuthentication,
-		CertPoolFactory: certpoolFactory,
-		Logger:          loggerInterface,
+		Authentication: authenticationAuthentication,
+		NewCertPool:    certpoolNewFunc,
+		Logger:         loggerInterface,
 	}
 	cmdSetup := &cmd.Setup{
 		Setup: setupSetup,
@@ -98,76 +105,6 @@ func NewCmd() cmd.Interface {
 }
 
 var (
-	_wireLocalServerReadyFuncValue = authentication.DefaultLocalServerReadyFunc
+	_wireNewFuncValue         = oidcclient.NewFunc(oidcclient.New)
+	_wireCertpoolNewFuncValue = certpool.NewFunc(certpool.New)
 )
-
-func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc authentication.LocalServerReadyFunc, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
-	factory := &oidcclient.Factory{
-		Logger: loggerInterface,
-	}
-	decoder := &jwtdecoder.Decoder{}
-	envEnv := &env.Env{}
-	authCode := &authentication.AuthCode{
-		Env:                  envEnv,
-		Logger:               loggerInterface,
-		LocalServerReadyFunc: localServerReadyFunc,
-	}
-	authCodeKeyboard := &authentication.AuthCodeKeyboard{
-		Env:    envEnv,
-		Logger: loggerInterface,
-	}
-	ropc := &authentication.ROPC{
-		Env:    envEnv,
-		Logger: loggerInterface,
-	}
-	authenticationAuthentication := &authentication.Authentication{
-		OIDCClientFactory: factory,
-		JWTDecoder:        decoder,
-		Logger:            loggerInterface,
-		Env:               envEnv,
-		AuthCode:          authCode,
-		AuthCodeKeyboard:  authCodeKeyboard,
-		ROPC:              ropc,
-	}
-	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
-		Logger: loggerInterface,
-	}
-	certpoolFactory := &certpool.Factory{}
-	standaloneStandalone := &standalone.Standalone{
-		Authentication:  authenticationAuthentication,
-		Kubeconfig:      kubeconfigKubeconfig,
-		CertPoolFactory: certpoolFactory,
-		Logger:          loggerInterface,
-	}
-	root := &cmd.Root{
-		Standalone: standaloneStandalone,
-		Logger:     loggerInterface,
-	}
-	repository := &tokencache.Repository{}
-	getToken := &credentialplugin2.GetToken{
-		Authentication:       authenticationAuthentication,
-		TokenCacheRepository: repository,
-		CertPoolFactory:      certpoolFactory,
-		Interaction:          credentialpluginInterface,
-		Logger:               loggerInterface,
-	}
-	cmdGetToken := &cmd.GetToken{
-		GetToken: getToken,
-		Logger:   loggerInterface,
-	}
-	setupSetup := &setup.Setup{
-		Authentication:  authenticationAuthentication,
-		CertPoolFactory: certpoolFactory,
-		Logger:          loggerInterface,
-	}
-	cmdSetup := &cmd.Setup{
-		Setup: setupSetup,
-	}
-	cmdCmd := &cmd.Cmd{
-		Root:     root,
-		GetToken: cmdGetToken,
-		Setup:    cmdSetup,
-		Logger:   loggerInterface,
-	}
-	return cmdCmd
-}

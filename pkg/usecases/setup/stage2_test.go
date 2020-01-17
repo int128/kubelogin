@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/domain/oidc"
@@ -37,10 +38,6 @@ func TestSetup_DoStage2(t *testing.T) {
 	mockCertPool := mock_certpool.NewMockInterface(ctrl)
 	mockCertPool.EXPECT().
 		AddFile("/path/to/cert")
-	mockCertPoolFactory := mock_certpool.NewMockFactoryInterface(ctrl)
-	mockCertPoolFactory.EXPECT().
-		New().
-		Return(mockCertPool)
 	mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 	mockAuthentication.EXPECT().
 		Do(ctx, authentication.Input{
@@ -58,9 +55,9 @@ func TestSetup_DoStage2(t *testing.T) {
 			IDTokenClaims: dummyTokenClaims,
 		}, nil)
 	u := Setup{
-		Authentication:  mockAuthentication,
-		CertPoolFactory: mockCertPoolFactory,
-		Logger:          mock_logger.New(t),
+		Authentication: mockAuthentication,
+		NewCertPool:    func() certpool.Interface { return mockCertPool },
+		Logger:         mock_logger.New(t),
 	}
 	if err := u.DoStage2(ctx, in); err != nil {
 		t.Errorf("DoStage2 returned error: %+v", err)
