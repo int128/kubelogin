@@ -125,7 +125,8 @@ Flags:
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --token-cache-dir string         Path to a directory for caching tokens (default "~/.kube/cache/oidc-login")
       --grant-type string              The authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
-      --listen-port ints               Port to bind to the local server. If multiple ports are given, it will try the ports in order (default [8000,18000])
+      --listen-address strings         Address to bind to the local server. If multiple addresses are given, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
+      --listen-port ints               (Deprecated: use --listen-address)
       --skip-open-browser              If true, it does not open the browser on authentication
       --username string                If set, perform the resource owner password credentials grant
       --password string                If set, use the password instead of asking it
@@ -183,11 +184,11 @@ You need to register the following redirect URIs to the provider:
 - `http://localhost:8000`
 - `http://localhost:18000` (used if port 8000 is already in use)
 
-You can change the ports by the option:
+You can change the listening address.
 
 ```yaml
-      - --listen-port=12345
-      - --listen-port=23456
+      - --listen-address=127.0.0.1:12345
+      - --listen-address=127.0.0.1:23456
 ```
 
 #### Authorization code flow with keyboard interactive

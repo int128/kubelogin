@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 
 	"github.com/google/wire"
@@ -24,15 +23,8 @@ type Interface interface {
 	Run(ctx context.Context, args []string, version string) int
 }
 
-var defaultListenPort = []int{8000, 18000}
+var defaultListenAddress = []string{"127.0.0.1:8000", "127.0.0.1:18000"}
 var defaultTokenCacheDir = homedir.HomeDir() + "/.kube/cache/oidc-login"
-
-func translateListenPortToBindAddress(ports []int) (address []string) {
-	for _, p := range ports {
-		address = append(address, fmt.Sprintf("127.0.0.1:%d", p))
-	}
-	return
-}
 
 // Cmd provides interaction with command line interface (CLI).
 type Cmd struct {

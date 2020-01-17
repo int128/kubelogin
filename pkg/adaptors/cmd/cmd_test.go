@@ -27,7 +27,37 @@ func TestCmd_Run(t *testing.T) {
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeOption: &authentication.AuthCodeOption{
-							BindAddress: []string{"127.0.0.1:8000", "127.0.0.1:18000"},
+							BindAddress: defaultListenAddress,
+						},
+					},
+				},
+			},
+			"when --listen-port is set, it should convert the port to address": {
+				args: []string{
+					executable,
+					"--listen-port", "10080",
+					"--listen-port", "20080",
+				},
+				in: standalone.Input{
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeOption: &authentication.AuthCodeOption{
+							BindAddress: []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+						},
+					},
+				},
+			},
+			"when --listen-port is set, it should ignore --listen-address flags": {
+				args: []string{
+					executable,
+					"--listen-port", "10080",
+					"--listen-port", "20080",
+					"--listen-address", "127.0.0.1:30080",
+					"--listen-address", "127.0.0.1:40080",
+				},
+				in: standalone.Input{
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeOption: &authentication.AuthCodeOption{
+							BindAddress: []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 						},
 					},
 				},
@@ -41,8 +71,8 @@ func TestCmd_Run(t *testing.T) {
 					"--insecure-skip-tls-verify",
 					"-v1",
 					"--grant-type", "authcode",
-					"--listen-port", "10080",
-					"--listen-port", "20080",
+					"--listen-address", "127.0.0.1:10080",
+					"--listen-address", "127.0.0.1:20080",
 					"--skip-open-browser",
 					"--username", "USER",
 					"--password", "PASS",
@@ -74,8 +104,8 @@ func TestCmd_Run(t *testing.T) {
 			"GrantType=password": {
 				args: []string{executable,
 					"--grant-type", "password",
-					"--listen-port", "10080",
-					"--listen-port", "20080",
+					"--listen-address", "127.0.0.1:10080",
+					"--listen-address", "127.0.0.1:20080",
 					"--username", "USER",
 					"--password", "PASS",
 				},
@@ -90,8 +120,8 @@ func TestCmd_Run(t *testing.T) {
 			},
 			"GrantType=auto": {
 				args: []string{executable,
-					"--listen-port", "10080",
-					"--listen-port", "20080",
+					"--listen-address", "127.0.0.1:10080",
+					"--listen-address", "127.0.0.1:20080",
 					"--username", "USER",
 					"--password", "PASS",
 				},
@@ -178,8 +208,8 @@ func TestCmd_Run(t *testing.T) {
 					"--insecure-skip-tls-verify",
 					"-v1",
 					"--grant-type", "authcode",
-					"--listen-port", "10080",
-					"--listen-port", "20080",
+					"--listen-address", "127.0.0.1:10080",
+					"--listen-address", "127.0.0.1:20080",
 					"--skip-open-browser",
 					"--username", "USER",
 					"--password", "PASS",
@@ -222,8 +252,8 @@ func TestCmd_Run(t *testing.T) {
 					"--oidc-issuer-url", "https://issuer.example.com",
 					"--oidc-client-id", "YOUR_CLIENT_ID",
 					"--grant-type", "password",
-					"--listen-port", "10080",
-					"--listen-port", "20080",
+					"--listen-address", "127.0.0.1:10080",
+					"--listen-address", "127.0.0.1:20080",
 					"--username", "USER",
 					"--password", "PASS",
 				},
@@ -244,8 +274,8 @@ func TestCmd_Run(t *testing.T) {
 					"get-token",
 					"--oidc-issuer-url", "https://issuer.example.com",
 					"--oidc-client-id", "YOUR_CLIENT_ID",
-					"--listen-port", "10080",
-					"--listen-port", "20080",
+					"--listen-address", "127.0.0.1:10080",
+					"--listen-address", "127.0.0.1:20080",
 					"--username", "USER",
 					"--password", "PASS",
 				},

@@ -55,8 +55,8 @@ func (cmd *Setup) New(ctx context.Context) *cobra.Command {
 				SkipTLSVerify:  o.SkipTLSVerify,
 				GrantOptionSet: grantOptionSet,
 			}
-			if c.Flags().Lookup("listen-port").Changed {
-				in.ListenPortArgs = o.authenticationOptions.ListenPort
+			if c.Flags().Lookup("listen-address").Changed {
+				in.ListenAddressArgs = o.authenticationOptions.ListenAddress
 			}
 			if in.IssuerURL == "" || in.ClientID == "" {
 				cmd.Setup.DoStage1()
