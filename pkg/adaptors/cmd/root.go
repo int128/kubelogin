@@ -46,10 +46,26 @@ func (o *rootOptions) register(f *pflag.FlagSet) {
 
 type authenticationOptions struct {
 	GrantType       string
-	ListenPort      []int
+	ListenAddress   []string
+	ListenPort      []int // deprecated
 	SkipOpenBrowser bool
 	Username        string
 	Password        string
+}
+
+// determineListenAddress returns the addresses from the flags.
+// Note that --listen-address is always given due to the default value.
+// If --listen-port is not set, it returns --listen-address.
+// If --listen-port is set, it returns the strings of --listen-port.
+func (o *authenticationOptions) determineListenAddress() []string {
+	if len(o.ListenPort) == 0 {
+		return o.ListenAddress
+	}
+	var a []string
+	for _, p := range o.ListenPort {
+		a = append(a, fmt.Sprintf("127.0.0.1:%d", p))
+	}
+	return a
 }
 
 var allGrantType = strings.Join([]string{
@@ -61,7 +77,9 @@ var allGrantType = strings.Join([]string{
 
 func (o *authenticationOptions) register(f *pflag.FlagSet) {
 	f.StringVar(&o.GrantType, "grant-type", "auto", fmt.Sprintf("The authorization grant type to use. One of (%s)", allGrantType))
-	f.IntSliceVar(&o.ListenPort, "listen-port", defaultListenPort, "Port to bind to the local server. If multiple ports are given, it will try the ports in order")
+	f.StringSliceVar(&o.ListenAddress, "listen-address", defaultListenAddress, "Address to bind to the local server. If multiple addresses are given, it will try binding in order")
+	//TODO: remove the deprecated flag
+	f.IntSliceVar(&o.ListenPort, "listen-port", nil, "(Deprecated: use --listen-address)")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
@@ -71,7 +89,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 	switch {
 	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == ""):
 		s.AuthCodeOption = &authentication.AuthCodeOption{
-			BindAddress:     translateListenPortToBindAddress(o.ListenPort),
+			BindAddress:     o.determineListenAddress(),
 			SkipOpenBrowser: o.SkipOpenBrowser,
 		}
 	case o.GrantType == "authcode-keyboard":

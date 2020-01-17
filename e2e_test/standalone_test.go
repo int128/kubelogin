@@ -260,7 +260,7 @@ func runRootCmd(t *testing.T, ctx context.Context, localServerReadyFunc authenti
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin",
 		"--v=1",
-		"--listen-port", "0",
+		"--listen-address", "127.0.0.1:0",
 		"--skip-open-browser",
 	}, args...), "HEAD")
 	if exitCode != 0 {

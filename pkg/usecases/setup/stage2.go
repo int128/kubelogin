@@ -2,7 +2,6 @@ package setup
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"text/template"
 
@@ -65,14 +64,14 @@ type stage2Vars struct {
 
 // Stage2Input represents an input DTO of the stage2.
 type Stage2Input struct {
-	IssuerURL      string
-	ClientID       string
-	ClientSecret   string
-	ExtraScopes    []string // optional
-	CACertFilename string   // If set, use the CA cert
-	SkipTLSVerify  bool
-	ListenPortArgs []int // non-nil if set by the command arg
-	GrantOptionSet authentication.GrantOptionSet
+	IssuerURL         string
+	ClientID          string
+	ClientSecret      string
+	ExtraScopes       []string // optional
+	CACertFilename    string   // If set, use the CA cert
+	SkipTLSVerify     bool
+	ListenAddressArgs []string // non-nil if set by the command arg
+	GrantOptionSet    authentication.GrantOptionSet
 }
 
 func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
@@ -136,9 +135,7 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 			args = append(args, "--skip-open-browser")
 		}
 	}
-	for _, port := range in.ListenPortArgs {
-		args = append(args, fmt.Sprintf("--listen-port=%d", port))
-	}
+	args = append(args, in.ListenAddressArgs...)
 	if in.GrantOptionSet.ROPCOption != nil {
 		if in.GrantOptionSet.ROPCOption.Username != "" {
 			args = append(args, "--username="+in.GrantOptionSet.ROPCOption.Username)
