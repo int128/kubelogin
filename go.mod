@@ -20,6 +20,6 @@ require (
 	gopkg.in/square/go-jose.v2 v2.3.1 // indirect
 	gopkg.in/yaml.v2 v2.2.7
 	k8s.io/apimachinery v0.17.0
-	k8s.io/client-go v0.17.0
+	k8s.io/client-go v0.17.1
 	k8s.io/klog v1.0.0
 )
