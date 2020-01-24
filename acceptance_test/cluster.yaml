@@ -1,0 +1,20 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+# https://github.com/dexidp/dex/blob/master/Documentation/kubernetes.md
+kubeadmConfigPatches:
+  - |
+    apiVersion: kubeadm.k8s.io/v1beta2
+    kind: ClusterConfiguration
+    metadata:
+      name: config
+    apiServer:
+      extraArgs:
+        oidc-issuer-url: https://kubelogin-acceptance-test-control-plane:30443/dex
+        oidc-client-id: YOUR_CLIENT_ID
+        oidc-username-claim: email
+        oidc-ca-file: /etc/kubernetes/pki/ca.crt
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30443
+        hostPort: 30443

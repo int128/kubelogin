@@ -1,6 +1,6 @@
 /.idea
 
-/.kubeconfig*
+/acceptance_test/output/
 
 /dist/output
 /coverage.out

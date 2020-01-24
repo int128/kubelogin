@@ -3,6 +3,7 @@ module github.com/int128/kubelogin
 go 1.12
 
 require (
+	github.com/chromedp/chromedp v0.5.3
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang/mock v1.4.0

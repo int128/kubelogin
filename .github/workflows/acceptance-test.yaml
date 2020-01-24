@@ -1,0 +1,28 @@
+name: acceptance-test
+on: [push]
+jobs:
+  build:
+    name: test
+    # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#ubuntu-1804-lts
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+      - uses: actions/checkout@v1
+      - uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            go-
+      - run: make -C acceptance_test build
+      # https://kind.sigs.k8s.io/docs/user/quick-start/
+      - run: |
+          wget -q -O ./kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-linux-amd64"
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+          kind version
+      - run: make -C acceptance_test setup
+      - run: make -C acceptance_test test
