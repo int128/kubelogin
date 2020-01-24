@@ -9,7 +9,7 @@ LDFLAGS := -X main.version=$(VERSION)
 
 all: $(TARGET)
 
-$(TARGET): $(wildcard *.go)
+$(TARGET): $(wildcard **/*.go)
 	go build -o $@ -ldflags "$(LDFLAGS)"
 
 .PHONY: ci
@@ -36,14 +36,15 @@ dist/output:
 
 .PHONY: release
 release: dist
-	# publish to the GitHub Releases
-	ghr -u "$(GITHUB_USERNAME)" -r "$(GITHUB_REPONAME)" "$(VERSION)" dist/output/
-	# publish to the Homebrew tap repository
-	ghcp commit -u "$(GITHUB_USERNAME)" -r "homebrew-$(GITHUB_REPONAME)" -m "$(VERSION)" -C dist/output/ kubelogin.rb
+	# publish the binaries
+	ghcp release -u "$(GITHUB_USERNAME)" -r "$(GITHUB_REPONAME)" -t "$(VERSION)" dist/output/
+	# publish the Homebrew formula
+	ghcp commit -u "$(GITHUB_USERNAME)" -r "homebrew-$(GITHUB_REPONAME)" -b "bump-$(VERSION)" -m "Bump the version to $(VERSION)" -C dist/output/ kubelogin.rb
+	ghcp pull-request -u "$(GITHUB_USERNAME)" -r "homebrew-$(GITHUB_REPONAME)" -b "bump-$(VERSION)" --title "Bump the version to $(VERSION)"
 	# publish the Dockerfile
 	ghcp commit -u "$(GITHUB_USERNAME)" -r "$(GITHUB_REPONAME)-docker" -b "bump-$(VERSION)" -m "Bump the version to $(VERSION)" -C dist/output/ Dockerfile
 	ghcp pull-request -u "$(GITHUB_USERNAME)" -r "$(GITHUB_REPONAME)-docker" -b "bump-$(VERSION)" --title "Bump the version to $(VERSION)"
-	# fork krew-index and create a branch
+	# publish the Krew manifest
 	ghcp fork-commit -u kubernetes-sigs -r krew-index -b "oidc-login-$(VERSION)" -m "Bump oidc-login to $(VERSION)" -C dist/output/ plugins/oidc-login.yaml
 
 .PHONY: clean
@@ -63,6 +64,3 @@ ci-setup-linux-amd64:
 	# https://github.com/int128/ghcp
 	curl -sfL -o /tmp/ghcp.zip https://github.com/int128/ghcp/releases/download/v1.8.0/ghcp_linux_amd64.zip
 	unzip /tmp/ghcp.zip -d ~/bin
-	# https://github.com/tcnksm/ghr
-	curl -sfL -o /tmp/ghr.tgz https://github.com/tcnksm/ghr/releases/download/v0.13.0/ghr_v0.13.0_linux_amd64.tar.gz
-	tar -xf /tmp/ghr.tgz -C ~/bin --strip-components 1 --wildcards "*/ghr"
