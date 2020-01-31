@@ -1,6 +1,7 @@
 # kubelogin/acceptance_test
 
 This is an acceptance test to verify behavior of kubelogin using a real Kubernetes cluster and OpenID Connect provider.
+It runs on [GitHub Actions](https://github.com/int128/kubelogin/actions?query=workflow%3Aacceptance-test).
 
 Let's look at the diagram.
 
