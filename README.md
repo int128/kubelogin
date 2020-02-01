@@ -28,9 +28,12 @@ brew install int128/kubelogin/kubelogin
 kubectl krew install oidc-login
 
 # GitHub Releases
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.15.0/kubelogin_linux_amd64.zip
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.16.0/kubelogin_linux_amd64.zip
 unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
+
+# Docker
+docker run --rm quay.io/int128/kubelogin:v1.16.0
 ```
 
 You need to set up the OIDC provider, cluster role binding, Kubernetes API server and kubeconfig.
@@ -110,9 +113,6 @@ If you are looking for a specific version, see [the release tags](https://github
 Kubelogin supports the following options:
 
 ```
-% kubectl oidc-login get-token -h
-Run as a kubectl credential plugin
-
 Usage:
   kubelogin get-token [flags]
 
@@ -158,7 +158,7 @@ You can set the extra scopes to request to the provider by `--oidc-extra-scope`.
       - --oidc-extra-scope=profile
 ```
 
-### CA Certificates
+### CA Certificate
 
 You can use your self-signed certificate for the provider.
 
@@ -171,6 +171,38 @@ You can use your self-signed certificate for the provider.
 You can set the following environment variables if you are behind a proxy: `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
 See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyFromEnvironment).
 
+### Docker
+
+You can run [the Docker image](https://quay.io/repository/int128/kubelogin) instead of the binary.
+The kubeconfig looks like:
+
+```yaml
+users:
+- name: oidc
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: docker
+      args:
+      - run
+      - --rm
+      - -v
+      - /tmp/.token-cache:/.token-cache
+      - -p
+      - 8000:8000
+      - quay.io/int128/kubelogin:v1.16.0
+      - get-token
+      - --token-cache-dir=/.token-cache
+      - --listen-address=0.0.0.0:8000
+      - --oidc-issuer-url=ISSUER_URL
+      - --oidc-client-id=YOUR_CLIENT_ID
+      - --oidc-client-secret=YOUR_CLIENT_SECRET
+```
+
+Known limitations:
+
+- It cannot open the browser automatically.
+- The container port and listen port must be equal for consistency of the redirect URI.
 
 ### Authentication flows
 
