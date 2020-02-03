@@ -17,12 +17,13 @@ jobs:
           key: go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             go-
-      - run: make -C acceptance_test build
       # https://kind.sigs.k8s.io/docs/user/quick-start/
       - run: |
           wget -q -O ./kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-linux-amd64"
           chmod +x ./kind
           sudo mv ./kind /usr/local/bin/kind
           kind version
-      - run: make -C acceptance_test setup
-      - run: make -C acceptance_test test
+      # https://packages.ubuntu.com/xenial/libnss3-tools
+      - run: sudo apt install -y libnss3-tools
+      - run: echo '127.0.0.1 dex-server' | sudo tee -a /etc/hosts
+      - run: make -C acceptance_test -j3

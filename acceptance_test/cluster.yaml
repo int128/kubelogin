@@ -9,12 +9,12 @@ kubeadmConfigPatches:
       name: config
     apiServer:
       extraArgs:
-        oidc-issuer-url: https://kubelogin-acceptance-test-control-plane:30443/dex
+        oidc-issuer-url: https://dex-server:10443/dex
         oidc-client-id: YOUR_CLIENT_ID
         oidc-username-claim: email
-        oidc-ca-file: /etc/kubernetes/pki/ca.crt
+        oidc-ca-file: /usr/local/share/ca-certificates/dex-ca.crt
 nodes:
   - role: control-plane
-    extraPortMappings:
-      - containerPort: 30443
-        hostPort: 30443
+    extraMounts:
+      - hostPath: /tmp/kubelogin-acceptance-test-dex-ca.crt
+        containerPath: /usr/local/share/ca-certificates/dex-ca.crt
