@@ -1,59 +1,30 @@
 EXPIRY := 3650
+OUTPUT_DIR := testdata
+TARGETS := ca.key
+TARGETS += ca.crt
+TARGETS += server.key
+TARGETS += server.crt
+TARGETS += jws.key
 
-all: ca.key ca.crt server.key server.crt jws.key
+.PHONY: all
+all: $(TARGETS)
+
+ca.key:
+	openssl genrsa -out $@ 2048
+ca.csr: ca.key
+	openssl req -new -key ca.key -out $@ -subj "/CN=hello-ca" -config openssl.cnf
+ca.crt: ca.key ca.csr
+	openssl x509 -req -in ca.csr -signkey ca.key -out $@ -days $(EXPIRY)
+server.key:
+	openssl genrsa -out $@ 2048
+server.csr: openssl.cnf server.key
+	openssl req -new -key server.key -out $@ -subj "/CN=localhost" -config openssl.cnf
+server.crt: openssl.cnf server.csr ca.crt ca.key
+	openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out $@ -sha256 -days $(EXPIRY) -extensions v3_req -extfile openssl.cnf
+
+jws.key:
+	openssl genrsa -out $@ 2048
 
 .PHONY: clean
 clean:
-	-rm -v ca.* server.* jws.*
-
-ca.key:
-	openssl genrsa -out $@ 1024
-
-.INTERMEDIATE: ca.csr
-ca.csr: openssl.cnf ca.key
-	openssl req -config openssl.cnf \
-		-new \
-		-key ca.key \
-		-subj "/CN=Hello CA" \
-		-out $@
-	openssl req -noout -text -in $@
-
-ca.crt: ca.csr ca.key
-	openssl x509 \
-		-req \
-		-days $(EXPIRY) \
-		-signkey ca.key \
-		-in ca.csr \
-		-out $@
-	openssl x509 -text -in $@
-
-server.key:
-	openssl genrsa -out $@ 1024
-
-.INTERMEDIATE: server.csr
-server.csr: openssl.cnf server.key
-	openssl req -config openssl.cnf \
-		-new \
-		-key server.key \
-		-subj "/CN=localhost" \
-		-out $@
-	openssl req -noout -text -in $@
-
-server.crt: openssl.cnf server.csr ca.key ca.crt
-	rm -fr ./CA
-	mkdir -p ./CA
-	touch CA/index.txt
-	touch CA/index.txt.attr
-	echo 00 > CA/serial
-	openssl ca -config openssl.cnf \
-		-days $(EXPIRY) \
-		-extensions v3_req \
-		-batch \
-		-cert ca.crt \
-		-keyfile ca.key \
-		-in server.csr \
-		-out $@
-	openssl x509 -text -in $@
-
-jws.key:
-	openssl genrsa -out $@ 1024
+	-rm -v $(TARGETS)
