@@ -1,5 +1,5 @@
-// Package credentialplugin provides interaction with kubectl for a credential plugin.
-package credentialplugin
+// Package credentialpluginwriter provides a writer for a credential plugin.
+package credentialpluginwriter
 
 import (
 	"encoding/json"
@@ -12,11 +12,11 @@ import (
 	"k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
 )
 
-//go:generate mockgen -destination mock_credentialplugin/mock_credentialplugin.go github.com/int128/kubelogin/pkg/adaptors/credentialplugin Interface
+//go:generate mockgen -destination mock_credentialpluginwriter/mock_credentialpluginwriter.go github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter Interface
 
 var Set = wire.NewSet(
-	wire.Struct(new(Interaction), "*"),
-	wire.Bind(new(Interface), new(*Interaction)),
+	wire.Struct(new(Writer), "*"),
+	wire.Bind(new(Interface), new(*Writer)),
 )
 
 type Interface interface {
@@ -29,10 +29,10 @@ type Output struct {
 	Expiry time.Time
 }
 
-type Interaction struct{}
+type Writer struct{}
 
 // Write writes the ExecCredential to standard output for kubectl.
-func (*Interaction) Write(out Output) error {
+func (*Writer) Write(out Output) error {
 	ec := &v1beta1.ExecCredential{
 		TypeMeta: v1.TypeMeta{
 			APIVersion: "client.authentication.k8s.io/v1beta1",

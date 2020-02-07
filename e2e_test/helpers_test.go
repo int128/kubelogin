@@ -11,7 +11,8 @@ import (
 	"github.com/int128/kubelogin/e2e_test/idp"
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
 	"github.com/int128/kubelogin/e2e_test/keys"
-	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/adaptors/browser"
+	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 )
 
 var (
@@ -43,49 +44,50 @@ func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 	return s
 }
 
-func setupMockIDPForDiscovery(service *mock_idp.MockService, serverURL string) {
-	service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-	service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-}
-
-func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, serverURL, scope string, idToken *string) {
+func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL, scope string, idToken *string) {
 	var nonce string
-	setupMockIDPForDiscovery(service, serverURL)
-	service.EXPECT().AuthenticateCode(scope, gomock.Any()).
+	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+	provider.EXPECT().AuthenticateCode(scope, gomock.Any()).
 		DoAndReturn(func(_, gotNonce string) (string, error) {
 			nonce = gotNonce
 			return "YOUR_AUTH_CODE", nil
 		})
-	service.EXPECT().Exchange("YOUR_AUTH_CODE").
+	provider.EXPECT().Exchange("YOUR_AUTH_CODE").
 		DoAndReturn(func(string) (*idp.TokenResponse, error) {
 			*idToken = newIDToken(t, serverURL, nonce, tokenExpiryFuture)
 			return idp.NewTokenResponse(*idToken, "YOUR_REFRESH_TOKEN"), nil
 		})
 }
 
-func setupMockIDPForROPC(service *mock_idp.MockService, serverURL, scope, username, password, idToken string) {
-	setupMockIDPForDiscovery(service, serverURL)
-	service.EXPECT().AuthenticatePassword(username, password, scope).
+func setupROPCFlow(provider *mock_idp.MockProvider, serverURL, scope, username, password, idToken string) {
+	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+	provider.EXPECT().AuthenticatePassword(username, password, scope).
 		Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
 }
 
-func openBrowserOnReadyFunc(t *testing.T, ctx context.Context, k keys.Keys) authentication.LocalServerReadyFunc {
-	return func(url string) {
-		client := http.Client{Transport: &http.Transport{TLSClientConfig: k.TLSConfig}}
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			t.Errorf("could not create a request: %s", err)
-			return
-		}
-		req = req.WithContext(ctx)
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Errorf("could not send a request: %s", err)
-			return
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != 200 {
-			t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
-		}
-	}
+func newBrowserMock(ctx context.Context, t *testing.T, ctrl *gomock.Controller, k keys.Keys) browser.Interface {
+	b := mock_browser.NewMockInterface(ctrl)
+	b.EXPECT().
+		Open(gomock.Any()).
+		Do(func(url string) {
+			client := http.Client{Transport: &http.Transport{TLSClientConfig: k.TLSConfig}}
+			req, err := http.NewRequest("GET", url, nil)
+			if err != nil {
+				t.Errorf("could not create a request: %s", err)
+				return
+			}
+			req = req.WithContext(ctx)
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Errorf("could not send a request: %s", err)
+				return
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != 200 {
+				t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
+			}
+		})
+	return b
 }

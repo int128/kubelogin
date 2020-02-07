@@ -3,6 +3,7 @@ package authentication
 import (
 	"context"
 
+	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
@@ -13,9 +14,9 @@ import (
 
 // AuthCode provides the authentication code flow.
 type AuthCode struct {
-	Env                  env.Interface
-	Logger               logger.Interface
-	LocalServerReadyFunc LocalServerReadyFunc // only for e2e tests
+	Env     env.Interface
+	Browser browser.Interface
+	Logger  logger.Interface
 }
 
 func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.Interface) (*Output, error) {
@@ -46,13 +47,10 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 				return nil
 			}
 			u.Logger.Printf("Open %s for authentication", url)
-			if u.LocalServerReadyFunc != nil {
-				u.LocalServerReadyFunc(url)
-			}
 			if o.SkipOpenBrowser {
 				return nil
 			}
-			if err := u.Env.OpenBrowser(url); err != nil {
+			if err := u.Browser.Open(url); err != nil {
 				u.Logger.V(1).Infof("could not open the browser: %s", err)
 			}
 			return nil

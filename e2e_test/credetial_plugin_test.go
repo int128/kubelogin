@@ -13,12 +13,13 @@ import (
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
 	"github.com/int128/kubelogin/e2e_test/keys"
 	"github.com/int128/kubelogin/e2e_test/localserver"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/browser"
+	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter/mock_credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/di"
-	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
 
 // Run the integration tests of the credential plugin use-case.
@@ -57,13 +58,13 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		var idToken string
-		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "openid", &idToken)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
+		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 
 		args := []string{
 			"--token-cache-dir", cacheDir,
@@ -71,7 +72,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 			"--oidc-client-id", "kubernetes",
 		}
 		args = append(args, extraArgs...)
-		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
+		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 	})
 
 	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
@@ -81,13 +82,13 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		idToken := newIDToken(t, serverURL, "", tokenExpiryFuture)
-		setupMockIDPForROPC(service, serverURL, "openid", "USER", "PASS", idToken)
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
+		setupROPCFlow(provider, serverURL, "openid", "USER", "PASS", idToken)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
+		browserMock := mock_browser.NewMockInterface(ctrl)
 
 		args := []string{
 			"--token-cache-dir", cacheDir,
@@ -97,7 +98,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 			"--password", "PASS",
 		}
 		args = append(args, extraArgs...)
-		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
+		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 	})
 
 	t.Run("HasValidToken", func(t *testing.T) {
@@ -107,8 +108,8 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		setupTokenCache(t, cacheDir,
@@ -120,8 +121,8 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 				IDToken:      idToken,
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			})
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
+		browserMock := mock_browser.NewMockInterface(ctrl)
 
 		args := []string{
 			"--token-cache-dir", cacheDir,
@@ -129,7 +130,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 			"--oidc-client-id", "kubernetes",
 		}
 		args = append(args, extraArgs...)
-		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
+		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 		assertTokenCache(t, cacheDir,
 			tokencache.Key{
 				IssuerURL:      serverURL,
@@ -148,14 +149,15 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		validIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
 
-		setupMockIDPForDiscovery(service, serverURL)
-		service.EXPECT().Refresh("VALID_REFRESH_TOKEN").
+		provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+		provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+		provider.EXPECT().Refresh("VALID_REFRESH_TOKEN").
 			Return(idp.NewTokenResponse(validIDToken, "NEW_REFRESH_TOKEN"), nil)
 
 		setupTokenCache(t, cacheDir,
@@ -167,8 +169,8 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 				IDToken:      expiredIDToken,
 				RefreshToken: "VALID_REFRESH_TOKEN",
 			})
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		assertCredentialPluginOutput(t, credentialPluginInteraction, &validIDToken)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &validIDToken)
+		browserMock := mock_browser.NewMockInterface(ctrl)
 
 		args := []string{
 			"--token-cache-dir", cacheDir,
@@ -176,7 +178,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 			"--oidc-client-id", "kubernetes",
 		}
 		args = append(args, extraArgs...)
-		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
+		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 		assertTokenCache(t, cacheDir,
 			tokencache.Key{
 				IssuerURL:      serverURL,
@@ -195,14 +197,14 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		validIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
 
-		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &validIDToken)
-		service.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
+		setupAuthCodeFlow(t, provider, serverURL, "openid", &validIDToken)
+		provider.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
 			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
 			MaxTimes(2) // package oauth2 will retry refreshing the token
 
@@ -215,8 +217,8 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 				IDToken:      expiredIDToken,
 				RefreshToken: "EXPIRED_REFRESH_TOKEN",
 			})
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		assertCredentialPluginOutput(t, credentialPluginInteraction, &validIDToken)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &validIDToken)
+		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 
 		args := []string{
 			"--token-cache-dir", cacheDir,
@@ -224,7 +226,7 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 			"--oidc-client-id", "kubernetes",
 		}
 		args = append(args, extraArgs...)
-		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
+		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 		assertTokenCache(t, cacheDir,
 			tokencache.Key{
 				IssuerURL:      serverURL,
@@ -243,14 +245,13 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		var idToken string
-		setupMockIDPForCodeFlow(t, service, serverURL, "email profile openid", &idToken)
-
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "email profile openid", &idToken)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
+		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 
 		args := []string{
 			"--token-cache-dir", cacheDir,
@@ -260,30 +261,32 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 			"--oidc-extra-scope", "profile",
 		}
 		args = append(args, extraArgs...)
-		runGetTokenCmd(t, ctx, openBrowserOnReadyFunc(t, ctx, idpTLS), credentialPluginInteraction, args)
+		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 	})
 }
 
-func assertCredentialPluginOutput(t *testing.T, credentialPluginInteraction *mock_credentialplugin.MockInterface, idToken *string) {
-	credentialPluginInteraction.EXPECT().
+func newCredentialPluginWriterMock(t *testing.T, ctrl *gomock.Controller, idToken *string) *mock_credentialpluginwriter.MockInterface {
+	writer := mock_credentialpluginwriter.NewMockInterface(ctrl)
+	writer.EXPECT().
 		Write(gomock.Any()).
-		Do(func(out credentialplugin.Output) {
-			if out.Token != *idToken {
-				t.Errorf("Token wants %s but %s", *idToken, out.Token)
+		Do(func(got credentialpluginwriter.Output) {
+			want := credentialpluginwriter.Output{
+				Token:  *idToken,
+				Expiry: tokenExpiryFuture,
 			}
-			if out.Expiry != tokenExpiryFuture {
-				t.Errorf("Expiry wants %v but %v", tokenExpiryFuture, out.Expiry)
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
+	return writer
 }
 
-func runGetTokenCmd(t *testing.T, ctx context.Context, localServerReadyFunc authentication.LocalServerReadyFunc, interaction credentialplugin.Interface, args []string) {
+func runGetTokenCmd(t *testing.T, ctx context.Context, b browser.Interface, interaction credentialpluginwriter.Interface, args []string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(mock_logger.New(t), localServerReadyFunc, interaction)
+	cmd := di.NewCmdForHeadless(mock_logger.New(t), b, interaction)
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin", "get-token",
 		"--v=1",
-		"--skip-open-browser",
 		"--listen-address", "127.0.0.1:0",
 	}, args...), "HEAD")
 	if exitCode != 0 {

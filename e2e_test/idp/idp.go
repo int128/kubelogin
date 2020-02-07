@@ -1,6 +1,7 @@
+// Package idp provides a test double of an OpenID Connect Provider.
 package idp
 
-//go:generate mockgen -destination mock_idp/mock_service.go github.com/int128/kubelogin/e2e_test/idp Service
+//go:generate mockgen -destination mock_idp/mock_idp.go github.com/int128/kubelogin/e2e_test/idp Provider
 
 import (
 	"crypto/rsa"
@@ -9,11 +10,11 @@ import (
 	"math/big"
 )
 
-// Service provides discovery and authentication methods.
+// Provider provides discovery and authentication methods.
 // If an implemented method returns an ErrorResponse,
 // the handler will respond 400 and corresponding json of the ErrorResponse.
 // Otherwise, the handler will respond 500 and fail the current test.
-type Service interface {
+type Provider interface {
 	Discovery() *DiscoveryResponse
 	GetCertificates() *CertificatesResponse
 	AuthenticateCode(scope, nonce string) (code string, err error)
