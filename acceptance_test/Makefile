@@ -5,8 +5,13 @@ KUBECONFIG := $(OUTPUT_DIR)/kubeconfig.yaml
 export KUBECONFIG
 
 .PHONY: test
-test: build dex cluster mutate
+test: build cluster add-dex-ca-cert-for-chrome
 	PATH=$(PATH):$(OUTPUT_DIR)/bin acceptance_test -test.v
+
+.PHONY: add-dex-ca-cert-for-chrome
+add-dex-ca-cert-for-chrome: $(OUTPUT_DIR)/ca.crt
+	mkdir -p ~/.pki/nssdb
+	cd ~/.pki/nssdb && certutil -A -d sql:. -n dex -i $(OUTPUT_DIR)/ca.crt -t "TC,,"
 
 # build binaries
 .PHONY: build
@@ -16,14 +21,7 @@ $(OUTPUT_DIR)/bin/kubectl-oidc_login:
 $(OUTPUT_DIR)/bin/acceptance_test: acceptance_test.go
 	go test -c -o $@ .
 
-# create a Kubernetes cluster
-.PHONY: cluster
-cluster: $(OUTPUT_DIR)/ca.crt
-	cp $(OUTPUT_DIR)/ca.crt /tmp/kubelogin-acceptance-test-dex-ca.crt
-	kind create cluster --name $(CLUSTER_NAME) --config cluster.yaml
-	kubectl apply -f role.yaml
-
-# create a Dex container
+# create a Dex server
 .PHONY: dex
 dex: $(OUTPUT_DIR)/server.crt $(OUTPUT_DIR)/server.key
 	docker create --name dex-server -p 10443:10443 quay.io/dexidp/dex:v2.21.0 serve /dex.yaml
@@ -48,17 +46,21 @@ $(OUTPUT_DIR)/server.csr: openssl.cnf $(OUTPUT_DIR)/server.key
 $(OUTPUT_DIR)/server.crt: openssl.cnf $(OUTPUT_DIR)/server.csr $(OUTPUT_DIR)/ca.crt $(OUTPUT_DIR)/ca.key
 	openssl x509 -req -in $(OUTPUT_DIR)/server.csr -CA $(OUTPUT_DIR)/ca.crt -CAkey $(OUTPUT_DIR)/ca.key -CAcreateserial -out $@ -sha256 -days 10 -extensions v3_req -extfile openssl.cnf
 
-# mutate environment for the test
-.PHONY: mutate
-mutate: mutate-nssdb mutate-apiserver-hosts
-.PHONY: mutate-nssdb
-mutate-nssdb: $(OUTPUT_DIR)/ca.crt
-	mkdir -p ~/.pki/nssdb
-	cd ~/.pki/nssdb && certutil -A -d sql:. -n dex -i $(OUTPUT_DIR)/ca.crt -t "TC,,"
-.PHONY: mutate-apiserver-hosts
-mutate-apiserver-hosts: dex cluster
+# create a Kubernetes cluster
+.PHONY: cluster
+cluster: dex create-cluster
+	# add the Dex container IP to /etc/hosts of kube-apiserver
 	docker inspect -f '{{.NetworkSettings.IPAddress}}' dex-server | sed -e 's,$$, dex-server,' | \
 		kubectl -n kube-system exec -i kube-apiserver-$(CLUSTER_NAME)-control-plane -- tee -a /etc/hosts
+	# wait for kube-apiserver oidc initialization
+	# (oidc authenticator will retry oidc discovery every 10s)
+	sleep 10
+
+.PHONY: create-cluster
+create-cluster: $(OUTPUT_DIR)/ca.crt
+	cp $(OUTPUT_DIR)/ca.crt /tmp/kubelogin-acceptance-test-dex-ca.crt
+	kind create cluster --name $(CLUSTER_NAME) --config cluster.yaml
+	kubectl apply -f role.yaml
 
 # clean up the resources
 .PHONY: clean
