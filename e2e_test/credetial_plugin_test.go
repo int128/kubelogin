@@ -58,11 +58,11 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		var idToken string
-		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "openid", &idToken)
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
@@ -83,11 +83,11 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		idToken := newIDToken(t, serverURL, "", tokenExpiryFuture)
-		setupMockIDPForROPC(service, serverURL, "openid", "USER", "PASS", idToken)
+		setupROPCFlow(provider, serverURL, "openid", "USER", "PASS", idToken)
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
 		assertCredentialPluginOutput(t, credentialPluginInteraction, &idToken)
 		browserMock := mock_browser.NewMockInterface(ctrl)
@@ -110,8 +110,8 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		setupTokenCache(t, cacheDir,
@@ -152,14 +152,15 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		validIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
 
-		setupMockIDPForDiscovery(service, serverURL)
-		service.EXPECT().Refresh("VALID_REFRESH_TOKEN").
+		provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+		provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+		provider.EXPECT().Refresh("VALID_REFRESH_TOKEN").
 			Return(idp.NewTokenResponse(validIDToken, "NEW_REFRESH_TOKEN"), nil)
 
 		browserMock := mock_browser.NewMockInterface(ctrl)
@@ -200,14 +201,14 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		validIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
 
-		setupMockIDPForCodeFlow(t, service, serverURL, "openid", &validIDToken)
-		service.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
+		setupAuthCodeFlow(t, provider, serverURL, "openid", &validIDToken)
+		provider.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
 			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
 			MaxTimes(2) // package oauth2 will retry refreshing the token
 
@@ -249,11 +250,11 @@ func testCredentialPlugin(t *testing.T, cacheDir string, idpTLS keys.Keys, extra
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := mock_idp.NewMockService(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, service), idpTLS)
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		var idToken string
-		setupMockIDPForCodeFlow(t, service, serverURL, "email profile openid", &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "email profile openid", &idToken)
 
 		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)

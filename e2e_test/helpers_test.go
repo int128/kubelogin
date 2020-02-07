@@ -44,29 +44,26 @@ func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 	return s
 }
 
-func setupMockIDPForDiscovery(service *mock_idp.MockService, serverURL string) {
-	service.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-	service.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
-}
-
-func setupMockIDPForCodeFlow(t *testing.T, service *mock_idp.MockService, serverURL, scope string, idToken *string) {
+func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL, scope string, idToken *string) {
 	var nonce string
-	setupMockIDPForDiscovery(service, serverURL)
-	service.EXPECT().AuthenticateCode(scope, gomock.Any()).
+	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+	provider.EXPECT().AuthenticateCode(scope, gomock.Any()).
 		DoAndReturn(func(_, gotNonce string) (string, error) {
 			nonce = gotNonce
 			return "YOUR_AUTH_CODE", nil
 		})
-	service.EXPECT().Exchange("YOUR_AUTH_CODE").
+	provider.EXPECT().Exchange("YOUR_AUTH_CODE").
 		DoAndReturn(func(string) (*idp.TokenResponse, error) {
 			*idToken = newIDToken(t, serverURL, nonce, tokenExpiryFuture)
 			return idp.NewTokenResponse(*idToken, "YOUR_REFRESH_TOKEN"), nil
 		})
 }
 
-func setupMockIDPForROPC(service *mock_idp.MockService, serverURL, scope, username, password, idToken string) {
-	setupMockIDPForDiscovery(service, serverURL)
-	service.EXPECT().AuthenticatePassword(username, password, scope).
+func setupROPCFlow(provider *mock_idp.MockProvider, serverURL, scope, username, password, idToken string) {
+	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+	provider.EXPECT().AuthenticatePassword(username, password, scope).
 		Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
 }
 

@@ -1,4 +1,3 @@
-// Package idp provides a test double of the identity provider of OpenID Connect.
 package idp
 
 import (
@@ -10,16 +9,16 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func NewHandler(t *testing.T, service Service) *Handler {
-	return &Handler{t, service}
+func NewHandler(t *testing.T, provider Provider) *Handler {
+	return &Handler{t, provider}
 }
 
-// Handler provides a HTTP handler for the identity provider of OpenID Connect.
-// You need to implement the Service interface.
+// Handler provides a HTTP handler for the OpenID Connect Provider.
+// You need to implement the Provider interface.
 // Note that this skips some security checks and is only for testing.
 type Handler struct {
-	t       *testing.T
-	service Service
+	t        *testing.T
+	provider Provider
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -58,14 +57,14 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 	p := r.URL.Path
 	switch {
 	case m == "GET" && p == "/.well-known/openid-configuration":
-		discoveryResponse := h.service.Discovery()
+		discoveryResponse := h.provider.Discovery()
 		w.Header().Add("Content-Type", "application/json")
 		e := json.NewEncoder(w)
 		if err := e.Encode(discoveryResponse); err != nil {
 			return xerrors.Errorf("could not render json: %w", err)
 		}
 	case m == "GET" && p == "/certs":
-		certificatesResponse := h.service.GetCertificates()
+		certificatesResponse := h.provider.GetCertificates()
 		w.Header().Add("Content-Type", "application/json")
 		e := json.NewEncoder(w)
 		if err := e.Encode(certificatesResponse); err != nil {
@@ -76,7 +75,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		// https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 		q := r.URL.Query()
 		redirectURI, scope, state, nonce := q.Get("redirect_uri"), q.Get("scope"), q.Get("state"), q.Get("nonce")
-		code, err := h.service.AuthenticateCode(scope, nonce)
+		code, err := h.provider.AuthenticateCode(scope, nonce)
 		if err != nil {
 			return xerrors.Errorf("authentication error: %w", err)
 		}
@@ -92,7 +91,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			// 3.1.3.1. Token Request
 			// https://openid.net/specs/openid-connect-core-1_0.html#TokenRequest
 			code := r.Form.Get("code")
-			tokenResponse, err := h.service.Exchange(code)
+			tokenResponse, err := h.provider.Exchange(code)
 			if err != nil {
 				return xerrors.Errorf("token request error: %w", err)
 			}
@@ -105,7 +104,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			// 4.3. Resource Owner Password Credentials Grant
 			// https://tools.ietf.org/html/rfc6749#section-4.3
 			username, password, scope := r.Form.Get("username"), r.Form.Get("password"), r.Form.Get("scope")
-			tokenResponse, err := h.service.AuthenticatePassword(username, password, scope)
+			tokenResponse, err := h.provider.AuthenticatePassword(username, password, scope)
 			if err != nil {
 				return xerrors.Errorf("authentication error: %w", err)
 			}
@@ -118,7 +117,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			// 12.1. Refresh Request
 			// https://openid.net/specs/openid-connect-core-1_0.html#RefreshingAccessToken
 			refreshToken := r.Form.Get("refresh_token")
-			tokenResponse, err := h.service.Refresh(refreshToken)
+			tokenResponse, err := h.provider.Refresh(refreshToken)
 			if err != nil {
 				return xerrors.Errorf("token refresh error: %w", err)
 			}
