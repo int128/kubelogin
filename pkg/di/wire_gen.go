@@ -9,7 +9,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
@@ -17,7 +17,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
-	credentialplugin2 "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
 )
@@ -27,12 +27,12 @@ import (
 func NewCmd() cmd.Interface {
 	loggerInterface := logger.New()
 	browserBrowser := &browser.Browser{}
-	interaction := &credentialplugin.Interaction{}
-	cmdInterface := NewCmdForHeadless(loggerInterface, browserBrowser, interaction)
+	writer := &credentialpluginwriter.Writer{}
+	cmdInterface := NewCmdForHeadless(loggerInterface, browserBrowser, writer)
 	return cmdInterface
 }
 
-func NewCmdForHeadless(loggerInterface logger.Interface, browserInterface browser.Interface, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
+func NewCmdForHeadless(loggerInterface logger.Interface, browserInterface browser.Interface, credentialpluginwriterInterface credentialpluginwriter.Interface) cmd.Interface {
 	newFunc := _wireNewFuncValue
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
@@ -73,11 +73,11 @@ func NewCmdForHeadless(loggerInterface logger.Interface, browserInterface browse
 		Logger:     loggerInterface,
 	}
 	repository := &tokencache.Repository{}
-	getToken := &credentialplugin2.GetToken{
+	getToken := &credentialplugin.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
 		NewCertPool:          certpoolNewFunc,
-		Interaction:          credentialpluginInterface,
+		Writer:               credentialpluginwriterInterface,
 		Logger:               loggerInterface,
 	}
 	cmdGetToken := &cmd.GetToken{

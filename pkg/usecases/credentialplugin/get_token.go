@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
@@ -42,7 +42,7 @@ type GetToken struct {
 	Authentication       authentication.Interface
 	TokenCacheRepository tokencache.Interface
 	NewCertPool          certpool.NewFunc
-	Interaction          credentialplugin.Interface
+	Writer               credentialpluginwriter.Interface
 	Logger               logger.Interface
 }
 
@@ -53,7 +53,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		return xerrors.Errorf("could not get a token from the cache or provider: %w", err)
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
-	if err := u.Interaction.Write(credentialplugin.Output{Token: out.IDToken, Expiry: out.IDTokenClaims.Expiry}); err != nil {
+	if err := u.Writer.Write(credentialpluginwriter.Output{Token: out.IDToken, Expiry: out.IDTokenClaims.Expiry}); err != nil {
 		return xerrors.Errorf("could not write the token to client-go: %w", err)
 	}
 	return nil

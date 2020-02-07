@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
+	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter/mock_credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
@@ -82,9 +82,9 @@ func TestGetToken_Do(t *testing.T) {
 					IDToken:      "YOUR_ID_TOKEN",
 					RefreshToken: "YOUR_REFRESH_TOKEN",
 				})
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		credentialPluginInteraction.EXPECT().
-			Write(credentialplugin.Output{
+		credentialPluginWriter := mock_credentialpluginwriter.NewMockInterface(ctrl)
+		credentialPluginWriter.EXPECT().
+			Write(credentialpluginwriter.Output{
 				Token:  "YOUR_ID_TOKEN",
 				Expiry: dummyTokenClaims.Expiry,
 			})
@@ -92,7 +92,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
-			Interaction:          credentialPluginInteraction,
+			Writer:               credentialPluginWriter,
 			Logger:               mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -135,9 +135,9 @@ func TestGetToken_Do(t *testing.T) {
 			Return(&tokencache.Value{
 				IDToken: "VALID_ID_TOKEN",
 			}, nil)
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		credentialPluginInteraction.EXPECT().
-			Write(credentialplugin.Output{
+		credentialPluginWriter := mock_credentialpluginwriter.NewMockInterface(ctrl)
+		credentialPluginWriter.EXPECT().
+			Write(credentialpluginwriter.Output{
 				Token:  "VALID_ID_TOKEN",
 				Expiry: dummyTokenClaims.Expiry,
 			})
@@ -145,7 +145,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
-			Interaction:          credentialPluginInteraction,
+			Writer:               credentialPluginWriter,
 			Logger:               mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -185,7 +185,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
-			Interaction:          mock_credentialplugin.NewMockInterface(ctrl),
+			Writer:               mock_credentialpluginwriter.NewMockInterface(ctrl),
 			Logger:               mock_logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
