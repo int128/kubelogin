@@ -6,7 +6,7 @@ package mock_idp
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	idp "github.com/int128/kubelogin/e2e_test/idp"
+	idp "github.com/int128/kubelogin/integration_test/idp"
 	reflect "reflect"
 )
 

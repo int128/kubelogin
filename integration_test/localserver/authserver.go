@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/int128/kubelogin/e2e_test/keys"
+	"github.com/int128/kubelogin/integration_test/keys"
 )
 
 type Shutdowner interface {

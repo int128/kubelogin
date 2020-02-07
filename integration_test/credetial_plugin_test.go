@@ -1,4 +1,4 @@
-package e2e_test
+package integration_test
 
 import (
 	"context"
@@ -9,10 +9,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/e2e_test/idp"
-	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
-	"github.com/int128/kubelogin/e2e_test/keys"
-	"github.com/int128/kubelogin/e2e_test/localserver"
+	"github.com/int128/kubelogin/integration_test/idp"
+	"github.com/int128/kubelogin/integration_test/idp/mock_idp"
+	"github.com/int128/kubelogin/integration_test/keys"
+	"github.com/int128/kubelogin/integration_test/localserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
