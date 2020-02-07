@@ -5,6 +5,7 @@ package di
 
 import (
 	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	credentialPluginAdaptor "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
@@ -27,14 +28,14 @@ func NewCmd() cmd.Interface {
 
 		// dependencies for production
 		logger.Set,
-		wire.Value(authentication.DefaultLocalServerReadyFunc),
+		browser.Set,
 		credentialPluginAdaptor.Set,
 	)
 	return nil
 }
 
 // NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
-func NewCmdForHeadless(logger.Interface, authentication.LocalServerReadyFunc, credentialPluginAdaptor.Interface) cmd.Interface {
+func NewCmdForHeadless(logger.Interface, browser.Interface, credentialPluginAdaptor.Interface) cmd.Interface {
 	wire.Build(
 		// use-cases
 		authentication.Set,

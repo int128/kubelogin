@@ -24,12 +24,6 @@ var Set = wire.NewSet(
 	wire.Struct(new(ROPC), "*"),
 )
 
-// LocalServerReadyFunc provides an extension point for e2e tests.
-type LocalServerReadyFunc func(url string)
-
-// DefaultLocalServerReadyFunc is the default noop function.
-var DefaultLocalServerReadyFunc = LocalServerReadyFunc(nil)
-
 type Interface interface {
 	Do(ctx context.Context, in Input) (*Output, error)
 }

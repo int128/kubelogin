@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
+	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
@@ -78,12 +78,12 @@ func TestAuthCode_Do(t *testing.T) {
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		mockEnv := mock_env.NewMockInterface(ctrl)
-		mockEnv.EXPECT().
-			OpenBrowser("LOCAL_SERVER_URL")
+		mockBrowser := mock_browser.NewMockInterface(ctrl)
+		mockBrowser.EXPECT().
+			Open("LOCAL_SERVER_URL")
 		u := AuthCode{
-			Logger: mock_logger.New(t),
-			Env:    mockEnv,
+			Logger:  mock_logger.New(t),
+			Browser: mockBrowser,
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {

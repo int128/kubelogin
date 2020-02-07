@@ -6,6 +6,7 @@
 package di
 
 import (
+	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
@@ -25,24 +26,20 @@ import (
 
 func NewCmd() cmd.Interface {
 	loggerInterface := logger.New()
-	localServerReadyFunc := _wireLocalServerReadyFuncValue
+	browserBrowser := &browser.Browser{}
 	interaction := &credentialplugin.Interaction{}
-	cmdInterface := NewCmdForHeadless(loggerInterface, localServerReadyFunc, interaction)
+	cmdInterface := NewCmdForHeadless(loggerInterface, browserBrowser, interaction)
 	return cmdInterface
 }
 
-var (
-	_wireLocalServerReadyFuncValue = authentication.DefaultLocalServerReadyFunc
-)
-
-func NewCmdForHeadless(loggerInterface logger.Interface, localServerReadyFunc authentication.LocalServerReadyFunc, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
+func NewCmdForHeadless(loggerInterface logger.Interface, browserInterface browser.Interface, credentialpluginInterface credentialplugin.Interface) cmd.Interface {
 	newFunc := _wireNewFuncValue
 	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
 	authCode := &authentication.AuthCode{
-		Env:                  envEnv,
-		Logger:               loggerInterface,
-		LocalServerReadyFunc: localServerReadyFunc,
+		Env:     envEnv,
+		Browser: browserInterface,
+		Logger:  loggerInterface,
 	}
 	authCodeKeyboard := &authentication.AuthCodeKeyboard{
 		Env:    envEnv,

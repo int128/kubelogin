@@ -11,7 +11,8 @@ import (
 	"github.com/int128/kubelogin/e2e_test/idp"
 	"github.com/int128/kubelogin/e2e_test/idp/mock_idp"
 	"github.com/int128/kubelogin/e2e_test/keys"
-	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/adaptors/browser"
+	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 )
 
 var (
@@ -69,23 +70,27 @@ func setupMockIDPForROPC(service *mock_idp.MockService, serverURL, scope, userna
 		Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
 }
 
-func openBrowserOnReadyFunc(t *testing.T, ctx context.Context, k keys.Keys) authentication.LocalServerReadyFunc {
-	return func(url string) {
-		client := http.Client{Transport: &http.Transport{TLSClientConfig: k.TLSConfig}}
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			t.Errorf("could not create a request: %s", err)
-			return
-		}
-		req = req.WithContext(ctx)
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Errorf("could not send a request: %s", err)
-			return
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != 200 {
-			t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
-		}
-	}
+func newBrowserMock(ctx context.Context, t *testing.T, ctrl *gomock.Controller, k keys.Keys) browser.Interface {
+	b := mock_browser.NewMockInterface(ctrl)
+	b.EXPECT().
+		Open(gomock.Any()).
+		Do(func(url string) {
+			client := http.Client{Transport: &http.Transport{TLSClientConfig: k.TLSConfig}}
+			req, err := http.NewRequest("GET", url, nil)
+			if err != nil {
+				t.Errorf("could not create a request: %s", err)
+				return
+			}
+			req = req.WithContext(ctx)
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Errorf("could not send a request: %s", err)
+				return
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != 200 {
+				t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
+			}
+		})
+	return b
 }
