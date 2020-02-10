@@ -46,12 +46,15 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 			if !ok {
 				return nil
 			}
-			u.Logger.Printf("Open %s for authentication", url)
 			if o.SkipOpenBrowser {
+				u.Logger.Printf("Please visit the following URL in your browser: %s", url)
 				return nil
 			}
 			if err := u.Browser.Open(url); err != nil {
-				u.Logger.V(1).Infof("could not open the browser: %s", err)
+				u.Logger.Printf(`error: could not open the browser: %s
+
+Please visit the following URL in your browser manually: %s`, err, url)
+				return nil
 			}
 			return nil
 		case <-ctx.Done():

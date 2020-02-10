@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/wire"
 	"github.com/pkg/browser"
-	"golang.org/x/xerrors"
 )
 
 //go:generate mockgen -destination mock_browser/mock_browser.go github.com/int128/kubelogin/pkg/adaptors/browser Interface
@@ -31,8 +30,5 @@ type Browser struct{}
 
 // Open opens the default browser.
 func (*Browser) Open(url string) error {
-	if err := browser.OpenURL(url); err != nil {
-		return xerrors.Errorf("could not open the browser: %w", err)
-	}
-	return nil
+	return browser.OpenURL(url)
 }
