@@ -26,4 +26,5 @@ jobs:
       # https://packages.ubuntu.com/xenial/libnss3-tools
       - run: sudo apt install -y libnss3-tools
       - run: echo '127.0.0.1 dex-server' | sudo tee -a /etc/hosts
-      - run: make -C acceptance_test -j3
+      - run: make -C acceptance_test -j3 setup
+      - run: make -C acceptance_test test

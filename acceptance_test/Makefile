@@ -5,21 +5,26 @@ KUBECONFIG := $(OUTPUT_DIR)/kubeconfig.yaml
 export KUBECONFIG
 
 .PHONY: test
-test: build cluster add-dex-ca-cert-for-chrome
-	PATH=$(PATH):$(OUTPUT_DIR)/bin acceptance_test -test.v
+test: build
+	PATH=$(PATH):$(OUTPUT_DIR)/bin BROWSER=chromelogin KUBECONFIG=$(KUBECONFIG):kubeconfig_oidc.yaml \
+		kubectl --user=oidc cluster-info
 
-.PHONY: add-dex-ca-cert-for-chrome
-add-dex-ca-cert-for-chrome: $(OUTPUT_DIR)/ca.crt
+.PHONY: setup
+setup: build dex cluster setup-chrome
+
+.PHONY: setup-chrome
+setup-chrome: $(OUTPUT_DIR)/ca.crt
+	# add the dex server certificate to the trust store
 	mkdir -p ~/.pki/nssdb
 	cd ~/.pki/nssdb && certutil -A -d sql:. -n dex -i $(OUTPUT_DIR)/ca.crt -t "TC,,"
 
 # build binaries
 .PHONY: build
-build: $(OUTPUT_DIR)/bin/kubectl-oidc_login $(OUTPUT_DIR)/bin/acceptance_test
+build: $(OUTPUT_DIR)/bin/kubectl-oidc_login $(OUTPUT_DIR)/bin/chromelogin
 $(OUTPUT_DIR)/bin/kubectl-oidc_login:
 	go build -o $@ ..
-$(OUTPUT_DIR)/bin/acceptance_test: acceptance_test.go
-	go test -c -o $@ .
+$(OUTPUT_DIR)/bin/chromelogin: chromelogin/main.go
+	go build -o $@ ./chromelogin
 
 # create a Dex server
 .PHONY: dex

@@ -19,8 +19,8 @@ It performs the test by the following steps:
 
 1. Run kubectl.
 1. kubectl automatically runs kubelogin.
-1. Open the browser and navigate to `http://localhost:8000`.
-1. Enter the username and password on the browser.
+1. kubelogin automatically runs [chromelogin](chromelogin).
+1. chromelogin opens the browser, navigates to `http://localhost:8000` and enter the username and password.
 1. kubelogin gets an authorization code from the browser.
 1. kubelogin gets a token.
 1. kubectl accesses an API with the token.
@@ -66,12 +66,7 @@ As a result,
 
 - Set the issuer URL to kubectl. See [`kubeconfig_oidc.yaml`](kubeconfig_oidc.yaml).
 - Set the issuer URL to kube-apiserver. See [`cluster.yaml`](cluster.yaml).
-
-### Test scenario
-
-- Run `kubectl` and open the browser concurrently.
-- It need to wait until `http://localhost:8000` is available. It prevents the browser error.
-- It need to kill sub-processes finally, i.e. kubectl and kubelogin.
+- Set `BROWSER` environment variable to run [`chromelogin`](chromelogin) by `xdg-open`.
 
 
 ## Run locally
