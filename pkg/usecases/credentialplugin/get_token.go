@@ -32,7 +32,8 @@ type Input struct {
 	ClientID       string
 	ClientSecret   string
 	ExtraScopes    []string // optional
-	CACertFilename string   // If set, use the CA cert
+	CACertFilename string   // optional
+	CACertData     string   // optional
 	SkipTLSVerify  bool
 	TokenCacheDir  string
 	GrantOptionSet authentication.GrantOptionSet
@@ -67,6 +68,7 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		ClientSecret:   in.ClientSecret,
 		ExtraScopes:    in.ExtraScopes,
 		CACertFilename: in.CACertFilename,
+		CACertData:     in.CACertData,
 		SkipTLSVerify:  in.SkipTLSVerify,
 	}
 	tokenCacheValue, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
@@ -77,7 +79,12 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 	certPool := u.NewCertPool()
 	if in.CACertFilename != "" {
 		if err := certPool.AddFile(in.CACertFilename); err != nil {
-			return nil, xerrors.Errorf("could not load the certificate: %w", err)
+			return nil, xerrors.Errorf("could not load the certificate file: %w", err)
+		}
+	}
+	if in.CACertData != "" {
+		if err := certPool.AddBase64Encoded(in.CACertData); err != nil {
+			return nil, xerrors.Errorf("could not load the certificate data: %w", err)
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{

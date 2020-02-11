@@ -156,6 +156,9 @@ func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error
 	if p.IDPCertificateAuthority != "" {
 		args = append(args, "--certificate-authority="+p.IDPCertificateAuthority)
 	}
+	if p.IDPCertificateAuthorityData != "" {
+		args = append(args, "--certificate-authority-data="+p.IDPCertificateAuthorityData)
+	}
 	if in.CACertFilename != "" {
 		args = append(args, "--certificate-authority="+in.CACertFilename)
 	}

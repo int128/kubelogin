@@ -32,6 +32,7 @@ type Key struct {
 	ClientSecret   string
 	ExtraScopes    []string
 	CACertFilename string
+	CACertData     string
 	SkipTLSVerify  bool
 }
 
