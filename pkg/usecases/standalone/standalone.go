@@ -118,29 +118,24 @@ var deprecationTpl = template.Must(template.New("").Parse(
 The credential plugin mode is available since v1.14.0.
 Kubectl will automatically run kubelogin and you do not need to run kubelogin explicitly.
 
-You can switch to the credential plugin mode by setting the following user to
-{{ .Kubeconfig }}.
----
-users:
-- name: oidc
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubectl
-      args:
-      - oidc-login
-      - get-token
+You can switch to the credential plugin mode by the following command:
+
+	kubectl config set-credentials oidc \
+	  --exec-api-version=client.authentication.k8s.io/v1beta1 \
+	  --exec-command=kubectl \
+	  --exec-arg=oidc-login \
+	  --exec-arg=get-token \
 {{- range .Args }}
-      - {{ . }}
+	  --exec-arg={{ . }}
 {{- end }}
----
+	kubectl config set-context --current --user=oidc
+
 See https://github.com/int128/kubelogin for more.
 
 `))
 
 type deprecationVars struct {
-	Kubeconfig string
-	Args       []string
+	Args []string
 }
 
 func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error {
@@ -169,8 +164,7 @@ func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error
 	}
 
 	v := deprecationVars{
-		Kubeconfig: p.LocationOfOrigin,
-		Args:       args,
+		Args: args,
 	}
 	var b strings.Builder
 	if err := deprecationTpl.Execute(&b, &v); err != nil {
