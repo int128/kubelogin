@@ -37,12 +37,15 @@ func TestGetToken_Do(t *testing.T) {
 			ClientSecret:   "YOUR_CLIENT_SECRET",
 			TokenCacheDir:  "/path/to/token-cache",
 			CACertFilename: "/path/to/cert",
+			CACertData:     "BASE64ENCODED",
 			SkipTLSVerify:  true,
 			GrantOptionSet: grantOptionSet,
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockCertPool.EXPECT().
 			AddFile("/path/to/cert")
+		mockCertPool.EXPECT().
+			AddBase64Encoded("BASE64ENCODED")
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
@@ -66,6 +69,7 @@ func TestGetToken_Do(t *testing.T) {
 					ClientID:       "YOUR_CLIENT_ID",
 					ClientSecret:   "YOUR_CLIENT_SECRET",
 					CACertFilename: "/path/to/cert",
+					CACertData:     "BASE64ENCODED",
 					SkipTLSVerify:  true,
 				}).
 			Return(nil, xerrors.New("file not found"))
@@ -76,6 +80,7 @@ func TestGetToken_Do(t *testing.T) {
 					ClientID:       "YOUR_CLIENT_ID",
 					ClientSecret:   "YOUR_CLIENT_SECRET",
 					CACertFilename: "/path/to/cert",
+					CACertData:     "BASE64ENCODED",
 					SkipTLSVerify:  true,
 				},
 				tokencache.Value{

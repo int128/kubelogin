@@ -205,6 +205,7 @@ func TestCmd_Run(t *testing.T) {
 					"--oidc-extra-scope", "email",
 					"--oidc-extra-scope", "profile",
 					"--certificate-authority", "/path/to/cacert",
+					"--certificate-authority-data", "BASE64ENCODED",
 					"--insecure-skip-tls-verify",
 					"-v1",
 					"--grant-type", "authcode",
@@ -221,6 +222,7 @@ func TestCmd_Run(t *testing.T) {
 					ClientSecret:   "YOUR_CLIENT_SECRET",
 					ExtraScopes:    []string{"email", "profile"},
 					CACertFilename: "/path/to/cacert",
+					CACertData:     "BASE64ENCODED",
 					SkipTLSVerify:  true,
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeOption: &authentication.AuthCodeOption{
