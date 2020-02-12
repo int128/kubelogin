@@ -1,13 +1,41 @@
 CLUSTER_NAME := kubelogin-acceptance-test
 OUTPUT_DIR := $(CURDIR)/output
 
+PATH := $(PATH):$(OUTPUT_DIR)/bin
+export PATH
 KUBECONFIG := $(OUTPUT_DIR)/kubeconfig.yaml
 export KUBECONFIG
 
+# run the login script instead of opening chrome
+BROWSER := $(OUTPUT_DIR)/bin/chromelogin
+export BROWSER
+
 .PHONY: test
 test: build
-	PATH=$(PATH):$(OUTPUT_DIR)/bin BROWSER=chromelogin KUBECONFIG=$(KUBECONFIG):kubeconfig_oidc.yaml \
-		kubectl --user=oidc cluster-info
+	# see the setup instruction
+	kubectl oidc-login setup \
+		--oidc-issuer-url=https://dex-server:10443/dex \
+		--oidc-client-id=YOUR_CLIENT_ID \
+		--oidc-client-secret=YOUR_CLIENT_SECRET \
+		--oidc-extra-scope=email \
+		--certificate-authority=$(OUTPUT_DIR)/ca.crt
+	# set up the kubeconfig
+	kubectl config set-credentials oidc \
+		--exec-api-version=client.authentication.k8s.io/v1beta1 \
+		--exec-command=kubectl \
+		--exec-arg=oidc-login \
+		--exec-arg=get-token \
+		--exec-arg=--oidc-issuer-url=https://dex-server:10443/dex \
+		--exec-arg=--oidc-client-id=YOUR_CLIENT_ID \
+		--exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET \
+		--exec-arg=--oidc-extra-scope=email \
+		--exec-arg=--certificate-authority=$(OUTPUT_DIR)/ca.crt
+	# make sure we can access the cluster
+	kubectl --user=oidc cluster-info
+	# switch the current context
+	kubectl config set-context --current --user=oidc
+	# make sure we can access the cluster
+	kubectl cluster-info
 
 .PHONY: setup
 setup: build dex cluster setup-chrome

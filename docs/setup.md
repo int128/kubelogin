@@ -1,6 +1,6 @@
 # Kubernetes OpenID Connection authentication
 
-This document guides how to set up the Kubernetes OpenID Connect (OIDC) authentication.
+This document guides how to set up Kubernetes OpenID Connect (OIDC) authentication.
 Let's see the following steps:
 
 1. Set up the OIDC provider
@@ -35,7 +35,7 @@ Variable                | Value
 You can log in with a user of Keycloak.
 Make sure you have an administrator role of the Keycloak realm.
 
-Open the Keycloak and create an OIDC client as follows:
+Open Keycloak and create an OIDC client as follows:
 
 - Client ID: `YOUR_CLIENT_ID`
 - Valid Redirect URLs:
@@ -52,7 +52,7 @@ You can associate client roles by adding the following mapper:
 - Token Claim Name: `groups`
 - Add to ID token: on
 
-For example, if you have the `admin` role of the client, you will get a JWT with the claim `{"groups": ["kubernetes:admin"]}`.
+For example, if you have `admin` role of the client, you will get a JWT with the claim `{"groups": ["kubernetes:admin"]}`.
 
 Replace the following variables in the later sections.
 
@@ -72,7 +72,7 @@ Open [GitHub OAuth Apps](https://github.com/settings/developers) and create an a
 - Homepage URL: `https://dex.example.com`
 - Authorization callback URL: `https://dex.example.com/callback`
 
-Deploy the [dex](https://github.com/dexidp/dex) with the following config:
+Deploy [Dex](https://github.com/dexidp/dex) with the following config:
 
 ```yaml
 issuer: https://dex.example.com
@@ -138,13 +138,20 @@ kubectl oidc-login setup \
   --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
-It will open the browser and you can log in to the provider.
-Then it will show the instruction.
+It launches the browser and navigates to `http://localhost:8000`.
+Please log in to the provider.
+
+You can set extra options, for example, extra scope or CA certificate.
+See also the full options.
+
+```sh
+kubectl oidc-login setup --help
+```
 
 
 ## 3. Bind a cluster role
 
-In this tutorial, bind the `cluster-admin` role to you.
+Here bind `cluster-admin` role to you.
 Apply the following manifest:
 
 ```yaml
@@ -170,14 +177,14 @@ As well as you can create a custom cluster role and bind it.
 
 ## 4. Set up the Kubernetes API server
 
-Add the following options to the kube-apiserver:
+Add the following flags to kube-apiserver:
 
 ```
 --oidc-issuer-url=ISSUER_URL
 --oidc-client-id=YOUR_CLIENT_ID
 ```
 
-See [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) for details.
+See [Kubernetes Authenticating: OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) for the all flags.
 
 If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and append the following settings:
 
@@ -200,35 +207,32 @@ If you are using [kube-aws](https://github.com/kubernetes-incubator/kube-aws), a
 
 ## 5. Set up the kubeconfig
 
-Add the following user to the kubeconfig:
+Add `oidc` user to the kubeconfig.
 
-```yaml
-users:
-- name: oidc
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubectl
-      args:
-      - oidc-login
-      - get-token
-      - --oidc-issuer-url=ISSUER_URL
-      - --oidc-client-id=YOUR_CLIENT_ID
-      - --oidc-client-secret=YOUR_CLIENT_SECRET
+```sh
+kubectl config set-credentials oidc \
+  --exec-api-version=client.authentication.k8s.io/v1beta1 \
+  --exec-command=kubectl \
+  --exec-arg=oidc-login \
+  --exec-arg=get-token \
+  --exec-arg=--oidc-issuer-url=ISSUER_URL \
+  --exec-arg=--oidc-client-id=YOUR_CLIENT_ID \
+  --exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET
 ```
-
-You can share the kubeconfig to your team members for on-boarding.
 
 
 ## 6. Verify cluster access
 
 Make sure you can access the Kubernetes cluster.
 
+```sh
+kubectl --user=oidc cluster-info
 ```
-% kubectl get nodes
-Open http://localhost:8000 for authentication
-You got a valid token until 2019-05-16 22:03:13 +0900 JST
-NAME                                    STATUS    ROLES     AGE       VERSION
-ip-1-2-3-4.us-west-2.compute.internal   Ready     node      21d       v1.9.6
-ip-1-2-3-5.us-west-2.compute.internal   Ready     node      20d       v1.9.6
+
+You can switch the current context to oidc.
+
+```sh
+kubectl config set-context --current --user=oidc
 ```
+
+You can share the kubeconfig to your team members for on-boarding.

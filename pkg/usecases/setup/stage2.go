@@ -10,11 +10,18 @@ import (
 )
 
 var stage2Tpl = template.Must(template.New("").Parse(`
-## 3. Bind a role
+## 2. Verify authentication
 
-Run the following command:
+You got a token with the following claims:
 
-	kubectl apply -f - <<-EOF
+{{- range $k, $v := .Claims }}
+	{{ $k }}={{ $v }}
+{{- end }}
+
+## 3. Bind a cluster role
+
+Apply the following manifest:
+
 	kind: ClusterRoleBinding
 	apiVersion: rbac.authorization.k8s.io/v1
 	metadata:
@@ -26,7 +33,6 @@ Run the following command:
 	subjects:
 	- kind: User
 	  name: {{ .IssuerURL }}#{{ .Subject }}
-	EOF
 
 ## 4. Set up the Kubernetes API server
 
@@ -37,25 +43,32 @@ Add the following options to the kube-apiserver:
 
 ## 5. Set up the kubeconfig
 
-Add the following user to the kubeconfig:
+Run the following command:
 
-	users:
-	- name: google
-	  user:
-	    exec:
-	      apiVersion: client.authentication.k8s.io/v1beta1
-	      command: kubectl
-	      args:
-	      - oidc-login
-	      - get-token
+	kubectl config set-credentials oidc \
+	  --exec-api-version=client.authentication.k8s.io/v1beta1 \
+	  --exec-command=kubectl \
+	  --exec-arg=oidc-login \
+	  --exec-arg=get-token \
 {{- range .Args }}
-	      - {{ . }}
+	  --exec-arg={{ . }}
 {{- end }}
 
-Run kubectl and verify cluster access.
+## 6. Verify cluster access
+
+Make sure you can access the Kubernetes cluster.
+
+	kubectl --user=oidc get nodes
+
+You can switch the default context to oidc.
+
+	kubectl config set-context --current --user=oidc
+
+You can share the kubeconfig to your team members for on-boarding.
 `))
 
 type stage2Vars struct {
+	Claims    map[string]string
 	IssuerURL string
 	ClientID  string
 	Args      []string
@@ -68,18 +81,24 @@ type Stage2Input struct {
 	ClientID          string
 	ClientSecret      string
 	ExtraScopes       []string // optional
-	CACertFilename    string   // If set, use the CA cert
+	CACertFilename    string   // optional
+	CACertData        string   // optional
 	SkipTLSVerify     bool
 	ListenAddressArgs []string // non-nil if set by the command arg
 	GrantOptionSet    authentication.GrantOptionSet
 }
 
 func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
-	u.Logger.Printf(`## 2. Verify authentication`)
+	u.Logger.Printf("authentication in progress...")
 	certPool := u.NewCertPool()
 	if in.CACertFilename != "" {
 		if err := certPool.AddFile(in.CACertFilename); err != nil {
-			return xerrors.Errorf("could not load the certificate: %w", err)
+			return xerrors.Errorf("could not load the certificate file: %w", err)
+		}
+	}
+	if in.CACertData != "" {
+		if err := certPool.AddBase64Encoded(in.CACertData); err != nil {
+			return xerrors.Errorf("could not load the certificate data: %w", err)
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
@@ -94,12 +113,9 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	if err != nil {
 		return xerrors.Errorf("error while authentication: %w", err)
 	}
-	u.Logger.Printf("You got the following claims in the token:")
-	for k, v := range out.IDTokenClaims.Pretty {
-		u.Logger.Printf("\t%s=%s", k, v)
-	}
 
 	v := stage2Vars{
+		Claims:    out.IDTokenClaims.Pretty,
 		IssuerURL: in.IssuerURL,
 		ClientID:  in.ClientID,
 		Args:      makeCredentialPluginArgs(in),
@@ -125,6 +141,9 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 	}
 	if in.CACertFilename != "" {
 		args = append(args, "--certificate-authority="+in.CACertFilename)
+	}
+	if in.CACertData != "" {
+		args = append(args, "--certificate-authority-data="+in.CACertData)
 	}
 	if in.SkipTLSVerify {
 		args = append(args, "--insecure-skip-tls-verify")
