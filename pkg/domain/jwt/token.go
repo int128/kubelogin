@@ -1,4 +1,4 @@
-package oidc
+package jwt
 
 import "time"
 
@@ -6,7 +6,7 @@ import "time"
 type Claims struct {
 	Subject string
 	Expiry  time.Time
-	Pretty  map[string]string // string representation for debug and logging
+	Pretty  string // string representation for debug and logging
 }
 
 // TimeProvider provides the current time.

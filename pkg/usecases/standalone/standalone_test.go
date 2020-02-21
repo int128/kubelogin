@@ -11,17 +11,17 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/domain/jwt"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"golang.org/x/xerrors"
 )
 
 func TestStandalone_Do(t *testing.T) {
-	dummyTokenClaims := oidc.Claims{
+	dummyTokenClaims := jwt.Claims{
 		Subject: "YOUR_SUBJECT",
 		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
-		Pretty:  map[string]string{"sub": "YOUR_SUBJECT"},
+		Pretty:  "PRETTY_JSON",
 	}
 
 	t.Run("FullOptions", func(t *testing.T) {

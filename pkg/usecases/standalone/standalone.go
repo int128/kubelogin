@@ -95,9 +95,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	if err != nil {
 		return xerrors.Errorf("error while authentication: %w", err)
 	}
-	for k, v := range out.IDTokenClaims.Pretty {
-		u.Logger.V(1).Infof("the ID token has the claim: %s=%v", k, v)
-	}
+	u.Logger.V(1).Infof("you got a token: %s", out.IDTokenClaims.Pretty)
 	if out.AlreadyHasValidIDToken {
 		u.Logger.Printf("You already have a valid token until %s", out.IDTokenClaims.Expiry)
 		return nil

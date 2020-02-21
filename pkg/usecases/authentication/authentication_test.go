@@ -9,27 +9,30 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
-	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder/mock_jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
-	"github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/domain/jwt"
+	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"golang.org/x/xerrors"
 )
 
 var cmpIgnoreLogger = cmpopts.IgnoreInterfaces(struct{ logger.Interface }{})
 
 func TestAuthentication_Do(t *testing.T) {
-	dummyTokenClaims := oidc.Claims{
-		Subject: "YOUR_SUBJECT",
-		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
-		Pretty:  map[string]string{"sub": "YOUR_SUBJECT"},
-	}
-	timeBeforeExpiry := time.Date(2019, 1, 2, 1, 0, 0, 0, time.UTC)
-	timeAfterExpiry := time.Date(2019, 1, 2, 4, 0, 0, 0, time.UTC)
 	timeout := 5 * time.Second
-	testingLogger := mock_logger.New(t)
+	expiryTime := time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC)
+	cachedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
+		claims.Issuer = "https://issuer.example.com"
+		claims.Subject = "SUBJECT"
+		claims.ExpiresAt = expiryTime.Unix()
+	})
+	dummyClaims := jwt.Claims{
+		Subject: "SUBJECT",
+		Expiry:  time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+		Pretty:  "PRETTY_JSON",
+	}
 
 	t.Run("HasValidIDToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
@@ -40,20 +43,15 @@ func TestAuthentication_Do(t *testing.T) {
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
-			IDToken:      "VALID_ID_TOKEN",
+			IDToken:      cachedIDToken,
 		}
 		mockEnv := mock_env.NewMockInterface(ctrl)
 		mockEnv.EXPECT().
 			Now().
-			Return(timeBeforeExpiry)
-		mockDecoder := mock_jwtdecoder.NewMockInterface(ctrl)
-		mockDecoder.EXPECT().
-			Decode("VALID_ID_TOKEN").
-			Return(&dummyTokenClaims, nil)
+			Return(expiryTime.Add(-time.Hour))
 		u := Authentication{
-			JWTDecoder: mockDecoder,
-			Logger:     testingLogger,
-			Env:        mockEnv,
+			Logger: mock_logger.New(t),
+			Env:    mockEnv,
 		}
 		got, err := u.Do(ctx, in)
 		if err != nil {
@@ -61,8 +59,16 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		want := &Output{
 			AlreadyHasValidIDToken: true,
-			IDToken:                "VALID_ID_TOKEN",
-			IDTokenClaims:          dummyTokenClaims,
+			IDToken:                cachedIDToken,
+			IDTokenClaims: jwt.Claims{
+				Subject: "SUBJECT",
+				Expiry:  expiryTime,
+				Pretty: `{
+  "exp": 1577934245,
+  "iss": "https://issuer.example.com",
+  "sub": "SUBJECT"
+}`,
+			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
@@ -78,24 +84,20 @@ func TestAuthentication_Do(t *testing.T) {
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
-			IDToken:      "EXPIRED_ID_TOKEN",
+			IDToken:      cachedIDToken,
 			RefreshToken: "VALID_REFRESH_TOKEN",
 		}
 		mockEnv := mock_env.NewMockInterface(ctrl)
 		mockEnv.EXPECT().
 			Now().
-			Return(timeAfterExpiry)
-		mockDecoder := mock_jwtdecoder.NewMockInterface(ctrl)
-		mockDecoder.EXPECT().
-			Decode("EXPIRED_ID_TOKEN").
-			Return(&dummyTokenClaims, nil)
+			Return(expiryTime.Add(+time.Hour))
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "VALID_REFRESH_TOKEN").
 			Return(&oidcclient.TokenSet{
 				IDToken:       "NEW_ID_TOKEN",
 				RefreshToken:  "NEW_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				IDTokenClaims: dummyClaims,
 			}, nil)
 		u := Authentication{
 			NewOIDCClient: func(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
@@ -109,9 +111,8 @@ func TestAuthentication_Do(t *testing.T) {
 				}
 				return mockOIDCClient, nil
 			},
-			JWTDecoder: mockDecoder,
-			Logger:     testingLogger,
-			Env:        mockEnv,
+			Logger: mock_logger.New(t),
+			Env:    mockEnv,
 		}
 		got, err := u.Do(ctx, in)
 		if err != nil {
@@ -120,7 +121,7 @@ func TestAuthentication_Do(t *testing.T) {
 		want := &Output{
 			IDToken:       "NEW_ID_TOKEN",
 			RefreshToken:  "NEW_REFRESH_TOKEN",
-			IDTokenClaims: dummyTokenClaims,
+			IDTokenClaims: dummyClaims,
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
@@ -142,17 +143,13 @@ func TestAuthentication_Do(t *testing.T) {
 			IssuerURL:    "https://issuer.example.com",
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
-			IDToken:      "EXPIRED_ID_TOKEN",
+			IDToken:      cachedIDToken,
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		}
 		mockEnv := mock_env.NewMockInterface(ctrl)
 		mockEnv.EXPECT().
 			Now().
-			Return(timeAfterExpiry)
-		mockDecoder := mock_jwtdecoder.NewMockInterface(ctrl)
-		mockDecoder.EXPECT().
-			Decode("EXPIRED_ID_TOKEN").
-			Return(&dummyTokenClaims, nil)
+			Return(expiryTime.Add(+time.Hour))
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
@@ -165,7 +162,7 @@ func TestAuthentication_Do(t *testing.T) {
 			Return(&oidcclient.TokenSet{
 				IDToken:       "NEW_ID_TOKEN",
 				RefreshToken:  "NEW_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				IDTokenClaims: dummyClaims,
 			}, nil)
 		u := Authentication{
 			NewOIDCClient: func(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
@@ -179,11 +176,10 @@ func TestAuthentication_Do(t *testing.T) {
 				}
 				return mockOIDCClient, nil
 			},
-			JWTDecoder: mockDecoder,
-			Logger:     testingLogger,
-			Env:        mockEnv,
+			Logger: mock_logger.New(t),
+			Env:    mockEnv,
 			AuthCode: &AuthCode{
-				Logger: testingLogger,
+				Logger: mock_logger.New(t),
 			},
 		}
 		got, err := u.Do(ctx, in)
@@ -193,7 +189,7 @@ func TestAuthentication_Do(t *testing.T) {
 		want := &Output{
 			IDToken:       "NEW_ID_TOKEN",
 			RefreshToken:  "NEW_REFRESH_TOKEN",
-			IDTokenClaims: dummyTokenClaims,
+			IDTokenClaims: dummyClaims,
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
@@ -222,7 +218,7 @@ func TestAuthentication_Do(t *testing.T) {
 			Return(&oidcclient.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				IDTokenClaims: dummyClaims,
 			}, nil)
 		u := Authentication{
 			NewOIDCClient: func(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
@@ -236,9 +232,9 @@ func TestAuthentication_Do(t *testing.T) {
 				}
 				return mockOIDCClient, nil
 			},
-			Logger: testingLogger,
+			Logger: mock_logger.New(t),
 			ROPC: &ROPC{
-				Logger: testingLogger,
+				Logger: mock_logger.New(t),
 			},
 		}
 		got, err := u.Do(ctx, in)
@@ -248,7 +244,7 @@ func TestAuthentication_Do(t *testing.T) {
 		want := &Output{
 			IDToken:       "YOUR_ID_TOKEN",
 			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenClaims: dummyTokenClaims,
+			IDTokenClaims: dummyClaims,
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)

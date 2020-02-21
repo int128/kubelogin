@@ -101,9 +101,7 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 	if err != nil {
 		return nil, xerrors.Errorf("error while authentication: %w", err)
 	}
-	for k, v := range out.IDTokenClaims.Pretty {
-		u.Logger.V(1).Infof("the ID token has the claim: %s=%v", k, v)
-	}
+	u.Logger.V(1).Infof("you got a token: %s", out.IDTokenClaims.Pretty)
 	if out.AlreadyHasValidIDToken {
 		u.Logger.V(1).Infof("you already have a valid token until %s", out.IDTokenClaims.Expiry)
 		return out, nil

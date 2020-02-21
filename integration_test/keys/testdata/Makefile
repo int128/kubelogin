@@ -4,7 +4,6 @@ TARGETS := ca.key
 TARGETS += ca.crt
 TARGETS += server.key
 TARGETS += server.crt
-TARGETS += jws.key
 
 .PHONY: all
 all: $(TARGETS)
@@ -21,9 +20,6 @@ server.csr: openssl.cnf server.key
 	openssl req -new -key server.key -out $@ -subj "/CN=localhost" -config openssl.cnf
 server.crt: openssl.cnf server.csr ca.crt ca.key
 	openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out $@ -sha256 -days $(EXPIRY) -extensions v3_req -extfile openssl.cnf
-
-jws.key:
-	openssl genrsa -out $@ 2048
 
 .PHONY: clean
 clean:

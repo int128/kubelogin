@@ -11,7 +11,6 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
-	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
@@ -34,7 +33,6 @@ func NewCmd() cmd.Interface {
 
 func NewCmdForHeadless(loggerInterface logger.Interface, browserInterface browser.Interface, credentialpluginwriterInterface credentialpluginwriter.Interface) cmd.Interface {
 	newFunc := _wireNewFuncValue
-	decoder := &jwtdecoder.Decoder{}
 	envEnv := &env.Env{}
 	authCode := &authentication.AuthCode{
 		Env:     envEnv,
@@ -51,7 +49,6 @@ func NewCmdForHeadless(loggerInterface logger.Interface, browserInterface browse
 	}
 	authenticationAuthentication := &authentication.Authentication{
 		NewOIDCClient:    newFunc,
-		JWTDecoder:       decoder,
 		Logger:           loggerInterface,
 		Env:              envEnv,
 		AuthCode:         authCode,

@@ -14,9 +14,7 @@ var stage2Tpl = template.Must(template.New("").Parse(`
 
 You got a token with the following claims:
 
-{{- range $k, $v := .Claims }}
-	{{ $k }}={{ $v }}
-{{- end }}
+{{ .IDTokenPrettyJSON }}
 
 ## 3. Bind a cluster role
 
@@ -68,11 +66,11 @@ You can share the kubeconfig to your team members for on-boarding.
 `))
 
 type stage2Vars struct {
-	Claims    map[string]string
-	IssuerURL string
-	ClientID  string
-	Args      []string
-	Subject   string
+	IDTokenPrettyJSON string
+	IssuerURL         string
+	ClientID          string
+	Args              []string
+	Subject           string
 }
 
 // Stage2Input represents an input DTO of the stage2.
@@ -115,11 +113,11 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	}
 
 	v := stage2Vars{
-		Claims:    out.IDTokenClaims.Pretty,
-		IssuerURL: in.IssuerURL,
-		ClientID:  in.ClientID,
-		Args:      makeCredentialPluginArgs(in),
-		Subject:   out.IDTokenClaims.Subject,
+		IDTokenPrettyJSON: out.IDTokenClaims.Pretty,
+		IssuerURL:         in.IssuerURL,
+		ClientID:          in.ClientID,
+		Args:              makeCredentialPluginArgs(in),
+		Subject:           out.IDTokenClaims.Subject,
 	}
 	var b strings.Builder
 	if err := stage2Tpl.Execute(&b, &v); err != nil {
