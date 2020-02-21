@@ -24,16 +24,17 @@ func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 	t.Helper()
 	var claims struct {
 		jwt.StandardClaims
-		Nonce  string   `json:"nonce"`
-		Groups []string `json:"groups"`
+		// aud claim is either a string or an array of strings.
+		// https://tools.ietf.org/html/rfc7519#section-4.1.3
+		Audience []string `json:"aud"`
+		Nonce    string   `json:"nonce"`
+		Groups   []string `json:"groups"`
 	}
-	claims.StandardClaims = jwt.StandardClaims{
-		Issuer:    issuer,
-		Audience:  "kubernetes",
-		Subject:   "SUBJECT",
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: expiry.Unix(),
-	}
+	claims.Issuer = issuer
+	claims.Subject = "SUBJECT"
+	claims.IssuedAt = time.Now().Unix()
+	claims.ExpiresAt = expiry.Unix()
+	claims.Audience = []string{"kubernetes", "system"}
 	claims.Nonce = nonce
 	claims.Groups = []string{"admin", "users"}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
