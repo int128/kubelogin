@@ -7,6 +7,7 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
+	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
@@ -45,6 +46,7 @@ func NewCmdForHeadless(logger.Interface, browser.Interface, credentialpluginwrit
 		// adaptors
 		cmd.Set,
 		env.Set,
+		clock.Set,
 		kubeconfig.Set,
 		tokencache.Set,
 		oidcclient.Set,

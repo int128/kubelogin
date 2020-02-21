@@ -8,6 +8,7 @@ package di
 import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
+	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
@@ -33,12 +34,12 @@ func NewCmd() cmd.Interface {
 
 func NewCmdForHeadless(loggerInterface logger.Interface, browserInterface browser.Interface, credentialpluginwriterInterface credentialpluginwriter.Interface) cmd.Interface {
 	newFunc := _wireNewFuncValue
-	envEnv := &env.Env{}
+	clockClock := &clock.Clock{}
 	authCode := &authentication.AuthCode{
-		Env:     envEnv,
 		Browser: browserInterface,
 		Logger:  loggerInterface,
 	}
+	envEnv := &env.Env{}
 	authCodeKeyboard := &authentication.AuthCodeKeyboard{
 		Env:    envEnv,
 		Logger: loggerInterface,
@@ -50,7 +51,7 @@ func NewCmdForHeadless(loggerInterface logger.Interface, browserInterface browse
 	authenticationAuthentication := &authentication.Authentication{
 		NewOIDCClient:    newFunc,
 		Logger:           loggerInterface,
-		Env:              envEnv,
+		Clock:            clockClock,
 		AuthCode:         authCode,
 		AuthCodeKeyboard: authCodeKeyboard,
 		ROPC:             ropc,

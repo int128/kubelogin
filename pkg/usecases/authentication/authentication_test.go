@@ -8,11 +8,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/testing/clock"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	testingLogger "github.com/int128/kubelogin/pkg/testing/logger"
 	"golang.org/x/xerrors"
@@ -45,13 +45,9 @@ func TestAuthentication_Do(t *testing.T) {
 			ClientSecret: "YOUR_CLIENT_SECRET",
 			IDToken:      cachedIDToken,
 		}
-		mockEnv := mock_env.NewMockInterface(ctrl)
-		mockEnv.EXPECT().
-			Now().
-			Return(expiryTime.Add(-time.Hour))
 		u := Authentication{
 			Logger: testingLogger.New(t),
-			Env:    mockEnv,
+			Clock:  clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		got, err := u.Do(ctx, in)
 		if err != nil {
@@ -87,10 +83,6 @@ func TestAuthentication_Do(t *testing.T) {
 			IDToken:      cachedIDToken,
 			RefreshToken: "VALID_REFRESH_TOKEN",
 		}
-		mockEnv := mock_env.NewMockInterface(ctrl)
-		mockEnv.EXPECT().
-			Now().
-			Return(expiryTime.Add(+time.Hour))
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "VALID_REFRESH_TOKEN").
@@ -112,7 +104,7 @@ func TestAuthentication_Do(t *testing.T) {
 				return mockOIDCClient, nil
 			},
 			Logger: testingLogger.New(t),
-			Env:    mockEnv,
+			Clock:  clock.Fake(expiryTime.Add(+time.Hour)),
 		}
 		got, err := u.Do(ctx, in)
 		if err != nil {
@@ -146,10 +138,6 @@ func TestAuthentication_Do(t *testing.T) {
 			IDToken:      cachedIDToken,
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		}
-		mockEnv := mock_env.NewMockInterface(ctrl)
-		mockEnv.EXPECT().
-			Now().
-			Return(expiryTime.Add(+time.Hour))
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
@@ -177,7 +165,7 @@ func TestAuthentication_Do(t *testing.T) {
 				return mockOIDCClient, nil
 			},
 			Logger: testingLogger.New(t),
-			Env:    mockEnv,
+			Clock:  clock.Fake(expiryTime.Add(+time.Hour)),
 			AuthCode: &AuthCode{
 				Logger: testingLogger.New(t),
 			},

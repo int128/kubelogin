@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/google/wire"
 	"golang.org/x/crypto/ssh/terminal"
@@ -25,7 +24,6 @@ var Set = wire.NewSet(
 type Interface interface {
 	ReadString(prompt string) (string, error)
 	ReadPassword(prompt string) (string, error)
-	Now() time.Time
 }
 
 // Env provides environment specific facilities.
@@ -58,9 +56,4 @@ func (*Env) ReadPassword(prompt string) (string, error) {
 		return "", xerrors.Errorf("could not write a new line: %w", err)
 	}
 	return string(b), nil
-}
-
-// Now returns the current time.
-func (*Env) Now() time.Time {
-	return time.Now()
 }

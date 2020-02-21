@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/oidc"
@@ -14,7 +13,6 @@ import (
 
 // AuthCode provides the authentication code flow.
 type AuthCode struct {
-	Env     env.Interface
 	Browser browser.Interface
 	Logger  logger.Interface
 }

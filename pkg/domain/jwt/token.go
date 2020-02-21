@@ -9,12 +9,12 @@ type Claims struct {
 	Pretty  string // string representation for debug and logging
 }
 
-// TimeProvider provides the current time.
-type TimeProvider interface {
+// Clock provides the current time.
+type Clock interface {
 	Now() time.Time
 }
 
 // IsExpired returns true if the token is expired.
-func (c *Claims) IsExpired(timeProvider TimeProvider) bool {
-	return c.Expiry.Before(timeProvider.Now())
+func (c *Claims) IsExpired(clock Clock) bool {
+	return c.Expiry.Before(clock.Now())
 }
