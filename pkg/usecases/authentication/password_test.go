@@ -8,10 +8,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 	"golang.org/x/xerrors"
 )
 
@@ -42,7 +42,7 @@ func TestROPC_Do(t *testing.T) {
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
 		u := ROPC{
 			Env:    mockEnv,
-			Logger: mock_logger.New(t),
+			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
@@ -76,7 +76,7 @@ func TestROPC_Do(t *testing.T) {
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		u := ROPC{
-			Logger: mock_logger.New(t),
+			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
@@ -112,7 +112,7 @@ func TestROPC_Do(t *testing.T) {
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
 		u := ROPC{
 			Env:    mockEnv,
-			Logger: mock_logger.New(t),
+			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
@@ -140,7 +140,7 @@ func TestROPC_Do(t *testing.T) {
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", xerrors.New("error"))
 		u := ROPC{
 			Env:    mockEnv,
-			Logger: mock_logger.New(t),
+			Logger: logger.New(t),
 		}
 		out, err := u.Do(ctx, o, mock_oidcclient.NewMockInterface(ctrl))
 		if err == nil {

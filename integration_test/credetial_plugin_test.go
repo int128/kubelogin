@@ -17,10 +17,10 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter/mock_credentialpluginwriter"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/testing/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
 // Run the integration tests of the credential plugin use-case.
@@ -282,7 +282,7 @@ func newCredentialPluginWriterMock(t *testing.T, ctrl *gomock.Controller, idToke
 
 func runGetTokenCmd(t *testing.T, ctx context.Context, b browser.Interface, w credentialpluginwriter.Interface, args []string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(mock_logger.New(t), b, w)
+	cmd := di.NewCmdForHeadless(logger.New(t), b, w)
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin", "get-token",
 		"--v=1",

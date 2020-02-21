@@ -8,10 +8,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
 var nonNil = gomock.Not(gomock.Nil())
@@ -51,7 +51,7 @@ func TestAuthCodeKeyboard_Do(t *testing.T) {
 			Return("YOUR_AUTH_CODE", nil)
 		u := AuthCodeKeyboard{
 			Env:    mockEnv,
-			Logger: mock_logger.New(t),
+			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, nil, mockOIDCClient)
 		if err != nil {

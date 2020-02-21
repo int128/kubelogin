@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin/mock_credentialplugin"
@@ -146,9 +146,9 @@ func TestCmd_Run(t *testing.T) {
 				cmd := Cmd{
 					Root: &Root{
 						Standalone: mockStandalone,
-						Logger:     mock_logger.New(t),
+						Logger:     logger.New(t),
 					},
-					Logger: mock_logger.New(t),
+					Logger: logger.New(t),
 				}
 				exitCode := cmd.Run(ctx, c.args, version)
 				if exitCode != 0 {
@@ -163,9 +163,9 @@ func TestCmd_Run(t *testing.T) {
 			cmd := Cmd{
 				Root: &Root{
 					Standalone: mock_standalone.NewMockInterface(ctrl),
-					Logger:     mock_logger.New(t),
+					Logger:     logger.New(t),
 				},
-				Logger: mock_logger.New(t),
+				Logger: logger.New(t),
 			}
 			exitCode := cmd.Run(context.TODO(), []string{executable, "some"}, version)
 			if exitCode != 1 {
@@ -304,13 +304,13 @@ func TestCmd_Run(t *testing.T) {
 					Do(ctx, c.in)
 				cmd := Cmd{
 					Root: &Root{
-						Logger: mock_logger.New(t),
+						Logger: logger.New(t),
 					},
 					GetToken: &GetToken{
 						GetToken: getToken,
-						Logger:   mock_logger.New(t),
+						Logger:   logger.New(t),
 					},
-					Logger: mock_logger.New(t),
+					Logger: logger.New(t),
 				}
 				exitCode := cmd.Run(ctx, c.args, version)
 				if exitCode != 0 {
@@ -325,13 +325,13 @@ func TestCmd_Run(t *testing.T) {
 			ctx := context.TODO()
 			cmd := Cmd{
 				Root: &Root{
-					Logger: mock_logger.New(t),
+					Logger: logger.New(t),
 				},
 				GetToken: &GetToken{
 					GetToken: mock_credentialplugin.NewMockInterface(ctrl),
-					Logger:   mock_logger.New(t),
+					Logger:   logger.New(t),
 				},
-				Logger: mock_logger.New(t),
+				Logger: logger.New(t),
 			}
 			exitCode := cmd.Run(ctx, []string{executable, "get-token"}, version)
 			if exitCode != 1 {
@@ -345,13 +345,13 @@ func TestCmd_Run(t *testing.T) {
 			ctx := context.TODO()
 			cmd := Cmd{
 				Root: &Root{
-					Logger: mock_logger.New(t),
+					Logger: logger.New(t),
 				},
 				GetToken: &GetToken{
 					GetToken: mock_credentialplugin.NewMockInterface(ctrl),
-					Logger:   mock_logger.New(t),
+					Logger:   logger.New(t),
 				},
-				Logger: mock_logger.New(t),
+				Logger: logger.New(t),
 			}
 			exitCode := cmd.Run(ctx, []string{executable, "get-token", "foo"}, version)
 			if exitCode != 1 {

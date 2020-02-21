@@ -10,10 +10,10 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter/mock_credentialpluginwriter"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"golang.org/x/xerrors"
@@ -98,7 +98,7 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
-			Logger:               mock_logger.New(t),
+			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -151,7 +151,7 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
-			Logger:               mock_logger.New(t),
+			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -191,7 +191,7 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               mock_credentialpluginwriter.NewMockInterface(ctrl),
-			Logger:               mock_logger.New(t),
+			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")

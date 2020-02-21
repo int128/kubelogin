@@ -10,11 +10,11 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
+	testingLogger "github.com/int128/kubelogin/pkg/testing/logger"
 	"golang.org/x/xerrors"
 )
 
@@ -50,7 +50,7 @@ func TestAuthentication_Do(t *testing.T) {
 			Now().
 			Return(expiryTime.Add(-time.Hour))
 		u := Authentication{
-			Logger: mock_logger.New(t),
+			Logger: testingLogger.New(t),
 			Env:    mockEnv,
 		}
 		got, err := u.Do(ctx, in)
@@ -111,7 +111,7 @@ func TestAuthentication_Do(t *testing.T) {
 				}
 				return mockOIDCClient, nil
 			},
-			Logger: mock_logger.New(t),
+			Logger: testingLogger.New(t),
 			Env:    mockEnv,
 		}
 		got, err := u.Do(ctx, in)
@@ -176,10 +176,10 @@ func TestAuthentication_Do(t *testing.T) {
 				}
 				return mockOIDCClient, nil
 			},
-			Logger: mock_logger.New(t),
+			Logger: testingLogger.New(t),
 			Env:    mockEnv,
 			AuthCode: &AuthCode{
-				Logger: mock_logger.New(t),
+				Logger: testingLogger.New(t),
 			},
 		}
 		got, err := u.Do(ctx, in)
@@ -232,9 +232,9 @@ func TestAuthentication_Do(t *testing.T) {
 				}
 				return mockOIDCClient, nil
 			},
-			Logger: mock_logger.New(t),
+			Logger: testingLogger.New(t),
 			ROPC: &ROPC{
-				Logger: mock_logger.New(t),
+				Logger: testingLogger.New(t),
 			},
 		}
 		got, err := u.Do(ctx, in)

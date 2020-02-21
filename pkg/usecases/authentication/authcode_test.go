@@ -8,10 +8,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
 func TestAuthCode_Do(t *testing.T) {
@@ -43,7 +43,7 @@ func TestAuthCode_Do(t *testing.T) {
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		u := AuthCode{
-			Logger: mock_logger.New(t),
+			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
@@ -82,7 +82,7 @@ func TestAuthCode_Do(t *testing.T) {
 		mockBrowser.EXPECT().
 			Open("LOCAL_SERVER_URL")
 		u := AuthCode{
-			Logger:  mock_logger.New(t),
+			Logger:  logger.New(t),
 			Browser: mockBrowser,
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
