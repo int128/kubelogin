@@ -8,7 +8,7 @@ import (
 )
 
 func New(t testingLogger) *Logger {
-	return &Logger{t}
+	return &Logger{t: t}
 }
 
 type testingLogger interface {
@@ -17,30 +17,38 @@ type testingLogger interface {
 
 // Logger provides logging facility using testing.T.
 type Logger struct {
-	t testingLogger
+	t        testingLogger
+	maxLevel int
 }
 
-func (*Logger) AddFlags(f *pflag.FlagSet) {
-	f.IntP("v", "v", 0, "dummy flag used in the tests")
+func (l *Logger) AddFlags(f *pflag.FlagSet) {
+	f.IntVarP(&l.maxLevel, "v", "v", 0, "dummy flag used in the tests")
 }
 
 func (l *Logger) Printf(format string, args ...interface{}) {
 	l.t.Logf(format, args...)
 }
 
-type Verbose struct {
+func (l *Logger) V(level int) logger.Verbose {
+	if l.IsEnabled(level) {
+		return &verbose{l.t, level}
+	}
+	return &noopVerbose{}
+}
+
+func (l *Logger) IsEnabled(level int) bool {
+	return level <= l.maxLevel
+}
+
+type verbose struct {
 	t     testingLogger
 	level int
 }
 
-func (v *Verbose) Infof(format string, args ...interface{}) {
+func (v *verbose) Infof(format string, args ...interface{}) {
 	v.t.Logf(fmt.Sprintf("I%d] ", v.level)+format, args...)
 }
 
-func (l *Logger) V(level int) logger.Verbose {
-	return &Verbose{l.t, level}
-}
+type noopVerbose struct{}
 
-func (*Logger) IsEnabled(int) bool {
-	return true
-}
+func (*noopVerbose) Infof(string, ...interface{}) {}
