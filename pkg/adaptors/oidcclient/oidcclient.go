@@ -1,9 +1,7 @@
 package oidcclient
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"net/http"
 	"time"
 
@@ -163,20 +161,16 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 	if nonce != "" && nonce != verifiedIDToken.Nonce {
 		return nil, xerrors.Errorf("nonce did not match (wants %s but was %s)", nonce, verifiedIDToken.Nonce)
 	}
-	payload, err := jwt.DecodePayload(idToken)
+	pretty, err := jwt.DecodePayloadAsPrettyJSON(idToken)
 	if err != nil {
 		return nil, xerrors.Errorf("could not decode the token: %w", err)
-	}
-	var prettyJson bytes.Buffer
-	if err := json.Indent(&prettyJson, payload, "", "  "); err != nil {
-		return nil, xerrors.Errorf("could not indent the json of token: %w", err)
 	}
 	return &TokenSet{
 		IDToken: idToken,
 		IDTokenClaims: jwt.Claims{
 			Subject: verifiedIDToken.Subject,
 			Expiry:  verifiedIDToken.Expiry,
-			Pretty:  prettyJson.String(),
+			Pretty:  pretty,
 		},
 		RefreshToken: token.RefreshToken,
 	}, nil
