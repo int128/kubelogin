@@ -39,7 +39,10 @@ func (d *Decoder) Decode(s string) (*oidc.Claims, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("could not decode the token: %w", err)
 	}
-	var claims jwt.StandardClaims
+	var claims struct {
+		Subject   string `json:"sub,omitempty"`
+		ExpiresAt int64  `json:"exp,omitempty"`
+	}
 	if err := json.NewDecoder(bytes.NewBuffer(b)).Decode(&claims); err != nil {
 		return nil, xerrors.Errorf("could not decode the json of token: %w", err)
 	}

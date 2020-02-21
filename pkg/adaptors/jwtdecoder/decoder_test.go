@@ -22,7 +22,10 @@ func TestDecoder_Decode(t *testing.T) {
 			t.Fatalf("Decode error: %s", err)
 		}
 		if decodedToken.Expiry != expiry {
-			t.Errorf("Expiry wants %s but %s", expiry, decodedToken.Expiry)
+			t.Errorf("Expiry wants %s but got %s", expiry, decodedToken.Expiry)
+		}
+		if decodedToken.Subject != "SUBJECT" {
+			t.Errorf("Subject wants %s but got %s", "SUBJECT", decodedToken.Expiry)
 		}
 		t.Logf("Pretty=%+v", decodedToken.Pretty)
 	})
@@ -41,23 +44,22 @@ func TestDecoder_Decode(t *testing.T) {
 
 func newIDToken(t *testing.T, issuer string, expiry time.Time) string {
 	t.Helper()
-	claims := struct {
+	var claims struct {
 		jwt.StandardClaims
+		// aud claim is either a string or an array of strings.
+		// https://tools.ietf.org/html/rfc7519#section-4.1.3
+		Audience      []string `json:"aud"`
 		Nonce         string   `json:"nonce"`
 		Groups        []string `json:"groups"`
 		EmailVerified bool     `json:"email_verified"`
-	}{
-		StandardClaims: jwt.StandardClaims{
-			Issuer:    issuer,
-			Audience:  "kubernetes",
-			Subject:   "SUBJECT",
-			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: expiry.Unix(),
-		},
-		Nonce:         "NONCE",
-		Groups:        []string{"admin", "users"},
-		EmailVerified: false,
 	}
+	claims.Issuer = issuer
+	claims.Subject = "SUBJECT"
+	claims.IssuedAt = time.Now().Unix()
+	claims.ExpiresAt = expiry.Unix()
+	claims.Audience = []string{"kubernetes", "system"}
+	claims.Nonce = "NONCE"
+	claims.Groups = []string{"admin", "users"}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	s, err := token.SignedString(readPrivateKey(t, "testdata/jws.key"))
 	if err != nil {
