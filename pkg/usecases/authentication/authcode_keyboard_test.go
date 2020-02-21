@@ -7,9 +7,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
+	"github.com/int128/kubelogin/pkg/adaptors/reader/mock_reader"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
@@ -45,12 +45,12 @@ func TestAuthCodeKeyboard_Do(t *testing.T) {
 				IDTokenClaims: dummyTokenClaims,
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockEnv := mock_env.NewMockInterface(ctrl)
-		mockEnv.EXPECT().
+		mockReader := mock_reader.NewMockInterface(ctrl)
+		mockReader.EXPECT().
 			ReadString(authCodeKeyboardPrompt).
 			Return("YOUR_AUTH_CODE", nil)
 		u := AuthCodeKeyboard{
-			Env:    mockEnv,
+			Reader: mockReader,
 			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, nil, mockOIDCClient)

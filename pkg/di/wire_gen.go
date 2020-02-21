@@ -11,10 +11,10 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
-	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
+	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
@@ -39,13 +39,13 @@ func NewCmdForHeadless(loggerInterface logger.Interface, browserInterface browse
 		Browser: browserInterface,
 		Logger:  loggerInterface,
 	}
-	envEnv := &env.Env{}
+	readerReader := &reader.Reader{}
 	authCodeKeyboard := &authentication.AuthCodeKeyboard{
-		Env:    envEnv,
+		Reader: readerReader,
 		Logger: loggerInterface,
 	}
 	ropc := &authentication.ROPC{
-		Env:    envEnv,
+		Reader: readerReader,
 		Logger: loggerInterface,
 	}
 	authenticationAuthentication := &authentication.Authentication{

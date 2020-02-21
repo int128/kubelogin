@@ -3,9 +3,9 @@ package authentication
 import (
 	"context"
 
-	"github.com/int128/kubelogin/pkg/adaptors/env"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
+	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"golang.org/x/xerrors"
 )
@@ -15,7 +15,7 @@ const oobRedirectURI = "urn:ietf:wg:oauth:2.0:oob"
 
 // AuthCodeKeyboard provides the authorization code flow with keyboard interactive.
 type AuthCodeKeyboard struct {
-	Env    env.Interface
+	Reader reader.Interface
 	Logger logger.Interface
 }
 
@@ -41,7 +41,7 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 		RedirectURI:         oobRedirectURI,
 	})
 	u.Logger.Printf("Open %s", authCodeURL)
-	code, err := u.Env.ReadString(authCodeKeyboardPrompt)
+	code, err := u.Reader.ReadString(authCodeKeyboardPrompt)
 	if err != nil {
 		return nil, xerrors.Errorf("could not read the authorization code: %w", err)
 	}

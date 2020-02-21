@@ -55,7 +55,7 @@ type AuthCodeKeyboardOption struct{}
 
 type ROPCOption struct {
 	Username string
-	Password string // If empty, read a password using Env.ReadPassword()
+	Password string // If empty, read a password using Reader.ReadPassword()
 }
 
 // Output represents an output DTO of the Authentication use-case.

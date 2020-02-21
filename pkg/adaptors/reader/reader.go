@@ -1,5 +1,5 @@
-// Package env provides environment dependent facilities.
-package env
+// Package reader provides the reader of standard input.
+package reader
 
 import (
 	"bufio"
@@ -13,12 +13,12 @@ import (
 	"golang.org/x/xerrors"
 )
 
-//go:generate mockgen -destination mock_env/mock_env.go github.com/int128/kubelogin/pkg/adaptors/env Interface
+//go:generate mockgen -destination mock_reader/mock_reader.go github.com/int128/kubelogin/pkg/adaptors/reader Interface
 
-// Set provides an implementation and interface for Env.
+// Set provides an implementation and interface for Reader.
 var Set = wire.NewSet(
-	wire.Struct(new(Env), "*"),
-	wire.Bind(new(Interface), new(*Env)),
+	wire.Struct(new(Reader), "*"),
+	wire.Bind(new(Interface), new(*Reader)),
 )
 
 type Interface interface {
@@ -26,11 +26,10 @@ type Interface interface {
 	ReadPassword(prompt string) (string, error)
 }
 
-// Env provides environment specific facilities.
-type Env struct{}
+type Reader struct{}
 
 // ReadString reads a string from the stdin.
-func (*Env) ReadString(prompt string) (string, error) {
+func (*Reader) ReadString(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", xerrors.Errorf("could not write the prompt: %w", err)
 	}
@@ -44,7 +43,7 @@ func (*Env) ReadString(prompt string) (string, error) {
 }
 
 // ReadPassword reads a password from the stdin without echo back.
-func (*Env) ReadPassword(prompt string) (string, error) {
+func (*Reader) ReadPassword(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", xerrors.Errorf("could not write the prompt: %w", err)
 	}
