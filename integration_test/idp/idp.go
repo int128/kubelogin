@@ -1,7 +1,7 @@
 // Package idp provides a test double of an OpenID Connect Provider.
 package idp
 
-//go:generate mockgen -destination mock_idp/mock_idp.go github.com/int128/kubelogin/e2e_test/idp Provider
+//go:generate mockgen -destination mock_idp/mock_idp.go github.com/int128/kubelogin/integration_test/idp Provider
 
 import (
 	"crypto/rsa"
