@@ -1,10 +1,10 @@
-package oidc_test
+package jwt_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/domain/jwt"
 )
 
 type timeProvider time.Time
@@ -14,7 +14,7 @@ func (tp timeProvider) Now() time.Time {
 }
 
 func TestClaims_IsExpired(t *testing.T) {
-	claims := oidc.Claims{
+	claims := jwt.Claims{
 		Expiry: time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
 	}
 

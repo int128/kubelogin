@@ -6,10 +6,9 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/env"
-	"github.com/int128/kubelogin/pkg/adaptors/jwtdecoder"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	"github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/domain/jwt"
 	"golang.org/x/xerrors"
 )
 
@@ -63,7 +62,7 @@ type ROPCOption struct {
 type Output struct {
 	AlreadyHasValidIDToken bool
 	IDToken                string
-	IDTokenClaims          oidc.Claims
+	IDTokenClaims          jwt.Claims
 	RefreshToken           string
 }
 
@@ -85,7 +84,6 @@ const passwordPrompt = "Password: "
 //
 type Authentication struct {
 	NewOIDCClient    oidcclient.NewFunc
-	JWTDecoder       jwtdecoder.Interface
 	Logger           logger.Interface
 	Env              env.Interface
 	AuthCode         *AuthCode
@@ -99,7 +97,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		// Skip verification of the token to reduce time of a discovery request.
 		// Here it trusts the signature and claims and checks only expiration,
 		// because the token has been verified before caching.
-		claims, err := u.JWTDecoder.Decode(in.IDToken)
+		claims, err := jwt.DecodeWithoutVerify(in.IDToken)
 		if err != nil {
 			return nil, xerrors.Errorf("invalid token and you need to remove the cache: %w", err)
 		}

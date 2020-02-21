@@ -16,6 +16,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/di"
+	"github.com/int128/kubelogin/pkg/testing/jwt"
 )
 
 // Run the integration tests of the Login use-case.
@@ -140,7 +141,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		defer server.Shutdown(t, ctx)
 		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+		provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(jwt.PrivateKey))
 		provider.EXPECT().Refresh("VALID_REFRESH_TOKEN").
 			Return(idp.NewTokenResponse(idToken, "NEW_REFRESH_TOKEN"), nil)
 		browserMock := mock_browser.NewMockInterface(ctrl)

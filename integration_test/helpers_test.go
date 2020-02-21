@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/integration_test/idp"
 	"github.com/int128/kubelogin/integration_test/idp/mock_idp"
 	"github.com/int128/kubelogin/integration_test/keys"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
+	"github.com/int128/kubelogin/pkg/testing/jwt"
 )
 
 var (
@@ -22,33 +22,21 @@ var (
 
 func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 	t.Helper()
-	var claims struct {
-		jwt.StandardClaims
-		// aud claim is either a string or an array of strings.
-		// https://tools.ietf.org/html/rfc7519#section-4.1.3
-		Audience []string `json:"aud"`
-		Nonce    string   `json:"nonce"`
-		Groups   []string `json:"groups"`
-	}
-	claims.Issuer = issuer
-	claims.Subject = "SUBJECT"
-	claims.IssuedAt = time.Now().Unix()
-	claims.ExpiresAt = expiry.Unix()
-	claims.Audience = []string{"kubernetes", "system"}
-	claims.Nonce = nonce
-	claims.Groups = []string{"admin", "users"}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	s, err := token.SignedString(keys.JWSKeyPair)
-	if err != nil {
-		t.Fatalf("Could not sign the claims: %s", err)
-	}
-	return s
+	return jwt.EncodeF(t, func(claims *jwt.Claims) {
+		claims.Issuer = issuer
+		claims.Subject = "SUBJECT"
+		claims.IssuedAt = time.Now().Unix()
+		claims.ExpiresAt = expiry.Unix()
+		claims.Audience = []string{"kubernetes", "system"}
+		claims.Nonce = nonce
+		claims.Groups = []string{"admin", "users"}
+	})
 }
 
 func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL, scope string, idToken *string) {
 	var nonce string
 	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(jwt.PrivateKey))
 	provider.EXPECT().AuthenticateCode(scope, gomock.Any()).
 		DoAndReturn(func(_, gotNonce string) (string, error) {
 			nonce = gotNonce
@@ -63,7 +51,7 @@ func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL,
 
 func setupROPCFlow(provider *mock_idp.MockProvider, serverURL, scope, username, password, idToken string) {
 	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(jwt.PrivateKey))
 	provider.EXPECT().AuthenticatePassword(username, password, scope).
 		Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
 }

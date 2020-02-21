@@ -11,15 +11,15 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
-	"github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/domain/jwt"
 	"golang.org/x/xerrors"
 )
 
 func TestROPC_Do(t *testing.T) {
-	dummyTokenClaims := oidc.Claims{
+	dummyTokenClaims := jwt.Claims{
 		Subject: "YOUR_SUBJECT",
 		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
-		Pretty:  map[string]string{"sub": "YOUR_SUBJECT"},
+		Pretty:  "PRETTY_JSON",
 	}
 	timeout := 5 * time.Second
 

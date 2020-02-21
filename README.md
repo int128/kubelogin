@@ -94,14 +94,16 @@ Kubelogin will perform authentication if the token cache file does not exist.
 You can dump the claims of token by passing `-v1` option.
 
 ```
-I1212 10:14:17.754394    2517 get_token.go:91] the ID token has the claim: sub=********
-I1212 10:14:17.754434    2517 get_token.go:91] the ID token has the claim: at_hash=********
-I1212 10:14:17.754449    2517 get_token.go:91] the ID token has the claim: nonce=********
-I1212 10:14:17.754459    2517 get_token.go:91] the ID token has the claim: iat=1576113256
-I1212 10:14:17.754467    2517 get_token.go:91] the ID token has the claim: exp=1576116856
-I1212 10:14:17.754484    2517 get_token.go:91] the ID token has the claim: iss=https://accounts.google.com
-I1212 10:14:17.754497    2517 get_token.go:91] the ID token has the claim: azp=********.apps.googleusercontent.com
-I1212 10:14:17.754506    2517 get_token.go:91] the ID token has the claim: aud=********.apps.googleusercontent.com
+I0221 21:54:08.151850   28231 get_token.go:104] you got a token: {
+  "sub": "********",
+  "iss": "https://accounts.google.com",
+  "aud": "********",
+  "iat": 1582289639,
+  "exp": 1582293239,
+  "jti": "********",
+  "nonce": "********",
+  "at_hash": "********"
+}
 ```
 
 

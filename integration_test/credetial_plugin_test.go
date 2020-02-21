@@ -20,6 +20,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/di"
+	"github.com/int128/kubelogin/pkg/testing/jwt"
 )
 
 // Run the integration tests of the credential plugin use-case.
@@ -177,7 +178,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
 
 		provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
-		provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(keys.JWSKeyPair))
+		provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(jwt.PrivateKey))
 		provider.EXPECT().Refresh("VALID_REFRESH_TOKEN").
 			Return(idp.NewTokenResponse(validIDToken, "NEW_REFRESH_TOKEN"), nil)
 

@@ -2,14 +2,13 @@ package oidcclient
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/coreos/go-oidc"
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	oidcModel "github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/domain/jwt"
 	"github.com/int128/oauth2cli"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
@@ -57,7 +56,7 @@ type GetTokenByAuthCodeInput struct {
 type TokenSet struct {
 	IDToken       string
 	RefreshToken  string
-	IDTokenClaims oidcModel.Claims
+	IDTokenClaims jwt.Claims
 }
 
 type client struct {
@@ -150,49 +149,29 @@ func (c *client) Refresh(ctx context.Context, refreshToken string) (*TokenSet, e
 // verifyToken verifies the token with the certificates of the provider and the nonce.
 // If the nonce is an empty string, it does not verify the nonce.
 func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce string) (*TokenSet, error) {
-	idTokenString, ok := token.Extra("id_token").(string)
+	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
 	}
 	verifier := c.provider.Verifier(&oidc.Config{ClientID: c.oauth2Config.ClientID})
-	idToken, err := verifier.Verify(ctx, idTokenString)
+	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, xerrors.Errorf("could not verify the ID token: %w", err)
 	}
-	if nonce != "" && nonce != idToken.Nonce {
-		return nil, xerrors.Errorf("nonce did not match (wants %s but was %s)", nonce, idToken.Nonce)
+	if nonce != "" && nonce != verifiedIDToken.Nonce {
+		return nil, xerrors.Errorf("nonce did not match (wants %s but was %s)", nonce, verifiedIDToken.Nonce)
 	}
-	claims, err := dumpClaims(idToken)
+	pretty, err := jwt.DecodePayloadAsPrettyJSON(idToken)
 	if err != nil {
-		c.logger.V(1).Infof("incomplete claims of the ID token: %w", err)
+		return nil, xerrors.Errorf("could not decode the token: %w", err)
 	}
 	return &TokenSet{
-		IDToken:       idTokenString,
-		IDTokenClaims: claims,
-		RefreshToken:  token.RefreshToken,
+		IDToken: idToken,
+		IDTokenClaims: jwt.Claims{
+			Subject: verifiedIDToken.Subject,
+			Expiry:  verifiedIDToken.Expiry,
+			Pretty:  pretty,
+		},
+		RefreshToken: token.RefreshToken,
 	}, nil
-}
-
-func dumpClaims(token *oidc.IDToken) (oidcModel.Claims, error) {
-	var rawClaims map[string]interface{}
-	err := token.Claims(&rawClaims)
-	pretty := dumpRawClaims(rawClaims)
-	return oidcModel.Claims{
-		Subject: token.Subject,
-		Expiry:  token.Expiry,
-		Pretty:  pretty,
-	}, err
-}
-
-func dumpRawClaims(rawClaims map[string]interface{}) map[string]string {
-	claims := make(map[string]string)
-	for k, v := range rawClaims {
-		switch v := v.(type) {
-		case float64:
-			claims[k] = fmt.Sprintf("%.f", v)
-		default:
-			claims[k] = fmt.Sprintf("%v", v)
-		}
-	}
-	return claims
 }
