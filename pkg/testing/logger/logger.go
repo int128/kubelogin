@@ -1,4 +1,4 @@
-package mock_logger
+package logger
 
 import (
 	"fmt"
@@ -41,6 +41,6 @@ func (l *Logger) V(level int) logger.Verbose {
 	return &Verbose{l.t, level}
 }
 
-func (*Logger) IsEnabled(level int) bool {
+func (*Logger) IsEnabled(int) bool {
 	return true
 }

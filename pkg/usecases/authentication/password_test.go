@@ -7,11 +7,11 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/adaptors/env/mock_env"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
+	"github.com/int128/kubelogin/pkg/adaptors/reader/mock_reader"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 	"golang.org/x/xerrors"
 )
 
@@ -37,12 +37,12 @@ func TestROPC_Do(t *testing.T) {
 				IDTokenClaims: dummyTokenClaims,
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockEnv := mock_env.NewMockInterface(ctrl)
-		mockEnv.EXPECT().ReadString(usernamePrompt).Return("USER", nil)
-		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
+		mockReader := mock_reader.NewMockInterface(ctrl)
+		mockReader.EXPECT().ReadString(usernamePrompt).Return("USER", nil)
+		mockReader.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
 		u := ROPC{
-			Env:    mockEnv,
-			Logger: mock_logger.New(t),
+			Reader: mockReader,
+			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
@@ -76,7 +76,7 @@ func TestROPC_Do(t *testing.T) {
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
 		u := ROPC{
-			Logger: mock_logger.New(t),
+			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
@@ -108,11 +108,11 @@ func TestROPC_Do(t *testing.T) {
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		mockEnv := mock_env.NewMockInterface(ctrl)
+		mockEnv := mock_reader.NewMockInterface(ctrl)
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
 		u := ROPC{
-			Env:    mockEnv,
-			Logger: mock_logger.New(t),
+			Reader: mockEnv,
+			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
@@ -136,11 +136,11 @@ func TestROPC_Do(t *testing.T) {
 		o := &ROPCOption{
 			Username: "USER",
 		}
-		mockEnv := mock_env.NewMockInterface(ctrl)
+		mockEnv := mock_reader.NewMockInterface(ctrl)
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", xerrors.New("error"))
 		u := ROPC{
-			Env:    mockEnv,
-			Logger: mock_logger.New(t),
+			Reader: mockEnv,
+			Logger: logger.New(t),
 		}
 		out, err := u.Do(ctx, o, mock_oidcclient.NewMockInterface(ctrl))
 		if err == nil {

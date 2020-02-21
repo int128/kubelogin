@@ -14,9 +14,9 @@ import (
 	"github.com/int128/kubelogin/integration_test/localserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/testing/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
 // Run the integration tests of the Login use-case.
@@ -265,7 +265,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 
 func runRootCmd(t *testing.T, ctx context.Context, b browser.Interface, args []string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(mock_logger.New(t), b, nil)
+	cmd := di.NewCmdForHeadless(logger.New(t), b, nil)
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin",
 		"--v=1",

@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 )
@@ -56,7 +56,7 @@ func TestSetup_DoStage2(t *testing.T) {
 	u := Setup{
 		Authentication: mockAuthentication,
 		NewCertPool:    func() certpool.Interface { return mockCertPool },
-		Logger:         mock_logger.New(t),
+		Logger:         logger.New(t),
 	}
 	if err := u.DoStage2(ctx, in); err != nil {
 		t.Errorf("DoStage2 returned error: %+v", err)

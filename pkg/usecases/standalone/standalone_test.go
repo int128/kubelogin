@@ -10,8 +10,8 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"golang.org/x/xerrors"
@@ -88,7 +88,7 @@ func TestStandalone_Do(t *testing.T) {
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
 			NewCertPool:    func() certpool.Interface { return mockCertPool },
-			Logger:         mock_logger.New(t),
+			Logger:         logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -131,7 +131,7 @@ func TestStandalone_Do(t *testing.T) {
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
 			NewCertPool:    func() certpool.Interface { return mockCertPool },
-			Logger:         mock_logger.New(t),
+			Logger:         logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -151,7 +151,7 @@ func TestStandalone_Do(t *testing.T) {
 		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			Logger:         mock_logger.New(t),
+			Logger:         logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -188,7 +188,7 @@ func TestStandalone_Do(t *testing.T) {
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
 			NewCertPool:    func() certpool.Interface { return mockCertPool },
-			Logger:         mock_logger.New(t),
+			Logger:         logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -240,7 +240,7 @@ func TestStandalone_Do(t *testing.T) {
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
 			NewCertPool:    func() certpool.Interface { return mockCertPool },
-			Logger:         mock_logger.New(t),
+			Logger:         logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")

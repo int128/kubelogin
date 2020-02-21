@@ -16,7 +16,6 @@ func init() {
 	browser.Stdout = os.Stderr
 }
 
-// Set provides an implementation and interface for Env.
 var Set = wire.NewSet(
 	wire.Struct(new(Browser)),
 	wire.Bind(new(Interface), new(*Browser)),
