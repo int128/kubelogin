@@ -61,7 +61,7 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 		RunE: func(*cobra.Command, []string) error {
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
-				return xerrors.Errorf("error: %w", err)
+				return xerrors.Errorf("get-token: %w", err)
 			}
 			in := credentialplugin.Input{
 				IssuerURL:      o.IssuerURL,
@@ -75,7 +75,7 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 				GrantOptionSet: grantOptionSet,
 			}
 			if err := cmd.GetToken.Do(ctx, in); err != nil {
-				return xerrors.Errorf("error: %w", err)
+				return xerrors.Errorf("get-token: %w", err)
 			}
 			return nil
 		},

@@ -131,7 +131,7 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 				GrantOptionSet:     grantOptionSet,
 			}
 			if err := cmd.Standalone.Do(ctx, in); err != nil {
-				return xerrors.Errorf("error: %w", err)
+				return xerrors.Errorf("login: %w", err)
 			}
 			return nil
 		},

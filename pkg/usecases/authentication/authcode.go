@@ -62,7 +62,7 @@ Please visit the following URL in your browser manually: %s`, err, url)
 	eg.Go(func() error {
 		tokenSet, err := client.GetTokenByAuthCode(ctx, in, readyChan)
 		if err != nil {
-			return xerrors.Errorf("error while the authorization code flow: %w", err)
+			return xerrors.Errorf("authorization code flow error: %w", err)
 		}
 		out = Output{
 			IDToken:       tokenSet.IDToken,
@@ -72,7 +72,7 @@ Please visit the following URL in your browser manually: %s`, err, url)
 		return nil
 	})
 	if err := eg.Wait(); err != nil {
-		return nil, xerrors.Errorf("error while the authorization code flow: %w", err)
+		return nil, xerrors.Errorf("authentication error: %w", err)
 	}
 	return &out, nil
 }

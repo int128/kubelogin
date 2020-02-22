@@ -92,7 +92,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
-		return nil, xerrors.Errorf("could not get a token: %w", err)
+		return nil, xerrors.Errorf("oauth2 error: %w", err)
 	}
 	return c.verifyToken(ctx, token, in.Nonce)
 }
@@ -116,7 +116,7 @@ func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput)
 	cfg.RedirectURL = in.RedirectURI
 	token, err := cfg.Exchange(ctx, in.Code, oauth2.SetAuthURLParam("code_verifier", in.CodeVerifier))
 	if err != nil {
-		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)
+		return nil, xerrors.Errorf("exchange error: %w", err)
 	}
 	return c.verifyToken(ctx, token, in.Nonce)
 }
@@ -126,7 +126,7 @@ func (c *client) GetTokenByROPC(ctx context.Context, username, password string) 
 	ctx = c.wrapContext(ctx)
 	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, username, password)
 	if err != nil {
-		return nil, xerrors.Errorf("could not get a token: %w", err)
+		return nil, xerrors.Errorf("resource owner password credentials flow error: %w", err)
 	}
 	return c.verifyToken(ctx, token, "")
 }
@@ -159,7 +159,7 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 		return nil, xerrors.Errorf("could not verify the ID token: %w", err)
 	}
 	if nonce != "" && nonce != verifiedIDToken.Nonce {
-		return nil, xerrors.Errorf("nonce did not match (wants %s but was %s)", nonce, verifiedIDToken.Nonce)
+		return nil, xerrors.Errorf("nonce did not match (wants %s but got %s)", nonce, verifiedIDToken.Nonce)
 	}
 	pretty, err := jwt.DecodePayloadAsPrettyJSON(idToken)
 	if err != nil {

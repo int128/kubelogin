@@ -109,7 +109,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 		GrantOptionSet: in.GrantOptionSet,
 	})
 	if err != nil {
-		return xerrors.Errorf("error while authentication: %w", err)
+		return xerrors.Errorf("authentication error: %w", err)
 	}
 
 	v := stage2Vars{

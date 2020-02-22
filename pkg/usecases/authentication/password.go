@@ -21,7 +21,7 @@ func (u *ROPC) Do(ctx context.Context, in *ROPCOption, client oidcclient.Interfa
 		var err error
 		in.Username, err = u.Reader.ReadString(usernamePrompt)
 		if err != nil {
-			return nil, xerrors.Errorf("could not get the username: %w", err)
+			return nil, xerrors.Errorf("could not read a username: %w", err)
 		}
 	}
 	if in.Password == "" {
@@ -33,7 +33,7 @@ func (u *ROPC) Do(ctx context.Context, in *ROPCOption, client oidcclient.Interfa
 	}
 	tokenSet, err := client.GetTokenByROPC(ctx, in.Username, in.Password)
 	if err != nil {
-		return nil, xerrors.Errorf("error while the resource owner password credentials flow: %w", err)
+		return nil, xerrors.Errorf("resource owner password credentials flow error: %w", err)
 	}
 	return &Output{
 		IDToken:       tokenSet.IDToken,

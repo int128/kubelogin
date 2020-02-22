@@ -54,7 +54,7 @@ func DecodePayloadAsPrettyJSON(s string) (string, error) {
 func DecodePayloadAsRawJSON(s string) ([]byte, error) {
 	parts := strings.SplitN(s, ".", 3)
 	if len(parts) != 3 {
-		return nil, xerrors.Errorf("token contains an invalid number of segments")
+		return nil, xerrors.Errorf("wants %d segments but got %d segments", 3, len(parts))
 	}
 	payloadJSON, err := decodePayload(parts[1])
 	if err != nil {
@@ -66,7 +66,7 @@ func DecodePayloadAsRawJSON(s string) ([]byte, error) {
 func decodePayload(payload string) ([]byte, error) {
 	b, err := base64.URLEncoding.WithPadding(base64.NoPadding).DecodeString(payload)
 	if err != nil {
-		return nil, xerrors.Errorf("could not decode base64: %w", err)
+		return nil, xerrors.Errorf("invalid base64: %w", err)
 	}
 	return b, nil
 }

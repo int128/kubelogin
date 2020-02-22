@@ -46,7 +46,7 @@ func (cmd *Setup) New(ctx context.Context) *cobra.Command {
 		RunE: func(c *cobra.Command, _ []string) error {
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
-				return xerrors.Errorf("error: %w", err)
+				return xerrors.Errorf("setup: %w", err)
 			}
 			in := setup.Stage2Input{
 				IssuerURL:      o.IssuerURL,
@@ -66,7 +66,7 @@ func (cmd *Setup) New(ctx context.Context) *cobra.Command {
 				return nil
 			}
 			if err := cmd.Setup.DoStage2(ctx, in); err != nil {
-				return xerrors.Errorf("error: %w", err)
+				return xerrors.Errorf("setup: %w", err)
 			}
 			return nil
 		},

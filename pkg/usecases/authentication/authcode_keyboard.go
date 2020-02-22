@@ -19,7 +19,7 @@ type AuthCodeKeyboard struct {
 	Logger logger.Interface
 }
 
-func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, client oidcclient.Interface) (*Output, error) {
+func (u *AuthCodeKeyboard) Do(ctx context.Context, _ *AuthCodeKeyboardOption, client oidcclient.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the authorization code flow with keyboard interactive")
 	state, err := oidc.NewState()
 	if err != nil {
@@ -43,7 +43,7 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 	u.Logger.Printf("Open %s", authCodeURL)
 	code, err := u.Reader.ReadString(authCodeKeyboardPrompt)
 	if err != nil {
-		return nil, xerrors.Errorf("could not read the authorization code: %w", err)
+		return nil, xerrors.Errorf("could not read an authorization code: %w", err)
 	}
 
 	tokenSet, err := client.ExchangeAuthCode(ctx, oidcclient.ExchangeAuthCodeInput{
@@ -53,7 +53,7 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 		RedirectURI:  oobRedirectURI,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("could not get the token: %w", err)
+		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)
 	}
 	return &Output{
 		IDToken:       tokenSet.IDToken,

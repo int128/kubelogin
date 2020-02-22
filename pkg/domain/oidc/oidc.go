@@ -44,7 +44,7 @@ func NewPKCEParams() (*PKCEParams, error) {
 func random32() ([]byte, error) {
 	b := make([]byte, 32)
 	if err := binary.Read(rand.Reader, binary.LittleEndian, b); err != nil {
-		return nil, xerrors.Errorf("could not read: %w", err)
+		return nil, xerrors.Errorf("read error: %w", err)
 	}
 	return b, nil
 }
