@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -110,14 +109,14 @@ type Root struct {
 	Logger     logger.Interface
 }
 
-func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
+func (cmd *Root) New() *cobra.Command {
 	var o rootOptions
 	rootCmd := &cobra.Command{
-		Use:   executable,
+		Use:   "kubelogin",
 		Short: "Login to the OpenID Connect provider",
 		Long:  longDescription,
 		Args:  cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
+		RunE: func(c *cobra.Command, _ []string) error {
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
 				return xerrors.Errorf("invalid option: %w", err)
@@ -130,7 +129,7 @@ func (cmd *Root) New(ctx context.Context, executable string) *cobra.Command {
 				SkipTLSVerify:      o.SkipTLSVerify,
 				GrantOptionSet:     grantOptionSet,
 			}
-			if err := cmd.Standalone.Do(ctx, in); err != nil {
+			if err := cmd.Standalone.Do(c.Context(), in); err != nil {
 				return xerrors.Errorf("login: %w", err)
 			}
 			return nil

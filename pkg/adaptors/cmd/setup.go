@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"context"
-
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -37,7 +35,7 @@ type Setup struct {
 	Setup setup.Interface
 }
 
-func (cmd *Setup) New(ctx context.Context) *cobra.Command {
+func (cmd *Setup) New() *cobra.Command {
 	var o setupOptions
 	c := &cobra.Command{
 		Use:   "setup",
@@ -65,7 +63,7 @@ func (cmd *Setup) New(ctx context.Context) *cobra.Command {
 				cmd.Setup.DoStage1()
 				return nil
 			}
-			if err := cmd.Setup.DoStage2(ctx, in); err != nil {
+			if err := cmd.Setup.DoStage2(c.Context(), in); err != nil {
 				return xerrors.Errorf("setup: %w", err)
 			}
 			return nil

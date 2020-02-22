@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"path/filepath"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
@@ -37,17 +36,15 @@ type Cmd struct {
 // Run parses the command line arguments and executes the specified use-case.
 // It returns an exit code, that is 0 on success or 1 on error.
 func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
-	executable := filepath.Base(args[0])
-
-	rootCmd := cmd.Root.New(ctx, executable)
+	rootCmd := cmd.Root.New()
 	rootCmd.Version = version
 	rootCmd.SilenceUsage = true
 	rootCmd.SilenceErrors = true
 
-	getTokenCmd := cmd.GetToken.New(ctx)
+	getTokenCmd := cmd.GetToken.New()
 	rootCmd.AddCommand(getTokenCmd)
 
-	setupCmd := cmd.Setup.New(ctx)
+	setupCmd := cmd.Setup.New()
 	rootCmd.AddCommand(setupCmd)
 
 	versionCmd := &cobra.Command{
@@ -55,13 +52,13 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		Short: "Print the version information",
 		Args:  cobra.NoArgs,
 		Run: func(*cobra.Command, []string) {
-			cmd.Logger.Printf("%s version %s", executable, version)
+			cmd.Logger.Printf("kubelogin version %s", version)
 		},
 	}
 	rootCmd.AddCommand(versionCmd)
 
 	rootCmd.SetArgs(args[1:])
-	if err := rootCmd.Execute(); err != nil {
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		cmd.Logger.Printf("error: %s", err)
 		cmd.Logger.V(1).Infof("stacktrace: %+v", err)
 		return 1
