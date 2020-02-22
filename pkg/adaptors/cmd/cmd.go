@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"path/filepath"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
@@ -37,9 +36,7 @@ type Cmd struct {
 // Run parses the command line arguments and executes the specified use-case.
 // It returns an exit code, that is 0 on success or 1 on error.
 func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
-	executable := filepath.Base(args[0])
-
-	rootCmd := cmd.Root.New(executable)
+	rootCmd := cmd.Root.New()
 	rootCmd.Version = version
 	rootCmd.SilenceUsage = true
 	rootCmd.SilenceErrors = true
@@ -55,7 +52,7 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		Short: "Print the version information",
 		Args:  cobra.NoArgs,
 		Run: func(*cobra.Command, []string) {
-			cmd.Logger.Printf("%s version %s", executable, version)
+			cmd.Logger.Printf("kubelogin version %s", version)
 		},
 	}
 	rootCmd.AddCommand(versionCmd)

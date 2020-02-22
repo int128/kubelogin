@@ -109,10 +109,10 @@ type Root struct {
 	Logger     logger.Interface
 }
 
-func (cmd *Root) New(executable string) *cobra.Command {
+func (cmd *Root) New() *cobra.Command {
 	var o rootOptions
 	rootCmd := &cobra.Command{
-		Use:   executable,
+		Use:   "kubelogin",
 		Short: "Login to the OpenID Connect provider",
 		Long:  longDescription,
 		Args:  cobra.NoArgs,
