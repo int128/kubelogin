@@ -45,6 +45,7 @@ type ExchangeAuthCodeInput struct {
 
 type GetTokenByAuthCodeInput struct {
 	BindAddress         []string
+	State               string
 	Nonce               string
 	CodeChallenge       string
 	CodeChallengeMethod string
@@ -78,6 +79,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 	ctx = c.wrapContext(ctx)
 	config := oauth2cli.Config{
 		OAuth2Config: c.oauth2Config,
+		State:        in.State,
 		AuthCodeOptions: []oauth2.AuthCodeOption{
 			oauth2.AccessTypeOffline,
 			oidc.Nonce(in.Nonce),
