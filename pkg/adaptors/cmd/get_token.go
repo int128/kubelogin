@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"context"
-
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/spf13/cobra"
@@ -41,7 +39,7 @@ type GetToken struct {
 	Logger   logger.Interface
 }
 
-func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
+func (cmd *GetToken) New() *cobra.Command {
 	var o getTokenOptions
 	c := &cobra.Command{
 		Use:   "get-token [flags]",
@@ -58,7 +56,7 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 			}
 			return nil
 		},
-		RunE: func(*cobra.Command, []string) error {
+		RunE: func(c *cobra.Command, _ []string) error {
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
 				return xerrors.Errorf("get-token: %w", err)
@@ -74,7 +72,7 @@ func (cmd *GetToken) New(ctx context.Context) *cobra.Command {
 				TokenCacheDir:  o.TokenCacheDir,
 				GrantOptionSet: grantOptionSet,
 			}
-			if err := cmd.GetToken.Do(ctx, in); err != nil {
+			if err := cmd.GetToken.Do(c.Context(), in); err != nil {
 				return xerrors.Errorf("get-token: %w", err)
 			}
 			return nil
