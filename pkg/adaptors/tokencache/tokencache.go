@@ -60,7 +60,7 @@ func (r *Repository) FindByKey(dir string, key Key) (*Value, error) {
 	d := json.NewDecoder(f)
 	var c Value
 	if err := d.Decode(&c); err != nil {
-		return nil, xerrors.Errorf("could not decode json file %s: %w", p, err)
+		return nil, xerrors.Errorf("invalid json file %s: %w", p, err)
 	}
 	return &c, nil
 }
@@ -81,7 +81,7 @@ func (r *Repository) Save(dir string, key Key, value Value) error {
 	defer f.Close()
 	e := json.NewEncoder(f)
 	if err := e.Encode(&value); err != nil {
-		return xerrors.Errorf("could not encode json to file %s: %w", p, err)
+		return xerrors.Errorf("json encode error: %w", err)
 	}
 	return nil
 }

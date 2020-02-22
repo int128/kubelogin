@@ -51,7 +51,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
 	out, err := u.getTokenFromCacheOrProvider(ctx, in)
 	if err != nil {
-		return xerrors.Errorf("could not get a token from the cache or provider: %w", err)
+		return xerrors.Errorf("could not get a token: %w", err)
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
 	if err := u.Writer.Write(credentialpluginwriter.Output{Token: out.IDToken, Expiry: out.IDTokenClaims.Expiry}); err != nil {
@@ -99,7 +99,7 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		GrantOptionSet: in.GrantOptionSet,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("error while authentication: %w", err)
+		return nil, xerrors.Errorf("authentication error: %w", err)
 	}
 	u.Logger.V(1).Infof("you got a token: %s", out.IDTokenClaims.Pretty)
 	if out.AlreadyHasValidIDToken {

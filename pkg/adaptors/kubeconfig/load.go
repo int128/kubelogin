@@ -11,7 +11,7 @@ import (
 func (*Kubeconfig) GetCurrentAuthProvider(explicitFilename string, contextName ContextName, userName UserName) (*AuthProvider, error) {
 	config, err := loadByDefaultRules(explicitFilename)
 	if err != nil {
-		return nil, xerrors.Errorf("could not load kubeconfig: %w", err)
+		return nil, xerrors.Errorf("could not load the kubeconfig: %w", err)
 	}
 	auth, err := findCurrentAuthProvider(config, contextName, userName)
 	if err != nil {
@@ -25,7 +25,7 @@ func loadByDefaultRules(explicitFilename string) (*api.Config, error) {
 	rules.ExplicitPath = explicitFilename
 	config, err := rules.Load()
 	if err != nil {
-		return nil, xerrors.Errorf("error while loading config: %w", err)
+		return nil, xerrors.Errorf("load error: %w", err)
 	}
 	return config, err
 }

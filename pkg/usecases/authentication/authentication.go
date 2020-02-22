@@ -35,8 +35,8 @@ type Input struct {
 	ExtraScopes    []string // optional
 	CertPool       certpool.Interface
 	SkipTLSVerify  bool
-	IDToken        string // optional
-	RefreshToken   string // optional
+	IDToken        string // optional, from the token cache
+	RefreshToken   string // optional, from the token cache
 	GrantOptionSet GrantOptionSet
 }
 
@@ -99,7 +99,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		// because the token has been verified before caching.
 		claims, err := jwt.DecodeWithoutVerify(in.IDToken)
 		if err != nil {
-			return nil, xerrors.Errorf("invalid token and you need to remove the cache: %w", err)
+			return nil, xerrors.Errorf("invalid token cache (you may need to remove): %w", err)
 		}
 		if !claims.IsExpired(u.Clock) {
 			u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
@@ -124,7 +124,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		Logger:        u.Logger,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("could not initialize the OpenID Connect client: %w", err)
+		return nil, xerrors.Errorf("oidc error: %w", err)
 	}
 
 	if in.RefreshToken != "" {

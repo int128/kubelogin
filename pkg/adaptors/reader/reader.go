@@ -31,12 +31,12 @@ type Reader struct{}
 // ReadString reads a string from the stdin.
 func (*Reader) ReadString(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
-		return "", xerrors.Errorf("could not write the prompt: %w", err)
+		return "", xerrors.Errorf("write error: %w", err)
 	}
 	r := bufio.NewReader(os.Stdin)
 	s, err := r.ReadString('\n')
 	if err != nil {
-		return "", xerrors.Errorf("could not read from stdin: %w", err)
+		return "", xerrors.Errorf("read error: %w", err)
 	}
 	s = strings.TrimRight(s, "\r\n")
 	return s, nil
@@ -45,14 +45,14 @@ func (*Reader) ReadString(prompt string) (string, error) {
 // ReadPassword reads a password from the stdin without echo back.
 func (*Reader) ReadPassword(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
-		return "", xerrors.Errorf("could not write the prompt: %w", err)
+		return "", xerrors.Errorf("write error: %w", err)
 	}
 	b, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
-		return "", xerrors.Errorf("could not read from stdin: %w", err)
+		return "", xerrors.Errorf("read error: %w", err)
 	}
 	if _, err := fmt.Fprintln(os.Stderr); err != nil {
-		return "", xerrors.Errorf("could not write a new line: %w", err)
+		return "", xerrors.Errorf("write error: %w", err)
 	}
 	return string(b), nil
 }

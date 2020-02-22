@@ -93,7 +93,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 		GrantOptionSet: in.GrantOptionSet,
 	})
 	if err != nil {
-		return xerrors.Errorf("error while authentication: %w", err)
+		return xerrors.Errorf("authentication error: %w", err)
 	}
 	u.Logger.V(1).Infof("you got a token: %s", out.IDTokenClaims.Pretty)
 	if out.AlreadyHasValidIDToken {
@@ -106,7 +106,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	authProvider.RefreshToken = out.RefreshToken
 	u.Logger.V(1).Infof("writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
 	if err := u.Kubeconfig.UpdateAuthProvider(authProvider); err != nil {
-		return xerrors.Errorf("could not write the token to the kubeconfig: %w", err)
+		return xerrors.Errorf("could not update the kubeconfig: %w", err)
 	}
 	return nil
 }
@@ -166,7 +166,7 @@ func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error
 	}
 	var b strings.Builder
 	if err := deprecationTpl.Execute(&b, &v); err != nil {
-		return xerrors.Errorf("could not render the template: %w", err)
+		return xerrors.Errorf("template error: %w", err)
 	}
 	u.Logger.Printf("%s", b.String())
 	return nil
