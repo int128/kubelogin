@@ -19,6 +19,10 @@ type AuthCode struct {
 
 func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the authentication code flow")
+	state, err := oidc.NewState()
+	if err != nil {
+		return nil, xerrors.Errorf("could not generate a state: %w", err)
+	}
 	nonce, err := oidc.NewNonce()
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a nonce: %w", err)
@@ -29,6 +33,7 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 	}
 	in := oidcclient.GetTokenByAuthCodeInput{
 		BindAddress:         o.BindAddress,
+		State:               state,
 		Nonce:               nonce,
 		CodeChallenge:       p.CodeChallenge,
 		CodeChallengeMethod: p.CodeChallengeMethod,

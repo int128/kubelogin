@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
-	"strings"
 
 	"golang.org/x/xerrors"
 )
@@ -61,5 +60,5 @@ func computeS256(b []byte) PKCEParams {
 }
 
 func base64URLEncode(b []byte) string {
-	return strings.TrimRight(base64.URLEncoding.EncodeToString(b), "=")
+	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(b)
 }
