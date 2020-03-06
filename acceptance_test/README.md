@@ -1,7 +1,21 @@
 # kubelogin/acceptance_test
 
-This is an acceptance test to verify behavior of kubelogin using a real Kubernetes cluster and OpenID Connect provider.
-It runs on [GitHub Actions](https://github.com/int128/kubelogin/actions?query=workflow%3Aacceptance-test).
+This is an acceptance test for walkthrough of the OIDC initial setup and plugin behavior using a real Kubernetes cluster and OpenID Connect provider, running on [GitHub Actions](https://github.com/int128/kubelogin/actions?query=workflow%3Aacceptance-test).
+
+It is intended to verify the following points:
+
+- User can set up Kubernetes OIDC authentication and this plugin.
+- User can access a cluster after login.
+
+It performs the test using the following components:
+
+- Kubernetes cluster (Kind)
+- OIDC provider (Dex)
+- Browser (Chrome)
+- kubectl command
+
+
+## How it works
 
 Let's take a look at the diagram.
 
@@ -26,6 +40,32 @@ It performs the test by the following steps:
 1. kubectl accesses an API with the token.
 1. kube-apiserver verifies the token by Dex.
 1. Check if kubectl exited with code 0.
+
+
+## Run locally
+
+You need to set up the following components:
+
+- Docker
+- Kind
+- Chrome or Chromium
+
+You need to add the following line to `/etc/hosts` so that the browser can access the Dex.
+
+```
+127.0.0.1 dex-server
+```
+
+Run the test.
+
+```shell script
+# run the test
+make
+
+# clean up
+make delete-cluster
+make delete-dex
+```
 
 
 ## Technical consideration
@@ -67,25 +107,3 @@ As a result,
 - Set the issuer URL to kubectl. See [`kubeconfig_oidc.yaml`](kubeconfig_oidc.yaml).
 - Set the issuer URL to kube-apiserver. See [`cluster.yaml`](cluster.yaml).
 - Set `BROWSER` environment variable to run [`chromelogin`](chromelogin) by `xdg-open`.
-
-
-## Run locally
-
-You need to set up Docker and Kind.
-
-You need to add the following line to `/etc/hosts`:
-
-```
-127.0.0.1 dex-server
-```
-
-Run:
-
-```shell script
-# run the test
-make
-
-# clean up
-make delete-cluster
-make delete-dex
-```
