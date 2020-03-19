@@ -38,6 +38,7 @@ type Input struct {
 	IDToken        string // optional, from the token cache
 	RefreshToken   string // optional, from the token cache
 	GrantOptionSet GrantOptionSet
+	ExtraURLParams map[string]string
 }
 
 type GrantOptionSet struct {
@@ -115,13 +116,14 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 
 	u.Logger.V(1).Infof("initializing an OpenID Connect client")
 	client, err := u.NewOIDCClient(ctx, oidcclient.Config{
-		IssuerURL:     in.IssuerURL,
-		ClientID:      in.ClientID,
-		ClientSecret:  in.ClientSecret,
-		ExtraScopes:   in.ExtraScopes,
-		CertPool:      in.CertPool,
-		SkipTLSVerify: in.SkipTLSVerify,
-		Logger:        u.Logger,
+		IssuerURL:      in.IssuerURL,
+		ClientID:       in.ClientID,
+		ClientSecret:   in.ClientSecret,
+		ExtraScopes:    in.ExtraScopes,
+		CertPool:       in.CertPool,
+		SkipTLSVerify:  in.SkipTLSVerify,
+		Logger:         u.Logger,
+		ExtraURLParams: in.ExtraURLParams,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("oidc error: %w", err)

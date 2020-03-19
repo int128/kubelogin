@@ -61,10 +61,11 @@ type TokenSet struct {
 }
 
 type client struct {
-	httpClient   *http.Client
-	provider     *oidc.Provider
-	oauth2Config oauth2.Config
-	logger       logger.Interface
+	httpClient     *http.Client
+	provider       *oidc.Provider
+	oauth2Config   oauth2.Config
+	logger         logger.Interface
+	extraURLParams map[string]string
 }
 
 func (c *client) wrapContext(ctx context.Context) context.Context {
@@ -92,6 +93,11 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		LocalServerBindAddress: in.BindAddress,
 		LocalServerReadyChan:   localServerReadyChan,
 	}
+
+	for key, value := range c.extraURLParams {
+		config.AuthCodeOptions = append(config.AuthCodeOptions, oauth2.SetAuthURLParam(key, value))
+	}
+
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
 		return nil, xerrors.Errorf("oauth2 error: %w", err)

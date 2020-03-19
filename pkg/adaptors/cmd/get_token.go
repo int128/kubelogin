@@ -19,6 +19,7 @@ type getTokenOptions struct {
 	SkipTLSVerify         bool
 	TokenCacheDir         string
 	authenticationOptions authenticationOptions
+	ExtraURLParams        map[string]string
 }
 
 func (o *getTokenOptions) register(f *pflag.FlagSet) {
@@ -31,6 +32,7 @@ func (o *getTokenOptions) register(f *pflag.FlagSet) {
 	f.StringVar(&o.CACertData, "certificate-authority-data", "", "Base64 encoded data for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for caching tokens")
+	f.StringToStringVar(&o.ExtraURLParams, "oidc-extra-url-params", nil, "Extra query parameters to send with get token requests")
 	o.authenticationOptions.register(f)
 }
 
@@ -71,6 +73,7 @@ func (cmd *GetToken) New() *cobra.Command {
 				SkipTLSVerify:  o.SkipTLSVerify,
 				TokenCacheDir:  o.TokenCacheDir,
 				GrantOptionSet: grantOptionSet,
+				ExtraURLParams: o.ExtraURLParams,
 			}
 			if err := cmd.GetToken.Do(c.Context(), in); err != nil {
 				return xerrors.Errorf("get-token: %w", err)
