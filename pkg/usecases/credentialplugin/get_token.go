@@ -37,7 +37,6 @@ type Input struct {
 	SkipTLSVerify  bool
 	TokenCacheDir  string
 	GrantOptionSet authentication.GrantOptionSet
-	ExtraURLParams map[string]string
 }
 
 type GetToken struct {
@@ -98,7 +97,6 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		IDToken:        tokenCacheValue.IDToken,
 		RefreshToken:   tokenCacheValue.RefreshToken,
 		GrantOptionSet: in.GrantOptionSet,
-		ExtraURLParams: in.ExtraURLParams,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("authentication error: %w", err)

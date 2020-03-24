@@ -19,7 +19,7 @@ type AuthCodeKeyboard struct {
 	Logger logger.Interface
 }
 
-func (u *AuthCodeKeyboard) Do(ctx context.Context, _ *AuthCodeKeyboardOption, client oidcclient.Interface) (*Output, error) {
+func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, client oidcclient.Interface) (*Output, error) {
 	u.Logger.V(1).Infof("performing the authorization code flow with keyboard interactive")
 	state, err := oidc.NewState()
 	if err != nil {
@@ -34,11 +34,12 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, _ *AuthCodeKeyboardOption, cl
 		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
 	}
 	authCodeURL := client.GetAuthCodeURL(oidcclient.AuthCodeURLInput{
-		State:               state,
-		Nonce:               nonce,
-		CodeChallenge:       p.CodeChallenge,
-		CodeChallengeMethod: p.CodeChallengeMethod,
-		RedirectURI:         oobRedirectURI,
+		State:                  state,
+		Nonce:                  nonce,
+		CodeChallenge:          p.CodeChallenge,
+		CodeChallengeMethod:    p.CodeChallengeMethod,
+		RedirectURI:            oobRedirectURI,
+		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	})
 	u.Logger.Printf("Open %s", authCodeURL)
 	code, err := u.Reader.ReadString(authCodeKeyboardPrompt)

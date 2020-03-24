@@ -29,11 +29,12 @@ type Interface interface {
 }
 
 type AuthCodeURLInput struct {
-	State               string
-	Nonce               string
-	CodeChallenge       string
-	CodeChallengeMethod string
-	RedirectURI         string
+	State                  string
+	Nonce                  string
+	CodeChallenge          string
+	CodeChallengeMethod    string
+	RedirectURI            string
+	AuthRequestExtraParams map[string]string
 }
 
 type ExchangeAuthCodeInput struct {
@@ -44,12 +45,13 @@ type ExchangeAuthCodeInput struct {
 }
 
 type GetTokenByAuthCodeInput struct {
-	BindAddress         []string
-	State               string
-	Nonce               string
-	CodeChallenge       string
-	CodeChallengeMethod string
-	CodeVerifier        string
+	BindAddress            []string
+	State                  string
+	Nonce                  string
+	CodeChallenge          string
+	CodeChallengeMethod    string
+	CodeVerifier           string
+	AuthRequestExtraParams map[string]string
 }
 
 // TokenSet represents an output DTO of
@@ -61,11 +63,10 @@ type TokenSet struct {
 }
 
 type client struct {
-	httpClient     *http.Client
-	provider       *oidc.Provider
-	oauth2Config   oauth2.Config
-	logger         logger.Interface
-	extraURLParams map[string]string
+	httpClient   *http.Client
+	provider     *oidc.Provider
+	oauth2Config oauth2.Config
+	logger       logger.Interface
 }
 
 func (c *client) wrapContext(ctx context.Context) context.Context {
@@ -93,8 +94,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		LocalServerBindAddress: in.BindAddress,
 		LocalServerReadyChan:   localServerReadyChan,
 	}
-
-	for key, value := range c.extraURLParams {
+	for key, value := range in.AuthRequestExtraParams {
 		config.AuthCodeOptions = append(config.AuthCodeOptions, oauth2.SetAuthURLParam(key, value))
 	}
 
@@ -109,12 +109,16 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 func (c *client) GetAuthCodeURL(in AuthCodeURLInput) string {
 	cfg := c.oauth2Config
 	cfg.RedirectURL = in.RedirectURI
-	return cfg.AuthCodeURL(in.State,
+	opts := []oauth2.AuthCodeOption{
 		oauth2.AccessTypeOffline,
 		oidc.Nonce(in.Nonce),
 		oauth2.SetAuthURLParam("code_challenge", in.CodeChallenge),
 		oauth2.SetAuthURLParam("code_challenge_method", in.CodeChallengeMethod),
-	)
+	}
+	for key, value := range in.AuthRequestExtraParams {
+		opts = append(opts, oauth2.SetAuthURLParam(key, value))
+	}
+	return cfg.AuthCodeURL(in.State, opts...)
 }
 
 // ExchangeAuthCode exchanges the authorization code and token.

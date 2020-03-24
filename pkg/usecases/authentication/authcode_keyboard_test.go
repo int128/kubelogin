@@ -29,9 +29,17 @@ func TestAuthCodeKeyboard_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
+		o := &AuthCodeKeyboardOption{
+			AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
+		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			GetAuthCodeURL(nonNil).
+			Do(func(in oidcclient.AuthCodeURLInput) {
+				if diff := cmp.Diff(o.AuthRequestExtraParams, in.AuthRequestExtraParams); diff != "" {
+					t.Errorf("AuthRequestExtraParams mismatch (-want +got):\n%s", diff)
+				}
+			}).
 			Return("https://issuer.example.com/auth")
 		mockOIDCClient.EXPECT().
 			ExchangeAuthCode(nonNil, nonNil).
@@ -53,7 +61,7 @@ func TestAuthCodeKeyboard_Do(t *testing.T) {
 			Reader: mockReader,
 			Logger: logger.New(t),
 		}
-		got, err := u.Do(ctx, nil, mockOIDCClient)
+		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}

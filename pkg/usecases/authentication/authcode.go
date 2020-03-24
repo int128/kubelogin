@@ -32,12 +32,13 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
 	}
 	in := oidcclient.GetTokenByAuthCodeInput{
-		BindAddress:         o.BindAddress,
-		State:               state,
-		Nonce:               nonce,
-		CodeChallenge:       p.CodeChallenge,
-		CodeChallengeMethod: p.CodeChallengeMethod,
-		CodeVerifier:        p.CodeVerifier,
+		BindAddress:            o.BindAddress,
+		State:                  state,
+		Nonce:                  nonce,
+		CodeChallenge:          p.CodeChallenge,
+		CodeChallengeMethod:    p.CodeChallengeMethod,
+		CodeVerifier:           p.CodeVerifier,
+		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	}
 	readyChan := make(chan string, 1)
 	defer close(readyChan)

@@ -18,14 +18,13 @@ type NewFunc func(ctx context.Context, config Config) (Interface, error)
 
 // Config represents a configuration of OpenID Connect client.
 type Config struct {
-	IssuerURL      string
-	ClientID       string
-	ClientSecret   string
-	ExtraScopes    []string // optional
-	CertPool       certpool.Interface
-	SkipTLSVerify  bool
-	Logger         logger.Interface
-	ExtraURLParams map[string]string
+	IssuerURL     string
+	ClientID      string
+	ClientSecret  string
+	ExtraScopes   []string // optional
+	CertPool      certpool.Interface
+	SkipTLSVerify bool
+	Logger        logger.Interface
 }
 
 // New returns an instance of adaptors.Interface with the given configuration.
@@ -59,7 +58,6 @@ func New(ctx context.Context, config Config) (Interface, error) {
 			ClientSecret: config.ClientSecret,
 			Scopes:       append(config.ExtraScopes, oidc.ScopeOpenID),
 		},
-		logger:         config.Logger,
-		extraURLParams: config.ExtraURLParams,
+		logger: config.Logger,
 	}, nil
 }
