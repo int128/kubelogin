@@ -34,18 +34,18 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // AuthenticateCode mocks base method
-func (m *MockProvider) AuthenticateCode(arg0, arg1 string) (string, error) {
+func (m *MockProvider) AuthenticateCode(arg0 idp.AuthenticationRequest) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AuthenticateCode", arg0, arg1)
+	ret := m.ctrl.Call(m, "AuthenticateCode", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AuthenticateCode indicates an expected call of AuthenticateCode
-func (mr *MockProviderMockRecorder) AuthenticateCode(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockProviderMockRecorder) AuthenticateCode(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateCode", reflect.TypeOf((*MockProvider)(nil).AuthenticateCode), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateCode", reflect.TypeOf((*MockProvider)(nil).AuthenticateCode), arg0)
 }
 
 // AuthenticatePassword mocks base method

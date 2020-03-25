@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/big"
+	"net/url"
 )
 
 // Provider provides discovery and authentication methods.
@@ -17,7 +18,7 @@ import (
 type Provider interface {
 	Discovery() *DiscoveryResponse
 	GetCertificates() *CertificatesResponse
-	AuthenticateCode(scope, nonce string) (code string, err error)
+	AuthenticateCode(req AuthenticationRequest) (code string, err error)
 	Exchange(code string) (*TokenResponse, error)
 	AuthenticatePassword(username, password, scope string) (*TokenResponse, error)
 	Refresh(refreshToken string) (*TokenResponse, error)
@@ -87,6 +88,14 @@ func NewCertificatesResponse(idTokenKeyPair *rsa.PrivateKey) *CertificatesRespon
 			},
 		},
 	}
+}
+
+type AuthenticationRequest struct {
+	RedirectURI string
+	State       string
+	Scope       string // space separated string
+	Nonce       string
+	RawQuery    url.Values
 }
 
 type TokenResponse struct {
