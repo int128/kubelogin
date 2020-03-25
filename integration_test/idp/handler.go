@@ -74,8 +74,14 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		// 3.1.2.1. Authentication Request
 		// https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 		q := r.URL.Query()
-		redirectURI, scope, state, nonce := q.Get("redirect_uri"), q.Get("scope"), q.Get("state"), q.Get("nonce")
-		code, err := h.provider.AuthenticateCode(scope, nonce)
+		redirectURI, state := q.Get("redirect_uri"), q.Get("state")
+		code, err := h.provider.AuthenticateCode(AuthenticationRequest{
+			RedirectURI: redirectURI,
+			State:       state,
+			Scope:       q.Get("scope"),
+			Nonce:       q.Get("nonce"),
+			RawQuery:    q,
+		})
 		if err != nil {
 			return xerrors.Errorf("authentication error: %w", err)
 		}

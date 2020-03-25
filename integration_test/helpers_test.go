@@ -33,13 +33,22 @@ func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 	})
 }
 
-func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL, scope string, idToken *string) {
+func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL, scope string, extraParams map[string]string, idToken *string) {
 	var nonce string
 	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
 	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(jwt.PrivateKey))
-	provider.EXPECT().AuthenticateCode(scope, gomock.Any()).
-		DoAndReturn(func(_, gotNonce string) (string, error) {
-			nonce = gotNonce
+	provider.EXPECT().AuthenticateCode(gomock.Any()).
+		DoAndReturn(func(req idp.AuthenticationRequest) (string, error) {
+			if req.Scope != scope {
+				t.Errorf("scope wants `%s` but was `%s`", scope, req.Scope)
+			}
+			for k, v := range extraParams {
+				got := req.RawQuery.Get(k)
+				if got != v {
+					t.Errorf("parameter %s wants `%s` but was `%s`", k, v, got)
+				}
+			}
+			nonce = req.Nonce
 			return "YOUR_AUTH_CODE", nil
 		})
 	provider.EXPECT().Exchange("YOUR_AUTH_CODE").

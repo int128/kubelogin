@@ -212,6 +212,8 @@ func TestCmd_Run(t *testing.T) {
 					"--listen-address", "127.0.0.1:10080",
 					"--listen-address", "127.0.0.1:20080",
 					"--skip-open-browser",
+					"--oidc-auth-request-extra-params", "ttl=86400",
+					"--oidc-auth-request-extra-params", "reauth=true",
 					"--username", "USER",
 					"--password", "PASS",
 				},
@@ -226,8 +228,9 @@ func TestCmd_Run(t *testing.T) {
 					SkipTLSVerify:  true,
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeOption: &authentication.AuthCodeOption{
-							BindAddress:     []string{"127.0.0.1:10080", "127.0.0.1:20080"},
-							SkipOpenBrowser: true,
+							BindAddress:            []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							SkipOpenBrowser:        true,
+							AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 						},
 					},
 				},
@@ -238,13 +241,16 @@ func TestCmd_Run(t *testing.T) {
 					"--oidc-issuer-url", "https://issuer.example.com",
 					"--oidc-client-id", "YOUR_CLIENT_ID",
 					"--grant-type", "authcode-keyboard",
+					"--oidc-auth-request-extra-params", "ttl=86400",
 				},
 				in: credentialplugin.Input{
 					TokenCacheDir: defaultTokenCacheDir,
 					IssuerURL:     "https://issuer.example.com",
 					ClientID:      "YOUR_CLIENT_ID",
 					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeKeyboardOption: &authentication.AuthCodeKeyboardOption{},
+						AuthCodeKeyboardOption: &authentication.AuthCodeKeyboardOption{
+							AuthRequestExtraParams: map[string]string{"ttl": "86400"},
+						},
 					},
 				},
 			},

@@ -97,7 +97,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
 		defer server.Shutdown(t, ctx)
 		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "openid", nil, &idToken)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
 
@@ -214,7 +214,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		validIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
 
-		setupAuthCodeFlow(t, provider, serverURL, "openid", &validIDToken)
+		setupAuthCodeFlow(t, provider, serverURL, "openid", nil, &validIDToken)
 		provider.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
 			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
 			MaxTimes(2) // package oauth2 will retry refreshing the token
@@ -249,7 +249,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
 		defer server.Shutdown(t, ctx)
 		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "email profile openid", &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "email profile openid", nil, &idToken)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
 
@@ -258,6 +258,34 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			"--oidc-client-id", "kubernetes",
 			"--oidc-extra-scope", "email",
 			"--oidc-extra-scope", "profile",
+		}
+		args = append(args, tc.ExtraArgs...)
+		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
+	})
+
+	t.Run("ExtraParams", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		provider := mock_idp.NewMockProvider(ctrl)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
+		defer server.Shutdown(t, ctx)
+		var idToken string
+		setupAuthCodeFlow(t, provider, serverURL, "openid", map[string]string{
+			"ttl":    "86400",
+			"reauth": "false",
+		}, &idToken)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
+		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
+
+		args := []string{
+			"--oidc-issuer-url", serverURL,
+			"--oidc-client-id", "kubernetes",
+			"--oidc-auth-request-extra-params", "ttl=86400",
+			"--oidc-auth-request-extra-params", "reauth=false",
 		}
 		args = append(args, tc.ExtraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)

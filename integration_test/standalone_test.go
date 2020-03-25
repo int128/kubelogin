@@ -50,7 +50,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		defer server.Shutdown(t, ctx)
 		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "openid", nil, &idToken)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  serverURL,
 			IDPCertificateAuthority: idpTLS.CACertPath,
@@ -175,7 +175,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "openid", nil, &idToken)
 		provider.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
 			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
 			MaxTimes(2) // package oauth2 will retry refreshing the token
@@ -210,7 +210,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "openid", nil, &idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
@@ -242,7 +242,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "profile groups openid", &idToken)
+		setupAuthCodeFlow(t, provider, serverURL, "profile groups openid", nil, &idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{

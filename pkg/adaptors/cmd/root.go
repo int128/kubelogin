@@ -44,12 +44,13 @@ func (o *rootOptions) register(f *pflag.FlagSet) {
 }
 
 type authenticationOptions struct {
-	GrantType       string
-	ListenAddress   []string
-	ListenPort      []int // deprecated
-	SkipOpenBrowser bool
-	Username        string
-	Password        string
+	GrantType              string
+	ListenAddress          []string
+	ListenPort             []int // deprecated
+	SkipOpenBrowser        bool
+	AuthRequestExtraParams map[string]string
+	Username               string
+	Password               string
 }
 
 // determineListenAddress returns the addresses from the flags.
@@ -80,6 +81,7 @@ func (o *authenticationOptions) register(f *pflag.FlagSet) {
 	//TODO: remove the deprecated flag
 	f.IntSliceVar(&o.ListenPort, "listen-port", nil, "(Deprecated: use --listen-address)")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
+	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
 }
@@ -88,11 +90,14 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 	switch {
 	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == ""):
 		s.AuthCodeOption = &authentication.AuthCodeOption{
-			BindAddress:     o.determineListenAddress(),
-			SkipOpenBrowser: o.SkipOpenBrowser,
+			BindAddress:            o.determineListenAddress(),
+			SkipOpenBrowser:        o.SkipOpenBrowser,
+			AuthRequestExtraParams: o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "authcode-keyboard":
-		s.AuthCodeKeyboardOption = &authentication.AuthCodeKeyboardOption{}
+		s.AuthCodeKeyboardOption = &authentication.AuthCodeKeyboardOption{
+			AuthRequestExtraParams: o.AuthRequestExtraParams,
+		}
 	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):
 		s.ROPCOption = &authentication.ROPCOption{
 			Username: o.Username,

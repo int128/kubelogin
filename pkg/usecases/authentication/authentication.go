@@ -47,11 +47,14 @@ type GrantOptionSet struct {
 }
 
 type AuthCodeOption struct {
-	SkipOpenBrowser bool
-	BindAddress     []string
+	SkipOpenBrowser        bool
+	BindAddress            []string
+	AuthRequestExtraParams map[string]string
 }
 
-type AuthCodeKeyboardOption struct{}
+type AuthCodeKeyboardOption struct {
+	AuthRequestExtraParams map[string]string
+}
 
 type ROPCOption struct {
 	Username string

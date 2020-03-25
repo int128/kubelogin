@@ -28,13 +28,20 @@ func TestAuthCode_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		o := &AuthCodeOption{
-			BindAddress:     []string{"127.0.0.1:8000"},
-			SkipOpenBrowser: true,
+			BindAddress:            []string{"127.0.0.1:8000"},
+			SkipOpenBrowser:        true,
+			AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, _ oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
+			Do(func(_ context.Context, in oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
+				if diff := cmp.Diff(o.BindAddress, in.BindAddress); diff != "" {
+					t.Errorf("BindAddress mismatch (-want +got):\n%s", diff)
+				}
+				if diff := cmp.Diff(o.AuthRequestExtraParams, in.AuthRequestExtraParams); diff != "" {
+					t.Errorf("AuthRequestExtraParams mismatch (-want +got):\n%s", diff)
+				}
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidcclient.TokenSet{
