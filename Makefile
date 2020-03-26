@@ -57,7 +57,7 @@ clean:
 ci-setup-linux-amd64:
 	mkdir -p ~/bin
 	# https://github.com/golangci/golangci-lint
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ~/bin v1.21.0
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ~/bin v1.24.0
 	# https://github.com/int128/goxzst
 	curl -sfL -o /tmp/goxzst.zip https://github.com/int128/goxzst/releases/download/v0.3.0/goxzst_linux_amd64.zip
 	unzip /tmp/goxzst.zip -d ~/bin
