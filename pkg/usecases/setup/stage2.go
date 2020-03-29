@@ -49,7 +49,7 @@ Run the following command:
 	  --exec-arg=oidc-login \
 	  --exec-arg=get-token \
 {{- range .Args }}
-	  --exec-arg={{ . }}
+	  --exec-arg={{ . }} \
 {{- end }}
 
 ## 6. Verify cluster access
