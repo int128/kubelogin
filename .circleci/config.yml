@@ -2,17 +2,28 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.14.1
+      - image: cimg/go:1.14
     steps:
-      - run: mkdir -p ~/bin
-      - run: echo 'export PATH="$HOME/bin:$PATH"' >> $BASH_ENV
+      - run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
       - checkout
-      - run: make ci-setup-linux-amd64
-      - run: make VERSION=$CIRCLE_TAG ci
+      - restore_cache:
+          keys:
+            - go-sum-{{ checksum "go.sum" }}
+      - run:
+          command: go get -v github.com/int128/goxzst github.com/int128/ghcp
+          working_directory: .circleci
+      - run: make check
+      - run: bash <(curl -s https://codecov.io/bash)
+      - run: make dist
       - run: |
           if [ "$CIRCLE_TAG" ]; then
-            make VERSION=$CIRCLE_TAG GITHUB_USERNAME=$CIRCLE_PROJECT_USERNAME GITHUB_REPONAME=$CIRCLE_PROJECT_REPONAME release
+            make release
           fi
+      - save_cache:
+          key: go-sum-{{ checksum "go.sum" }}
+          paths:
+            - ~/go/pkg
       - store_artifacts:
           path: gotest.log
 
