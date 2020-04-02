@@ -1,22 +1,16 @@
-# CI must provide the following variables (on tag push)
-# VERSION
-# GITHUB_USERNAME
-# GITHUB_REPONAME
+# CircleCI specific variables
+CIRCLE_TAG ?= latest
+GITHUB_USERNAME := $(CIRCLE_PROJECT_USERNAME)
+GITHUB_REPONAME := $(CIRCLE_PROJECT_REPONAME)
 
 TARGET := kubelogin
-VERSION ?= latest
+VERSION ?= $(CIRCLE_TAG)
 LDFLAGS := -X main.version=$(VERSION)
 
 all: $(TARGET)
 
 $(TARGET): $(wildcard **/*.go)
 	go build -o $@ -ldflags "$(LDFLAGS)"
-
-.PHONY: ci
-ci:
-	$(MAKE) check
-	bash -c "bash <(curl -s https://codecov.io/bash)"
-	$(MAKE) dist
 
 .PHONY: check
 check:
@@ -52,15 +46,3 @@ clean:
 	-rm $(TARGET)
 	-rm -r dist/output/
 	-rm coverage.out gotest.log
-
-.PHONY: ci-setup-linux-amd64
-ci-setup-linux-amd64:
-	mkdir -p ~/bin
-	# https://github.com/golangci/golangci-lint
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ~/bin v1.24.0
-	# https://github.com/int128/goxzst
-	curl -sfL -o /tmp/goxzst.zip https://github.com/int128/goxzst/releases/download/v0.3.0/goxzst_linux_amd64.zip
-	unzip /tmp/goxzst.zip -d ~/bin
-	# https://github.com/int128/ghcp
-	curl -sfL -o /tmp/ghcp.zip https://github.com/int128/ghcp/releases/download/v1.8.0/ghcp_linux_amd64.zip
-	unzip /tmp/ghcp.zip -d ~/bin
