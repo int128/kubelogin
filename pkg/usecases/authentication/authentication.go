@@ -49,6 +49,7 @@ type GrantOptionSet struct {
 type AuthCodeOption struct {
 	SkipOpenBrowser        bool
 	BindAddress            []string
+	RedirectURLHostname    string
 	AuthRequestExtraParams map[string]string
 }
 

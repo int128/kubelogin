@@ -51,6 +51,7 @@ type GetTokenByAuthCodeInput struct {
 	CodeChallenge          string
 	CodeChallengeMethod    string
 	CodeVerifier           string
+	RedirectURLHostname    string
 	AuthRequestExtraParams map[string]string
 }
 
@@ -93,6 +94,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		},
 		LocalServerBindAddress: in.BindAddress,
 		LocalServerReadyChan:   localServerReadyChan,
+		RedirectURLHostname:    in.RedirectURLHostname,
 	}
 	for key, value := range in.AuthRequestExtraParams {
 		config.AuthCodeOptions = append(config.AuthCodeOptions, oauth2.SetAuthURLParam(key, value))

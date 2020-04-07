@@ -38,6 +38,7 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 		CodeChallenge:          p.CodeChallenge,
 		CodeChallengeMethod:    p.CodeChallengeMethod,
 		CodeVerifier:           p.CodeVerifier,
+		RedirectURLHostname:    o.RedirectURLHostname,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	}
 	readyChan := make(chan string, 1)

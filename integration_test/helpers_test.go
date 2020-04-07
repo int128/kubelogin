@@ -3,6 +3,7 @@ package integration_test
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,7 +34,7 @@ func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 	})
 }
 
-func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL, scope string, extraParams map[string]string, idToken *string) {
+func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL, scope, redirectURIPrefix string, extraParams map[string]string, idToken *string) {
 	var nonce string
 	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
 	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(jwt.PrivateKey))
@@ -41,6 +42,9 @@ func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL,
 		DoAndReturn(func(req idp.AuthenticationRequest) (string, error) {
 			if req.Scope != scope {
 				t.Errorf("scope wants `%s` but was `%s`", scope, req.Scope)
+			}
+			if !strings.HasPrefix(req.RedirectURI, redirectURIPrefix) {
+				t.Errorf("redirectURI wants prefix `%s` but was `%s`", redirectURIPrefix, req.RedirectURI)
 			}
 			for k, v := range extraParams {
 				got := req.RawQuery.Get(k)

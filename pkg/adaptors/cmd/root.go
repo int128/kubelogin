@@ -48,6 +48,7 @@ type authenticationOptions struct {
 	ListenAddress          []string
 	ListenPort             []int // deprecated
 	SkipOpenBrowser        bool
+	RedirectURLHostname    string
 	AuthRequestExtraParams map[string]string
 	Username               string
 	Password               string
@@ -81,6 +82,7 @@ func (o *authenticationOptions) register(f *pflag.FlagSet) {
 	//TODO: remove the deprecated flag
 	f.IntSliceVar(&o.ListenPort, "listen-port", nil, "(Deprecated: use --listen-address)")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
+	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "Hostname of the redirect URL")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
@@ -92,6 +94,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 		s.AuthCodeOption = &authentication.AuthCodeOption{
 			BindAddress:            o.determineListenAddress(),
 			SkipOpenBrowser:        o.SkipOpenBrowser,
+			RedirectURLHostname:    o.RedirectURLHostname,
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "authcode-keyboard":

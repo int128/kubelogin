@@ -30,6 +30,7 @@ func TestAuthCode_Do(t *testing.T) {
 		o := &AuthCodeOption{
 			BindAddress:            []string{"127.0.0.1:8000"},
 			SkipOpenBrowser:        true,
+			RedirectURLHostname:    "localhost",
 			AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
@@ -38,6 +39,9 @@ func TestAuthCode_Do(t *testing.T) {
 			Do(func(_ context.Context, in oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				if diff := cmp.Diff(o.BindAddress, in.BindAddress); diff != "" {
 					t.Errorf("BindAddress mismatch (-want +got):\n%s", diff)
+				}
+				if diff := cmp.Diff(o.RedirectURLHostname, in.RedirectURLHostname); diff != "" {
+					t.Errorf("RedirectURLHostname mismatch (-want +got):\n%s", diff)
 				}
 				if diff := cmp.Diff(o.AuthRequestExtraParams, in.AuthRequestExtraParams); diff != "" {
 					t.Errorf("AuthRequestExtraParams mismatch (-want +got):\n%s", diff)

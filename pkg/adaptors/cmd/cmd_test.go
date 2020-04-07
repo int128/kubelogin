@@ -27,7 +27,8 @@ func TestCmd_Run(t *testing.T) {
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeOption: &authentication.AuthCodeOption{
-							BindAddress: defaultListenAddress,
+							BindAddress:         defaultListenAddress,
+							RedirectURLHostname: "localhost",
 						},
 					},
 				},
@@ -41,7 +42,8 @@ func TestCmd_Run(t *testing.T) {
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeOption: &authentication.AuthCodeOption{
-							BindAddress: []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							BindAddress:         []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							RedirectURLHostname: "localhost",
 						},
 					},
 				},
@@ -57,7 +59,8 @@ func TestCmd_Run(t *testing.T) {
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeOption: &authentication.AuthCodeOption{
-							BindAddress: []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							BindAddress:         []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							RedirectURLHostname: "localhost",
 						},
 					},
 				},
@@ -85,8 +88,9 @@ func TestCmd_Run(t *testing.T) {
 					SkipTLSVerify:      true,
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeOption: &authentication.AuthCodeOption{
-							BindAddress:     []string{"127.0.0.1:10080", "127.0.0.1:20080"},
-							SkipOpenBrowser: true,
+							BindAddress:         []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							SkipOpenBrowser:     true,
+							RedirectURLHostname: "localhost",
 						},
 					},
 				},
@@ -191,7 +195,8 @@ func TestCmd_Run(t *testing.T) {
 					ClientID:      "YOUR_CLIENT_ID",
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeOption: &authentication.AuthCodeOption{
-							BindAddress: []string{"127.0.0.1:8000", "127.0.0.1:18000"},
+							BindAddress:         []string{"127.0.0.1:8000", "127.0.0.1:18000"},
+							RedirectURLHostname: "localhost",
 						},
 					},
 				},
@@ -230,6 +235,7 @@ func TestCmd_Run(t *testing.T) {
 						AuthCodeOption: &authentication.AuthCodeOption{
 							BindAddress:            []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 							SkipOpenBrowser:        true,
+							RedirectURLHostname:    "localhost",
 							AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 						},
 					},

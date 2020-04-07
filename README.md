@@ -128,6 +128,7 @@ Flags:
       --listen-address strings                          Address to bind to the local server. If multiple addresses are given, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --listen-port ints                                (Deprecated: use --listen-address)
       --skip-open-browser                               If true, it does not open the browser on authentication
+      --oidc-redirect-url-hostname string               Hostname of the redirect URL (default "localhost")
       --oidc-auth-request-extra-params stringToString   Extra query parameters to send with an authentication request (default [])
       --username string                                 If set, perform the resource owner password credentials grant
       --password string                                 If set, use the password instead of asking it
@@ -190,6 +191,12 @@ You can change the listening address.
 ```yaml
       - --listen-address=127.0.0.1:12345
       - --listen-address=127.0.0.1:23456
+```
+
+You can change the hostname of redirect URI from the default value `localhost`.
+
+```yaml
+      - --oidc-redirect-url-hostname=127.0.0.1
 ```
 
 You can add extra parameters to the authentication request.
