@@ -93,7 +93,8 @@ cluster: dex create-cluster
 create-cluster: $(OUTPUT_DIR)/ca.crt
 	cp $(OUTPUT_DIR)/ca.crt /tmp/kubelogin-acceptance-test-dex-ca.crt
 	kind create cluster --name $(CLUSTER_NAME) --config cluster.yaml
-	kubectl apply -f role.yaml
+	kubectl create clusterrole cluster-readonly --verb=get,watch,list --resource='*.*'
+	kubectl create clusterrolebinding cluster-readonly --clusterrole=cluster-readonly --user=admin@example.com
 
 # clean up the resources
 .PHONY: clean
