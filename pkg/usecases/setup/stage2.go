@@ -18,19 +18,9 @@ You got a token with the following claims:
 
 ## 3. Bind a cluster role
 
-Apply the following manifest:
+Run the following command:
 
-	kind: ClusterRoleBinding
-	apiVersion: rbac.authorization.k8s.io/v1
-	metadata:
-	  name: oidc-cluster-admin
-	roleRef:
-	  apiGroup: rbac.authorization.k8s.io
-	  kind: ClusterRole
-	  name: cluster-admin
-	subjects:
-	- kind: User
-	  name: {{ .IssuerURL }}#{{ .Subject }}
+	kubectl create clusterrolebinding oidc-cluster-admin --clusterrole=cluster-admin --user='{{ .IssuerURL }}#{{ .Subject }}'
 
 ## 4. Set up the Kubernetes API server
 

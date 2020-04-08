@@ -152,24 +152,9 @@ kubectl oidc-login setup --help
 ## 3. Bind a cluster role
 
 Here bind `cluster-admin` role to you.
-Apply the following manifest:
-
-```yaml
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: oidc-cluster-admin
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: User
-  name: ISSUER_URL#YOUR_SUBJECT
-```
 
 ```sh
-kubectl apply -f oidc-cluster-admin.yaml
+kubectl create clusterrolebinding oidc-cluster-admin --clusterrole=cluster-admin --user='ISSUER_URL#YOUR_SUBJECT'
 ```
 
 As well as you can create a custom cluster role and bind it.
