@@ -9,7 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/integration_test/idp"
 	"github.com/int128/kubelogin/integration_test/idp/mock_idp"
-	"github.com/int128/kubelogin/integration_test/keys"
+	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/kubeconfig"
 	"github.com/int128/kubelogin/integration_test/localserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
@@ -28,14 +28,14 @@ import (
 //
 func TestStandalone(t *testing.T) {
 	t.Run("NoTLS", func(t *testing.T) {
-		testStandalone(t, keys.None)
+		testStandalone(t, keypair.None)
 	})
 	t.Run("TLS", func(t *testing.T) {
-		testStandalone(t, keys.Server)
+		testStandalone(t, keypair.Server)
 	})
 }
 
-func testStandalone(t *testing.T, idpTLS keys.Keys) {
+func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 	timeout := 5 * time.Second
 
 	t.Run("Defaults", func(t *testing.T) {
@@ -49,8 +49,12 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
 		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
-		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", "http://localhost:", nil, &idToken)
+		cfg := authCodeFlowConfig{
+			serverURL:         serverURL,
+			scope:             "openid",
+			redirectURIPrefix: "http://localhost:",
+		}
+		setupAuthCodeFlow(t, provider, &cfg)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  serverURL,
 			IDPCertificateAuthority: idpTLS.CACertPath,
@@ -62,7 +66,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		}
 		runRootCmd(t, ctx, browserMock, args)
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
+			IDToken:      cfg.idToken,
 			RefreshToken: "YOUR_REFRESH_TOKEN",
 		})
 	})
@@ -174,8 +178,12 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		provider := mock_idp.NewMockProvider(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", "http://localhost:", nil, &idToken)
+		cfg := authCodeFlowConfig{
+			serverURL:         serverURL,
+			scope:             "openid",
+			redirectURIPrefix: "http://localhost:",
+		}
+		setupAuthCodeFlow(t, provider, &cfg)
 		provider.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
 			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
 			MaxTimes(2) // package oauth2 will retry refreshing the token
@@ -194,7 +202,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		}
 		runRootCmd(t, ctx, browserMock, args)
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
+			IDToken:      cfg.idToken,
 			RefreshToken: "YOUR_REFRESH_TOKEN",
 		})
 	})
@@ -209,8 +217,12 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		provider := mock_idp.NewMockProvider(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", "http://localhost:", nil, &idToken)
+		cfg := authCodeFlowConfig{
+			serverURL:         serverURL,
+			scope:             "openid",
+			redirectURIPrefix: "http://localhost:",
+		}
+		setupAuthCodeFlow(t, provider, &cfg)
 		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
@@ -226,7 +238,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		}
 		runRootCmd(t, ctx, browserMock, args)
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
+			IDToken:      cfg.idToken,
 			RefreshToken: "YOUR_REFRESH_TOKEN",
 		})
 	})
@@ -241,8 +253,12 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		provider := mock_idp.NewMockProvider(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), idpTLS)
 		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "profile groups openid", "http://localhost:", nil, &idToken)
+		cfg := authCodeFlowConfig{
+			serverURL:         serverURL,
+			scope:             "profile groups openid",
+			redirectURIPrefix: "http://localhost:",
+		}
+		setupAuthCodeFlow(t, provider, &cfg)
 		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
@@ -257,7 +273,7 @@ func testStandalone(t *testing.T, idpTLS keys.Keys) {
 		}
 		runRootCmd(t, ctx, browserMock, args)
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
+			IDToken:      cfg.idToken,
 			RefreshToken: "YOUR_REFRESH_TOKEN",
 		})
 	})

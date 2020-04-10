@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/int128/kubelogin/integration_test/keys"
+	"github.com/int128/kubelogin/integration_test/keypair"
 )
 
 type Shutdowner interface {
@@ -31,8 +31,8 @@ func (s *shutdowner) Shutdown(t *testing.T, ctx context.Context) {
 
 // Start starts an authentication server.
 // If k is non-nil, it starts a TLS server.
-func Start(t *testing.T, h http.Handler, k keys.Keys) (string, Shutdowner) {
-	if k == keys.None {
+func Start(t *testing.T, h http.Handler, k keypair.KeyPair) (string, Shutdowner) {
+	if k == keypair.None {
 		return startNoTLS(t, h)
 	}
 	return startTLS(t, h, k)
@@ -54,7 +54,7 @@ func startNoTLS(t *testing.T, h http.Handler) (string, Shutdowner) {
 	return url, &shutdowner{l, s}
 }
 
-func startTLS(t *testing.T, h http.Handler, k keys.Keys) (string, Shutdowner) {
+func startTLS(t *testing.T, h http.Handler, k keypair.KeyPair) (string, Shutdowner) {
 	t.Helper()
 	l, port := newLocalhostListener(t)
 	url := "https://localhost:" + port
