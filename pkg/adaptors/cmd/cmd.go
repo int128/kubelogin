@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"runtime"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
@@ -52,7 +53,7 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 		Short: "Print the version information",
 		Args:  cobra.NoArgs,
 		Run: func(*cobra.Command, []string) {
-			cmd.Logger.Printf("kubelogin version %s", version)
+			cmd.Logger.Printf("kubelogin version %s (%s %s_%s)", version, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 		},
 	}
 	rootCmd.AddCommand(versionCmd)
