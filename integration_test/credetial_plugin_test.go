@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/integration_test/idp"
 	"github.com/int128/kubelogin/integration_test/idp/mock_idp"
-	"github.com/int128/kubelogin/integration_test/keys"
+	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/localserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
@@ -44,7 +44,7 @@ func TestCredentialPlugin(t *testing.T) {
 	t.Run("NoTLS", func(t *testing.T) {
 		testCredentialPlugin(t, credentialPluginTestCase{
 			TokenCacheDir: tokenCacheDir,
-			Keys:          keys.None,
+			idpTLS:        keypair.None,
 			ExtraArgs: []string{
 				"--token-cache-dir", tokenCacheDir,
 			},
@@ -54,22 +54,22 @@ func TestCredentialPlugin(t *testing.T) {
 		t.Run("CertFile", func(t *testing.T) {
 			testCredentialPlugin(t, credentialPluginTestCase{
 				TokenCacheDir: tokenCacheDir,
-				TokenCacheKey: tokencache.Key{CACertFilename: keys.Server.CACertPath},
-				Keys:          keys.Server,
+				TokenCacheKey: tokencache.Key{CACertFilename: keypair.Server.CACertPath},
+				idpTLS:        keypair.Server,
 				ExtraArgs: []string{
 					"--token-cache-dir", tokenCacheDir,
-					"--certificate-authority", keys.Server.CACertPath,
+					"--certificate-authority", keypair.Server.CACertPath,
 				},
 			})
 		})
 		t.Run("CertData", func(t *testing.T) {
 			testCredentialPlugin(t, credentialPluginTestCase{
 				TokenCacheDir: tokenCacheDir,
-				TokenCacheKey: tokencache.Key{CACertData: keys.Server.CACertBase64},
-				Keys:          keys.Server,
+				TokenCacheKey: tokencache.Key{CACertData: keypair.Server.CACertBase64},
+				idpTLS:        keypair.Server,
 				ExtraArgs: []string{
 					"--token-cache-dir", tokenCacheDir,
-					"--certificate-authority-data", keys.Server.CACertBase64,
+					"--certificate-authority-data", keypair.Server.CACertBase64,
 				},
 			})
 		})
@@ -79,7 +79,7 @@ func TestCredentialPlugin(t *testing.T) {
 type credentialPluginTestCase struct {
 	TokenCacheDir string
 	TokenCacheKey tokencache.Key
-	Keys          keys.Keys
+	idpTLS        keypair.KeyPair
 	ExtraArgs     []string
 }
 
@@ -94,7 +94,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer ctrl.Finish()
 
 		provider := mock_idp.NewMockProvider(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.idpTLS)
 		defer server.Shutdown(t, ctx)
 		cfg := authCodeFlowConfig{
 			serverURL:         serverURL,
@@ -103,7 +103,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		}
 		setupAuthCodeFlow(t, provider, &cfg)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
+		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
 
 		args := []string{
 			"--oidc-issuer-url", serverURL,
@@ -121,7 +121,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer ctrl.Finish()
 
 		provider := mock_idp.NewMockProvider(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.idpTLS)
 		defer server.Shutdown(t, ctx)
 		idToken := newIDToken(t, serverURL, "", tokenExpiryFuture)
 		setupROPCFlow(provider, serverURL, "openid", "USER", "PASS", idToken)
@@ -146,7 +146,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer ctrl.Finish()
 
 		provider := mock_idp.NewMockProvider(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.idpTLS)
 		defer server.Shutdown(t, ctx)
 		idToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
@@ -176,7 +176,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer ctrl.Finish()
 
 		provider := mock_idp.NewMockProvider(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.idpTLS)
 		defer server.Shutdown(t, ctx)
 		validIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
 		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
@@ -213,7 +213,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer ctrl.Finish()
 
 		provider := mock_idp.NewMockProvider(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.idpTLS)
 		defer server.Shutdown(t, ctx)
 
 		cfg := authCodeFlowConfig{
@@ -232,7 +232,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		})
 		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
+		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
 
 		args := []string{
 			"--oidc-issuer-url", serverURL,
@@ -254,7 +254,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer ctrl.Finish()
 
 		provider := mock_idp.NewMockProvider(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.idpTLS)
 		defer server.Shutdown(t, ctx)
 		cfg := authCodeFlowConfig{
 			serverURL:         serverURL,
@@ -263,7 +263,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		}
 		setupAuthCodeFlow(t, provider, &cfg)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
+		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
 
 		args := []string{
 			"--oidc-issuer-url", serverURL,
@@ -283,7 +283,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer ctrl.Finish()
 
 		provider := mock_idp.NewMockProvider(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.idpTLS)
 		defer server.Shutdown(t, ctx)
 		cfg := authCodeFlowConfig{
 			serverURL:         serverURL,
@@ -292,7 +292,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		}
 		setupAuthCodeFlow(t, provider, &cfg)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
+		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
 
 		args := []string{
 			"--oidc-issuer-url", serverURL,
@@ -311,7 +311,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer ctrl.Finish()
 
 		provider := mock_idp.NewMockProvider(ctrl)
-		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
+		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.idpTLS)
 		defer server.Shutdown(t, ctx)
 		cfg := authCodeFlowConfig{
 			serverURL:         serverURL,
@@ -324,7 +324,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		}
 		setupAuthCodeFlow(t, provider, &cfg)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
+		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
 
 		args := []string{
 			"--oidc-issuer-url", serverURL,

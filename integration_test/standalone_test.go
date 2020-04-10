@@ -9,7 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/integration_test/idp"
 	"github.com/int128/kubelogin/integration_test/idp/mock_idp"
-	"github.com/int128/kubelogin/integration_test/keys"
+	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/kubeconfig"
 	"github.com/int128/kubelogin/integration_test/localserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
@@ -28,14 +28,14 @@ import (
 //
 func TestStandalone(t *testing.T) {
 	t.Run("NoTLS", func(t *testing.T) {
-		testStandalone(t, keys.None)
+		testStandalone(t, keypair.None)
 	})
 	t.Run("TLS", func(t *testing.T) {
-		testStandalone(t, keys.Server)
+		testStandalone(t, keypair.Server)
 	})
 }
 
-func testStandalone(t *testing.T, idpTLS keys.Keys) {
+func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 	timeout := 5 * time.Second
 
 	t.Run("Defaults", func(t *testing.T) {

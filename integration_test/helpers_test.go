@@ -10,7 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/integration_test/idp"
 	"github.com/int128/kubelogin/integration_test/idp/mock_idp"
-	"github.com/int128/kubelogin/integration_test/keys"
+	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kubelogin/pkg/testing/jwt"
@@ -79,7 +79,7 @@ func setupROPCFlow(provider *mock_idp.MockProvider, serverURL, scope, username, 
 		Return(idp.NewTokenResponse(idToken, "YOUR_REFRESH_TOKEN"), nil)
 }
 
-func newBrowserMock(ctx context.Context, t *testing.T, ctrl *gomock.Controller, k keys.Keys) browser.Interface {
+func newBrowserMock(ctx context.Context, t *testing.T, ctrl *gomock.Controller, k keypair.KeyPair) browser.Interface {
 	b := mock_browser.NewMockInterface(ctrl)
 	b.EXPECT().
 		Open(gomock.Any()).
