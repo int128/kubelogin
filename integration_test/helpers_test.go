@@ -34,19 +34,29 @@ func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 	})
 }
 
-func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL, scope, redirectURIPrefix string, extraParams map[string]string, idToken *string) {
+type authCodeFlowConfig struct {
+	serverURL         string
+	scope             string
+	redirectURIPrefix string
+	extraParams       map[string]string
+
+	// setupAuthCodeFlow will set this after authentication
+	idToken string
+}
+
+func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, c *authCodeFlowConfig) {
 	var nonce string
-	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(serverURL))
+	provider.EXPECT().Discovery().Return(idp.NewDiscoveryResponse(c.serverURL))
 	provider.EXPECT().GetCertificates().Return(idp.NewCertificatesResponse(jwt.PrivateKey))
 	provider.EXPECT().AuthenticateCode(gomock.Any()).
 		DoAndReturn(func(req idp.AuthenticationRequest) (string, error) {
-			if req.Scope != scope {
-				t.Errorf("scope wants `%s` but was `%s`", scope, req.Scope)
+			if req.Scope != c.scope {
+				t.Errorf("scope wants `%s` but was `%s`", c.scope, req.Scope)
 			}
-			if !strings.HasPrefix(req.RedirectURI, redirectURIPrefix) {
-				t.Errorf("redirectURI wants prefix `%s` but was `%s`", redirectURIPrefix, req.RedirectURI)
+			if !strings.HasPrefix(req.RedirectURI, c.redirectURIPrefix) {
+				t.Errorf("redirectURI wants prefix `%s` but was `%s`", c.redirectURIPrefix, req.RedirectURI)
 			}
-			for k, v := range extraParams {
+			for k, v := range c.extraParams {
 				got := req.RawQuery.Get(k)
 				if got != v {
 					t.Errorf("parameter %s wants `%s` but was `%s`", k, v, got)
@@ -57,8 +67,8 @@ func setupAuthCodeFlow(t *testing.T, provider *mock_idp.MockProvider, serverURL,
 		})
 	provider.EXPECT().Exchange("YOUR_AUTH_CODE").
 		DoAndReturn(func(string) (*idp.TokenResponse, error) {
-			*idToken = newIDToken(t, serverURL, nonce, tokenExpiryFuture)
-			return idp.NewTokenResponse(*idToken, "YOUR_REFRESH_TOKEN"), nil
+			c.idToken = newIDToken(t, c.serverURL, nonce, tokenExpiryFuture)
+			return idp.NewTokenResponse(c.idToken, "YOUR_REFRESH_TOKEN"), nil
 		})
 }
 

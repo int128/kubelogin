@@ -96,9 +96,13 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		provider := mock_idp.NewMockProvider(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
 		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", "http://localhost:", nil, &idToken)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
+		cfg := authCodeFlowConfig{
+			serverURL:         serverURL,
+			scope:             "openid",
+			redirectURIPrefix: "http://localhost:",
+		}
+		setupAuthCodeFlow(t, provider, &cfg)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
 
 		args := []string{
@@ -211,19 +215,23 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		provider := mock_idp.NewMockProvider(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
 		defer server.Shutdown(t, ctx)
-		validIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryFuture)
-		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
 
-		setupAuthCodeFlow(t, provider, serverURL, "openid", "http://localhost:", nil, &validIDToken)
+		cfg := authCodeFlowConfig{
+			serverURL:         serverURL,
+			scope:             "openid",
+			redirectURIPrefix: "http://localhost:",
+		}
+		setupAuthCodeFlow(t, provider, &cfg)
 		provider.EXPECT().Refresh("EXPIRED_REFRESH_TOKEN").
 			Return(nil, &idp.ErrorResponse{Code: "invalid_request", Description: "token has expired"}).
 			MaxTimes(2) // package oauth2 will retry refreshing the token
 
+		expiredIDToken := newIDToken(t, serverURL, "YOUR_NONCE", tokenExpiryPast)
 		setupTokenCache(t, tc, serverURL, tokencache.Value{
 			IDToken:      expiredIDToken,
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		})
-		writerMock := newCredentialPluginWriterMock(t, ctrl, &validIDToken)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
 
 		args := []string{
@@ -233,7 +241,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		args = append(args, tc.ExtraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 		assertTokenCache(t, tc, serverURL, tokencache.Value{
-			IDToken:      validIDToken,
+			IDToken:      cfg.idToken,
 			RefreshToken: "YOUR_REFRESH_TOKEN",
 		})
 	})
@@ -248,9 +256,13 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		provider := mock_idp.NewMockProvider(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
 		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "email profile openid", "http://localhost:", nil, &idToken)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
+		cfg := authCodeFlowConfig{
+			serverURL:         serverURL,
+			scope:             "email profile openid",
+			redirectURIPrefix: "http://localhost:",
+		}
+		setupAuthCodeFlow(t, provider, &cfg)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
 
 		args := []string{
@@ -273,9 +285,13 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		provider := mock_idp.NewMockProvider(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
 		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", "http://127.0.0.1:", nil, &idToken)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
+		cfg := authCodeFlowConfig{
+			serverURL:         serverURL,
+			scope:             "openid",
+			redirectURIPrefix: "http://127.0.0.1:",
+		}
+		setupAuthCodeFlow(t, provider, &cfg)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
 
 		args := []string{
@@ -297,12 +313,17 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		provider := mock_idp.NewMockProvider(ctrl)
 		serverURL, server := localserver.Start(t, idp.NewHandler(t, provider), tc.Keys)
 		defer server.Shutdown(t, ctx)
-		var idToken string
-		setupAuthCodeFlow(t, provider, serverURL, "openid", "http://localhost:", map[string]string{
-			"ttl":    "86400",
-			"reauth": "false",
-		}, &idToken)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, &idToken)
+		cfg := authCodeFlowConfig{
+			serverURL:         serverURL,
+			scope:             "openid",
+			redirectURIPrefix: "http://localhost:",
+			extraParams: map[string]string{
+				"ttl":    "86400",
+				"reauth": "false",
+			},
+		}
+		setupAuthCodeFlow(t, provider, &cfg)
+		writerMock := newCredentialPluginWriterMock(t, ctrl, &cfg.idToken)
 		browserMock := newBrowserMock(ctx, t, ctrl, tc.Keys)
 
 		args := []string{
