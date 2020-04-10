@@ -43,9 +43,9 @@ func TestCredentialPlugin(t *testing.T) {
 
 	t.Run("NoTLS", func(t *testing.T) {
 		testCredentialPlugin(t, credentialPluginTestCase{
-			TokenCacheDir: tokenCacheDir,
+			tokenCacheDir: tokenCacheDir,
 			idpTLS:        keypair.None,
-			ExtraArgs: []string{
+			extraArgs: []string{
 				"--token-cache-dir", tokenCacheDir,
 			},
 		})
@@ -53,10 +53,10 @@ func TestCredentialPlugin(t *testing.T) {
 	t.Run("TLS", func(t *testing.T) {
 		t.Run("CertFile", func(t *testing.T) {
 			testCredentialPlugin(t, credentialPluginTestCase{
-				TokenCacheDir: tokenCacheDir,
-				TokenCacheKey: tokencache.Key{CACertFilename: keypair.Server.CACertPath},
+				tokenCacheDir: tokenCacheDir,
+				tokenCacheKey: tokencache.Key{CACertFilename: keypair.Server.CACertPath},
 				idpTLS:        keypair.Server,
-				ExtraArgs: []string{
+				extraArgs: []string{
 					"--token-cache-dir", tokenCacheDir,
 					"--certificate-authority", keypair.Server.CACertPath,
 				},
@@ -64,10 +64,10 @@ func TestCredentialPlugin(t *testing.T) {
 		})
 		t.Run("CertData", func(t *testing.T) {
 			testCredentialPlugin(t, credentialPluginTestCase{
-				TokenCacheDir: tokenCacheDir,
-				TokenCacheKey: tokencache.Key{CACertData: keypair.Server.CACertBase64},
+				tokenCacheDir: tokenCacheDir,
+				tokenCacheKey: tokencache.Key{CACertData: keypair.Server.CACertBase64},
 				idpTLS:        keypair.Server,
-				ExtraArgs: []string{
+				extraArgs: []string{
 					"--token-cache-dir", tokenCacheDir,
 					"--certificate-authority-data", keypair.Server.CACertBase64,
 				},
@@ -77,10 +77,10 @@ func TestCredentialPlugin(t *testing.T) {
 }
 
 type credentialPluginTestCase struct {
-	TokenCacheDir string
-	TokenCacheKey tokencache.Key
+	tokenCacheDir string
+	tokenCacheKey tokencache.Key
 	idpTLS        keypair.KeyPair
-	ExtraArgs     []string
+	extraArgs     []string
 }
 
 func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
@@ -109,7 +109,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			"--oidc-issuer-url", serverURL,
 			"--oidc-client-id", "kubernetes",
 		}
-		args = append(args, tc.ExtraArgs...)
+		args = append(args, tc.extraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 	})
 
@@ -134,7 +134,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			"--username", "USER",
 			"--password", "PASS",
 		}
-		args = append(args, tc.ExtraArgs...)
+		args = append(args, tc.extraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 	})
 
@@ -160,7 +160,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			"--oidc-issuer-url", serverURL,
 			"--oidc-client-id", "kubernetes",
 		}
-		args = append(args, tc.ExtraArgs...)
+		args = append(args, tc.extraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 		assertTokenCache(t, tc, serverURL, tokencache.Value{
 			IDToken:      idToken,
@@ -197,7 +197,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			"--oidc-issuer-url", serverURL,
 			"--oidc-client-id", "kubernetes",
 		}
-		args = append(args, tc.ExtraArgs...)
+		args = append(args, tc.extraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 		assertTokenCache(t, tc, serverURL, tokencache.Value{
 			IDToken:      validIDToken,
@@ -238,7 +238,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			"--oidc-issuer-url", serverURL,
 			"--oidc-client-id", "kubernetes",
 		}
-		args = append(args, tc.ExtraArgs...)
+		args = append(args, tc.extraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 		assertTokenCache(t, tc, serverURL, tokencache.Value{
 			IDToken:      cfg.idToken,
@@ -271,7 +271,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			"--oidc-extra-scope", "email",
 			"--oidc-extra-scope", "profile",
 		}
-		args = append(args, tc.ExtraArgs...)
+		args = append(args, tc.extraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 	})
 
@@ -299,7 +299,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			"--oidc-client-id", "kubernetes",
 			"--oidc-redirect-url-hostname", "127.0.0.1",
 		}
-		args = append(args, tc.ExtraArgs...)
+		args = append(args, tc.extraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 	})
 
@@ -332,7 +332,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			"--oidc-auth-request-extra-params", "ttl=86400",
 			"--oidc-auth-request-extra-params", "reauth=false",
 		}
-		args = append(args, tc.ExtraArgs...)
+		args = append(args, tc.extraArgs...)
 		runGetTokenCmd(t, ctx, browserMock, writerMock, args)
 	})
 }
@@ -367,22 +367,22 @@ func runGetTokenCmd(t *testing.T, ctx context.Context, b browser.Interface, w cr
 }
 
 func setupTokenCache(t *testing.T, tc credentialPluginTestCase, serverURL string, v tokencache.Value) {
-	k := tc.TokenCacheKey
+	k := tc.tokenCacheKey
 	k.IssuerURL = serverURL
 	k.ClientID = "kubernetes"
 	var r tokencache.Repository
-	err := r.Save(tc.TokenCacheDir, k, v)
+	err := r.Save(tc.tokenCacheDir, k, v)
 	if err != nil {
 		t.Errorf("could not set up the token cache: %s", err)
 	}
 }
 
 func assertTokenCache(t *testing.T, tc credentialPluginTestCase, serverURL string, want tokencache.Value) {
-	k := tc.TokenCacheKey
+	k := tc.tokenCacheKey
 	k.IssuerURL = serverURL
 	k.ClientID = "kubernetes"
 	var r tokencache.Repository
-	got, err := r.FindByKey(tc.TokenCacheDir, k)
+	got, err := r.FindByKey(tc.tokenCacheDir, k)
 	if err != nil {
 		t.Errorf("could not set up the token cache: %s", err)
 	}
