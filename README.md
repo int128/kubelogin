@@ -28,7 +28,7 @@ brew install int128/kubelogin/kubelogin
 kubectl krew install oidc-login
 
 # GitHub Releases
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.18.0/kubelogin_linux_amd64.zip
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.19.0/kubelogin_linux_amd64.zip
 unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
@@ -288,7 +288,7 @@ users:
       - /tmp/.token-cache:/.token-cache
       - -p
       - 8000:8000
-      - quay.io/int128/kubelogin:v1.18.0
+      - quay.io/int128/kubelogin:v1.19.0
       - get-token
       - --token-cache-dir=/.token-cache
       - --listen-address=0.0.0.0:8000
