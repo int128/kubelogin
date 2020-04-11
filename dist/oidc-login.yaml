@@ -62,3 +62,27 @@ spec:
         matchLabels:
           os: windows
           arch: amd64
+    - uri: https://github.com/int128/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_linux_arm.zip
+      sha256: "{{ sha256 .linux_arm_archive }}"
+      bin: kubelogin
+      files:
+        - from: kubelogin
+          to: .
+        - from: LICENSE
+          to: .
+      selector:
+        matchLabels:
+          os: linux
+          arch: arm
+    - uri: https://github.com/int128/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_linux_arm64.zip
+      sha256: "{{ sha256 .linux_arm64_archive }}"
+      bin: kubelogin
+      files:
+        - from: kubelogin
+          to: .
+        - from: LICENSE
+          to: .
+      selector:
+        matchLabels:
+          os: linux
+          arch: arm64
