@@ -139,6 +139,7 @@ func TestAuthentication_Do(t *testing.T) {
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
+		mockOIDCClient.EXPECT().SupportedPKCEMethods()
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
 			Return(nil, xerrors.New("token has expired"))

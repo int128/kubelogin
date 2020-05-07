@@ -34,6 +34,7 @@ func TestAuthCode_Do(t *testing.T) {
 			AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
+		mockOIDCClient.EXPECT().SupportedPKCEMethods()
 		mockOIDCClient.EXPECT().
 			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
 			Do(func(_ context.Context, in oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
@@ -79,6 +80,7 @@ func TestAuthCode_Do(t *testing.T) {
 			BindAddress: []string{"127.0.0.1:8000"},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
+		mockOIDCClient.EXPECT().SupportedPKCEMethods()
 		mockOIDCClient.EXPECT().
 			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
 			Do(func(_ context.Context, _ oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {

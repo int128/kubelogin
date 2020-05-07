@@ -7,6 +7,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/domain/pkce"
 	"golang.org/x/xerrors"
 )
 
@@ -29,15 +30,14 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a nonce: %w", err)
 	}
-	p, err := oidc.NewPKCEParams()
+	p, err := pkce.New(client.SupportedPKCEMethods())
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
 	}
 	authCodeURL := client.GetAuthCodeURL(oidcclient.AuthCodeURLInput{
 		State:                  state,
 		Nonce:                  nonce,
-		CodeChallenge:          p.CodeChallenge,
-		CodeChallengeMethod:    p.CodeChallengeMethod,
+		PKCEParams:             p,
 		RedirectURI:            oobRedirectURI,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	})
@@ -48,10 +48,10 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 	}
 
 	tokenSet, err := client.ExchangeAuthCode(ctx, oidcclient.ExchangeAuthCodeInput{
-		Code:         code,
-		CodeVerifier: p.CodeVerifier,
-		Nonce:        nonce,
-		RedirectURI:  oobRedirectURI,
+		Code:        code,
+		PKCEParams:  p,
+		Nonce:       nonce,
+		RedirectURI: oobRedirectURI,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)

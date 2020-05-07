@@ -4,6 +4,7 @@ package oidcclient
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"net/http"
 
 	"github.com/coreos/go-oidc"
@@ -49,6 +50,10 @@ func New(ctx context.Context, config Config) (Interface, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("oidc discovery error: %w", err)
 	}
+	supportedPKCEMethods, err := extractSupportedPKCEMethods(provider)
+	if err != nil {
+		return nil, xerrors.Errorf("could not determine supported PKCE methods: %w", err)
+	}
 	return &client{
 		httpClient: httpClient,
 		provider:   provider,
@@ -58,6 +63,17 @@ func New(ctx context.Context, config Config) (Interface, error) {
 			ClientSecret: config.ClientSecret,
 			Scopes:       append(config.ExtraScopes, oidc.ScopeOpenID),
 		},
-		logger: config.Logger,
+		logger:               config.Logger,
+		supportedPKCEMethods: supportedPKCEMethods,
 	}, nil
+}
+
+func extractSupportedPKCEMethods(provider *oidc.Provider) ([]string, error) {
+	var d struct {
+		CodeChallengeMethodsSupported []string `json:"code_challenge_methods_supported"`
+	}
+	if err := provider.Claims(&d); err != nil {
+		return nil, fmt.Errorf("invalid discovery document: %w", err)
+	}
+	return d.CodeChallengeMethodsSupported, nil
 }

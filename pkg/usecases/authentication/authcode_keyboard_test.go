@@ -33,6 +33,7 @@ func TestAuthCodeKeyboard_Do(t *testing.T) {
 			AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
+		mockOIDCClient.EXPECT().SupportedPKCEMethods()
 		mockOIDCClient.EXPECT().
 			GetAuthCodeURL(nonNil).
 			Do(func(in oidcclient.AuthCodeURLInput) {
