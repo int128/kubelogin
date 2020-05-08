@@ -7,6 +7,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/domain/pkce"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
@@ -27,7 +28,7 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a nonce: %w", err)
 	}
-	p, err := oidc.NewPKCEParams()
+	p, err := pkce.New(client.SupportedPKCEMethods())
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
 	}
@@ -35,9 +36,7 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 		BindAddress:            o.BindAddress,
 		State:                  state,
 		Nonce:                  nonce,
-		CodeChallenge:          p.CodeChallenge,
-		CodeChallengeMethod:    p.CodeChallengeMethod,
-		CodeVerifier:           p.CodeVerifier,
+		PKCEParams:             p,
 		RedirectURLHostname:    o.RedirectURLHostname,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	}
