@@ -1,4 +1,5 @@
-package idp
+// Package handler provides a HTTP handler for the OpenID Connect Provider.
+package handler
 
 import (
 	"encoding/json"
@@ -9,7 +10,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func NewHandler(t *testing.T, provider Provider) *Handler {
+func New(t *testing.T, provider Provider) *Handler {
 	return &Handler{t, provider}
 }
 
