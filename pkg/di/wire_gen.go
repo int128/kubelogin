@@ -27,8 +27,8 @@ import (
 func NewCmd() cmd.Interface {
 	loggerInterface := logger.New()
 	browserBrowser := &browser.Browser{}
-	writer := &credentialpluginwriter.Writer{}
-	cmdInterface := NewCmdForHeadless(loggerInterface, browserBrowser, writer)
+	credentialpluginwriterInterface := credentialpluginwriter.New()
+	cmdInterface := NewCmdForHeadless(loggerInterface, browserBrowser, credentialpluginwriterInterface)
 	return cmdInterface
 }
 

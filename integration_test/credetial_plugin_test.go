@@ -1,24 +1,27 @@
 package integration_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/integration_test/httpdriver"
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter/mock_credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
 )
 
 // Run the integration tests of the credential plugin use-case.
@@ -88,9 +91,6 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               tc.idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -98,8 +98,9 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RedirectURIPrefix: "http://localhost:",
 		})
 		defer server.Shutdown(t, ctx)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
+		var stdout bytes.Buffer
+		writerMock := credentialpluginwriter.NewTo(&stdout)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -109,15 +110,13 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			IDToken:      server.LastTokenResponse().IDToken,
 			RefreshToken: server.LastTokenResponse().RefreshToken,
 		})
+		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
 	})
 
 	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               tc.idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -127,8 +126,9 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			Password:          "PASS",
 		})
 		defer server.Shutdown(t, ctx)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
 		browserMock := httpdriver.Zero(t)
+		var stdout bytes.Buffer
+		writerMock := credentialpluginwriter.NewTo(&stdout)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -140,15 +140,13 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			IDToken:      server.LastTokenResponse().IDToken,
 			RefreshToken: server.LastTokenResponse().RefreshToken,
 		})
+		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
 	})
 
 	t.Run("HasValidToken", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               tc.idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -166,8 +164,9 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			}),
 			RefreshToken: "VALID_REFRESH_TOKEN",
 		}
-		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return preexist.IDToken })
 		browserMock := httpdriver.Zero(t)
+		var stdout bytes.Buffer
+		writerMock := credentialpluginwriter.NewTo(&stdout)
 		setupTokenCache(t, tc, server.IssuerURL(), preexist)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
@@ -175,15 +174,13 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 				"--oidc-client-id", "kubernetes",
 			}, tc.extraArgs...))
 		assertTokenCache(t, tc, server.IssuerURL(), preexist)
+		assertCredentialPluginWriter(t, &stdout, preexist.IDToken, tokenExpiryFuture)
 	})
 
 	t.Run("HasValidRefreshToken", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               tc.idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -203,8 +200,9 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RefreshToken: "VALID_REFRESH_TOKEN",
 		}
 		setupTokenCache(t, tc, server.IssuerURL(), preexist)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
 		browserMock := httpdriver.Zero(t)
+		var stdout bytes.Buffer
+		writerMock := credentialpluginwriter.NewTo(&stdout)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -214,15 +212,13 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			IDToken:      server.LastTokenResponse().IDToken,
 			RefreshToken: server.LastTokenResponse().RefreshToken,
 		})
+		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
 	})
 
 	t.Run("HasExpiredRefreshToken", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               tc.idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -243,8 +239,9 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		}
 		setupTokenCache(t, tc, server.IssuerURL(), preexist)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
+		var stdout bytes.Buffer
+		writerMock := credentialpluginwriter.NewTo(&stdout)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -254,15 +251,13 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			IDToken:      server.LastTokenResponse().IDToken,
 			RefreshToken: server.LastTokenResponse().RefreshToken,
 		})
+		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
 	})
 
 	t.Run("ExtraScopes", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               tc.idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -270,8 +265,9 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RedirectURIPrefix: "http://localhost:",
 		})
 		defer server.Shutdown(t, ctx)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
+		var stdout bytes.Buffer
+		writerMock := credentialpluginwriter.NewTo(&stdout)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -279,15 +275,13 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 				"--oidc-extra-scope", "email",
 				"--oidc-extra-scope", "profile",
 			}, tc.extraArgs...))
+		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
 	})
 
 	t.Run("RedirectURLHostname", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               tc.idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -295,23 +289,22 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RedirectURIPrefix: "http://127.0.0.1:",
 		})
 		defer server.Shutdown(t, ctx)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
+		var stdout bytes.Buffer
+		writerMock := credentialpluginwriter.NewTo(&stdout)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
 				"--oidc-redirect-url-hostname", "127.0.0.1",
 			}, tc.extraArgs...))
+		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
 	})
 
 	t.Run("ExtraParams", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               tc.idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -323,8 +316,9 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			},
 		})
 		defer server.Shutdown(t, ctx)
-		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
+		var stdout bytes.Buffer
+		writerMock := credentialpluginwriter.NewTo(&stdout)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -332,23 +326,29 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 				"--oidc-auth-request-extra-params", "ttl=86400",
 				"--oidc-auth-request-extra-params", "reauth=false",
 			}, tc.extraArgs...))
+		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
 	})
 }
 
-func newCredentialPluginWriterMock(t *testing.T, ctrl *gomock.Controller, idToken func() string) *mock_credentialpluginwriter.MockInterface {
-	writer := mock_credentialpluginwriter.NewMockInterface(ctrl)
-	writer.EXPECT().
-		Write(gomock.Any()).
-		Do(func(got credentialpluginwriter.Output) {
-			want := credentialpluginwriter.Output{
-				Token:  idToken(),
-				Expiry: tokenExpiryFuture,
-			}
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("mismatch (-want +got):\n%s", diff)
-			}
-		})
-	return writer
+func assertCredentialPluginWriter(t *testing.T, stdout io.Reader, token string, expiry time.Time) {
+	var got clientauthenticationv1beta1.ExecCredential
+	if err := json.NewDecoder(stdout).Decode(&got); err != nil {
+		t.Errorf("could not decode json of the credential plugin: %s", err)
+		return
+	}
+	want := clientauthenticationv1beta1.ExecCredential{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "client.authentication.k8s.io/v1beta1",
+			Kind:       "ExecCredential",
+		},
+		Status: &clientauthenticationv1beta1.ExecCredentialStatus{
+			Token:               token,
+			ExpirationTimestamp: &metav1.Time{Time: expiry},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("kubeconfig mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func runGetTokenCmd(t *testing.T, ctx context.Context, b browser.Interface, w credentialpluginwriter.Interface, args []string) {
