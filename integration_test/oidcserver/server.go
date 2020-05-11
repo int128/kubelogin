@@ -18,7 +18,6 @@ import (
 type Server interface {
 	http.Shutdowner
 	IssuerURL() string
-	NewTokenResponse(expiry time.Time, nonce string) *handler.TokenResponse
 	LastTokenResponse() *handler.TokenResponse
 }
 
@@ -55,27 +54,6 @@ type server struct {
 
 func (sv *server) IssuerURL() string {
 	return sv.issuerURL
-}
-
-func (sv *server) NewTokenResponse(expiry time.Time, nonce string) *handler.TokenResponse {
-	idToken := jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
-		claims.Issuer = sv.IssuerURL()
-		claims.Subject = "SUBJECT"
-		claims.IssuedAt = expiry.Add(-time.Hour).Unix()
-		claims.ExpiresAt = expiry.Unix()
-		claims.Audience = []string{"kubernetes", "system"}
-		claims.Nonce = nonce
-		claims.Groups = []string{"admin", "users"}
-	})
-	resp := &handler.TokenResponse{
-		TokenType:    "Bearer",
-		ExpiresIn:    3600,
-		AccessToken:  "YOUR_ACCESS_TOKEN",
-		IDToken:      idToken,
-		RefreshToken: "YOUR_REFRESH_TOKEN",
-	}
-	sv.lastTokenResponse = resp
-	return resp
 }
 
 func (sv *server) LastTokenResponse() *handler.TokenResponse {
@@ -138,7 +116,22 @@ func (sv *server) Exchange(code string) (*handler.TokenResponse, error) {
 	if code != "YOUR_AUTH_CODE" {
 		return nil, xerrors.Errorf("code wants %s but was %s", "YOUR_AUTH_CODE", code)
 	}
-	return sv.NewTokenResponse(sv.IDTokenExpiry, sv.nonce), nil
+	resp := &handler.TokenResponse{
+		TokenType:    "Bearer",
+		ExpiresIn:    3600,
+		AccessToken:  "YOUR_ACCESS_TOKEN",
+		RefreshToken: "YOUR_REFRESH_TOKEN",
+		IDToken: jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
+			claims.Issuer = sv.issuerURL
+			claims.Subject = "SUBJECT"
+			claims.IssuedAt = sv.IDTokenExpiry.Add(-time.Hour).Unix()
+			claims.ExpiresAt = sv.IDTokenExpiry.Unix()
+			claims.Audience = []string{"kubernetes"}
+			claims.Nonce = sv.nonce
+		}),
+	}
+	sv.lastTokenResponse = resp
+	return resp, nil
 }
 
 func (sv *server) AuthenticatePassword(username, password, scope string) (*handler.TokenResponse, error) {
@@ -151,7 +144,21 @@ func (sv *server) AuthenticatePassword(username, password, scope string) (*handl
 	if password != sv.Password {
 		sv.t.Errorf("password wants `%s` but was `%s`", sv.Password, password)
 	}
-	return sv.NewTokenResponse(sv.IDTokenExpiry, ""), nil
+	resp := &handler.TokenResponse{
+		TokenType:    "Bearer",
+		ExpiresIn:    3600,
+		AccessToken:  "YOUR_ACCESS_TOKEN",
+		RefreshToken: "YOUR_REFRESH_TOKEN",
+		IDToken: jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
+			claims.Issuer = sv.issuerURL
+			claims.Subject = "SUBJECT"
+			claims.IssuedAt = sv.IDTokenExpiry.Add(-time.Hour).Unix()
+			claims.ExpiresAt = sv.IDTokenExpiry.Unix()
+			claims.Audience = []string{"kubernetes"}
+		}),
+	}
+	sv.lastTokenResponse = resp
+	return resp, nil
 }
 
 func (sv *server) Refresh(refreshToken string) (*handler.TokenResponse, error) {
@@ -161,5 +168,19 @@ func (sv *server) Refresh(refreshToken string) (*handler.TokenResponse, error) {
 	if sv.RefreshError != "" {
 		return nil, &handler.ErrorResponse{Code: "invalid_request", Description: sv.RefreshError}
 	}
-	return sv.NewTokenResponse(sv.IDTokenExpiry, sv.nonce), nil
+	resp := &handler.TokenResponse{
+		TokenType:    "Bearer",
+		ExpiresIn:    3600,
+		AccessToken:  "YOUR_ACCESS_TOKEN",
+		RefreshToken: "YOUR_REFRESH_TOKEN",
+		IDToken: jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
+			claims.Issuer = sv.issuerURL
+			claims.Subject = "SUBJECT"
+			claims.IssuedAt = sv.IDTokenExpiry.Add(-time.Hour).Unix()
+			claims.ExpiresAt = sv.IDTokenExpiry.Unix()
+			claims.Audience = []string{"kubernetes"}
+		}),
+	}
+	sv.lastTokenResponse = resp
+	return resp, nil
 }
