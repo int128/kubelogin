@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/integration_test/httpdriver"
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/kubeconfig"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
@@ -49,7 +49,7 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 			RedirectURIPrefix: "http://localhost:",
 		})
 		defer server.Shutdown(t, ctx)
-		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
+		browserMock := httpdriver.New(ctx, t, idpTLS.TLSConfig)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
 			IDPCertificateAuthority: idpTLS.CACertPath,
@@ -80,12 +80,12 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 			Password:          "PASS",
 		})
 		defer server.Shutdown(t, ctx)
+		browserMock := httpdriver.Zero(t)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
 			IDPCertificateAuthority: idpTLS.CACertPath,
 		})
 		defer os.Remove(kubeConfigFilename)
-		browserMock := mock_browser.NewMockInterface(ctrl)
 		runRootCmd(t, ctx, browserMock, []string{
 			"--kubeconfig", kubeConfigFilename,
 			"--username", "USER",
@@ -111,8 +111,8 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 			RedirectURIPrefix: "http://localhost:",
 		})
 		defer server.Shutdown(t, ctx)
-		browserMock := mock_browser.NewMockInterface(ctrl)
 		idToken := server.NewTokenResponse(tokenExpiryFuture, "YOUR_NONCE").IDToken
+		browserMock := httpdriver.Zero(t)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
 			IDToken:                 idToken,
@@ -143,7 +143,7 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 			RedirectURIPrefix: "http://localhost:",
 			RefreshToken:      "VALID_REFRESH_TOKEN",
 		})
-		browserMock := mock_browser.NewMockInterface(ctrl)
+		browserMock := httpdriver.Zero(t)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
 			IDToken:                 server.NewTokenResponse(tokenExpiryPast, "YOUR_NONCE").IDToken, // expired
@@ -175,8 +175,8 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 			RefreshToken:      "EXPIRED_REFRESH_TOKEN",
 			RefreshError:      "token has expired",
 		})
-		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
 		expired := server.NewTokenResponse(tokenExpiryPast, "EXPIRED_NONCE")
+		browserMock := httpdriver.New(ctx, t, idpTLS.TLSConfig)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
 			IDToken:                 expired.IDToken,
@@ -207,7 +207,7 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 			RedirectURIPrefix: "http://localhost:",
 		})
 		defer server.Shutdown(t, ctx)
-		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
+		browserMock := httpdriver.New(ctx, t, idpTLS.TLSConfig)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
 			IDPCertificateAuthority: idpTLS.CACertPath,
@@ -238,7 +238,7 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 			RedirectURIPrefix: "http://localhost:",
 		})
 		defer server.Shutdown(t, ctx)
-		browserMock := newBrowserMock(ctx, t, ctrl, idpTLS)
+		browserMock := httpdriver.New(ctx, t, idpTLS.TLSConfig)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
 			ExtraScopes:             "profile,groups",

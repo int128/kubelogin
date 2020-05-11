@@ -9,10 +9,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
+	"github.com/int128/kubelogin/integration_test/httpdriver"
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter/mock_credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
@@ -98,8 +98,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		})
 		defer server.Shutdown(t, ctx)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
-
+		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -124,7 +123,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		})
 		defer server.Shutdown(t, ctx)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
-		browserMock := mock_browser.NewMockInterface(ctrl)
+		browserMock := httpdriver.Zero(t)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -148,10 +147,9 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RedirectURIPrefix: "http://localhost:",
 		})
 		defer server.Shutdown(t, ctx)
-
 		idToken := server.NewTokenResponse(tokenExpiryFuture, "YOUR_NONCE").IDToken
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return idToken })
-		browserMock := mock_browser.NewMockInterface(ctrl)
+		browserMock := httpdriver.Zero(t)
 		setupTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
 			IDToken:      idToken,
 			RefreshToken: "YOUR_REFRESH_TOKEN",
@@ -189,7 +187,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RefreshToken: "VALID_REFRESH_TOKEN",
 		})
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
-		browserMock := mock_browser.NewMockInterface(ctrl)
+		browserMock := httpdriver.Zero(t)
 
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
@@ -225,7 +223,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		})
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
+		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -252,8 +250,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		})
 		defer server.Shutdown(t, ctx)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
-
+		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -278,8 +275,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		})
 		defer server.Shutdown(t, ctx)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
-
+		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -307,8 +303,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		})
 		defer server.Shutdown(t, ctx)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
-		browserMock := newBrowserMock(ctx, t, ctrl, tc.idpTLS)
-
+		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
