@@ -1,7 +1,5 @@
-// Package localserver provides a http server running on localhost.
-// This is only for testing.
-//
-package localserver
+// Package http provides a http server running on localhost for testing.
+package http
 
 import (
 	"context"
@@ -17,20 +15,15 @@ type Shutdowner interface {
 }
 
 type shutdowner struct {
-	l net.Listener
 	s *http.Server
 }
 
 func (s *shutdowner) Shutdown(t *testing.T, ctx context.Context) {
-	// s.Shutdown() closes the lister as well,
-	// so we do not need to call l.Close() explicitly
 	if err := s.s.Shutdown(ctx); err != nil {
-		t.Errorf("Could not shutdown the server: %s", err)
+		t.Errorf("could not shutdown the server: %s", err)
 	}
 }
 
-// Start starts an authentication server.
-// If k is non-nil, it starts a TLS server.
 func Start(t *testing.T, h http.Handler, k keypair.KeyPair) (string, Shutdowner) {
 	if k == keypair.None {
 		return startNoTLS(t, h)
@@ -38,7 +31,7 @@ func Start(t *testing.T, h http.Handler, k keypair.KeyPair) (string, Shutdowner)
 	return startTLS(t, h, k)
 }
 
-func startNoTLS(t *testing.T, h http.Handler) (string, Shutdowner) {
+func startNoTLS(t *testing.T, h http.Handler) (string, *shutdowner) {
 	t.Helper()
 	l, port := newLocalhostListener(t)
 	url := "http://localhost:" + port
@@ -51,10 +44,10 @@ func startNoTLS(t *testing.T, h http.Handler) (string, Shutdowner) {
 			t.Error(err)
 		}
 	}()
-	return url, &shutdowner{l, s}
+	return url, &shutdowner{s}
 }
 
-func startTLS(t *testing.T, h http.Handler, k keypair.KeyPair) (string, Shutdowner) {
+func startTLS(t *testing.T, h http.Handler, k keypair.KeyPair) (string, *shutdowner) {
 	t.Helper()
 	l, port := newLocalhostListener(t)
 	url := "https://localhost:" + port
@@ -67,7 +60,7 @@ func startTLS(t *testing.T, h http.Handler, k keypair.KeyPair) (string, Shutdown
 			t.Error(err)
 		}
 	}()
-	return url, &shutdowner{l, s}
+	return url, &shutdowner{s}
 }
 
 func newLocalhostListener(t *testing.T) (net.Listener, string) {
