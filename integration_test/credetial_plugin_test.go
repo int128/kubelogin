@@ -86,6 +86,10 @@ type credentialPluginTestCase struct {
 
 func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 	timeout := 1 * time.Second
+	var (
+		tokenExpiryFuture = time.Now().Add(time.Hour).Round(time.Second)
+		tokenExpiryPast   = time.Now().Add(-time.Hour).Round(time.Second)
+	)
 
 	t.Run("Defaults", func(t *testing.T) {
 		t.Parallel()

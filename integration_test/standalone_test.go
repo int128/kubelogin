@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/integration_test/httpdriver"
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/kubeconfig"
@@ -35,14 +34,15 @@ func TestStandalone(t *testing.T) {
 
 func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 	timeout := 5 * time.Second
+	var (
+		tokenExpiryFuture = time.Now().Add(time.Hour).Round(time.Second)
+		tokenExpiryPast   = time.Now().Add(-time.Hour).Round(time.Second)
+	)
 
 	t.Run("Defaults", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -69,9 +69,6 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -102,9 +99,6 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -140,9 +134,6 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -177,9 +168,6 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -215,9 +203,6 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 		// do not run this in parallel due to change of the env var
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
@@ -246,9 +231,6 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		server := oidcserver.New(t, oidcserver.Config{
 			TLS:               idpTLS,
 			IDTokenExpiry:     tokenExpiryFuture,
