@@ -17,6 +17,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter/mock_credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/di"
+	"github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
@@ -104,6 +105,10 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
 			}, tc.extraArgs...))
+		assertTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
+			IDToken:      server.LastTokenResponse().IDToken,
+			RefreshToken: server.LastTokenResponse().RefreshToken,
+		})
 	})
 
 	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
@@ -131,6 +136,10 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 				"--username", "USER",
 				"--password", "PASS",
 			}, tc.extraArgs...))
+		assertTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
+			IDToken:      server.LastTokenResponse().IDToken,
+			RefreshToken: server.LastTokenResponse().RefreshToken,
+		})
 	})
 
 	t.Run("HasValidToken", func(t *testing.T) {
@@ -147,22 +156,25 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RedirectURIPrefix: "http://localhost:",
 		})
 		defer server.Shutdown(t, ctx)
-		idToken := server.NewTokenResponse(tokenExpiryFuture, "YOUR_NONCE").IDToken
-		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return idToken })
+		preexist := tokencache.Value{
+			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
+				claims.Issuer = server.IssuerURL()
+				claims.Subject = "SUBJECT"
+				claims.Audience = []string{"kubernetes"}
+				claims.IssuedAt = tokenExpiryFuture.Add(-time.Hour).Unix()
+				claims.ExpiresAt = tokenExpiryFuture.Unix()
+			}),
+			RefreshToken: "VALID_REFRESH_TOKEN",
+		}
+		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return preexist.IDToken })
 		browserMock := httpdriver.Zero(t)
-		setupTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
+		setupTokenCache(t, tc, server.IssuerURL(), preexist)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
 			}, tc.extraArgs...))
-		assertTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
+		assertTokenCache(t, tc, server.IssuerURL(), preexist)
 	})
 
 	t.Run("HasValidRefreshToken", func(t *testing.T) {
@@ -180,15 +192,19 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RefreshToken:      "VALID_REFRESH_TOKEN",
 		})
 		defer server.Shutdown(t, ctx)
-
-		expired := server.NewTokenResponse(tokenExpiryPast, "EXPIRED_NONCE")
-		setupTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
-			IDToken:      expired.IDToken,
+		preexist := tokencache.Value{
+			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
+				claims.Issuer = server.IssuerURL()
+				claims.Subject = "SUBJECT"
+				claims.Audience = []string{"kubernetes"}
+				claims.IssuedAt = tokenExpiryPast.Add(-time.Hour).Unix()
+				claims.ExpiresAt = tokenExpiryPast.Unix()
+			}),
 			RefreshToken: "VALID_REFRESH_TOKEN",
-		})
+		}
+		setupTokenCache(t, tc, server.IssuerURL(), preexist)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
 		browserMock := httpdriver.Zero(t)
-
 		runGetTokenCmd(t, ctx, browserMock, writerMock,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
@@ -216,12 +232,17 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 			RefreshToken:      "EXPIRED_REFRESH_TOKEN",
 		})
 		defer server.Shutdown(t, ctx)
-
-		expired := server.NewTokenResponse(tokenExpiryPast, "EXPIRED_NONCE")
-		setupTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
-			IDToken:      expired.IDToken,
+		preexist := tokencache.Value{
+			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
+				claims.Issuer = server.IssuerURL()
+				claims.Subject = "SUBJECT"
+				claims.Audience = []string{"kubernetes"}
+				claims.IssuedAt = tokenExpiryPast.Add(-time.Hour).Unix()
+				claims.ExpiresAt = tokenExpiryPast.Unix()
+			}),
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
-		})
+		}
+		setupTokenCache(t, tc, server.IssuerURL(), preexist)
 		writerMock := newCredentialPluginWriterMock(t, ctrl, func() string { return server.LastTokenResponse().IDToken })
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		runGetTokenCmd(t, ctx, browserMock, writerMock,

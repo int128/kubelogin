@@ -13,6 +13,7 @@ import (
 	"github.com/int128/kubelogin/integration_test/oidcserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/di"
+	"github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
@@ -111,13 +112,19 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 			RedirectURIPrefix: "http://localhost:",
 		})
 		defer server.Shutdown(t, ctx)
-		idToken := server.NewTokenResponse(tokenExpiryFuture, "YOUR_NONCE").IDToken
 		browserMock := httpdriver.Zero(t)
+		idToken := jwt.EncodeF(t, func(claims *jwt.Claims) {
+			claims.Issuer = server.IssuerURL()
+			claims.Subject = "SUBJECT"
+			claims.Audience = []string{"kubernetes"}
+			claims.IssuedAt = tokenExpiryFuture.Add(-time.Hour).Unix()
+			claims.ExpiresAt = tokenExpiryFuture.Unix()
+		})
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
-			IDToken:                 idToken,
 			RefreshToken:            "YOUR_REFRESH_TOKEN",
 			IDPCertificateAuthority: idpTLS.CACertPath,
+			IDToken:                 idToken,
 		})
 		defer os.Remove(kubeConfigFilename)
 		runRootCmd(t, ctx, browserMock, []string{
@@ -146,9 +153,15 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 		browserMock := httpdriver.Zero(t)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
-			IDToken:                 server.NewTokenResponse(tokenExpiryPast, "YOUR_NONCE").IDToken, // expired
 			RefreshToken:            "VALID_REFRESH_TOKEN",
 			IDPCertificateAuthority: idpTLS.CACertPath,
+			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
+				claims.Issuer = server.IssuerURL()
+				claims.Subject = "SUBJECT"
+				claims.Audience = []string{"kubernetes"}
+				claims.IssuedAt = tokenExpiryPast.Add(-time.Hour).Unix()
+				claims.ExpiresAt = tokenExpiryPast.Unix()
+			}),
 		})
 		defer os.Remove(kubeConfigFilename)
 		runRootCmd(t, ctx, browserMock, []string{
@@ -175,13 +188,18 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 			RefreshToken:      "EXPIRED_REFRESH_TOKEN",
 			RefreshError:      "token has expired",
 		})
-		expired := server.NewTokenResponse(tokenExpiryPast, "EXPIRED_NONCE")
 		browserMock := httpdriver.New(ctx, t, idpTLS.TLSConfig)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                  server.IssuerURL(),
-			IDToken:                 expired.IDToken,
 			RefreshToken:            "EXPIRED_REFRESH_TOKEN",
 			IDPCertificateAuthority: idpTLS.CACertPath,
+			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
+				claims.Issuer = server.IssuerURL()
+				claims.Subject = "SUBJECT"
+				claims.Audience = []string{"kubernetes"}
+				claims.IssuedAt = tokenExpiryPast.Add(-time.Hour).Unix()
+				claims.ExpiresAt = tokenExpiryPast.Unix()
+			}),
 		})
 		defer os.Remove(kubeConfigFilename)
 		runRootCmd(t, ctx, browserMock, []string{
