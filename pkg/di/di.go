@@ -14,6 +14,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
+	"github.com/int128/kubelogin/pkg/adaptors/stdio"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
@@ -27,15 +28,15 @@ func NewCmd() cmd.Interface {
 		NewCmdForHeadless,
 
 		// dependencies for production
+		stdio.Set,
 		logger.Set,
 		browser.Set,
-		credentialpluginwriter.Set,
 	)
 	return nil
 }
 
 // NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
-func NewCmdForHeadless(logger.Interface, browser.Interface, credentialpluginwriter.Interface) cmd.Interface {
+func NewCmdForHeadless(stdio.Stdin, stdio.Stdout, logger.Interface, browser.Interface) cmd.Interface {
 	wire.Build(
 		// use-cases
 		authentication.Set,
@@ -51,6 +52,7 @@ func NewCmdForHeadless(logger.Interface, browser.Interface, credentialpluginwrit
 		tokencache.Set,
 		oidcclient.Set,
 		certpool.Set,
+		credentialpluginwriter.Set,
 	)
 	return nil
 }
