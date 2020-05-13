@@ -27,11 +27,12 @@ import (
 // Injectors from di.go:
 
 func NewCmd() cmd.Interface {
+	clockReal := &clock.Real{}
 	stdin := _wireFileValue
 	stdout := _wireOsFileValue
 	loggerInterface := logger.New()
 	browserBrowser := &browser.Browser{}
-	cmdInterface := NewCmdForHeadless(stdin, stdout, loggerInterface, browserBrowser)
+	cmdInterface := NewCmdForHeadless(clockReal, stdin, stdout, loggerInterface, browserBrowser)
 	return cmdInterface
 }
 
@@ -40,9 +41,11 @@ var (
 	_wireOsFileValue = os.Stdout
 )
 
-func NewCmdForHeadless(stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface logger.Interface, browserInterface browser.Interface) cmd.Interface {
-	newFunc := _wireNewFuncValue
-	clockClock := &clock.Clock{}
+func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface logger.Interface, browserInterface browser.Interface) cmd.Interface {
+	factory := &oidcclient.Factory{
+		Clock:  clockInterface,
+		Logger: loggerInterface,
+	}
 	authCode := &authentication.AuthCode{
 		Browser: browserInterface,
 		Logger:  loggerInterface,
@@ -59,9 +62,9 @@ func NewCmdForHeadless(stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface l
 		Logger: loggerInterface,
 	}
 	authenticationAuthentication := &authentication.Authentication{
-		NewOIDCClient:    newFunc,
+		OIDCClient:       factory,
 		Logger:           loggerInterface,
-		Clock:            clockClock,
+		Clock:            clockInterface,
 		AuthCode:         authCode,
 		AuthCodeKeyboard: authCodeKeyboard,
 		ROPC:             ropc,
@@ -69,11 +72,11 @@ func NewCmdForHeadless(stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface l
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,
 	}
-	certpoolNewFunc := _wireCertpoolNewFuncValue
+	newFunc := _wireNewFuncValue
 	standaloneStandalone := &standalone.Standalone{
 		Authentication: authenticationAuthentication,
 		Kubeconfig:     kubeconfigKubeconfig,
-		NewCertPool:    certpoolNewFunc,
+		NewCertPool:    newFunc,
 		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
@@ -87,7 +90,7 @@ func NewCmdForHeadless(stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface l
 	getToken := &credentialplugin.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
-		NewCertPool:          certpoolNewFunc,
+		NewCertPool:          newFunc,
 		Writer:               writer,
 		Logger:               loggerInterface,
 	}
@@ -97,7 +100,7 @@ func NewCmdForHeadless(stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface l
 	}
 	setupSetup := &setup.Setup{
 		Authentication: authenticationAuthentication,
-		NewCertPool:    certpoolNewFunc,
+		NewCertPool:    newFunc,
 		Logger:         loggerInterface,
 	}
 	cmdSetup := &cmd.Setup{
@@ -113,6 +116,5 @@ func NewCmdForHeadless(stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface l
 }
 
 var (
-	_wireNewFuncValue         = oidcclient.NewFunc(oidcclient.New)
-	_wireCertpoolNewFuncValue = certpool.NewFunc(certpool.New)
+	_wireNewFuncValue = certpool.NewFunc(certpool.New)
 )

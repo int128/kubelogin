@@ -15,6 +15,7 @@ import (
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
+	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/testing/jwt"
@@ -348,7 +349,7 @@ func assertCredentialPluginWriter(t *testing.T, stdout io.Reader, token string, 
 
 func runGetTokenCmd(t *testing.T, ctx context.Context, b browser.Interface, stdout io.Writer, args []string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(os.Stdin, stdout, logger.New(t), b)
+	cmd := di.NewCmdForHeadless(&clock.Real{}, os.Stdin, stdout, logger.New(t), b)
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin", "get-token",
 		"--v=1",

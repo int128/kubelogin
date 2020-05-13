@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc"
-	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
 	"github.com/int128/kubelogin/pkg/domain/pkce"
@@ -16,10 +16,6 @@ import (
 )
 
 //go:generate mockgen -destination mock_oidcclient/mock_oidcclient.go github.com/int128/kubelogin/pkg/adaptors/oidcclient Interface
-
-var Set = wire.NewSet(
-	wire.Value(NewFunc(New)),
-)
 
 type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string
@@ -66,6 +62,7 @@ type client struct {
 	httpClient           *http.Client
 	provider             *oidc.Provider
 	oauth2Config         oauth2.Config
+	clock                clock.Interface
 	logger               logger.Interface
 	supportedPKCEMethods []string
 }
@@ -179,7 +176,7 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 	if !ok {
 		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
 	}
-	verifier := c.provider.Verifier(&oidc.Config{ClientID: c.oauth2Config.ClientID})
+	verifier := c.provider.Verifier(&oidc.Config{ClientID: c.oauth2Config.ClientID, Now: c.clock.Now})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, xerrors.Errorf("could not verify the ID token: %w", err)
