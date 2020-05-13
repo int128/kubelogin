@@ -11,6 +11,7 @@ import (
 	"github.com/int128/kubelogin/integration_test/kubeconfig"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
+	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -257,7 +258,7 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 
 func runRootCmd(t *testing.T, ctx context.Context, b browser.Interface, args []string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(os.Stdin, os.Stdout, logger.New(t), b)
+	cmd := di.NewCmdForHeadless(&clock.Real{}, os.Stdin, os.Stdout, logger.New(t), b)
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin",
 		"--v=1",

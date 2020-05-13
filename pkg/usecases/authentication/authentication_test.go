@@ -7,8 +7,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
@@ -17,8 +15,6 @@ import (
 	testingLogger "github.com/int128/kubelogin/pkg/testing/logger"
 	"golang.org/x/xerrors"
 )
-
-var cmpIgnoreLogger = cmpopts.IgnoreInterfaces(struct{ logger.Interface }{})
 
 func TestAuthentication_Do(t *testing.T) {
 	timeout := 5 * time.Second
@@ -92,16 +88,14 @@ func TestAuthentication_Do(t *testing.T) {
 				IDTokenClaims: dummyClaims,
 			}, nil)
 		u := Authentication{
-			NewOIDCClient: func(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
-				want := oidcclient.Config{
+			OIDCClient: &oidcclientFactory{
+				t:      t,
+				client: mockOIDCClient,
+				want: oidcclient.Config{
 					IssuerURL:    "https://issuer.example.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
-				}
-				if diff := cmp.Diff(want, got, cmpIgnoreLogger); diff != "" {
-					t.Errorf("mismatch (-want +got):\n%s", diff)
-				}
-				return mockOIDCClient, nil
+				},
 			},
 			Logger: testingLogger.New(t),
 			Clock:  clock.Fake(expiryTime.Add(+time.Hour)),
@@ -154,16 +148,14 @@ func TestAuthentication_Do(t *testing.T) {
 				IDTokenClaims: dummyClaims,
 			}, nil)
 		u := Authentication{
-			NewOIDCClient: func(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
-				want := oidcclient.Config{
+			OIDCClient: &oidcclientFactory{
+				t:      t,
+				client: mockOIDCClient,
+				want: oidcclient.Config{
 					IssuerURL:    "https://issuer.example.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
-				}
-				if diff := cmp.Diff(want, got, cmpIgnoreLogger); diff != "" {
-					t.Errorf("mismatch (-want +got):\n%s", diff)
-				}
-				return mockOIDCClient, nil
+				},
 			},
 			Logger: testingLogger.New(t),
 			Clock:  clock.Fake(expiryTime.Add(+time.Hour)),
@@ -210,16 +202,14 @@ func TestAuthentication_Do(t *testing.T) {
 				IDTokenClaims: dummyClaims,
 			}, nil)
 		u := Authentication{
-			NewOIDCClient: func(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
-				want := oidcclient.Config{
+			OIDCClient: &oidcclientFactory{
+				t:      t,
+				client: mockOIDCClient,
+				want: oidcclient.Config{
 					IssuerURL:    "https://issuer.example.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
-				}
-				if diff := cmp.Diff(want, got, cmpIgnoreLogger); diff != "" {
-					t.Errorf("mismatch (-want +got):\n%s", diff)
-				}
-				return mockOIDCClient, nil
+				},
 			},
 			Logger: testingLogger.New(t),
 			ROPC: &ROPC{
@@ -239,4 +229,17 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
+}
+
+type oidcclientFactory struct {
+	t      *testing.T
+	client oidcclient.Interface
+	want   oidcclient.Config
+}
+
+func (f *oidcclientFactory) New(_ context.Context, got oidcclient.Config) (oidcclient.Interface, error) {
+	if diff := cmp.Diff(f.want, got); diff != "" {
+		f.t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
+	return f.client, nil
 }

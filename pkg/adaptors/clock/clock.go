@@ -8,17 +8,17 @@ import (
 )
 
 var Set = wire.NewSet(
-	wire.Struct(new(Clock), "*"),
-	wire.Bind(new(Interface), new(*Clock)),
+	wire.Struct(new(Real), "*"),
+	wire.Bind(new(Interface), new(*Real)),
 )
 
 type Interface interface {
 	Now() time.Time
 }
 
-type Clock struct{}
+type Real struct{}
 
 // Now returns the current time.
-func (c *Clock) Now() time.Time {
+func (c *Real) Now() time.Time {
 	return time.Now()
 }

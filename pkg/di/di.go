@@ -28,6 +28,7 @@ func NewCmd() cmd.Interface {
 		NewCmdForHeadless,
 
 		// dependencies for production
+		clock.Set,
 		stdio.Set,
 		logger.Set,
 		browser.Set,
@@ -36,7 +37,7 @@ func NewCmd() cmd.Interface {
 }
 
 // NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
-func NewCmdForHeadless(stdio.Stdin, stdio.Stdout, logger.Interface, browser.Interface) cmd.Interface {
+func NewCmdForHeadless(clock.Interface, stdio.Stdin, stdio.Stdout, logger.Interface, browser.Interface) cmd.Interface {
 	wire.Build(
 		// use-cases
 		authentication.Set,
@@ -47,7 +48,6 @@ func NewCmdForHeadless(stdio.Stdin, stdio.Stdout, logger.Interface, browser.Inte
 		// adaptors
 		cmd.Set,
 		reader.Set,
-		clock.Set,
 		kubeconfig.Set,
 		tokencache.Set,
 		oidcclient.Set,

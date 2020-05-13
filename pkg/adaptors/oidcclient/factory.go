@@ -8,14 +8,23 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc"
+	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
+	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/logging"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
 )
 
-type NewFunc func(ctx context.Context, config Config) (Interface, error)
+var Set = wire.NewSet(
+	wire.Struct(new(Factory), "*"),
+	wire.Bind(new(FactoryInterface), new(*Factory)),
+)
+
+type FactoryInterface interface {
+	New(ctx context.Context, config Config) (Interface, error)
+}
 
 // Config represents a configuration of OpenID Connect client.
 type Config struct {
@@ -25,11 +34,15 @@ type Config struct {
 	ExtraScopes   []string // optional
 	CertPool      certpool.Interface
 	SkipTLSVerify bool
-	Logger        logger.Interface
+}
+
+type Factory struct {
+	Clock  clock.Interface
+	Logger logger.Interface
 }
 
 // New returns an instance of adaptors.Interface with the given configuration.
-func New(ctx context.Context, config Config) (Interface, error) {
+func (f *Factory) New(ctx context.Context, config Config) (Interface, error) {
 	var tlsConfig tls.Config
 	tlsConfig.InsecureSkipVerify = config.SkipTLSVerify
 	config.CertPool.SetRootCAs(&tlsConfig)
@@ -39,7 +52,7 @@ func New(ctx context.Context, config Config) (Interface, error) {
 	}
 	loggingTransport := &logging.Transport{
 		Base:   baseTransport,
-		Logger: config.Logger,
+		Logger: f.Logger,
 	}
 	httpClient := &http.Client{
 		Transport: loggingTransport,
@@ -63,7 +76,8 @@ func New(ctx context.Context, config Config) (Interface, error) {
 			ClientSecret: config.ClientSecret,
 			Scopes:       append(config.ExtraScopes, oidc.ScopeOpenID),
 		},
-		logger:               config.Logger,
+		clock:                f.Clock,
+		logger:               f.Logger,
 		supportedPKCEMethods: supportedPKCEMethods,
 	}, nil
 }
