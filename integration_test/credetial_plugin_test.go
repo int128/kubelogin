@@ -15,7 +15,6 @@ import (
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/testing/jwt"
@@ -104,8 +103,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer server.Shutdown(t, ctx)
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		var stdout bytes.Buffer
-		writerMock := credentialpluginwriter.NewTo(&stdout)
-		runGetTokenCmd(t, ctx, browserMock, writerMock,
+		runGetTokenCmd(t, ctx, browserMock, &stdout,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
@@ -132,8 +130,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer server.Shutdown(t, ctx)
 		browserMock := httpdriver.Zero(t)
 		var stdout bytes.Buffer
-		writerMock := credentialpluginwriter.NewTo(&stdout)
-		runGetTokenCmd(t, ctx, browserMock, writerMock,
+		runGetTokenCmd(t, ctx, browserMock, &stdout,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
@@ -170,9 +167,8 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		}
 		browserMock := httpdriver.Zero(t)
 		var stdout bytes.Buffer
-		writerMock := credentialpluginwriter.NewTo(&stdout)
 		setupTokenCache(t, tc, server.IssuerURL(), preexist)
-		runGetTokenCmd(t, ctx, browserMock, writerMock,
+		runGetTokenCmd(t, ctx, browserMock, &stdout,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
@@ -206,8 +202,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		setupTokenCache(t, tc, server.IssuerURL(), preexist)
 		browserMock := httpdriver.Zero(t)
 		var stdout bytes.Buffer
-		writerMock := credentialpluginwriter.NewTo(&stdout)
-		runGetTokenCmd(t, ctx, browserMock, writerMock,
+		runGetTokenCmd(t, ctx, browserMock, &stdout,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
@@ -245,8 +240,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		setupTokenCache(t, tc, server.IssuerURL(), preexist)
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		var stdout bytes.Buffer
-		writerMock := credentialpluginwriter.NewTo(&stdout)
-		runGetTokenCmd(t, ctx, browserMock, writerMock,
+		runGetTokenCmd(t, ctx, browserMock, &stdout,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
@@ -271,8 +265,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer server.Shutdown(t, ctx)
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		var stdout bytes.Buffer
-		writerMock := credentialpluginwriter.NewTo(&stdout)
-		runGetTokenCmd(t, ctx, browserMock, writerMock,
+		runGetTokenCmd(t, ctx, browserMock, &stdout,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
@@ -295,8 +288,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer server.Shutdown(t, ctx)
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		var stdout bytes.Buffer
-		writerMock := credentialpluginwriter.NewTo(&stdout)
-		runGetTokenCmd(t, ctx, browserMock, writerMock,
+		runGetTokenCmd(t, ctx, browserMock, &stdout,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
@@ -322,8 +314,7 @@ func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
 		defer server.Shutdown(t, ctx)
 		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
 		var stdout bytes.Buffer
-		writerMock := credentialpluginwriter.NewTo(&stdout)
-		runGetTokenCmd(t, ctx, browserMock, writerMock,
+		runGetTokenCmd(t, ctx, browserMock, &stdout,
 			append([]string{
 				"--oidc-issuer-url", server.IssuerURL(),
 				"--oidc-client-id", "kubernetes",
@@ -355,9 +346,9 @@ func assertCredentialPluginWriter(t *testing.T, stdout io.Reader, token string, 
 	}
 }
 
-func runGetTokenCmd(t *testing.T, ctx context.Context, b browser.Interface, w credentialpluginwriter.Interface, args []string) {
+func runGetTokenCmd(t *testing.T, ctx context.Context, b browser.Interface, stdout io.Writer, args []string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(logger.New(t), b, w)
+	cmd := di.NewCmdForHeadless(os.Stdin, stdout, logger.New(t), b)
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin", "get-token",
 		"--v=1",

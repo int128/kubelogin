@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/adaptors/stdio"
 	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/xerrors"
 )
@@ -26,14 +27,16 @@ type Interface interface {
 	ReadPassword(prompt string) (string, error)
 }
 
-type Reader struct{}
+type Reader struct {
+	Stdin stdio.Stdin
+}
 
 // ReadString reads a string from the stdin.
-func (*Reader) ReadString(prompt string) (string, error) {
+func (x *Reader) ReadString(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", xerrors.Errorf("write error: %w", err)
 	}
-	r := bufio.NewReader(os.Stdin)
+	r := bufio.NewReader(x.Stdin)
 	s, err := r.ReadString('\n')
 	if err != nil {
 		return "", xerrors.Errorf("read error: %w", err)

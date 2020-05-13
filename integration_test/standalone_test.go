@@ -257,7 +257,7 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 
 func runRootCmd(t *testing.T, ctx context.Context, b browser.Interface, args []string) {
 	t.Helper()
-	cmd := di.NewCmdForHeadless(logger.New(t), b, nil)
+	cmd := di.NewCmdForHeadless(os.Stdin, os.Stdout, logger.New(t), b)
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin",
 		"--v=1",
