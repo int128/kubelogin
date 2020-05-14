@@ -11,9 +11,8 @@ import (
 	"github.com/int128/kubelogin/integration_test/kubeconfig"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/di"
-	"github.com/int128/kubelogin/pkg/testing/jwt"
+	"github.com/int128/kubelogin/pkg/testing/clock"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
@@ -25,206 +24,241 @@ import (
 // 4. Verify the kubeconfig.
 //
 func TestStandalone(t *testing.T) {
-	t.Run("NoTLS", func(t *testing.T) {
-		testStandalone(t, keypair.None)
-	})
-	t.Run("TLS", func(t *testing.T) {
-		testStandalone(t, keypair.Server)
-	})
-}
+	timeout := 3 * time.Second
+	now := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 
-func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
-	timeout := 5 * time.Second
-	var (
-		tokenExpiryFuture = time.Now().Add(time.Hour).Round(time.Second)
-		tokenExpiryPast   = time.Now().Add(-time.Hour).Round(time.Second)
-	)
+	for name, tc := range map[string]struct {
+		keyPair keypair.KeyPair
+		args    []string
+	}{
+		"NoTLS": {},
+		"TLS": {
+			keyPair: keypair.Server,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Run("AuthCode", func(t *testing.T) {
+				t.Parallel()
+				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+				defer cancel()
+				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{
+					Want: oidcserver.Want{
+						Scope:             "openid",
+						RedirectURIPrefix: "http://localhost:",
+					},
+					Response: oidcserver.Response{
+						IDTokenExpiry: now.Add(time.Hour),
+					},
+				})
+				defer sv.Shutdown(t, ctx)
+				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+					Issuer:                  sv.IssuerURL(),
+					IDPCertificateAuthority: tc.keyPair.CACertPath,
+				})
+				defer os.Remove(kubeConfigFilename)
+				runStandalone(t, ctx, standaloneConfig{
+					issuerURL:          sv.IssuerURL(),
+					kubeConfigFilename: kubeConfigFilename,
+					httpDriver:         httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+					now:                now,
+				})
+				kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+					IDToken:      sv.LastTokenResponse().IDToken,
+					RefreshToken: sv.LastTokenResponse().RefreshToken,
+				})
+			})
 
-	t.Run("Defaults", func(t *testing.T) {
+			t.Run("ROPC", func(t *testing.T) {
+				t.Parallel()
+				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+				defer cancel()
+				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{
+					Want: oidcserver.Want{
+						Scope:             "openid",
+						RedirectURIPrefix: "http://localhost:",
+						Username:          "USER1",
+						Password:          "PASS1",
+					},
+					Response: oidcserver.Response{
+						IDTokenExpiry: now.Add(time.Hour),
+					},
+				})
+				defer sv.Shutdown(t, ctx)
+				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+					Issuer:                  sv.IssuerURL(),
+					IDPCertificateAuthority: tc.keyPair.CACertPath,
+				})
+				defer os.Remove(kubeConfigFilename)
+				runStandalone(t, ctx, standaloneConfig{
+					issuerURL:          sv.IssuerURL(),
+					kubeConfigFilename: kubeConfigFilename,
+					httpDriver:         httpdriver.Zero(t),
+					now:                now,
+					args: []string{
+						"--username", "USER1",
+						"--password", "PASS1",
+					},
+				})
+				kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+					IDToken:      sv.LastTokenResponse().IDToken,
+					RefreshToken: sv.LastTokenResponse().RefreshToken,
+				})
+			})
+
+			t.Run("TokenLifecycle", func(t *testing.T) {
+				t.Parallel()
+				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+				defer cancel()
+				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{})
+				defer sv.Shutdown(t, ctx)
+				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+					Issuer:                  sv.IssuerURL(),
+					IDPCertificateAuthority: tc.keyPair.CACertPath,
+				})
+				defer os.Remove(kubeConfigFilename)
+
+				t.Run("NoToken", func(t *testing.T) {
+					sv.SetConfig(oidcserver.Config{
+						Want: oidcserver.Want{
+							Scope:             "openid",
+							RedirectURIPrefix: "http://localhost:",
+						},
+						Response: oidcserver.Response{
+							IDTokenExpiry: now.Add(time.Hour),
+							RefreshToken:  "REFRESH_TOKEN_1",
+						},
+					})
+					runStandalone(t, ctx, standaloneConfig{
+						issuerURL:          sv.IssuerURL(),
+						kubeConfigFilename: kubeConfigFilename,
+						httpDriver:         httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+						now:                now,
+					})
+					kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+						IDToken:      sv.LastTokenResponse().IDToken,
+						RefreshToken: "REFRESH_TOKEN_1",
+					})
+				})
+				t.Run("Valid", func(t *testing.T) {
+					sv.SetConfig(oidcserver.Config{})
+					runStandalone(t, ctx, standaloneConfig{
+						issuerURL:          sv.IssuerURL(),
+						kubeConfigFilename: kubeConfigFilename,
+						httpDriver:         httpdriver.Zero(t),
+						now:                now,
+					})
+					kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+						IDToken:      sv.LastTokenResponse().IDToken,
+						RefreshToken: "REFRESH_TOKEN_1",
+					})
+				})
+				t.Run("Refresh", func(t *testing.T) {
+					sv.SetConfig(oidcserver.Config{
+						Want: oidcserver.Want{
+							Scope:             "openid",
+							RedirectURIPrefix: "http://localhost:",
+							RefreshToken:      "REFRESH_TOKEN_1",
+						},
+						Response: oidcserver.Response{
+							IDTokenExpiry: now.Add(3 * time.Hour),
+							RefreshToken:  "REFRESH_TOKEN_2",
+						},
+					})
+					runStandalone(t, ctx, standaloneConfig{
+						issuerURL:          sv.IssuerURL(),
+						kubeConfigFilename: kubeConfigFilename,
+						httpDriver:         httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+						now:                now.Add(2 * time.Hour),
+					})
+					kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+						IDToken:      sv.LastTokenResponse().IDToken,
+						RefreshToken: "REFRESH_TOKEN_2",
+					})
+				})
+				t.Run("RefreshAgain", func(t *testing.T) {
+					sv.SetConfig(oidcserver.Config{
+						Want: oidcserver.Want{
+							Scope:             "openid",
+							RedirectURIPrefix: "http://localhost:",
+							RefreshToken:      "REFRESH_TOKEN_2",
+						},
+						Response: oidcserver.Response{
+							IDTokenExpiry: now.Add(5 * time.Hour),
+						},
+					})
+					runStandalone(t, ctx, standaloneConfig{
+						issuerURL:          sv.IssuerURL(),
+						kubeConfigFilename: kubeConfigFilename,
+						httpDriver:         httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+						now:                now.Add(4 * time.Hour),
+					})
+					kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+						IDToken:      sv.LastTokenResponse().IDToken,
+						RefreshToken: "REFRESH_TOKEN_2",
+					})
+				})
+			})
+		})
+	}
+
+	t.Run("TLSData", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
+		sv := oidcserver.New(t, keypair.Server, oidcserver.Config{
+			Want: oidcserver.Want{
+				Scope:             "openid",
+				RedirectURIPrefix: "http://localhost:",
+			},
+			Response: oidcserver.Response{
+				IDTokenExpiry: now.Add(time.Hour),
+			},
 		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.New(ctx, t, idpTLS.TLSConfig)
+		defer sv.Shutdown(t, ctx)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                  server.IssuerURL(),
-			IDPCertificateAuthority: idpTLS.CACertPath,
+			Issuer:                      sv.IssuerURL(),
+			IDPCertificateAuthorityData: keypair.Server.CACertBase64,
 		})
 		defer os.Remove(kubeConfigFilename)
-		runRootCmd(t, ctx, browserMock, []string{
-			"--kubeconfig", kubeConfigFilename,
+		runStandalone(t, ctx, standaloneConfig{
+			issuerURL:          sv.IssuerURL(),
+			kubeConfigFilename: kubeConfigFilename,
+			httpDriver:         httpdriver.New(ctx, t, keypair.Server.TLSConfig),
+			now:                now,
 		})
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
-	})
-
-	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-			Username:          "USER",
-			Password:          "PASS",
-		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.Zero(t)
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                  server.IssuerURL(),
-			IDPCertificateAuthority: idpTLS.CACertPath,
-		})
-		defer os.Remove(kubeConfigFilename)
-		runRootCmd(t, ctx, browserMock, []string{
-			"--kubeconfig", kubeConfigFilename,
-			"--username", "USER",
-			"--password", "PASS",
-		})
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
-	})
-
-	t.Run("HasValidToken", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.Zero(t)
-		idToken := jwt.EncodeF(t, func(claims *jwt.Claims) {
-			claims.Issuer = server.IssuerURL()
-			claims.Subject = "SUBJECT"
-			claims.Audience = []string{"kubernetes"}
-			claims.IssuedAt = tokenExpiryFuture.Add(-time.Hour).Unix()
-			claims.ExpiresAt = tokenExpiryFuture.Unix()
-		})
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                  server.IssuerURL(),
-			RefreshToken:            "YOUR_REFRESH_TOKEN",
-			IDPCertificateAuthority: idpTLS.CACertPath,
-			IDToken:                 idToken,
-		})
-		defer os.Remove(kubeConfigFilename)
-		runRootCmd(t, ctx, browserMock, []string{
-			"--kubeconfig", kubeConfigFilename,
-		})
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      idToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		})
-	})
-
-	t.Run("HasValidRefreshToken", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-			RefreshToken:      "VALID_REFRESH_TOKEN",
-		})
-		browserMock := httpdriver.Zero(t)
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                  server.IssuerURL(),
-			RefreshToken:            "VALID_REFRESH_TOKEN",
-			IDPCertificateAuthority: idpTLS.CACertPath,
-			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
-				claims.Issuer = server.IssuerURL()
-				claims.Subject = "SUBJECT"
-				claims.Audience = []string{"kubernetes"}
-				claims.IssuedAt = tokenExpiryPast.Add(-time.Hour).Unix()
-				claims.ExpiresAt = tokenExpiryPast.Unix()
-			}),
-		})
-		defer os.Remove(kubeConfigFilename)
-		runRootCmd(t, ctx, browserMock, []string{
-			"--kubeconfig", kubeConfigFilename,
-		})
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: server.LastTokenResponse().RefreshToken,
-		})
-	})
-
-	t.Run("HasExpiredRefreshToken", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-			RefreshToken:      "EXPIRED_REFRESH_TOKEN",
-			RefreshError:      "token has expired",
-		})
-		browserMock := httpdriver.New(ctx, t, idpTLS.TLSConfig)
-		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                  server.IssuerURL(),
-			RefreshToken:            "EXPIRED_REFRESH_TOKEN",
-			IDPCertificateAuthority: idpTLS.CACertPath,
-			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
-				claims.Issuer = server.IssuerURL()
-				claims.Subject = "SUBJECT"
-				claims.Audience = []string{"kubernetes"}
-				claims.IssuedAt = tokenExpiryPast.Add(-time.Hour).Unix()
-				claims.ExpiresAt = tokenExpiryPast.Unix()
-			}),
-		})
-		defer os.Remove(kubeConfigFilename)
-		runRootCmd(t, ctx, browserMock, []string{
-			"--kubeconfig", kubeConfigFilename,
-		})
-		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: server.LastTokenResponse().RefreshToken,
+			IDToken:      sv.LastTokenResponse().IDToken,
+			RefreshToken: sv.LastTokenResponse().RefreshToken,
 		})
 	})
 
 	t.Run("env_KUBECONFIG", func(t *testing.T) {
-		// do not run this in parallel due to change of the env var
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
+		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
+			Want: oidcserver.Want{
+				Scope:             "openid",
+				RedirectURIPrefix: "http://localhost:",
+			},
+			Response: oidcserver.Response{
+				IDTokenExpiry: now.Add(time.Hour),
+			},
 		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.New(ctx, t, idpTLS.TLSConfig)
+		defer sv.Shutdown(t, ctx)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                  server.IssuerURL(),
-			IDPCertificateAuthority: idpTLS.CACertPath,
+			Issuer: sv.IssuerURL(),
 		})
 		defer os.Remove(kubeConfigFilename)
 		setenv(t, "KUBECONFIG", kubeConfigFilename+string(os.PathListSeparator)+"kubeconfig/testdata/dummy.yaml")
 		defer unsetenv(t, "KUBECONFIG")
-		runRootCmd(t, ctx, browserMock, []string{
-			"--kubeconfig", kubeConfigFilename,
+		runStandalone(t, ctx, standaloneConfig{
+			issuerURL:  sv.IssuerURL(),
+			httpDriver: httpdriver.New(ctx, t, nil),
+			now:        now,
 		})
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: server.LastTokenResponse().RefreshToken,
+			IDToken:      sv.LastTokenResponse().IDToken,
+			RefreshToken: sv.LastTokenResponse().RefreshToken,
 		})
 	})
 
@@ -232,38 +266,49 @@ func testStandalone(t *testing.T, idpTLS keypair.KeyPair) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "profile groups openid",
-			RedirectURIPrefix: "http://localhost:",
+		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
+			Want: oidcserver.Want{
+				Scope:             "profile groups openid",
+				RedirectURIPrefix: "http://localhost:",
+			},
+			Response: oidcserver.Response{
+				IDTokenExpiry: now.Add(time.Hour),
+			},
 		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.New(ctx, t, idpTLS.TLSConfig)
+		defer sv.Shutdown(t, ctx)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
-			Issuer:                  server.IssuerURL(),
-			ExtraScopes:             "profile,groups",
-			IDPCertificateAuthority: idpTLS.CACertPath,
+			Issuer:      sv.IssuerURL(),
+			ExtraScopes: "profile,groups",
 		})
 		defer os.Remove(kubeConfigFilename)
-		runRootCmd(t, ctx, browserMock, []string{
-			"--kubeconfig", kubeConfigFilename,
+		runStandalone(t, ctx, standaloneConfig{
+			issuerURL:          sv.IssuerURL(),
+			kubeConfigFilename: kubeConfigFilename,
+			httpDriver:         httpdriver.New(ctx, t, nil),
+			now:                now,
 		})
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: server.LastTokenResponse().RefreshToken,
+			IDToken:      sv.LastTokenResponse().IDToken,
+			RefreshToken: sv.LastTokenResponse().RefreshToken,
 		})
 	})
 }
 
-func runRootCmd(t *testing.T, ctx context.Context, b browser.Interface, args []string) {
-	t.Helper()
-	cmd := di.NewCmdForHeadless(&clock.Real{}, os.Stdin, os.Stdout, logger.New(t), b)
+type standaloneConfig struct {
+	issuerURL          string
+	kubeConfigFilename string
+	httpDriver         browser.Interface
+	now                time.Time
+	args               []string
+}
+
+func runStandalone(t *testing.T, ctx context.Context, cfg standaloneConfig) {
+	cmd := di.NewCmdForHeadless(clock.Fake(cfg.now), os.Stdin, os.Stdout, logger.New(t), cfg.httpDriver)
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin",
-		"--v=1",
+		"--kubeconfig", cfg.kubeConfigFilename,
 		"--listen-address", "127.0.0.1:0",
-	}, args...), "HEAD")
+	}, cfg.args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)
 	}
