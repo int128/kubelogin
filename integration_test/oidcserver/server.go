@@ -18,16 +18,12 @@ import (
 type Server interface {
 	http.Shutdowner
 	IssuerURL() string
+	SetConfig(Config)
 	LastTokenResponse() *handler.TokenResponse
 }
 
-// Config represents a configuration of the OpenID Connect provider.
-type Config struct {
-	TLS           keypair.KeyPair
-	IDTokenExpiry time.Time
-	RefreshError  string // if set, Refresh() will return the error
-
-	// expected values
+// Want represents a set of expected values.
+type Want struct {
 	Scope             string
 	RedirectURIPrefix string
 	ExtraParams       map[string]string // optional
@@ -36,10 +32,23 @@ type Config struct {
 	RefreshToken      string            // optional
 }
 
+// Response represents a set of response values.
+type Response struct {
+	IDTokenExpiry time.Time
+	RefreshToken  string
+	RefreshError  string // if set, Refresh() will return the error
+}
+
+// Config represents a configuration of the OpenID Connect provider.
+type Config struct {
+	Want     Want
+	Response Response
+}
+
 // New starts a HTTP server for the OpenID Connect provider.
-func New(t *testing.T, c Config) Server {
+func New(t *testing.T, k keypair.KeyPair, c Config) Server {
 	sv := server{Config: c, t: t}
-	sv.issuerURL, sv.Shutdowner = http.Start(t, handler.New(t, &sv), c.TLS)
+	sv.issuerURL, sv.Shutdowner = http.Start(t, handler.New(t, &sv), k)
 	return &sv
 }
 
@@ -54,6 +63,10 @@ type server struct {
 
 func (sv *server) IssuerURL() string {
 	return sv.issuerURL
+}
+
+func (sv *server) SetConfig(cfg Config) {
+	sv.Config = cfg
 }
 
 func (sv *server) LastTokenResponse() *handler.TokenResponse {
@@ -96,13 +109,13 @@ func (sv *server) GetCertificates() *handler.CertificatesResponse {
 }
 
 func (sv *server) AuthenticateCode(req handler.AuthenticationRequest) (code string, err error) {
-	if req.Scope != sv.Scope {
-		sv.t.Errorf("scope wants `%s` but was `%s`", sv.Scope, req.Scope)
+	if req.Scope != sv.Want.Scope {
+		sv.t.Errorf("scope wants `%s` but was `%s`", sv.Want.Scope, req.Scope)
 	}
-	if !strings.HasPrefix(req.RedirectURI, sv.RedirectURIPrefix) {
-		sv.t.Errorf("redirectURI wants prefix `%s` but was `%s`", sv.RedirectURIPrefix, req.RedirectURI)
+	if !strings.HasPrefix(req.RedirectURI, sv.Want.RedirectURIPrefix) {
+		sv.t.Errorf("redirectURI wants prefix `%s` but was `%s`", sv.Want.RedirectURIPrefix, req.RedirectURI)
 	}
-	for k, v := range sv.ExtraParams {
+	for k, v := range sv.Want.ExtraParams {
 		got := req.RawQuery.Get(k)
 		if got != v {
 			sv.t.Errorf("parameter %s wants `%s` but was `%s`", k, v, got)
@@ -120,12 +133,12 @@ func (sv *server) Exchange(code string) (*handler.TokenResponse, error) {
 		TokenType:    "Bearer",
 		ExpiresIn:    3600,
 		AccessToken:  "YOUR_ACCESS_TOKEN",
-		RefreshToken: "YOUR_REFRESH_TOKEN",
+		RefreshToken: sv.Response.RefreshToken,
 		IDToken: jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
 			claims.Issuer = sv.issuerURL
 			claims.Subject = "SUBJECT"
-			claims.IssuedAt = sv.IDTokenExpiry.Add(-time.Hour).Unix()
-			claims.ExpiresAt = sv.IDTokenExpiry.Unix()
+			claims.IssuedAt = sv.Response.IDTokenExpiry.Add(-time.Hour).Unix()
+			claims.ExpiresAt = sv.Response.IDTokenExpiry.Unix()
 			claims.Audience = []string{"kubernetes"}
 			claims.Nonce = sv.nonce
 		}),
@@ -135,25 +148,25 @@ func (sv *server) Exchange(code string) (*handler.TokenResponse, error) {
 }
 
 func (sv *server) AuthenticatePassword(username, password, scope string) (*handler.TokenResponse, error) {
-	if scope != sv.Scope {
-		sv.t.Errorf("scope wants `%s` but was `%s`", sv.Scope, scope)
+	if scope != sv.Want.Scope {
+		sv.t.Errorf("scope wants `%s` but was `%s`", sv.Want.Scope, scope)
 	}
-	if username != sv.Username {
-		sv.t.Errorf("username wants `%s` but was `%s`", sv.Username, username)
+	if username != sv.Want.Username {
+		sv.t.Errorf("username wants `%s` but was `%s`", sv.Want.Username, username)
 	}
-	if password != sv.Password {
-		sv.t.Errorf("password wants `%s` but was `%s`", sv.Password, password)
+	if password != sv.Want.Password {
+		sv.t.Errorf("password wants `%s` but was `%s`", sv.Want.Password, password)
 	}
 	resp := &handler.TokenResponse{
 		TokenType:    "Bearer",
 		ExpiresIn:    3600,
 		AccessToken:  "YOUR_ACCESS_TOKEN",
-		RefreshToken: "YOUR_REFRESH_TOKEN",
+		RefreshToken: sv.Response.RefreshToken,
 		IDToken: jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
 			claims.Issuer = sv.issuerURL
 			claims.Subject = "SUBJECT"
-			claims.IssuedAt = sv.IDTokenExpiry.Add(-time.Hour).Unix()
-			claims.ExpiresAt = sv.IDTokenExpiry.Unix()
+			claims.IssuedAt = sv.Response.IDTokenExpiry.Add(-time.Hour).Unix()
+			claims.ExpiresAt = sv.Response.IDTokenExpiry.Unix()
 			claims.Audience = []string{"kubernetes"}
 		}),
 	}
@@ -162,22 +175,22 @@ func (sv *server) AuthenticatePassword(username, password, scope string) (*handl
 }
 
 func (sv *server) Refresh(refreshToken string) (*handler.TokenResponse, error) {
-	if refreshToken != sv.RefreshToken {
-		sv.t.Errorf("refreshToken wants %s but was %s", sv.RefreshToken, refreshToken)
+	if refreshToken != sv.Want.RefreshToken {
+		sv.t.Errorf("refreshToken wants %s but was %s", sv.Want.RefreshToken, refreshToken)
 	}
-	if sv.RefreshError != "" {
-		return nil, &handler.ErrorResponse{Code: "invalid_request", Description: sv.RefreshError}
+	if sv.Response.RefreshError != "" {
+		return nil, &handler.ErrorResponse{Code: "invalid_request", Description: sv.Response.RefreshError}
 	}
 	resp := &handler.TokenResponse{
 		TokenType:    "Bearer",
 		ExpiresIn:    3600,
 		AccessToken:  "YOUR_ACCESS_TOKEN",
-		RefreshToken: "YOUR_REFRESH_TOKEN",
+		RefreshToken: sv.Response.RefreshToken,
 		IDToken: jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
 			claims.Issuer = sv.issuerURL
 			claims.Subject = "SUBJECT"
-			claims.IssuedAt = sv.IDTokenExpiry.Add(-time.Hour).Unix()
-			claims.ExpiresAt = sv.IDTokenExpiry.Unix()
+			claims.IssuedAt = sv.Response.IDTokenExpiry.Add(-time.Hour).Unix()
+			claims.ExpiresAt = sv.Response.IDTokenExpiry.Unix()
 			claims.Audience = []string{"kubernetes"}
 		}),
 	}

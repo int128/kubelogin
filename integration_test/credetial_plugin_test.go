@@ -15,10 +15,8 @@ import (
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/clock"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/di"
-	"github.com/int128/kubelogin/pkg/testing/jwt"
+	"github.com/int128/kubelogin/pkg/testing/clock"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
@@ -32,6 +30,8 @@ import (
 // 4. Verify the output.
 //
 func TestCredentialPlugin(t *testing.T) {
+	timeout := 3 * time.Second
+	now := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 	tokenCacheDir, err := ioutil.TempDir("", "kube")
 	if err != nil {
 		t.Fatalf("could not create a cache dir: %s", err)
@@ -42,291 +42,305 @@ func TestCredentialPlugin(t *testing.T) {
 		}
 	}()
 
-	t.Run("NoTLS", func(t *testing.T) {
-		testCredentialPlugin(t, credentialPluginTestCase{
-			tokenCacheDir: tokenCacheDir,
-			idpTLS:        keypair.None,
-			extraArgs: []string{
-				"--token-cache-dir", tokenCacheDir,
+	for name, tc := range map[string]struct {
+		keyPair keypair.KeyPair
+		args    []string
+	}{
+		"NoTLS": {},
+		"TLS": {
+			keyPair: keypair.Server,
+			args:    []string{"--certificate-authority", keypair.Server.CACertPath},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Run("AuthCode", func(t *testing.T) {
+				t.Parallel()
+				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+				defer cancel()
+				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{
+					Want: oidcserver.Want{
+						Scope:             "openid",
+						RedirectURIPrefix: "http://localhost:",
+					},
+					Response: oidcserver.Response{
+						IDTokenExpiry: now.Add(time.Hour),
+					},
+				})
+				defer sv.Shutdown(t, ctx)
+				var stdout bytes.Buffer
+				runGetToken(t, ctx, getTokenConfig{
+					tokenCacheDir: tokenCacheDir,
+					issuerURL:     sv.IssuerURL(),
+					httpDriver:    httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+					now:           now,
+					stdout:        &stdout,
+					args:          tc.args,
+				})
+				assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+			})
+
+			t.Run("ROPC", func(t *testing.T) {
+				t.Parallel()
+				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+				defer cancel()
+				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{
+					Want: oidcserver.Want{
+						Scope:             "openid",
+						RedirectURIPrefix: "http://localhost:",
+						Username:          "USER1",
+						Password:          "PASS1",
+					},
+					Response: oidcserver.Response{
+						IDTokenExpiry: now.Add(time.Hour),
+					},
+				})
+				defer sv.Shutdown(t, ctx)
+				var stdout bytes.Buffer
+				runGetToken(t, ctx, getTokenConfig{
+					tokenCacheDir: tokenCacheDir,
+					issuerURL:     sv.IssuerURL(),
+					httpDriver:    httpdriver.Zero(t),
+					now:           now,
+					stdout:        &stdout,
+					args: append([]string{
+						"--username", "USER1",
+						"--password", "PASS1",
+					}, tc.args...),
+				})
+				assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+			})
+
+			t.Run("TokenCacheLifecycle", func(t *testing.T) {
+				t.Parallel()
+				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+				defer cancel()
+				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{})
+				defer sv.Shutdown(t, ctx)
+
+				t.Run("NoCache", func(t *testing.T) {
+					sv.SetConfig(oidcserver.Config{
+						Want: oidcserver.Want{
+							Scope:             "openid",
+							RedirectURIPrefix: "http://localhost:",
+						},
+						Response: oidcserver.Response{
+							IDTokenExpiry: now.Add(time.Hour),
+							RefreshToken:  "REFRESH_TOKEN_1",
+						},
+					})
+					var stdout bytes.Buffer
+					runGetToken(t, ctx, getTokenConfig{
+						tokenCacheDir: tokenCacheDir,
+						issuerURL:     sv.IssuerURL(),
+						httpDriver:    httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+						now:           now,
+						stdout:        &stdout,
+						args:          tc.args,
+					})
+					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+				})
+				t.Run("Valid", func(t *testing.T) {
+					sv.SetConfig(oidcserver.Config{})
+					var stdout bytes.Buffer
+					runGetToken(t, ctx, getTokenConfig{
+						tokenCacheDir: tokenCacheDir,
+						issuerURL:     sv.IssuerURL(),
+						httpDriver:    httpdriver.Zero(t),
+						now:           now,
+						stdout:        &stdout,
+						args:          tc.args,
+					})
+					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+				})
+				t.Run("Refresh", func(t *testing.T) {
+					sv.SetConfig(oidcserver.Config{
+						Want: oidcserver.Want{
+							Scope:             "openid",
+							RedirectURIPrefix: "http://localhost:",
+							RefreshToken:      "REFRESH_TOKEN_1",
+						},
+						Response: oidcserver.Response{
+							IDTokenExpiry: now.Add(3 * time.Hour),
+							RefreshToken:  "REFRESH_TOKEN_2",
+						},
+					})
+					var stdout bytes.Buffer
+					runGetToken(t, ctx, getTokenConfig{
+						tokenCacheDir: tokenCacheDir,
+						issuerURL:     sv.IssuerURL(),
+						httpDriver:    httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+						now:           now.Add(2 * time.Hour),
+						stdout:        &stdout,
+						args:          tc.args,
+					})
+					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(3*time.Hour))
+				})
+				t.Run("RefreshAgain", func(t *testing.T) {
+					sv.SetConfig(oidcserver.Config{
+						Want: oidcserver.Want{
+							Scope:             "openid",
+							RedirectURIPrefix: "http://localhost:",
+							RefreshToken:      "REFRESH_TOKEN_2",
+						},
+						Response: oidcserver.Response{
+							IDTokenExpiry: now.Add(5 * time.Hour),
+						},
+					})
+					var stdout bytes.Buffer
+					runGetToken(t, ctx, getTokenConfig{
+						tokenCacheDir: tokenCacheDir,
+						issuerURL:     sv.IssuerURL(),
+						httpDriver:    httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+						now:           now.Add(4 * time.Hour),
+						stdout:        &stdout,
+						args:          tc.args,
+					})
+					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(5*time.Hour))
+				})
+			})
+		})
+	}
+
+	t.Run("TLSData", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		sv := oidcserver.New(t, keypair.Server, oidcserver.Config{
+			Want: oidcserver.Want{
+				Scope:             "openid",
+				RedirectURIPrefix: "http://localhost:",
+			},
+			Response: oidcserver.Response{
+				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-	})
-	t.Run("TLS", func(t *testing.T) {
-		t.Run("CertFile", func(t *testing.T) {
-			testCredentialPlugin(t, credentialPluginTestCase{
-				tokenCacheDir: tokenCacheDir,
-				tokenCacheKey: tokencache.Key{CACertFilename: keypair.Server.CACertPath},
-				idpTLS:        keypair.Server,
-				extraArgs: []string{
-					"--token-cache-dir", tokenCacheDir,
-					"--certificate-authority", keypair.Server.CACertPath,
-				},
-			})
-		})
-		t.Run("CertData", func(t *testing.T) {
-			testCredentialPlugin(t, credentialPluginTestCase{
-				tokenCacheDir: tokenCacheDir,
-				tokenCacheKey: tokencache.Key{CACertData: keypair.Server.CACertBase64},
-				idpTLS:        keypair.Server,
-				extraArgs: []string{
-					"--token-cache-dir", tokenCacheDir,
-					"--certificate-authority-data", keypair.Server.CACertBase64,
-				},
-			})
-		})
-	})
-}
-
-type credentialPluginTestCase struct {
-	tokenCacheDir string
-	tokenCacheKey tokencache.Key
-	idpTLS        keypair.KeyPair
-	extraArgs     []string
-}
-
-func testCredentialPlugin(t *testing.T, tc credentialPluginTestCase) {
-	timeout := 1 * time.Second
-	var (
-		tokenExpiryFuture = time.Now().Add(time.Hour).Round(time.Second)
-		tokenExpiryPast   = time.Now().Add(-time.Hour).Round(time.Second)
-	)
-
-	t.Run("Defaults", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               tc.idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
+		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
-		runGetTokenCmd(t, ctx, browserMock, &stdout,
-			append([]string{
-				"--oidc-issuer-url", server.IssuerURL(),
-				"--oidc-client-id", "kubernetes",
-			}, tc.extraArgs...))
-		assertTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: server.LastTokenResponse().RefreshToken,
+		runGetToken(t, ctx, getTokenConfig{
+			tokenCacheDir: tokenCacheDir,
+			issuerURL:     sv.IssuerURL(),
+			httpDriver:    httpdriver.New(ctx, t, keypair.Server.TLSConfig),
+			now:           now,
+			stdout:        &stdout,
+			args:          []string{"--certificate-authority-data", keypair.Server.CACertBase64},
 		})
-		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
-	})
-
-	t.Run("ResourceOwnerPasswordCredentials", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               tc.idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-			Username:          "USER",
-			Password:          "PASS",
-		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.Zero(t)
-		var stdout bytes.Buffer
-		runGetTokenCmd(t, ctx, browserMock, &stdout,
-			append([]string{
-				"--oidc-issuer-url", server.IssuerURL(),
-				"--oidc-client-id", "kubernetes",
-				"--username", "USER",
-				"--password", "PASS",
-			}, tc.extraArgs...))
-		assertTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: server.LastTokenResponse().RefreshToken,
-		})
-		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
-	})
-
-	t.Run("HasValidToken", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               tc.idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-		})
-		defer server.Shutdown(t, ctx)
-		preexist := tokencache.Value{
-			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
-				claims.Issuer = server.IssuerURL()
-				claims.Subject = "SUBJECT"
-				claims.Audience = []string{"kubernetes"}
-				claims.IssuedAt = tokenExpiryFuture.Add(-time.Hour).Unix()
-				claims.ExpiresAt = tokenExpiryFuture.Unix()
-			}),
-			RefreshToken: "VALID_REFRESH_TOKEN",
-		}
-		browserMock := httpdriver.Zero(t)
-		var stdout bytes.Buffer
-		setupTokenCache(t, tc, server.IssuerURL(), preexist)
-		runGetTokenCmd(t, ctx, browserMock, &stdout,
-			append([]string{
-				"--oidc-issuer-url", server.IssuerURL(),
-				"--oidc-client-id", "kubernetes",
-			}, tc.extraArgs...))
-		assertTokenCache(t, tc, server.IssuerURL(), preexist)
-		assertCredentialPluginWriter(t, &stdout, preexist.IDToken, tokenExpiryFuture)
-	})
-
-	t.Run("HasValidRefreshToken", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               tc.idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-			RefreshToken:      "VALID_REFRESH_TOKEN",
-		})
-		defer server.Shutdown(t, ctx)
-		preexist := tokencache.Value{
-			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
-				claims.Issuer = server.IssuerURL()
-				claims.Subject = "SUBJECT"
-				claims.Audience = []string{"kubernetes"}
-				claims.IssuedAt = tokenExpiryPast.Add(-time.Hour).Unix()
-				claims.ExpiresAt = tokenExpiryPast.Unix()
-			}),
-			RefreshToken: "VALID_REFRESH_TOKEN",
-		}
-		setupTokenCache(t, tc, server.IssuerURL(), preexist)
-		browserMock := httpdriver.Zero(t)
-		var stdout bytes.Buffer
-		runGetTokenCmd(t, ctx, browserMock, &stdout,
-			append([]string{
-				"--oidc-issuer-url", server.IssuerURL(),
-				"--oidc-client-id", "kubernetes",
-			}, tc.extraArgs...))
-		assertTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: server.LastTokenResponse().RefreshToken,
-		})
-		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
-	})
-
-	t.Run("HasExpiredRefreshToken", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               tc.idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			RefreshError:      "token has expired",
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-			RefreshToken:      "EXPIRED_REFRESH_TOKEN",
-		})
-		defer server.Shutdown(t, ctx)
-		preexist := tokencache.Value{
-			IDToken: jwt.EncodeF(t, func(claims *jwt.Claims) {
-				claims.Issuer = server.IssuerURL()
-				claims.Subject = "SUBJECT"
-				claims.Audience = []string{"kubernetes"}
-				claims.IssuedAt = tokenExpiryPast.Add(-time.Hour).Unix()
-				claims.ExpiresAt = tokenExpiryPast.Unix()
-			}),
-			RefreshToken: "EXPIRED_REFRESH_TOKEN",
-		}
-		setupTokenCache(t, tc, server.IssuerURL(), preexist)
-		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
-		var stdout bytes.Buffer
-		runGetTokenCmd(t, ctx, browserMock, &stdout,
-			append([]string{
-				"--oidc-issuer-url", server.IssuerURL(),
-				"--oidc-client-id", "kubernetes",
-			}, tc.extraArgs...))
-		assertTokenCache(t, tc, server.IssuerURL(), tokencache.Value{
-			IDToken:      server.LastTokenResponse().IDToken,
-			RefreshToken: server.LastTokenResponse().RefreshToken,
-		})
-		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
+		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
 	t.Run("ExtraScopes", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               tc.idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "email profile openid",
-			RedirectURIPrefix: "http://localhost:",
+		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
+			Want: oidcserver.Want{
+				Scope:             "email profile openid",
+				RedirectURIPrefix: "http://localhost:",
+			},
+			Response: oidcserver.Response{
+				IDTokenExpiry: now.Add(time.Hour),
+			},
 		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
+		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
-		runGetTokenCmd(t, ctx, browserMock, &stdout,
-			append([]string{
-				"--oidc-issuer-url", server.IssuerURL(),
-				"--oidc-client-id", "kubernetes",
+		runGetToken(t, ctx, getTokenConfig{
+			tokenCacheDir: tokenCacheDir,
+			issuerURL:     sv.IssuerURL(),
+			httpDriver:    httpdriver.New(ctx, t, nil),
+			now:           now,
+			stdout:        &stdout,
+			args: []string{
 				"--oidc-extra-scope", "email",
 				"--oidc-extra-scope", "profile",
-			}, tc.extraArgs...))
-		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
+			},
+		})
+		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
 	t.Run("RedirectURLHostname", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               tc.idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://127.0.0.1:",
+		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
+			Want: oidcserver.Want{
+				Scope:             "openid",
+				RedirectURIPrefix: "http://127.0.0.1:",
+			},
+			Response: oidcserver.Response{
+				IDTokenExpiry: now.Add(time.Hour),
+			},
 		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
+		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
-		runGetTokenCmd(t, ctx, browserMock, &stdout,
-			append([]string{
-				"--oidc-issuer-url", server.IssuerURL(),
-				"--oidc-client-id", "kubernetes",
-				"--oidc-redirect-url-hostname", "127.0.0.1",
-			}, tc.extraArgs...))
-		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
+		runGetToken(t, ctx, getTokenConfig{
+			tokenCacheDir: tokenCacheDir,
+			issuerURL:     sv.IssuerURL(),
+			httpDriver:    httpdriver.New(ctx, t, nil),
+			now:           now,
+			stdout:        &stdout,
+			args:          []string{"--oidc-redirect-url-hostname", "127.0.0.1"},
+		})
+		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
 	t.Run("ExtraParams", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		server := oidcserver.New(t, oidcserver.Config{
-			TLS:               tc.idpTLS,
-			IDTokenExpiry:     tokenExpiryFuture,
-			Scope:             "openid",
-			RedirectURIPrefix: "http://localhost:",
-			ExtraParams: map[string]string{
-				"ttl":    "86400",
-				"reauth": "false",
+		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
+			Want: oidcserver.Want{
+				Scope:             "openid",
+				RedirectURIPrefix: "http://localhost:",
+				ExtraParams: map[string]string{
+					"ttl":    "86400",
+					"reauth": "false",
+				},
+			},
+			Response: oidcserver.Response{
+				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer server.Shutdown(t, ctx)
-		browserMock := httpdriver.New(ctx, t, tc.idpTLS.TLSConfig)
+		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
-		runGetTokenCmd(t, ctx, browserMock, &stdout,
-			append([]string{
-				"--oidc-issuer-url", server.IssuerURL(),
-				"--oidc-client-id", "kubernetes",
+		runGetToken(t, ctx, getTokenConfig{
+			tokenCacheDir: tokenCacheDir,
+			issuerURL:     sv.IssuerURL(),
+			httpDriver:    httpdriver.New(ctx, t, nil),
+			now:           now,
+			stdout:        &stdout,
+			args: []string{
 				"--oidc-auth-request-extra-params", "ttl=86400",
 				"--oidc-auth-request-extra-params", "reauth=false",
-			}, tc.extraArgs...))
-		assertCredentialPluginWriter(t, &stdout, server.LastTokenResponse().IDToken, tokenExpiryFuture)
+			},
+		})
+		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 }
 
-func assertCredentialPluginWriter(t *testing.T, stdout io.Reader, token string, expiry time.Time) {
+type getTokenConfig struct {
+	tokenCacheDir string
+	issuerURL     string
+	httpDriver    browser.Interface
+	stdout        io.Writer
+	now           time.Time
+	args          []string
+}
+
+func runGetToken(t *testing.T, ctx context.Context, cfg getTokenConfig) {
+	cmd := di.NewCmdForHeadless(clock.Fake(cfg.now), os.Stdin, cfg.stdout, logger.New(t), cfg.httpDriver)
+	exitCode := cmd.Run(ctx, append([]string{
+		"kubelogin",
+		"get-token",
+		"--token-cache-dir", cfg.tokenCacheDir,
+		"--oidc-issuer-url", cfg.issuerURL,
+		"--oidc-client-id", "kubernetes",
+		"--listen-address", "127.0.0.1:0",
+	}, cfg.args...), "latest")
+	if exitCode != 0 {
+		t.Errorf("exit status wants 0 but %d", exitCode)
+	}
+}
+
+func assertCredentialPluginStdout(t *testing.T, stdout io.Reader, token string, expiry time.Time) {
 	var got clientauthenticationv1beta1.ExecCredential
 	if err := json.NewDecoder(stdout).Decode(&got); err != nil {
 		t.Errorf("could not decode json of the credential plugin: %s", err)
@@ -344,43 +358,5 @@ func assertCredentialPluginWriter(t *testing.T, stdout io.Reader, token string, 
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("kubeconfig mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func runGetTokenCmd(t *testing.T, ctx context.Context, b browser.Interface, stdout io.Writer, args []string) {
-	t.Helper()
-	cmd := di.NewCmdForHeadless(&clock.Real{}, os.Stdin, stdout, logger.New(t), b)
-	exitCode := cmd.Run(ctx, append([]string{
-		"kubelogin", "get-token",
-		"--v=1",
-		"--listen-address", "127.0.0.1:0",
-	}, args...), "HEAD")
-	if exitCode != 0 {
-		t.Errorf("exit status wants 0 but %d", exitCode)
-	}
-}
-
-func setupTokenCache(t *testing.T, tc credentialPluginTestCase, serverURL string, v tokencache.Value) {
-	k := tc.tokenCacheKey
-	k.IssuerURL = serverURL
-	k.ClientID = "kubernetes"
-	var r tokencache.Repository
-	err := r.Save(tc.tokenCacheDir, k, v)
-	if err != nil {
-		t.Errorf("could not set up the token cache: %s", err)
-	}
-}
-
-func assertTokenCache(t *testing.T, tc credentialPluginTestCase, serverURL string, want tokencache.Value) {
-	k := tc.tokenCacheKey
-	k.IssuerURL = serverURL
-	k.ClientID = "kubernetes"
-	var r tokencache.Repository
-	got, err := r.FindByKey(tc.tokenCacheDir, k)
-	if err != nil {
-		t.Errorf("could not set up the token cache: %s", err)
-	}
-	if diff := cmp.Diff(&want, got); diff != "" {
-		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 }
