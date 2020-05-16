@@ -72,16 +72,16 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			return xerrors.Errorf("could not render json: %w", err)
 		}
 	case m == "GET" && p == "/auth":
-		// 3.1.2.1. Authentication Request
-		// https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 		q := r.URL.Query()
 		redirectURI, state := q.Get("redirect_uri"), q.Get("state")
 		code, err := h.provider.AuthenticateCode(AuthenticationRequest{
-			RedirectURI: redirectURI,
-			State:       state,
-			Scope:       q.Get("scope"),
-			Nonce:       q.Get("nonce"),
-			RawQuery:    q,
+			RedirectURI:         redirectURI,
+			State:               state,
+			Scope:               q.Get("scope"),
+			Nonce:               q.Get("nonce"),
+			CodeChallenge:       q.Get("code_challenge"),
+			CodeChallengeMethod: q.Get("code_challenge_method"),
+			RawQuery:            q,
 		})
 		if err != nil {
 			return xerrors.Errorf("authentication error: %w", err)
@@ -95,10 +95,10 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		grantType := r.Form.Get("grant_type")
 		switch grantType {
 		case "authorization_code":
-			// 3.1.3.1. Token Request
-			// https://openid.net/specs/openid-connect-core-1_0.html#TokenRequest
-			code := r.Form.Get("code")
-			tokenResponse, err := h.provider.Exchange(code)
+			tokenResponse, err := h.provider.Exchange(TokenRequest{
+				Code:         r.Form.Get("code"),
+				CodeVerifier: r.Form.Get("code_verifier"),
+			})
 			if err != nil {
 				return xerrors.Errorf("token request error: %w", err)
 			}

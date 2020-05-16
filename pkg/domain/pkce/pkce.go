@@ -15,8 +15,7 @@ var Plain Params
 
 const (
 	// code challenge methods defined as https://tools.ietf.org/html/rfc7636#section-4.3
-	methodPlain = "plain"
-	methodS256  = "S256"
+	methodS256 = "S256"
 )
 
 // Params represents a set of the PKCE parameters.
@@ -26,8 +25,8 @@ type Params struct {
 	CodeVerifier        string
 }
 
-func (p *Params) IsPlain() bool {
-	return p.CodeChallengeMethod == "" || p.CodeChallengeMethod == methodPlain
+func (p Params) IsZero() bool {
+	return p == Params{}
 }
 
 // New returns a parameters supported by the provider.

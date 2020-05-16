@@ -13,7 +13,7 @@ type Provider interface {
 	Discovery() *DiscoveryResponse
 	GetCertificates() *CertificatesResponse
 	AuthenticateCode(req AuthenticationRequest) (code string, err error)
-	Exchange(code string) (*TokenResponse, error)
+	Exchange(req TokenRequest) (*TokenResponse, error)
 	AuthenticatePassword(username, password, scope string) (*TokenResponse, error)
 	Refresh(refreshToken string) (*TokenResponse, error)
 }
@@ -47,12 +47,23 @@ type CertificatesResponseKey struct {
 	E   string `json:"e"`
 }
 
+// AuthenticationRequest represents a type of:
+// https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 type AuthenticationRequest struct {
-	RedirectURI string
-	State       string
-	Scope       string // space separated string
-	Nonce       string
-	RawQuery    url.Values
+	RedirectURI         string
+	State               string
+	Scope               string // space separated string
+	Nonce               string
+	CodeChallenge       string
+	CodeChallengeMethod string
+	RawQuery            url.Values
+}
+
+// TokenRequest represents a type of:
+// https://openid.net/specs/openid-connect-core-1_0.html#TokenRequest
+type TokenRequest struct {
+	Code         string
+	CodeVerifier string
 }
 
 type TokenResponse struct {
