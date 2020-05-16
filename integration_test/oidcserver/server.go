@@ -2,6 +2,7 @@
 package oidcserver
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
 	"math/big"
 	"strings"
@@ -24,19 +25,21 @@ type Server interface {
 
 // Want represents a set of expected values.
 type Want struct {
-	Scope             string
-	RedirectURIPrefix string
-	ExtraParams       map[string]string // optional
-	Username          string            // optional
-	Password          string            // optional
-	RefreshToken      string            // optional
+	Scope               string
+	RedirectURIPrefix   string
+	CodeChallengeMethod string            // optional
+	ExtraParams         map[string]string // optional
+	Username            string            // optional
+	Password            string            // optional
+	RefreshToken        string            // optional
 }
 
 // Response represents a set of response values.
 type Response struct {
-	IDTokenExpiry time.Time
-	RefreshToken  string
-	RefreshError  string // if set, Refresh() will return the error
+	IDTokenExpiry                 time.Time
+	RefreshToken                  string
+	RefreshError                  string   // if set, Refresh() will return the error
+	CodeChallengeMethodsSupported []string // optional
 }
 
 // Config represents a configuration of the OpenID Connect provider.
@@ -55,10 +58,10 @@ func New(t *testing.T, k keypair.KeyPair, c Config) Server {
 type server struct {
 	Config
 	http.Shutdowner
-	t                 *testing.T
-	issuerURL         string
-	nonce             string
-	lastTokenResponse *handler.TokenResponse
+	t                         *testing.T
+	issuerURL                 string
+	lastAuthenticationRequest *handler.AuthenticationRequest
+	lastTokenResponse         *handler.TokenResponse
 }
 
 func (sv *server) IssuerURL() string {
@@ -87,7 +90,7 @@ func (sv *server) Discovery() *handler.DiscoveryResponse {
 		IDTokenSigningAlgValuesSupported:  []string{"RS256"},
 		ScopesSupported:                   []string{"openid", "email", "profile"},
 		TokenEndpointAuthMethodsSupported: []string{"client_secret_post", "client_secret_basic"},
-		CodeChallengeMethodsSupported:     []string{"plain", "S256"},
+		CodeChallengeMethodsSupported:     sv.Config.Response.CodeChallengeMethodsSupported,
 		ClaimsSupported:                   []string{"aud", "email", "exp", "iat", "iss", "name", "sub"},
 	}
 }
@@ -115,19 +118,29 @@ func (sv *server) AuthenticateCode(req handler.AuthenticationRequest) (code stri
 	if !strings.HasPrefix(req.RedirectURI, sv.Want.RedirectURIPrefix) {
 		sv.t.Errorf("redirectURI wants prefix `%s` but was `%s`", sv.Want.RedirectURIPrefix, req.RedirectURI)
 	}
+	if req.CodeChallengeMethod != sv.Want.CodeChallengeMethod {
+		sv.t.Errorf("code_challenge_method wants `%s` but was `%s`", sv.Want.CodeChallengeMethod, req.CodeChallengeMethod)
+	}
 	for k, v := range sv.Want.ExtraParams {
 		got := req.RawQuery.Get(k)
 		if got != v {
 			sv.t.Errorf("parameter %s wants `%s` but was `%s`", k, v, got)
 		}
 	}
-	sv.nonce = req.Nonce
+	sv.lastAuthenticationRequest = &req
 	return "YOUR_AUTH_CODE", nil
 }
 
-func (sv *server) Exchange(code string) (*handler.TokenResponse, error) {
-	if code != "YOUR_AUTH_CODE" {
-		return nil, xerrors.Errorf("code wants %s but was %s", "YOUR_AUTH_CODE", code)
+func (sv *server) Exchange(req handler.TokenRequest) (*handler.TokenResponse, error) {
+	if req.Code != "YOUR_AUTH_CODE" {
+		return nil, xerrors.Errorf("code wants %s but was %s", "YOUR_AUTH_CODE", req.Code)
+	}
+	if sv.lastAuthenticationRequest.CodeChallengeMethod == "S256" {
+		// https://tools.ietf.org/html/rfc7636#section-4.6
+		challenge := computeS256Challenge(req.CodeVerifier)
+		if challenge != sv.lastAuthenticationRequest.CodeChallenge {
+			sv.t.Errorf("pkce S256 challenge did not match (want %s but was %s)", sv.lastAuthenticationRequest.CodeChallenge, challenge)
+		}
 	}
 	resp := &handler.TokenResponse{
 		TokenType:    "Bearer",
@@ -140,11 +153,16 @@ func (sv *server) Exchange(code string) (*handler.TokenResponse, error) {
 			claims.IssuedAt = sv.Response.IDTokenExpiry.Add(-time.Hour).Unix()
 			claims.ExpiresAt = sv.Response.IDTokenExpiry.Unix()
 			claims.Audience = []string{"kubernetes"}
-			claims.Nonce = sv.nonce
+			claims.Nonce = sv.lastAuthenticationRequest.Nonce
 		}),
 	}
 	sv.lastTokenResponse = resp
 	return resp, nil
+}
+
+func computeS256Challenge(verifier string) string {
+	c := sha256.Sum256([]byte(verifier))
+	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(c[:])
 }
 
 func (sv *server) AuthenticatePassword(username, password, scope string) (*handler.TokenResponse, error) {

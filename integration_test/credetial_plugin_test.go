@@ -201,6 +201,33 @@ func TestCredentialPlugin(t *testing.T) {
 		})
 	}
 
+	t.Run("PKCE", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
+			Want: oidcserver.Want{
+				Scope:               "openid",
+				RedirectURIPrefix:   "http://localhost:",
+				CodeChallengeMethod: "S256",
+			},
+			Response: oidcserver.Response{
+				IDTokenExpiry:                 now.Add(time.Hour),
+				CodeChallengeMethodsSupported: []string{"plain", "S256"},
+			},
+		})
+		defer sv.Shutdown(t, ctx)
+		var stdout bytes.Buffer
+		runGetToken(t, ctx, getTokenConfig{
+			tokenCacheDir: tokenCacheDir,
+			issuerURL:     sv.IssuerURL(),
+			httpDriver:    httpdriver.New(ctx, t, nil),
+			now:           now,
+			stdout:        &stdout,
+		})
+		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+	})
+
 	t.Run("TLSData", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
