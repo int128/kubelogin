@@ -21,14 +21,14 @@ Take a look at the diagram:
 Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases) as follows:
 
 ```sh
-# Homebrew
+# Homebrew (macOS and Linux)
 brew install int128/kubelogin/kubelogin
 
 # Krew
 kubectl krew install oidc-login
 
 # GitHub Releases
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.19.0/kubelogin_linux_amd64.zip
+curl -LO https://github.com/int128/kubelogin/releases/download/v1.19.1/kubelogin_linux_amd64.zip
 unzip kubelogin_linux_amd64.zip
 ln -s kubelogin kubectl-oidc_login
 ```
@@ -288,7 +288,7 @@ users:
       - /tmp/.token-cache:/.token-cache
       - -p
       - 8000:8000
-      - quay.io/int128/kubelogin:v1.19.0
+      - quay.io/int128/kubelogin
       - get-token
       - --token-cache-dir=/.token-cache
       - --listen-address=0.0.0.0:8000
