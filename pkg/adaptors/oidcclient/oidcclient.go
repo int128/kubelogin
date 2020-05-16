@@ -119,7 +119,7 @@ func authorizationRequestOptions(n string, p pkce.Params, e map[string]string) [
 		oauth2.AccessTypeOffline,
 		oidc.Nonce(n),
 	}
-	if !p.IsPlain() {
+	if !p.IsZero() {
 		o = append(o,
 			oauth2.SetAuthURLParam("code_challenge", p.CodeChallenge),
 			oauth2.SetAuthURLParam("code_challenge_method", p.CodeChallengeMethod),
@@ -132,7 +132,7 @@ func authorizationRequestOptions(n string, p pkce.Params, e map[string]string) [
 }
 
 func tokenRequestOptions(p pkce.Params) (o []oauth2.AuthCodeOption) {
-	if !p.IsPlain() {
+	if !p.IsZero() {
 		o = append(o, oauth2.SetAuthURLParam("code_verifier", p.CodeVerifier))
 	}
 	return

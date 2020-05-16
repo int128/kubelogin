@@ -6,7 +6,7 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Run("S256", func(t *testing.T) {
-		p, err := New([]string{methodPlain, methodS256})
+		p, err := New([]string{"plain", "S256"})
 		if err != nil {
 			t.Fatalf("New error: %s", err)
 		}
@@ -20,22 +20,22 @@ func TestNew(t *testing.T) {
 			t.Errorf("CodeVerifier wants non-empty but was empty")
 		}
 	})
+	t.Run("plain", func(t *testing.T) {
+		p, err := New([]string{"plain"})
+		if err != nil {
+			t.Fatalf("New error: %s", err)
+		}
+		if !p.IsZero() {
+			t.Errorf("IsZero wants true but was false")
+		}
+	})
 	t.Run("nil", func(t *testing.T) {
 		p, err := New(nil)
 		if err != nil {
 			t.Fatalf("New error: %s", err)
 		}
-		if !p.IsPlain() {
-			t.Errorf("IsPlain wants true but was false")
-		}
-	})
-	t.Run("plain", func(t *testing.T) {
-		p, err := New([]string{methodPlain})
-		if err != nil {
-			t.Fatalf("New error: %s", err)
-		}
-		if !p.IsPlain() {
-			t.Errorf("IsPlain wants true but was false")
+		if !p.IsZero() {
+			t.Errorf("IsZero wants true but was false")
 		}
 	})
 }
