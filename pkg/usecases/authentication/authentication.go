@@ -50,6 +50,8 @@ type AuthCodeOption struct {
 	SkipOpenBrowser        bool
 	BindAddress            []string
 	RedirectURLHostname    string
+	LocalServerCertFile    string
+	LocalServerKeyFile     string
 	AuthRequestExtraParams map[string]string
 }
 

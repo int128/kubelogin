@@ -47,6 +47,8 @@ type GetTokenByAuthCodeInput struct {
 	Nonce                  string
 	PKCEParams             pkce.Params
 	RedirectURLHostname    string
+	LocalServerCertFile    string
+	LocalServerKeyFile     string
 	AuthRequestExtraParams map[string]string
 }
 
@@ -86,6 +88,14 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		LocalServerReadyChan:   localServerReadyChan,
 		RedirectURLHostname:    in.RedirectURLHostname,
 	}
+
+	if in.LocalServerCertFile != "" {
+		config.LocalServerCertFile = in.LocalServerCertFile
+	}
+	if in.LocalServerKeyFile != "" {
+		config.LocalServerKeyFile = in.LocalServerKeyFile
+	}
+
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
 		return nil, xerrors.Errorf("oauth2 error: %w", err)

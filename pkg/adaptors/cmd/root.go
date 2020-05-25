@@ -49,6 +49,8 @@ type authenticationOptions struct {
 	ListenPort             []int // deprecated
 	SkipOpenBrowser        bool
 	RedirectURLHostname    string
+	LocalServerCertFile    string
+	LocalServerKeyFile     string
 	AuthRequestExtraParams map[string]string
 	Username               string
 	Password               string
@@ -83,6 +85,8 @@ func (o *authenticationOptions) register(f *pflag.FlagSet) {
 	f.IntSliceVar(&o.ListenPort, "listen-port", nil, "(Deprecated: use --listen-address)")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
 	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "Hostname of the redirect URL")
+	f.StringVar(&o.LocalServerCertFile, "local-server-cert-file", "", "A PEM-encoded certificate, and possibly the complete certificate chain. When set, the server will serve TLS traffic using the specified certificates.")
+	f.StringVar(&o.LocalServerKeyFile, "local-server-key-file", "", "A PEM-encoded private key for the certificate. This is required when --local-server-cert-file is set.")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
@@ -95,6 +99,8 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			BindAddress:            o.determineListenAddress(),
 			SkipOpenBrowser:        o.SkipOpenBrowser,
 			RedirectURLHostname:    o.RedirectURLHostname,
+			LocalServerCertFile:    o.LocalServerCertFile,
+			LocalServerKeyFile:     o.LocalServerKeyFile,
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "authcode-keyboard":

@@ -38,6 +38,8 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 		Nonce:                  nonce,
 		PKCEParams:             p,
 		RedirectURLHostname:    o.RedirectURLHostname,
+		LocalServerCertFile:    o.LocalServerCertFile,
+		LocalServerKeyFile:     o.LocalServerKeyFile,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	}
 	readyChan := make(chan string, 1)
