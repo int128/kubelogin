@@ -19,7 +19,7 @@ $(TARGET): $(wildcard **/*.go)
 .PHONY: check
 check:
 	golangci-lint run
-	go test -v -race -cover -coverprofile=coverage.out ./... > gotest.log
+	CGO_ENABLED=1 go test -v -race -cover -coverprofile=coverage.out ./... > gotest.log
 
 .PHONY: dist
 dist: dist/output
