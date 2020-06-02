@@ -81,7 +81,6 @@ func (c *client) wrapContext(ctx context.Context) context.Context {
 func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*TokenSet, error) {
 
 	ctx = c.wrapContext(ctx)
-	fmt.Println("Got it here before config")
 
 	config := oauth2cli.Config{
 		OAuth2Config: c.oauth2Config,
