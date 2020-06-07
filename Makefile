@@ -1,15 +1,9 @@
-# CircleCI specific variables
-CIRCLE_TAG ?= latest
-GITHUB_USERNAME := $(CIRCLE_PROJECT_USERNAME)
-GITHUB_REPONAME := $(CIRCLE_PROJECT_REPONAME)
-
 TARGET := kubelogin
 TARGET_OSARCH := linux_amd64 darwin_amd64 windows_amd64 linux_arm linux_arm64
-VERSION ?= $(CIRCLE_TAG)
+VERSION ?= latest
 LDFLAGS := -X main.version=$(VERSION)
-
-CGO_ENABLED ?= 0
-export CGO_ENABLED
+GITHUB_USERNAME := int128
+GITHUB_REPONAME := kubelogin
 
 all: $(TARGET)
 
@@ -19,7 +13,7 @@ $(TARGET): $(wildcard **/*.go)
 .PHONY: check
 check:
 	golangci-lint run
-	CGO_ENABLED=1 go test -v -race -cover -coverprofile=coverage.out ./... > gotest.log
+	go test -v -race -cover -coverprofile=coverage.out ./... > gotest.log
 
 .PHONY: dist
 dist: dist/output
