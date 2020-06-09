@@ -26,11 +26,6 @@ brew install int128/kubelogin/kubelogin
 
 # Krew
 kubectl krew install oidc-login
-
-# GitHub Releases
-curl -LO https://github.com/int128/kubelogin/releases/download/v1.19.1/kubelogin_linux_amd64.zip
-unzip kubelogin_linux_amd64.zip
-ln -s kubelogin kubectl-oidc_login
 ```
 
 You need to set up the OIDC provider, cluster role binding, Kubernetes API server and kubeconfig.
