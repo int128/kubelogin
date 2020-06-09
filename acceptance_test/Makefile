@@ -57,7 +57,7 @@ $(OUTPUT_DIR)/bin/chromelogin: chromelogin/main.go
 # create a Dex server
 .PHONY: dex
 dex: $(OUTPUT_DIR)/server.crt $(OUTPUT_DIR)/server.key
-	docker create --name dex-server -p 10443:10443 quay.io/dexidp/dex:v2.21.0 serve /dex.yaml
+	docker create --name dex-server -p 10443:10443 --network kind quay.io/dexidp/dex:v2.21.0 serve /dex.yaml
 	docker cp $(OUTPUT_DIR)/server.crt dex-server:/
 	docker cp $(OUTPUT_DIR)/server.key dex-server:/
 	docker cp dex.yaml dex-server:/

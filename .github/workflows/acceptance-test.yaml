@@ -19,7 +19,7 @@ jobs:
             go-
       # https://kind.sigs.k8s.io/docs/user/quick-start/
       - run: |
-          wget -q -O ./kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-linux-amd64"
+          wget -q -O ./kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.8.1/kind-linux-amd64"
           chmod +x ./kind
           sudo mv ./kind /usr/local/bin/kind
           kind version
