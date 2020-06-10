@@ -18,13 +18,13 @@ Take a look at the diagram:
 
 ### Setup
 
-Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases) as follows:
+Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases).
 
 ```sh
 # Homebrew (macOS and Linux)
 brew install int128/kubelogin/kubelogin
 
-# Krew
+# Krew (macOS, Linux, Windows and ARM)
 kubectl krew install oidc-login
 ```
 
