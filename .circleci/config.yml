@@ -1,25 +1,17 @@
-version: 2
+version: 2.1
+
 jobs:
-  build:
+  test:
     docker:
-      - image: cimg/go:1.14
+      - image: cimg/go:1.14.4
     steps:
-      - run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
+      - run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
       - checkout
       - restore_cache:
           keys:
             - go-sum-{{ checksum "go.sum" }}
-      - run:
-          command: go get -v github.com/int128/goxzst github.com/int128/ghcp
-          working_directory: .circleci
       - run: make check
       - run: bash <(curl -s https://codecov.io/bash)
-      - run: make dist
-      - run: |
-          if [ "$CIRCLE_TAG" ]; then
-            make release
-          fi
       - save_cache:
           key: go-sum-{{ checksum "go.sum" }}
           paths:
@@ -27,12 +19,42 @@ jobs:
       - store_artifacts:
           path: gotest.log
 
+  crossbuild:
+    macos:
+      xcode: 11.5.0
+    steps:
+      - run: |
+          curl -sSfL https://dl.google.com/go/go1.14.4.darwin-amd64.tar.gz | tar -C /tmp -xz
+          echo 'export PATH="$PATH:/tmp/go/bin:$HOME/go/bin"' >> $BASH_ENV
+      - checkout
+      - restore_cache:
+          keys:
+            - go-macos-{{ checksum "go.sum" }}
+      - run:
+          command: go get -v github.com/int128/goxzst github.com/int128/ghcp
+          working_directory: .circleci
+      - run: make dist
+      - run: |
+          if [ "$CIRCLE_TAG" ]; then
+            make release
+          fi
+      - save_cache:
+          key: go-macos-{{ checksum "go.sum" }}
+          paths:
+            - ~/go/pkg
+
 workflows:
   version: 2
-  all:
+  build:
     jobs:
-      - build:
+      - test:
+          filters:
+            tags:
+              only: /.*/
+      - crossbuild:
           context: open-source
+          requires:
+            - test
           filters:
             tags:
               only: /.*/
