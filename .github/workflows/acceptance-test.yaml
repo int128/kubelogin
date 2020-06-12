@@ -1,8 +1,6 @@
-name: acceptance-test
 on: [push]
 jobs:
-  build:
-    name: test
+  acceptance-test:
     # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#ubuntu-1804-lts
     runs-on: ubuntu-18.04
     steps:
