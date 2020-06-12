@@ -22,8 +22,6 @@ spec:
 
   caveats: |
     You need to setup the OIDC provider, Kubernetes API server, role binding and kubeconfig.
-    See https://github.com/int128/kubelogin for more.
-
   version: {{ env "VERSION" }}
   platforms:
     - uri: https://github.com/int128/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_linux_amd64.zip
