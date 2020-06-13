@@ -52,6 +52,7 @@ type authenticationOptions struct {
 	AuthRequestExtraParams map[string]string
 	Username               string
 	Password               string
+	LocalServerSuccessHTML string
 }
 
 // determineListenAddress returns the addresses from the flags.
@@ -86,6 +87,7 @@ func (o *authenticationOptions) register(f *pflag.FlagSet) {
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
+	f.StringVar(&o.LocalServerSuccessHTML, "server-success-html", "", "HTML page to display upon successful login")
 }
 
 func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {
@@ -96,6 +98,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			SkipOpenBrowser:        o.SkipOpenBrowser,
 			RedirectURLHostname:    o.RedirectURLHostname,
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
+			LocalServerSuccessHTML: o.LocalServerSuccessHTML,
 		}
 	case o.GrantType == "authcode-keyboard":
 		s.AuthCodeKeyboardOption = &authentication.AuthCodeKeyboardOption{

@@ -39,6 +39,7 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 		PKCEParams:             p,
 		RedirectURLHostname:    o.RedirectURLHostname,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
+		LocalServerSuccessHTML: o.LocalServerSuccessHTML,
 	}
 	readyChan := make(chan string, 1)
 	defer close(readyChan)
