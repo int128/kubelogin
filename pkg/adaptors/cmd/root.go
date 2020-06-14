@@ -87,7 +87,7 @@ func (o *authenticationOptions) register(f *pflag.FlagSet) {
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
-	f.StringVar(&o.LocalServerSuccessHTML, "server-success-html", "", "HTML page to display upon successful login")
+	f.StringVar(&o.LocalServerSuccessHTML, "server-success-html", "", "Response HTML body on authorization completed")
 }
 
 func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {

@@ -127,6 +127,7 @@ Flags:
       --oidc-auth-request-extra-params stringToString   Extra query parameters to send with an authentication request (default [])
       --username string                                 If set, perform the resource owner password credentials grant
       --password string                                 If set, use the password instead of asking it
+      --server-success-html string                      Response HTML body on authorization completed
   -h, --help                                            help for get-token
 
 Global Flags:
@@ -198,6 +199,12 @@ You can add extra parameters to the authentication request.
 
 ```yaml
       - --oidc-auth-request-extra-params=ttl=86400
+```
+
+You can add custom HTML to display upon successful authentication.
+
+```yaml
+      - --server-success-html='<p>Kubernetes login successful.  You can now close this page.</p>'
 ```
 
 #### Authorization code flow with keyboard interactive
