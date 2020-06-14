@@ -83,18 +83,21 @@ If the refresh token has expired, kubelogin will perform reauthentication.
 You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
 Kubelogin will perform authentication if the token cache file does not exist.
 
-You can dump the claims of token by passing `-v1` option.
+You can dump claims of an ID token by `setup` command.
 
-```
-I0221 21:54:08.151850   28231 get_token.go:104] you got a token: {
+```console
+% kubectl oidc-login setup --oidc-issuer-url https://accounts.google.com --oidc-client-id REDACTED --oidc-client-secret REDACTED
+authentication in progress...
+
+## 2. Verify authentication
+
+You got a token with the following claims:
+
+{
   "sub": "********",
   "iss": "https://accounts.google.com",
   "aud": "********",
-  "iat": 1582289639,
-  "exp": 1582293239,
-  "jti": "********",
-  "nonce": "********",
-  "at_hash": "********"
+  ...
 }
 ```
 
