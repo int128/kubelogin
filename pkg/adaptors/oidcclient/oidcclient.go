@@ -48,6 +48,7 @@ type GetTokenByAuthCodeInput struct {
 	PKCEParams             pkce.Params
 	RedirectURLHostname    string
 	AuthRequestExtraParams map[string]string
+	LocalServerSuccessHTML string
 }
 
 // TokenSet represents an output DTO of
@@ -85,6 +86,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		LocalServerBindAddress: in.BindAddress,
 		LocalServerReadyChan:   localServerReadyChan,
 		RedirectURLHostname:    in.RedirectURLHostname,
+		LocalServerSuccessHTML: in.LocalServerSuccessHTML,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
