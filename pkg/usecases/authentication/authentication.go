@@ -51,6 +51,7 @@ type AuthCodeOption struct {
 	BindAddress            []string
 	RedirectURLHostname    string
 	AuthRequestExtraParams map[string]string
+	LocalServerSuccessHTML string
 }
 
 type AuthCodeKeyboardOption struct {
