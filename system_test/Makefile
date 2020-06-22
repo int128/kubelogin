@@ -1,4 +1,4 @@
-CLUSTER_NAME := kubelogin-acceptance-test
+CLUSTER_NAME := kubelogin-system-test
 OUTPUT_DIR := $(CURDIR)/output
 
 PATH := $(PATH):$(OUTPUT_DIR)/bin
@@ -91,7 +91,7 @@ cluster: dex create-cluster
 
 .PHONY: create-cluster
 create-cluster: $(OUTPUT_DIR)/ca.crt
-	cp $(OUTPUT_DIR)/ca.crt /tmp/kubelogin-acceptance-test-dex-ca.crt
+	cp $(OUTPUT_DIR)/ca.crt /tmp/kubelogin-system-test-dex-ca.crt
 	kind create cluster --name $(CLUSTER_NAME) --config cluster.yaml
 	kubectl create clusterrole cluster-readonly --verb=get,watch,list --resource='*.*'
 	kubectl create clusterrolebinding cluster-readonly --clusterrole=cluster-readonly --user=admin@example.com
