@@ -16,5 +16,5 @@ kubeadmConfigPatches:
 nodes:
   - role: control-plane
     extraMounts:
-      - hostPath: /tmp/kubelogin-acceptance-test-dex-ca.crt
+      - hostPath: /tmp/kubelogin-system-test-dex-ca.crt
         containerPath: /usr/local/share/ca-certificates/dex-ca.crt

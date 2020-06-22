@@ -1,6 +1,6 @@
-# kubelogin/acceptance_test
+# kubelogin/system_test
 
-This is an acceptance test for walkthrough of the OIDC initial setup and plugin behavior using a real Kubernetes cluster and OpenID Connect provider, running on [GitHub Actions](https://github.com/int128/kubelogin/actions?query=workflow%3Aacceptance-test).
+This is a system test for verifying the OIDC initial setup and plugin behavior using a real Kubernetes cluster and OIDC provider.
 
 It is intended to verify the following points:
 
@@ -19,7 +19,7 @@ It performs the test using the following components:
 
 Let's take a look at the diagram.
 
-![diagram](../docs/acceptance-test-diagram.svg)
+![diagram](../docs/system-test-diagram.svg)
 
 It prepares the following resources:
 
@@ -104,6 +104,5 @@ As a result,
 
 ### Test environment
 
-- Set the issuer URL to kubectl. See [`kubeconfig_oidc.yaml`](kubeconfig_oidc.yaml).
 - Set the issuer URL to kube-apiserver. See [`cluster.yaml`](cluster.yaml).
 - Set `BROWSER` environment variable to run [`chromelogin`](chromelogin) by `xdg-open`.

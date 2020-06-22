@@ -1,6 +1,6 @@
 /.idea
 
-/acceptance_test/output/
+/system_test/output/
 
 /dist/output
 /coverage.out

@@ -1,6 +1,6 @@
 on: [push]
 jobs:
-  acceptance-test:
+  system-test:
     # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#ubuntu-1804-lts
     runs-on: ubuntu-18.04
     steps:
@@ -25,5 +25,5 @@ jobs:
       - run: sudo apt update
       - run: sudo apt install -y libnss3-tools
       - run: echo '127.0.0.1 dex-server' | sudo tee -a /etc/hosts
-      - run: make -C acceptance_test -j3 setup
-      - run: make -C acceptance_test test
+      - run: make -C system_test -j3 setup
+      - run: make -C system_test test
