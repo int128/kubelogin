@@ -18,7 +18,7 @@ const AuthCodeBrowserSuccessHTML = `
 			font-family: sans-serif;
 		}
 		.placeholder {
-			margin: 5em;
+			margin: 2em;
 			padding: 2em;
 			background-color: #fff;
 			border-radius: 1em;
