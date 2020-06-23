@@ -46,7 +46,7 @@ users:
       - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
-See [the setup guide](docs/setup.md) for more.
+See [setup guide](docs/setup.md) for more.
 
 
 ### Run
@@ -100,6 +100,8 @@ You got a token with the following claims:
   ...
 }
 ```
+
+You can verify kubelogin works with your provider using [acceptance test](acceptance_test).
 
 
 ## Usage

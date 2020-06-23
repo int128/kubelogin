@@ -1,13 +1,17 @@
 # kubelogin/system_test
 
-This is a system test for verifying the OIDC initial setup and plugin behavior using a real Kubernetes cluster and OIDC provider.
+This is an automated test for verifying behavior of the plugin with a real Kubernetes cluster and OIDC provider.
 
-It is intended to verify the following points:
 
-- User can set up Kubernetes OIDC authentication and this plugin.
-- User can access a cluster after login.
+## Purpose
 
-It performs the test using the following components:
+This test checks the following points:
+
+1. User can set up Kubernetes OIDC authentication using [setup guide](../docs/setup.md).
+1. User can log in to an OIDC provider on a browser.
+1. User can access the cluster using a token returned from the plugin.
+
+It depends on the following components:
 
 - Kubernetes cluster (Kind)
 - OIDC provider (Dex)
