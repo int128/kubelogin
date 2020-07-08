@@ -117,6 +117,8 @@ github.com/int128/listener v1.1.0 h1:2Jb41DWLpkQ3I9bIdBzO8H/tNwMvyl/OBZWtCV5Pjuw
 github.com/int128/listener v1.1.0/go.mod h1:68WkmTN8PQtLzc9DucIaagAKeGVyMnyyKIkW4Xn47UA=
 github.com/int128/oauth2cli v1.11.0 h1:yohafseIxX8xESedQOxB3rpuuodDowYiPaTFMpqPP3Q=
 github.com/int128/oauth2cli v1.11.0/go.mod h1:O3Tjuj1cyQCuM11KbH2ffh0O6LRX0+O97Z3InsY0M3g=
+github.com/int128/oauth2cli v1.12.0 h1:yb88Drq9yzn2LMX0AQXtOlBVVKVRhRi06o/ca5J2BA4=
+github.com/int128/oauth2cli v1.12.0/go.mod h1:0Wf2wAxKJNzbkPkUIYNhTjeLn/pqIBDOBAGfwrxGYQw=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/json-iterator/go v1.1.8 h1:QiWkFLKq0T7mpzwOTu6BzNDbfTE8OLrYhVKYMLF46Ok=
