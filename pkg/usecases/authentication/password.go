@@ -16,7 +16,7 @@ type ROPC struct {
 }
 
 func (u *ROPC) Do(ctx context.Context, in *ROPCOption, client oidcclient.Interface) (*Output, error) {
-	u.Logger.V(1).Infof("performing the resource owner password credentials flow")
+	u.Logger.V(1).Infof("starting the resource owner password credentials flow")
 	if in.Username == "" {
 		var err error
 		in.Username, err = u.Reader.ReadString(usernamePrompt)
@@ -35,6 +35,7 @@ func (u *ROPC) Do(ctx context.Context, in *ROPCOption, client oidcclient.Interfa
 	if err != nil {
 		return nil, xerrors.Errorf("resource owner password credentials flow error: %w", err)
 	}
+	u.Logger.V(1).Infof("finished the resource owner password credentials flow")
 	return &Output{
 		IDToken:       tokenSet.IDToken,
 		IDTokenClaims: tokenSet.IDTokenClaims,

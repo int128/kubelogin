@@ -20,7 +20,7 @@ type AuthCode struct {
 }
 
 func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.Interface) (*Output, error) {
-	u.Logger.V(1).Infof("performing the authentication code flow")
+	u.Logger.V(1).Infof("starting the authentication code flow via the browser")
 	state, err := oidc.NewState()
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a state: %w", err)
@@ -56,6 +56,7 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 				u.Logger.Printf("Please visit the following URL in your browser: %s", url)
 				return nil
 			}
+			u.Logger.V(1).Infof("opening %s in the browser", url)
 			if err := u.Browser.Open(url); err != nil {
 				u.Logger.Printf(`error: could not open the browser: %s
 
@@ -77,10 +78,12 @@ Please visit the following URL in your browser manually: %s`, err, url)
 			IDTokenClaims: tokenSet.IDTokenClaims,
 			RefreshToken:  tokenSet.RefreshToken,
 		}
+		u.Logger.V(1).Infof("got a token set by the authorization code flow")
 		return nil
 	})
 	if err := eg.Wait(); err != nil {
 		return nil, xerrors.Errorf("authentication error: %w", err)
 	}
+	u.Logger.V(1).Infof("finished the authorization code flow via the browser")
 	return &out, nil
 }

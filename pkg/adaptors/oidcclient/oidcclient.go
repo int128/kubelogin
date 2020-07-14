@@ -87,6 +87,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		LocalServerReadyChan:   localServerReadyChan,
 		RedirectURLHostname:    in.RedirectURLHostname,
 		LocalServerSuccessHTML: in.LocalServerSuccessHTML,
+		Logf:                   c.logger.V(1).Infof,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {

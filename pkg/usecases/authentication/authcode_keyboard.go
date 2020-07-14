@@ -21,7 +21,7 @@ type AuthCodeKeyboard struct {
 }
 
 func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, client oidcclient.Interface) (*Output, error) {
-	u.Logger.V(1).Infof("performing the authorization code flow with keyboard interactive")
+	u.Logger.V(1).Infof("starting the authorization code flow with keyboard interactive")
 	state, err := oidc.NewState()
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a state: %w", err)
@@ -41,12 +41,13 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 		RedirectURI:            oobRedirectURI,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	})
-	u.Logger.Printf("Open %s", authCodeURL)
+	u.Logger.Printf("Please visit the following URL in your browser: %s", authCodeURL)
 	code, err := u.Reader.ReadString(authCodeKeyboardPrompt)
 	if err != nil {
 		return nil, xerrors.Errorf("could not read an authorization code: %w", err)
 	}
 
+	u.Logger.V(1).Infof("exchanging the code and token")
 	tokenSet, err := client.ExchangeAuthCode(ctx, oidcclient.ExchangeAuthCodeInput{
 		Code:        code,
 		PKCEParams:  p,
@@ -56,6 +57,7 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 	if err != nil {
 		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)
 	}
+	u.Logger.V(1).Infof("finished the authorization code flow with keyboard interactive")
 	return &Output{
 		IDToken:       tokenSet.IDToken,
 		IDTokenClaims: tokenSet.IDTokenClaims,
