@@ -12,6 +12,10 @@ jobs:
             - go-sum-{{ checksum "go.sum" }}
       - run: make check
       - run: bash <(curl -s https://codecov.io/bash)
+      - run:
+          command: go get -v github.com/int128/goxzst
+          working_directory: .circleci
+      - run: make dist
       - save_cache:
           key: go-sum-{{ checksum "go.sum" }}
           paths:
@@ -19,7 +23,7 @@ jobs:
       - store_artifacts:
           path: gotest.log
 
-  crossbuild:
+  release:
     macos:
       xcode: 11.5.0
     steps:
@@ -34,10 +38,7 @@ jobs:
           command: go get -v github.com/int128/goxzst github.com/int128/ghcp
           working_directory: .circleci
       - run: make dist
-      - run: |
-          if [ "$CIRCLE_TAG" ]; then
-            make release
-          fi
+      - run: make release
       - save_cache:
           key: go-macos-{{ checksum "go.sum" }}
           paths:
@@ -50,11 +51,13 @@ workflows:
       - test:
           filters:
             tags:
-              only: /.*/
-      - crossbuild:
+              only: /^v.*/
+      - release:
           context: open-source
           requires:
             - test
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v.*/
