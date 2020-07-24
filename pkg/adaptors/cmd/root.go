@@ -33,14 +33,13 @@ type rootOptions struct {
 	authenticationOptions authenticationOptions
 }
 
-func (o *rootOptions) register(f *pflag.FlagSet) {
-	f.SortFlags = false
+func (o *rootOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.Kubeconfig, "kubeconfig", "", "Path to the kubeconfig file")
 	f.StringVar(&o.Context, "context", "", "The name of the kubeconfig context to use")
 	f.StringVar(&o.User, "user", "", "The name of the kubeconfig user to use. Prior to --context")
 	f.StringVar(&o.CertificateAuthority, "certificate-authority", "", "Path to a cert file for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
-	o.authenticationOptions.register(f)
+	o.authenticationOptions.addFlags(f)
 }
 
 type authenticationOptions struct {
@@ -76,7 +75,7 @@ var allGrantType = strings.Join([]string{
 	"password",
 }, "|")
 
-func (o *authenticationOptions) register(f *pflag.FlagSet) {
+func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.GrantType, "grant-type", "auto", fmt.Sprintf("The authorization grant type to use. One of (%s)", allGrantType))
 	f.StringSliceVar(&o.ListenAddress, "listen-address", defaultListenAddress, "Address to bind to the local server. If multiple addresses are given, it will try binding in order")
 	//TODO: remove the deprecated flag
@@ -119,7 +118,7 @@ type Root struct {
 
 func (cmd *Root) New() *cobra.Command {
 	var o rootOptions
-	rootCmd := &cobra.Command{
+	c := &cobra.Command{
 		Use:   "kubelogin",
 		Short: "Login to the OpenID Connect provider",
 		Long:  longDescription,
@@ -143,7 +142,8 @@ func (cmd *Root) New() *cobra.Command {
 			return nil
 		},
 	}
-	o.register(rootCmd.Flags())
-	cmd.Logger.AddFlags(rootCmd.PersistentFlags())
-	return rootCmd
+	c.Flags().SortFlags = false
+	o.addFlags(c.Flags())
+	cmd.Logger.AddFlags(c.PersistentFlags())
+	return c
 }

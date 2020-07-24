@@ -19,8 +19,7 @@ type setupOptions struct {
 	authenticationOptions authenticationOptions
 }
 
-func (o *setupOptions) register(f *pflag.FlagSet) {
-	f.SortFlags = false
+func (o *setupOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.IssuerURL, "oidc-issuer-url", "", "Issuer URL of the provider")
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
@@ -28,7 +27,7 @@ func (o *setupOptions) register(f *pflag.FlagSet) {
 	f.StringVar(&o.CACertFilename, "certificate-authority", "", "Path to a cert file for the certificate authority")
 	f.StringVar(&o.CACertData, "certificate-authority-data", "", "Base64 encoded data for the certificate authority")
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
-	o.authenticationOptions.register(f)
+	o.authenticationOptions.addFlags(f)
 }
 
 type Setup struct {
@@ -69,6 +68,7 @@ func (cmd *Setup) New() *cobra.Command {
 			return nil
 		},
 	}
-	o.register(c.Flags())
+	c.Flags().SortFlags = false
+	o.addFlags(c.Flags())
 	return c
 }

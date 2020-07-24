@@ -21,17 +21,16 @@ type getTokenOptions struct {
 	authenticationOptions authenticationOptions
 }
 
-func (o *getTokenOptions) register(f *pflag.FlagSet) {
-	f.SortFlags = false
+func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.IssuerURL, "oidc-issuer-url", "", "Issuer URL of the provider (mandatory)")
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider (mandatory)")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
 	f.StringVar(&o.CACertFilename, "certificate-authority", "", "Path to a cert file for the certificate authority")
-	f.StringVar(&o.CACertData, "certificate-authority-data", "", "Base64 encoded data for the certificate authority")
-	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
-	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for caching tokens")
-	o.authenticationOptions.register(f)
+	f.StringVar(&o.CACertData, "certificate-authority-data", "", "Base64 encoded cert for the certificate authority")
+	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
+	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for token cache")
+	o.authenticationOptions.addFlags(f)
 }
 
 type GetToken struct {
@@ -78,6 +77,7 @@ func (cmd *GetToken) New() *cobra.Command {
 			return nil
 		},
 	}
-	o.register(c.Flags())
+	c.Flags().SortFlags = false
+	o.addFlags(c.Flags())
 	return c
 }
