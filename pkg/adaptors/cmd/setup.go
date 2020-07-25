@@ -13,9 +13,7 @@ type setupOptions struct {
 	ClientID              string
 	ClientSecret          string
 	ExtraScopes           []string
-	CACertFilename        string
-	CACertData            string
-	SkipTLSVerify         bool
+	tlsOptions            tlsOptions
 	authenticationOptions authenticationOptions
 }
 
@@ -24,9 +22,7 @@ func (o *setupOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
-	f.StringVar(&o.CACertFilename, "certificate-authority", "", "Path to a cert file for the certificate authority")
-	f.StringVar(&o.CACertData, "certificate-authority-data", "", "Base64 encoded data for the certificate authority")
-	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
+	o.tlsOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
 }
 
@@ -50,9 +46,9 @@ func (cmd *Setup) New() *cobra.Command {
 				ClientID:       o.ClientID,
 				ClientSecret:   o.ClientSecret,
 				ExtraScopes:    o.ExtraScopes,
-				CACertFilename: o.CACertFilename,
-				CACertData:     o.CACertData,
-				SkipTLSVerify:  o.SkipTLSVerify,
+				CACertFilename: o.tlsOptions.CACertFilename,
+				CACertData:     o.tlsOptions.CACertData,
+				SkipTLSVerify:  o.tlsOptions.SkipTLSVerify,
 				GrantOptionSet: grantOptionSet,
 			}
 			if c.Flags().Lookup("listen-address").Changed {

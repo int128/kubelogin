@@ -30,7 +30,8 @@ type Input struct {
 	KubeconfigFilename string                 // Default to the environment variable or global config as kubectl
 	KubeconfigContext  kubeconfig.ContextName // Default to the current context but ignored if KubeconfigUser is set
 	KubeconfigUser     kubeconfig.UserName    // Default to the user of the context
-	CACertFilename     string                 // If set, use the CA cert
+	CACertFilename     string                 // optional
+	CACertData         string                 // optional
 	SkipTLSVerify      bool
 	GrantOptionSet     authentication.GrantOptionSet
 }
@@ -78,7 +79,12 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	}
 	if in.CACertFilename != "" {
 		if err := certPool.AddFile(in.CACertFilename); err != nil {
-			return xerrors.Errorf("could not load the certificate: %w", err)
+			return xerrors.Errorf("could not load the certificate file: %w", err)
+		}
+	}
+	if in.CACertData != "" {
+		if err := certPool.AddBase64Encoded(in.CACertData); err != nil {
+			return xerrors.Errorf("could not load the certificate data: %w", err)
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{

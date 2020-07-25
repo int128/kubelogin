@@ -34,6 +34,7 @@ func TestStandalone_Do(t *testing.T) {
 			KubeconfigContext:  "theContext",
 			KubeconfigUser:     "theUser",
 			CACertFilename:     "/path/to/cert1",
+			CACertData:         "BASE64ENCODED1",
 			SkipTLSVerify:      true,
 			GrantOptionSet:     grantOptionSet,
 		}
@@ -44,7 +45,7 @@ func TestStandalone_Do(t *testing.T) {
 			ClientID:                    "YOUR_CLIENT_ID",
 			ClientSecret:                "YOUR_CLIENT_SECRET",
 			IDPCertificateAuthority:     "/path/to/cert2",
-			IDPCertificateAuthorityData: "BASE64ENCODED",
+			IDPCertificateAuthorityData: "BASE64ENCODED2",
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockCertPool.EXPECT().
@@ -52,7 +53,9 @@ func TestStandalone_Do(t *testing.T) {
 		mockCertPool.EXPECT().
 			AddFile("/path/to/cert2")
 		mockCertPool.EXPECT().
-			AddBase64Encoded("BASE64ENCODED")
+			AddBase64Encoded("BASE64ENCODED1")
+		mockCertPool.EXPECT().
+			AddBase64Encoded("BASE64ENCODED2")
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
@@ -65,7 +68,7 @@ func TestStandalone_Do(t *testing.T) {
 				ClientID:                    "YOUR_CLIENT_ID",
 				ClientSecret:                "YOUR_CLIENT_SECRET",
 				IDPCertificateAuthority:     "/path/to/cert2",
-				IDPCertificateAuthorityData: "BASE64ENCODED",
+				IDPCertificateAuthorityData: "BASE64ENCODED2",
 				IDToken:                     "YOUR_ID_TOKEN",
 				RefreshToken:                "YOUR_REFRESH_TOKEN",
 			})
