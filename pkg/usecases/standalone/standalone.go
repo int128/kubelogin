@@ -2,8 +2,6 @@ package standalone
 
 import (
 	"context"
-	"strings"
-	"text/template"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
@@ -36,7 +34,17 @@ type Input struct {
 	GrantOptionSet     authentication.GrantOptionSet
 }
 
-const oidcConfigErrorMessage = `You need to set up the kubeconfig for OpenID Connect authentication.
+const oidcConfigErrorMessage = `No configuration found.
+You need to set up the OIDC provider, role binding, Kubernetes API server and kubeconfig.
+To show the setup instruction:
+
+	kubectl oidc-login setup
+
+See https://github.com/int128/kubelogin for more.
+`
+
+const deprecationMessage = `NOTE: You can use the credential plugin mode for better user experience.
+Kubectl automatically runs kubelogin and you do not need to run kubelogin explicitly.
 See https://github.com/int128/kubelogin for more.
 `
 
@@ -61,9 +69,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 		u.Logger.Printf(oidcConfigErrorMessage)
 		return xerrors.Errorf("could not find the current authentication provider: %w", err)
 	}
-	if err := u.showDeprecation(in, authProvider); err != nil {
-		return xerrors.Errorf("could not show deprecation message: %w", err)
-	}
+	u.Logger.Printf(deprecationMessage)
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
 	certPool := u.NewCertPool()
@@ -114,66 +120,5 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	if err := u.Kubeconfig.UpdateAuthProvider(authProvider); err != nil {
 		return xerrors.Errorf("could not update the kubeconfig: %w", err)
 	}
-	return nil
-}
-
-var deprecationTpl = template.Must(template.New("").Parse(
-	`IMPORTANT NOTICE:
-The credential plugin mode is available since v1.14.0.
-Kubectl will automatically run kubelogin and you do not need to run kubelogin explicitly.
-
-You can switch to the credential plugin mode by the following command:
-
-	kubectl config set-credentials oidc \
-	  --exec-api-version=client.authentication.k8s.io/v1beta1 \
-	  --exec-command=kubectl \
-	  --exec-arg=oidc-login \
-	  --exec-arg=get-token \
-{{- range .Args }}
-	  --exec-arg={{ . }}
-{{- end }}
-	kubectl config set-context --current --user=oidc
-
-See https://github.com/int128/kubelogin for more.
-
-`))
-
-type deprecationVars struct {
-	Args []string
-}
-
-func (u *Standalone) showDeprecation(in Input, p *kubeconfig.AuthProvider) error {
-	var args []string
-	args = append(args, "--oidc-issuer-url="+p.IDPIssuerURL)
-	args = append(args, "--oidc-client-id="+p.ClientID)
-	if p.ClientSecret != "" {
-		args = append(args, "--oidc-client-secret="+p.ClientSecret)
-	}
-	for _, extraScope := range p.ExtraScopes {
-		args = append(args, "--oidc-extra-scope="+extraScope)
-	}
-	if p.IDPCertificateAuthority != "" {
-		args = append(args, "--certificate-authority="+p.IDPCertificateAuthority)
-	}
-	if p.IDPCertificateAuthorityData != "" {
-		args = append(args, "--certificate-authority-data="+p.IDPCertificateAuthorityData)
-	}
-	if in.CACertFilename != "" {
-		args = append(args, "--certificate-authority="+in.CACertFilename)
-	}
-	if in.GrantOptionSet.ROPCOption != nil {
-		if in.GrantOptionSet.ROPCOption.Username != "" {
-			args = append(args, "--username="+in.GrantOptionSet.ROPCOption.Username)
-		}
-	}
-
-	v := deprecationVars{
-		Args: args,
-	}
-	var b strings.Builder
-	if err := deprecationTpl.Execute(&b, &v); err != nil {
-		return xerrors.Errorf("template error: %w", err)
-	}
-	u.Logger.Printf("%s", b.String())
 	return nil
 }
