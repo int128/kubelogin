@@ -18,7 +18,7 @@ import (
 var Set = wire.NewSet(
 	wire.Struct(new(Authentication), "*"),
 	wire.Bind(new(Interface), new(*Authentication)),
-	wire.Struct(new(AuthCode), "*"),
+	wire.Struct(new(AuthCodeBrowser), "*"),
 	wire.Struct(new(AuthCodeKeyboard), "*"),
 	wire.Struct(new(ROPC), "*"),
 )
@@ -41,12 +41,12 @@ type Input struct {
 }
 
 type GrantOptionSet struct {
-	AuthCodeOption         *AuthCodeOption
+	AuthCodeBrowserOption  *AuthCodeBrowserOption
 	AuthCodeKeyboardOption *AuthCodeKeyboardOption
 	ROPCOption             *ROPCOption
 }
 
-type AuthCodeOption struct {
+type AuthCodeBrowserOption struct {
 	SkipOpenBrowser        bool
 	BindAddress            []string
 	RedirectURLHostname    string
@@ -90,7 +90,7 @@ type Authentication struct {
 	OIDCClient       oidcclient.FactoryInterface
 	Logger           logger.Interface
 	Clock            clock.Interface
-	AuthCode         *AuthCode
+	AuthCodeBrowser  *AuthCodeBrowser
 	AuthCodeKeyboard *AuthCodeKeyboard
 	ROPC             *ROPC
 }
@@ -143,8 +143,8 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		u.Logger.V(1).Infof("could not refresh the token: %s", err)
 	}
 
-	if in.GrantOptionSet.AuthCodeOption != nil {
-		return u.AuthCode.Do(ctx, in.GrantOptionSet.AuthCodeOption, client)
+	if in.GrantOptionSet.AuthCodeBrowserOption != nil {
+		return u.AuthCodeBrowser.Do(ctx, in.GrantOptionSet.AuthCodeBrowserOption, client)
 	}
 	if in.GrantOptionSet.AuthCodeKeyboardOption != nil {
 		return u.AuthCodeKeyboard.Do(ctx, in.GrantOptionSet.AuthCodeKeyboardOption, client)

@@ -60,7 +60,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {
 	switch {
 	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == ""):
-		s.AuthCodeOption = &authentication.AuthCodeOption{
+		s.AuthCodeBrowserOption = &authentication.AuthCodeBrowserOption{
 			BindAddress:            o.determineListenAddress(),
 			SkipOpenBrowser:        o.SkipOpenBrowser,
 			RedirectURLHostname:    o.RedirectURLHostname,
