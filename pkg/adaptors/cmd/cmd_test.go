@@ -71,6 +71,7 @@ func TestCmd_Run(t *testing.T) {
 					"--context", "hello.k8s.local",
 					"--user", "google",
 					"--certificate-authority", "/path/to/cacert",
+					"--certificate-authority-data", "BASE64ENCODED",
 					"--insecure-skip-tls-verify",
 					"-v1",
 					"--grant-type", "authcode",
@@ -85,6 +86,7 @@ func TestCmd_Run(t *testing.T) {
 					KubeconfigContext:  "hello.k8s.local",
 					KubeconfigUser:     "google",
 					CACertFilename:     "/path/to/cacert",
+					CACertData:         "BASE64ENCODED",
 					SkipTLSVerify:      true,
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeOption: &authentication.AuthCodeOption{

@@ -120,18 +120,17 @@ Flags:
       --oidc-client-id string                           Client ID of the provider (mandatory)
       --oidc-client-secret string                       Client secret of the provider
       --oidc-extra-scope strings                        Scopes to request to the provider
+      --token-cache-dir string                          Path to a directory for token cache (default "~/.kube/cache/oidc-login")
       --certificate-authority string                    Path to a cert file for the certificate authority
-      --certificate-authority-data string               Base64 encoded data for the certificate authority
-      --insecure-skip-tls-verify                        If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
-      --token-cache-dir string                          Path to a directory for caching tokens (default "~/.kube/cache/oidc-login")
-      --grant-type string                               The authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
-      --listen-address strings                          Address to bind to the local server. If multiple addresses are given, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
-      --listen-port ints                                (Deprecated: use --listen-address)
-      --skip-open-browser                               If true, it does not open the browser on authentication
-      --oidc-redirect-url-hostname string               Hostname of the redirect URL (default "localhost")
-      --oidc-auth-request-extra-params stringToString   Extra query parameters to send with an authentication request (default [])
-      --username string                                 If set, perform the resource owner password credentials grant
-      --password string                                 If set, use the password instead of asking it
+      --certificate-authority-data string               Base64 encoded cert for the certificate authority
+      --insecure-skip-tls-verify                        If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+      --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
+      --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
+      --skip-open-browser                               [authcode] Do not open the browser automatically
+      --oidc-redirect-url-hostname string               [authcode] Hostname of the redirect URL (default "localhost")
+      --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard] Extra query parameters to send with an authentication request (default [])
+      --username string                                 [password] Username for resource owner password credentials grant
+      --password string                                 [password] Password for resource owner password credentials grant
   -h, --help                                            help for get-token
 
 Global Flags:
