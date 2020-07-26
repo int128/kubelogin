@@ -13,14 +13,14 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// AuthCode provides the authentication code flow.
-type AuthCode struct {
+// AuthCodeBrowser provides the authentication code flow using the browser.
+type AuthCodeBrowser struct {
 	Browser browser.Interface
 	Logger  logger.Interface
 }
 
-func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.Interface) (*Output, error) {
-	u.Logger.V(1).Infof("starting the authentication code flow via the browser")
+func (u *AuthCodeBrowser) Do(ctx context.Context, o *AuthCodeBrowserOption, client oidcclient.Interface) (*Output, error) {
+	u.Logger.V(1).Infof("starting the authentication code flow using the browser")
 	state, err := oidc.NewState()
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a state: %w", err)

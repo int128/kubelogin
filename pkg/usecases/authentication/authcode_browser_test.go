@@ -27,7 +27,7 @@ func TestAuthCode_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		o := &AuthCodeOption{
+		o := &AuthCodeBrowserOption{
 			BindAddress:            []string{"127.0.0.1:8000"},
 			SkipOpenBrowser:        true,
 			RedirectURLHostname:    "localhost",
@@ -54,7 +54,7 @@ func TestAuthCode_Do(t *testing.T) {
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		u := AuthCode{
+		u := AuthCodeBrowser{
 			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
@@ -76,7 +76,7 @@ func TestAuthCode_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		o := &AuthCodeOption{
+		o := &AuthCodeBrowserOption{
 			BindAddress: []string{"127.0.0.1:8000"},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
@@ -94,7 +94,7 @@ func TestAuthCode_Do(t *testing.T) {
 		mockBrowser := mock_browser.NewMockInterface(ctrl)
 		mockBrowser.EXPECT().
 			Open("LOCAL_SERVER_URL")
-		u := AuthCode{
+		u := AuthCodeBrowser{
 			Logger:  logger.New(t),
 			Browser: mockBrowser,
 		}

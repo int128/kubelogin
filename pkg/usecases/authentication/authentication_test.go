@@ -114,14 +114,14 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 	})
 
-	t.Run("HasExpiredRefreshToken/AuthCode", func(t *testing.T) {
+	t.Run("HasExpiredRefreshToken/AuthCodeBrowser", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			GrantOptionSet: GrantOptionSet{
-				AuthCodeOption: &AuthCodeOption{
+				AuthCodeBrowserOption: &AuthCodeBrowserOption{
 					BindAddress:     []string{"127.0.0.1:8000"},
 					SkipOpenBrowser: true,
 				},
@@ -159,7 +159,7 @@ func TestAuthentication_Do(t *testing.T) {
 			},
 			Logger: testingLogger.New(t),
 			Clock:  clock.Fake(expiryTime.Add(+time.Hour)),
-			AuthCode: &AuthCode{
+			AuthCodeBrowser: &AuthCodeBrowser{
 				Logger: testingLogger.New(t),
 			},
 		}

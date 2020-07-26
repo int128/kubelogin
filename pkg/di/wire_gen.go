@@ -26,6 +26,7 @@ import (
 
 // Injectors from di.go:
 
+// NewCmd returns an instance of adaptors.Cmd.
 func NewCmd() cmd.Interface {
 	clockReal := &clock.Real{}
 	stdin := _wireFileValue
@@ -41,12 +42,13 @@ var (
 	_wireOsFileValue = os.Stdout
 )
 
+// NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
 func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface logger.Interface, browserInterface browser.Interface) cmd.Interface {
 	factory := &oidcclient.Factory{
 		Clock:  clockInterface,
 		Logger: loggerInterface,
 	}
-	authCode := &authentication.AuthCode{
+	authCodeBrowser := &authentication.AuthCodeBrowser{
 		Browser: browserInterface,
 		Logger:  loggerInterface,
 	}
@@ -65,7 +67,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		OIDCClient:       factory,
 		Logger:           loggerInterface,
 		Clock:            clockInterface,
-		AuthCode:         authCode,
+		AuthCodeBrowser:  authCodeBrowser,
 		AuthCodeKeyboard: authCodeKeyboard,
 		ROPC:             ropc,
 	}

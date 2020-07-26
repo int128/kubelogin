@@ -137,8 +137,8 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 		args = append(args, "--insecure-skip-tls-verify")
 	}
 
-	if in.GrantOptionSet.AuthCodeOption != nil {
-		if in.GrantOptionSet.AuthCodeOption.SkipOpenBrowser {
+	if in.GrantOptionSet.AuthCodeBrowserOption != nil {
+		if in.GrantOptionSet.AuthCodeBrowserOption.SkipOpenBrowser {
 			args = append(args, "--skip-open-browser")
 		}
 	}
