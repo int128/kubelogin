@@ -9,10 +9,10 @@ import (
 	"golang.org/x/xerrors"
 )
 
-const longDescription = `Login to the OpenID Connect provider.
+const rootDescription = `Log in to the OpenID Connect provider.
 
 You need to set up the OIDC provider, role binding, Kubernetes API server and kubeconfig.
-Run the following command to show the setup instruction:
+To show the setup instruction:
 
 	kubectl oidc-login setup
 
@@ -30,8 +30,8 @@ type rootOptions struct {
 
 func (o *rootOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.Kubeconfig, "kubeconfig", "", "Path to the kubeconfig file")
-	f.StringVar(&o.Context, "context", "", "The name of the kubeconfig context to use")
-	f.StringVar(&o.User, "user", "", "The name of the kubeconfig user to use. Prior to --context")
+	f.StringVar(&o.Context, "context", "", "Name of the kubeconfig context to use")
+	f.StringVar(&o.User, "user", "", "Name of the kubeconfig user to use. Prior to --context")
 	o.tlsOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
 }
@@ -45,8 +45,8 @@ func (cmd *Root) New() *cobra.Command {
 	var o rootOptions
 	c := &cobra.Command{
 		Use:   "kubelogin",
-		Short: "Login to the OpenID Connect provider",
-		Long:  longDescription,
+		Short: "Log in to the OpenID Connect provider",
+		Long:  rootDescription,
 		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()

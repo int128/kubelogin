@@ -43,15 +43,18 @@ var allGrantType = strings.Join([]string{
 }, "|")
 
 func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
-	f.StringVar(&o.GrantType, "grant-type", "auto", fmt.Sprintf("The authorization grant type to use. One of (%s)", allGrantType))
-	f.StringSliceVar(&o.ListenAddress, "listen-address", defaultListenAddress, "Address to bind to the local server. If multiple addresses are given, it will try binding in order")
+	f.StringVar(&o.GrantType, "grant-type", "auto", fmt.Sprintf("Authorization grant type to use. One of (%s)", allGrantType))
+	f.StringSliceVar(&o.ListenAddress, "listen-address", defaultListenAddress, "[authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order")
 	//TODO: remove the deprecated flag
-	f.IntSliceVar(&o.ListenPort, "listen-port", nil, "(Deprecated: use --listen-address)")
-	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "If true, it does not open the browser on authentication")
-	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "Hostname of the redirect URL")
-	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "Extra query parameters to send with an authentication request")
-	f.StringVar(&o.Username, "username", "", "If set, perform the resource owner password credentials grant")
-	f.StringVar(&o.Password, "password", "", "If set, use the password instead of asking it")
+	f.IntSliceVar(&o.ListenPort, "listen-port", nil, "[authcode] deprecated: port to bind to the local server")
+	if err := f.MarkDeprecated("listen-port", "use --listen-address instead"); err != nil {
+		panic(err)
+	}
+	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
+	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "[authcode] Hostname of the redirect URL")
+	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
+	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
+	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
 }
 
 func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {
