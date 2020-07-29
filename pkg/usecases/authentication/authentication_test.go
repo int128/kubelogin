@@ -10,9 +10,12 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/testing/clock"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	testingLogger "github.com/int128/kubelogin/pkg/testing/logger"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"golang.org/x/xerrors"
 )
 
@@ -51,15 +54,17 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		want := &Output{
 			AlreadyHasValidIDToken: true,
-			IDToken:                cachedIDToken,
-			IDTokenClaims: jwt.Claims{
-				Subject: "SUBJECT",
-				Expiry:  expiryTime,
-				Pretty: `{
+			TokenSet: oidc.TokenSet{
+				IDToken: cachedIDToken,
+				IDTokenClaims: jwt.Claims{
+					Subject: "SUBJECT",
+					Expiry:  expiryTime,
+					Pretty: `{
   "exp": 1577934245,
   "iss": "https://issuer.example.com",
   "sub": "SUBJECT"
 }`,
+				},
 			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
@@ -105,23 +110,25 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			IDToken:       "NEW_ID_TOKEN",
-			RefreshToken:  "NEW_REFRESH_TOKEN",
-			IDTokenClaims: dummyClaims,
+			TokenSet: oidc.TokenSet{
+				IDToken:       "NEW_ID_TOKEN",
+				RefreshToken:  "NEW_REFRESH_TOKEN",
+				IDTokenClaims: dummyClaims,
+			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 
-	t.Run("HasExpiredRefreshToken/AuthCodeBrowser", func(t *testing.T) {
+	t.Run("HasExpiredRefreshToken/Browser", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
 			GrantOptionSet: GrantOptionSet{
-				AuthCodeBrowserOption: &AuthCodeBrowserOption{
+				AuthCodeBrowserOption: &authcode.BrowserOption{
 					BindAddress:     []string{"127.0.0.1:8000"},
 					SkipOpenBrowser: true,
 				},
@@ -159,7 +166,7 @@ func TestAuthentication_Do(t *testing.T) {
 			},
 			Logger: testingLogger.New(t),
 			Clock:  clock.Fake(expiryTime.Add(+time.Hour)),
-			AuthCodeBrowser: &AuthCodeBrowser{
+			AuthCodeBrowser: &authcode.Browser{
 				Logger: testingLogger.New(t),
 			},
 		}
@@ -168,9 +175,11 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			IDToken:       "NEW_ID_TOKEN",
-			RefreshToken:  "NEW_REFRESH_TOKEN",
-			IDTokenClaims: dummyClaims,
+			TokenSet: oidc.TokenSet{
+				IDToken:       "NEW_ID_TOKEN",
+				RefreshToken:  "NEW_REFRESH_TOKEN",
+				IDTokenClaims: dummyClaims,
+			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
@@ -184,7 +193,7 @@ func TestAuthentication_Do(t *testing.T) {
 		defer cancel()
 		in := Input{
 			GrantOptionSet: GrantOptionSet{
-				ROPCOption: &ROPCOption{
+				ROPCOption: &ropc.Option{
 					Username: "USER",
 					Password: "PASS",
 				},
@@ -212,7 +221,7 @@ func TestAuthentication_Do(t *testing.T) {
 				},
 			},
 			Logger: testingLogger.New(t),
-			ROPC: &ROPC{
+			ROPC: &ropc.ROPC{
 				Logger: testingLogger.New(t),
 			},
 		}
@@ -221,9 +230,11 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenClaims: dummyClaims,
+			TokenSet: oidc.TokenSet{
+				IDToken:       "YOUR_ID_TOKEN",
+				RefreshToken:  "YOUR_REFRESH_TOKEN",
+				IDTokenClaims: dummyClaims,
+			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)

@@ -18,6 +18,8 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
@@ -48,18 +50,18 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		Clock:  clockInterface,
 		Logger: loggerInterface,
 	}
-	authCodeBrowser := &authentication.AuthCodeBrowser{
+	authcodeBrowser := &authcode.Browser{
 		Browser: browserInterface,
 		Logger:  loggerInterface,
 	}
 	readerReader := &reader.Reader{
 		Stdin: stdin,
 	}
-	authCodeKeyboard := &authentication.AuthCodeKeyboard{
+	keyboard := &authcode.Keyboard{
 		Reader: readerReader,
 		Logger: loggerInterface,
 	}
-	ropc := &authentication.ROPC{
+	ropcROPC := &ropc.ROPC{
 		Reader: readerReader,
 		Logger: loggerInterface,
 	}
@@ -67,9 +69,9 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		OIDCClient:       factory,
 		Logger:           loggerInterface,
 		Clock:            clockInterface,
-		AuthCodeBrowser:  authCodeBrowser,
-		AuthCodeKeyboard: authCodeKeyboard,
-		ROPC:             ropc,
+		AuthCodeBrowser:  authcodeBrowser,
+		AuthCodeKeyboard: keyboard,
+		ROPC:             ropcROPC,
 	}
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,

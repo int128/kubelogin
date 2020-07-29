@@ -1,4 +1,4 @@
-package authentication
+package authcode
 
 import (
 	"context"
@@ -11,16 +11,20 @@ import (
 	"golang.org/x/xerrors"
 )
 
-const authCodeKeyboardPrompt = "Enter code: "
+const keyboardPrompt = "Enter code: "
 const oobRedirectURI = "urn:ietf:wg:oauth:2.0:oob"
 
-// AuthCodeKeyboard provides the authorization code flow with keyboard interactive.
-type AuthCodeKeyboard struct {
+type KeyboardOption struct {
+	AuthRequestExtraParams map[string]string
+}
+
+// Keyboard provides the authorization code flow with keyboard interactive.
+type Keyboard struct {
 	Reader reader.Interface
 	Logger logger.Interface
 }
 
-func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, client oidcclient.Interface) (*Output, error) {
+func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, client oidcclient.Interface) (*oidc.TokenSet, error) {
 	u.Logger.V(1).Infof("starting the authorization code flow with keyboard interactive")
 	state, err := oidc.NewState()
 	if err != nil {
@@ -42,7 +46,7 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	})
 	u.Logger.Printf("Please visit the following URL in your browser: %s", authCodeURL)
-	code, err := u.Reader.ReadString(authCodeKeyboardPrompt)
+	code, err := u.Reader.ReadString(keyboardPrompt)
 	if err != nil {
 		return nil, xerrors.Errorf("could not read an authorization code: %w", err)
 	}
@@ -58,7 +62,7 @@ func (u *AuthCodeKeyboard) Do(ctx context.Context, o *AuthCodeKeyboardOption, cl
 		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)
 	}
 	u.Logger.V(1).Infof("finished the authorization code flow with keyboard interactive")
-	return &Output{
+	return &oidc.TokenSet{
 		IDToken:       tokenSet.IDToken,
 		IDTokenClaims: tokenSet.IDTokenClaims,
 		RefreshToken:  tokenSet.RefreshToken,

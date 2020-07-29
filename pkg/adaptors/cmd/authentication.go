@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"github.com/spf13/pflag"
 	"golang.org/x/xerrors"
 )
@@ -60,18 +62,18 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {
 	switch {
 	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == ""):
-		s.AuthCodeBrowserOption = &authentication.AuthCodeBrowserOption{
+		s.AuthCodeBrowserOption = &authcode.BrowserOption{
 			BindAddress:            o.determineListenAddress(),
 			SkipOpenBrowser:        o.SkipOpenBrowser,
 			RedirectURLHostname:    o.RedirectURLHostname,
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "authcode-keyboard":
-		s.AuthCodeKeyboardOption = &authentication.AuthCodeKeyboardOption{
+		s.AuthCodeKeyboardOption = &authcode.KeyboardOption{
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):
-		s.ROPCOption = &authentication.ROPCOption{
+		s.ROPCOption = &ropc.Option{
 			Username: o.Username,
 			Password: o.Password,
 		}

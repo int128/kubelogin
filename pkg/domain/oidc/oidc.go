@@ -5,8 +5,17 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 
+	"github.com/int128/kubelogin/pkg/domain/jwt"
 	"golang.org/x/xerrors"
 )
+
+// TokenSet represents an output DTO of
+// Interface.GetTokenByAuthCode, Interface.GetTokenByROPC and Interface.Refresh.
+type TokenSet struct {
+	IDToken       string
+	RefreshToken  string
+	IDTokenClaims jwt.Claims
+}
 
 func NewState() (string, error) {
 	b, err := random32()

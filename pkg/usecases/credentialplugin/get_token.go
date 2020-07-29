@@ -54,7 +54,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		return xerrors.Errorf("could not get a token: %w", err)
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
-	if err := u.Writer.Write(credentialpluginwriter.Output{Token: out.IDToken, Expiry: out.IDTokenClaims.Expiry}); err != nil {
+	if err := u.Writer.Write(credentialpluginwriter.Output{Token: out.TokenSet.IDToken, Expiry: out.TokenSet.IDTokenClaims.Expiry}); err != nil {
 		return xerrors.Errorf("could not write the token to client-go: %w", err)
 	}
 	return nil
@@ -101,16 +101,16 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 	if err != nil {
 		return nil, xerrors.Errorf("authentication error: %w", err)
 	}
-	u.Logger.V(1).Infof("you got a token: %s", out.IDTokenClaims.Pretty)
+	u.Logger.V(1).Infof("you got a token: %s", out.TokenSet.IDTokenClaims.Pretty)
 	if out.AlreadyHasValidIDToken {
-		u.Logger.V(1).Infof("you already have a valid token until %s", out.IDTokenClaims.Expiry)
+		u.Logger.V(1).Infof("you already have a valid token until %s", out.TokenSet.IDTokenClaims.Expiry)
 		return out, nil
 	}
 
-	u.Logger.V(1).Infof("you got a valid token until %s", out.IDTokenClaims.Expiry)
+	u.Logger.V(1).Infof("you got a valid token until %s", out.TokenSet.IDTokenClaims.Expiry)
 	newTokenCacheValue := tokencache.Value{
-		IDToken:      out.IDToken,
-		RefreshToken: out.RefreshToken,
+		IDToken:      out.TokenSet.IDToken,
+		RefreshToken: out.TokenSet.RefreshToken,
 	}
 	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, newTokenCacheValue); err != nil {
 		return nil, xerrors.Errorf("could not write the token cache: %w", err)
