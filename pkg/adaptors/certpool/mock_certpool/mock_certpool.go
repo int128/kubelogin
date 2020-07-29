@@ -10,30 +10,30 @@ import (
 	reflect "reflect"
 )
 
-// MockInterface is a mock of Interface interface
+// MockInterface is a mock of Interface interface.
 type MockInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockInterfaceMockRecorder
 }
 
-// MockInterfaceMockRecorder is the mock recorder for MockInterface
+// MockInterfaceMockRecorder is the mock recorder for MockInterface.
 type MockInterfaceMockRecorder struct {
 	mock *MockInterface
 }
 
-// NewMockInterface creates a new mock instance
+// NewMockInterface creates a new mock instance.
 func NewMockInterface(ctrl *gomock.Controller) *MockInterface {
 	mock := &MockInterface{ctrl: ctrl}
 	mock.recorder = &MockInterfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 	return m.recorder
 }
 
-// AddBase64Encoded mocks base method
+// AddBase64Encoded mocks base method.
 func (m *MockInterface) AddBase64Encoded(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddBase64Encoded", arg0)
@@ -41,13 +41,13 @@ func (m *MockInterface) AddBase64Encoded(arg0 string) error {
 	return ret0
 }
 
-// AddBase64Encoded indicates an expected call of AddBase64Encoded
+// AddBase64Encoded indicates an expected call of AddBase64Encoded.
 func (mr *MockInterfaceMockRecorder) AddBase64Encoded(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBase64Encoded", reflect.TypeOf((*MockInterface)(nil).AddBase64Encoded), arg0)
 }
 
-// AddFile mocks base method
+// AddFile mocks base method.
 func (m *MockInterface) AddFile(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddFile", arg0)
@@ -55,19 +55,19 @@ func (m *MockInterface) AddFile(arg0 string) error {
 	return ret0
 }
 
-// AddFile indicates an expected call of AddFile
+// AddFile indicates an expected call of AddFile.
 func (mr *MockInterfaceMockRecorder) AddFile(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFile", reflect.TypeOf((*MockInterface)(nil).AddFile), arg0)
 }
 
-// SetRootCAs mocks base method
+// SetRootCAs mocks base method.
 func (m *MockInterface) SetRootCAs(arg0 *tls.Config) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetRootCAs", arg0)
 }
 
-// SetRootCAs indicates an expected call of SetRootCAs
+// SetRootCAs indicates an expected call of SetRootCAs.
 func (mr *MockInterfaceMockRecorder) SetRootCAs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRootCAs", reflect.TypeOf((*MockInterface)(nil).SetRootCAs), arg0)

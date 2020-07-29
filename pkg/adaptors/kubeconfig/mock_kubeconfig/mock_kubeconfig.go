@@ -10,30 +10,30 @@ import (
 	reflect "reflect"
 )
 
-// MockInterface is a mock of Interface interface
+// MockInterface is a mock of Interface interface.
 type MockInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockInterfaceMockRecorder
 }
 
-// MockInterfaceMockRecorder is the mock recorder for MockInterface
+// MockInterfaceMockRecorder is the mock recorder for MockInterface.
 type MockInterfaceMockRecorder struct {
 	mock *MockInterface
 }
 
-// NewMockInterface creates a new mock instance
+// NewMockInterface creates a new mock instance.
 func NewMockInterface(ctrl *gomock.Controller) *MockInterface {
 	mock := &MockInterface{ctrl: ctrl}
 	mock.recorder = &MockInterfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 	return m.recorder
 }
 
-// GetCurrentAuthProvider mocks base method
+// GetCurrentAuthProvider mocks base method.
 func (m *MockInterface) GetCurrentAuthProvider(arg0 string, arg1 kubeconfig.ContextName, arg2 kubeconfig.UserName) (*kubeconfig.AuthProvider, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCurrentAuthProvider", arg0, arg1, arg2)
@@ -42,13 +42,13 @@ func (m *MockInterface) GetCurrentAuthProvider(arg0 string, arg1 kubeconfig.Cont
 	return ret0, ret1
 }
 
-// GetCurrentAuthProvider indicates an expected call of GetCurrentAuthProvider
+// GetCurrentAuthProvider indicates an expected call of GetCurrentAuthProvider.
 func (mr *MockInterfaceMockRecorder) GetCurrentAuthProvider(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentAuthProvider", reflect.TypeOf((*MockInterface)(nil).GetCurrentAuthProvider), arg0, arg1, arg2)
 }
 
-// UpdateAuthProvider mocks base method
+// UpdateAuthProvider mocks base method.
 func (m *MockInterface) UpdateAuthProvider(arg0 *kubeconfig.AuthProvider) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAuthProvider", arg0)
@@ -56,7 +56,7 @@ func (m *MockInterface) UpdateAuthProvider(arg0 *kubeconfig.AuthProvider) error 
 	return ret0
 }
 
-// UpdateAuthProvider indicates an expected call of UpdateAuthProvider
+// UpdateAuthProvider indicates an expected call of UpdateAuthProvider.
 func (mr *MockInterfaceMockRecorder) UpdateAuthProvider(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthProvider", reflect.TypeOf((*MockInterface)(nil).UpdateAuthProvider), arg0)
