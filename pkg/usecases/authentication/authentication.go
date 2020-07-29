@@ -9,6 +9,9 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"golang.org/x/xerrors"
 )
 
@@ -18,9 +21,9 @@ import (
 var Set = wire.NewSet(
 	wire.Struct(new(Authentication), "*"),
 	wire.Bind(new(Interface), new(*Authentication)),
-	wire.Struct(new(AuthCodeBrowser), "*"),
-	wire.Struct(new(AuthCodeKeyboard), "*"),
-	wire.Struct(new(ROPC), "*"),
+	wire.Struct(new(authcode.Browser), "*"),
+	wire.Struct(new(authcode.Keyboard), "*"),
+	wire.Struct(new(ropc.ROPC), "*"),
 )
 
 type Interface interface {
@@ -41,37 +44,16 @@ type Input struct {
 }
 
 type GrantOptionSet struct {
-	AuthCodeBrowserOption  *AuthCodeBrowserOption
-	AuthCodeKeyboardOption *AuthCodeKeyboardOption
-	ROPCOption             *ROPCOption
-}
-
-type AuthCodeBrowserOption struct {
-	SkipOpenBrowser        bool
-	BindAddress            []string
-	RedirectURLHostname    string
-	AuthRequestExtraParams map[string]string
-}
-
-type AuthCodeKeyboardOption struct {
-	AuthRequestExtraParams map[string]string
-}
-
-type ROPCOption struct {
-	Username string
-	Password string // If empty, read a password using Reader.ReadPassword()
+	AuthCodeBrowserOption  *authcode.BrowserOption
+	AuthCodeKeyboardOption *authcode.KeyboardOption
+	ROPCOption             *ropc.Option
 }
 
 // Output represents an output DTO of the Authentication use-case.
 type Output struct {
 	AlreadyHasValidIDToken bool
-	IDToken                string
-	IDTokenClaims          jwt.Claims
-	RefreshToken           string
+	TokenSet               oidc.TokenSet
 }
-
-const usernamePrompt = "Username: "
-const passwordPrompt = "Password: "
 
 // Authentication provides the internal use-case of authentication.
 //
@@ -90,9 +72,9 @@ type Authentication struct {
 	OIDCClient       oidcclient.FactoryInterface
 	Logger           logger.Interface
 	Clock            clock.Interface
-	AuthCodeBrowser  *AuthCodeBrowser
-	AuthCodeKeyboard *AuthCodeKeyboard
-	ROPC             *ROPC
+	AuthCodeBrowser  *authcode.Browser
+	AuthCodeKeyboard *authcode.Keyboard
+	ROPC             *ropc.ROPC
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -109,9 +91,11 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 			u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
 			return &Output{
 				AlreadyHasValidIDToken: true,
-				IDToken:                in.IDToken,
-				RefreshToken:           in.RefreshToken,
-				IDTokenClaims:          *claims,
+				TokenSet: oidc.TokenSet{
+					IDToken:       in.IDToken,
+					RefreshToken:  in.RefreshToken,
+					IDTokenClaims: *claims,
+				},
 			}, nil
 		}
 		u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
@@ -135,22 +119,36 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		out, err := client.Refresh(ctx, in.RefreshToken)
 		if err == nil {
 			return &Output{
-				IDToken:       out.IDToken,
-				IDTokenClaims: out.IDTokenClaims,
-				RefreshToken:  out.RefreshToken,
+				TokenSet: oidc.TokenSet{
+					IDToken:       out.IDToken,
+					IDTokenClaims: out.IDTokenClaims,
+					RefreshToken:  out.RefreshToken,
+				},
 			}, nil
 		}
 		u.Logger.V(1).Infof("could not refresh the token: %s", err)
 	}
 
 	if in.GrantOptionSet.AuthCodeBrowserOption != nil {
-		return u.AuthCodeBrowser.Do(ctx, in.GrantOptionSet.AuthCodeBrowserOption, client)
+		tokenSet, err := u.AuthCodeBrowser.Do(ctx, in.GrantOptionSet.AuthCodeBrowserOption, client)
+		if err != nil {
+			return nil, xerrors.Errorf("authcode-browser error: %w", err)
+		}
+		return &Output{TokenSet: *tokenSet}, nil
 	}
 	if in.GrantOptionSet.AuthCodeKeyboardOption != nil {
-		return u.AuthCodeKeyboard.Do(ctx, in.GrantOptionSet.AuthCodeKeyboardOption, client)
+		tokenSet, err := u.AuthCodeKeyboard.Do(ctx, in.GrantOptionSet.AuthCodeKeyboardOption, client)
+		if err != nil {
+			return nil, xerrors.Errorf("authcode-keyboard error: %w", err)
+		}
+		return &Output{TokenSet: *tokenSet}, nil
 	}
 	if in.GrantOptionSet.ROPCOption != nil {
-		return u.ROPC.Do(ctx, in.GrantOptionSet.ROPCOption, client)
+		tokenSet, err := u.ROPC.Do(ctx, in.GrantOptionSet.ROPCOption, client)
+		if err != nil {
+			return nil, xerrors.Errorf("ropc error: %w", err)
+		}
+		return &Output{TokenSet: *tokenSet}, nil
 	}
 	return nil, xerrors.Errorf("any authorization grant must be set")
 }

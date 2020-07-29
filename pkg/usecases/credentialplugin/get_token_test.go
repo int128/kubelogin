@@ -13,6 +13,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
@@ -57,9 +58,11 @@ func TestGetToken_Do(t *testing.T) {
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				TokenSet: oidc.TokenSet{
+					IDToken:       "YOUR_ID_TOKEN",
+					RefreshToken:  "YOUR_REFRESH_TOKEN",
+					IDTokenClaims: dummyTokenClaims,
+				},
 			}, nil)
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
@@ -127,8 +130,10 @@ func TestGetToken_Do(t *testing.T) {
 			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
-				IDToken:                "VALID_ID_TOKEN",
-				IDTokenClaims:          dummyTokenClaims,
+				TokenSet: oidc.TokenSet{
+					IDToken:       "VALID_ID_TOKEN",
+					IDTokenClaims: dummyTokenClaims,
+				},
 			}, nil)
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().

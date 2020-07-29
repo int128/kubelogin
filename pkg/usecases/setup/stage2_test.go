@@ -9,6 +9,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
@@ -45,12 +46,14 @@ func TestSetup_DoStage2(t *testing.T) {
 			GrantOptionSet: grantOptionSet,
 		}).
 		Return(&authentication.Output{
-			IDToken:      "YOUR_ID_TOKEN",
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-			IDTokenClaims: jwt.Claims{
-				Subject: "YOUR_SUBJECT",
-				Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
-				Pretty:  "PRETTY_JSON",
+			TokenSet: oidc.TokenSet{
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+				IDTokenClaims: jwt.Claims{
+					Subject: "YOUR_SUBJECT",
+					Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
+					Pretty:  "PRETTY_JSON",
+				},
 			},
 		}, nil)
 	u := Setup{

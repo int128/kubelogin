@@ -103,11 +103,11 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	}
 
 	v := stage2Vars{
-		IDTokenPrettyJSON: out.IDTokenClaims.Pretty,
+		IDTokenPrettyJSON: out.TokenSet.IDTokenClaims.Pretty,
 		IssuerURL:         in.IssuerURL,
 		ClientID:          in.ClientID,
 		Args:              makeCredentialPluginArgs(in),
-		Subject:           out.IDTokenClaims.Subject,
+		Subject:           out.TokenSet.IDTokenClaims.Subject,
 	}
 	var b strings.Builder
 	if err := stage2Tpl.Execute(&b, &v); err != nil {

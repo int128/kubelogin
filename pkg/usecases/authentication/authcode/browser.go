@@ -1,4 +1,4 @@
-package authentication
+package authcode
 
 import (
 	"context"
@@ -13,13 +13,20 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// AuthCodeBrowser provides the authentication code flow using the browser.
-type AuthCodeBrowser struct {
+type BrowserOption struct {
+	SkipOpenBrowser        bool
+	BindAddress            []string
+	RedirectURLHostname    string
+	AuthRequestExtraParams map[string]string
+}
+
+// Browser provides the authentication code flow using the browser.
+type Browser struct {
 	Browser browser.Interface
 	Logger  logger.Interface
 }
 
-func (u *AuthCodeBrowser) Do(ctx context.Context, o *AuthCodeBrowserOption, client oidcclient.Interface) (*Output, error) {
+func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.Interface) (*oidc.TokenSet, error) {
 	u.Logger.V(1).Infof("starting the authentication code flow using the browser")
 	state, err := oidc.NewState()
 	if err != nil {
@@ -44,7 +51,7 @@ func (u *AuthCodeBrowser) Do(ctx context.Context, o *AuthCodeBrowserOption, clie
 	}
 	readyChan := make(chan string, 1)
 	defer close(readyChan)
-	var out Output
+	var out oidc.TokenSet
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		select {
@@ -73,7 +80,7 @@ Please visit the following URL in your browser manually: %s`, err, url)
 		if err != nil {
 			return xerrors.Errorf("authorization code flow error: %w", err)
 		}
-		out = Output{
+		out = oidc.TokenSet{
 			IDToken:       tokenSet.IDToken,
 			IDTokenClaims: tokenSet.IDTokenClaims,
 			RefreshToken:  tokenSet.RefreshToken,

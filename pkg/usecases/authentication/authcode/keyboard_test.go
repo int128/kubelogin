@@ -1,4 +1,4 @@
-package authentication
+package authcode
 
 import (
 	"context"
@@ -11,12 +11,13 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader/mock_reader"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
 var nonNil = gomock.Not(gomock.Nil())
 
-func TestAuthCodeKeyboard_Do(t *testing.T) {
+func TestKeyboard_Do(t *testing.T) {
 	dummyTokenClaims := jwt.Claims{
 		Subject: "YOUR_SUBJECT",
 		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
@@ -29,7 +30,7 @@ func TestAuthCodeKeyboard_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		o := &AuthCodeKeyboardOption{
+		o := &KeyboardOption{
 			AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
@@ -56,9 +57,9 @@ func TestAuthCodeKeyboard_Do(t *testing.T) {
 			}, nil)
 		mockReader := mock_reader.NewMockInterface(ctrl)
 		mockReader.EXPECT().
-			ReadString(authCodeKeyboardPrompt).
+			ReadString(keyboardPrompt).
 			Return("YOUR_AUTH_CODE", nil)
-		u := AuthCodeKeyboard{
+		u := Keyboard{
 			Reader: mockReader,
 			Logger: logger.New(t),
 		}
@@ -66,7 +67,7 @@ func TestAuthCodeKeyboard_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &Output{
+		want := &oidc.TokenSet{
 			IDToken:       "YOUR_ID_TOKEN",
 			IDTokenClaims: dummyTokenClaims,
 			RefreshToken:  "YOUR_REFRESH_TOKEN",

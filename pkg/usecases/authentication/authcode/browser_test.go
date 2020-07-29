@@ -1,4 +1,4 @@
-package authentication
+package authcode
 
 import (
 	"context"
@@ -11,10 +11,11 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
-func TestAuthCode_Do(t *testing.T) {
+func TestBrowser_Do(t *testing.T) {
 	dummyTokenClaims := jwt.Claims{
 		Subject: "YOUR_SUBJECT",
 		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
@@ -27,7 +28,7 @@ func TestAuthCode_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		o := &AuthCodeBrowserOption{
+		o := &BrowserOption{
 			BindAddress:            []string{"127.0.0.1:8000"},
 			SkipOpenBrowser:        true,
 			RedirectURLHostname:    "localhost",
@@ -54,14 +55,14 @@ func TestAuthCode_Do(t *testing.T) {
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
 			}, nil)
-		u := AuthCodeBrowser{
+		u := Browser{
 			Logger: logger.New(t),
 		}
 		got, err := u.Do(ctx, o, mockOIDCClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &Output{
+		want := &oidc.TokenSet{
 			IDToken:       "YOUR_ID_TOKEN",
 			RefreshToken:  "YOUR_REFRESH_TOKEN",
 			IDTokenClaims: dummyTokenClaims,
@@ -76,7 +77,7 @@ func TestAuthCode_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		o := &AuthCodeBrowserOption{
+		o := &BrowserOption{
 			BindAddress: []string{"127.0.0.1:8000"},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
@@ -94,7 +95,7 @@ func TestAuthCode_Do(t *testing.T) {
 		mockBrowser := mock_browser.NewMockInterface(ctrl)
 		mockBrowser.EXPECT().
 			Open("LOCAL_SERVER_URL")
-		u := AuthCodeBrowser{
+		u := Browser{
 			Logger:  logger.New(t),
 			Browser: mockBrowser,
 		}
@@ -102,7 +103,7 @@ func TestAuthCode_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &Output{
+		want := &oidc.TokenSet{
 			IDToken:       "YOUR_ID_TOKEN",
 			RefreshToken:  "YOUR_REFRESH_TOKEN",
 			IDTokenClaims: dummyTokenClaims,

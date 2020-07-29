@@ -11,6 +11,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
@@ -83,9 +84,11 @@ func TestStandalone_Do(t *testing.T) {
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				TokenSet: oidc.TokenSet{
+					IDToken:       "YOUR_ID_TOKEN",
+					RefreshToken:  "YOUR_REFRESH_TOKEN",
+					IDTokenClaims: dummyTokenClaims,
+				},
 			}, nil)
 		u := Standalone{
 			Authentication: mockAuthentication,
@@ -127,8 +130,10 @@ func TestStandalone_Do(t *testing.T) {
 			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
-				IDToken:                "VALID_ID_TOKEN",
-				IDTokenClaims:          dummyTokenClaims,
+				TokenSet: oidc.TokenSet{
+					IDToken:       "VALID_ID_TOKEN",
+					IDTokenClaims: dummyTokenClaims,
+				},
 			}, nil)
 		u := Standalone{
 			Authentication: mockAuthentication,
@@ -235,9 +240,11 @@ func TestStandalone_Do(t *testing.T) {
 				CertPool:     mockCertPool,
 			}).
 			Return(&authentication.Output{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				TokenSet: oidc.TokenSet{
+					IDToken:       "YOUR_ID_TOKEN",
+					RefreshToken:  "YOUR_REFRESH_TOKEN",
+					IDTokenClaims: dummyTokenClaims,
+				},
 			}, nil)
 		u := Standalone{
 			Authentication: mockAuthentication,

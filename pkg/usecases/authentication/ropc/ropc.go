@@ -1,4 +1,4 @@
-package authentication
+package ropc
 
 import (
 	"context"
@@ -6,8 +6,17 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"golang.org/x/xerrors"
 )
+
+const usernamePrompt = "Username: "
+const passwordPrompt = "Password: "
+
+type Option struct {
+	Username string
+	Password string // If empty, read a password using Reader.ReadPassword()
+}
 
 // ROPC provides the resource owner password credentials flow.
 type ROPC struct {
@@ -15,7 +24,7 @@ type ROPC struct {
 	Logger logger.Interface
 }
 
-func (u *ROPC) Do(ctx context.Context, in *ROPCOption, client oidcclient.Interface) (*Output, error) {
+func (u *ROPC) Do(ctx context.Context, in *Option, client oidcclient.Interface) (*oidc.TokenSet, error) {
 	u.Logger.V(1).Infof("starting the resource owner password credentials flow")
 	if in.Username == "" {
 		var err error
@@ -36,7 +45,7 @@ func (u *ROPC) Do(ctx context.Context, in *ROPCOption, client oidcclient.Interfa
 		return nil, xerrors.Errorf("resource owner password credentials flow error: %w", err)
 	}
 	u.Logger.V(1).Infof("finished the resource owner password credentials flow")
-	return &Output{
+	return &oidc.TokenSet{
 		IDToken:       tokenSet.IDToken,
 		IDTokenClaims: tokenSet.IDTokenClaims,
 		RefreshToken:  tokenSet.RefreshToken,

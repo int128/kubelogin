@@ -7,6 +7,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin/mock_credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
@@ -26,7 +28,7 @@ func TestCmd_Run(t *testing.T) {
 				args: []string{executable},
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authentication.AuthCodeBrowserOption{
+						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:         defaultListenAddress,
 							RedirectURLHostname: "localhost",
 						},
@@ -41,7 +43,7 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authentication.AuthCodeBrowserOption{
+						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:         []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 							RedirectURLHostname: "localhost",
 						},
@@ -58,7 +60,7 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authentication.AuthCodeBrowserOption{
+						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:         []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 							RedirectURLHostname: "localhost",
 						},
@@ -89,7 +91,7 @@ func TestCmd_Run(t *testing.T) {
 					CACertData:         "BASE64ENCODED",
 					SkipTLSVerify:      true,
 					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authentication.AuthCodeBrowserOption{
+						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:         []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 							SkipOpenBrowser:     true,
 							RedirectURLHostname: "localhost",
@@ -103,7 +105,7 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeKeyboardOption: &authentication.AuthCodeKeyboardOption{},
+						AuthCodeKeyboardOption: &authcode.KeyboardOption{},
 					},
 				},
 			},
@@ -117,7 +119,7 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
-						ROPCOption: &authentication.ROPCOption{
+						ROPCOption: &ropc.Option{
 							Username: "USER",
 							Password: "PASS",
 						},
@@ -133,7 +135,7 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
-						ROPCOption: &authentication.ROPCOption{
+						ROPCOption: &ropc.Option{
 							Username: "USER",
 							Password: "PASS",
 						},
@@ -196,7 +198,7 @@ func TestCmd_Run(t *testing.T) {
 					IssuerURL:     "https://issuer.example.com",
 					ClientID:      "YOUR_CLIENT_ID",
 					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authentication.AuthCodeBrowserOption{
+						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:         []string{"127.0.0.1:8000", "127.0.0.1:18000"},
 							RedirectURLHostname: "localhost",
 						},
@@ -234,7 +236,7 @@ func TestCmd_Run(t *testing.T) {
 					CACertData:     "BASE64ENCODED",
 					SkipTLSVerify:  true,
 					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authentication.AuthCodeBrowserOption{
+						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:            []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 							SkipOpenBrowser:        true,
 							RedirectURLHostname:    "localhost",
@@ -256,7 +258,7 @@ func TestCmd_Run(t *testing.T) {
 					IssuerURL:     "https://issuer.example.com",
 					ClientID:      "YOUR_CLIENT_ID",
 					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeKeyboardOption: &authentication.AuthCodeKeyboardOption{
+						AuthCodeKeyboardOption: &authcode.KeyboardOption{
 							AuthRequestExtraParams: map[string]string{"ttl": "86400"},
 						},
 					},
@@ -278,7 +280,7 @@ func TestCmd_Run(t *testing.T) {
 					IssuerURL:     "https://issuer.example.com",
 					ClientID:      "YOUR_CLIENT_ID",
 					GrantOptionSet: authentication.GrantOptionSet{
-						ROPCOption: &authentication.ROPCOption{
+						ROPCOption: &ropc.Option{
 							Username: "USER",
 							Password: "PASS",
 						},
@@ -300,7 +302,7 @@ func TestCmd_Run(t *testing.T) {
 					IssuerURL:     "https://issuer.example.com",
 					ClientID:      "YOUR_CLIENT_ID",
 					GrantOptionSet: authentication.GrantOptionSet{
-						ROPCOption: &authentication.ROPCOption{
+						ROPCOption: &ropc.Option{
 							Username: "USER",
 							Password: "PASS",
 						},

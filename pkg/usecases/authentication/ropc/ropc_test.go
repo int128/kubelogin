@@ -1,4 +1,4 @@
-package authentication
+package ropc
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader/mock_reader"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"golang.org/x/xerrors"
 )
@@ -28,7 +29,7 @@ func TestROPC_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		o := &ROPCOption{}
+		o := &Option{}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
@@ -48,7 +49,7 @@ func TestROPC_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &Output{
+		want := &oidc.TokenSet{
 			IDToken:       "YOUR_ID_TOKEN",
 			RefreshToken:  "YOUR_REFRESH_TOKEN",
 			IDTokenClaims: dummyTokenClaims,
@@ -63,7 +64,7 @@ func TestROPC_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		o := &ROPCOption{
+		o := &Option{
 			Username: "USER",
 			Password: "PASS",
 		}
@@ -82,7 +83,7 @@ func TestROPC_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &Output{
+		want := &oidc.TokenSet{
 			IDToken:       "YOUR_ID_TOKEN",
 			RefreshToken:  "YOUR_REFRESH_TOKEN",
 			IDTokenClaims: dummyTokenClaims,
@@ -97,7 +98,7 @@ func TestROPC_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		o := &ROPCOption{
+		o := &Option{
 			Username: "USER",
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
@@ -118,7 +119,7 @@ func TestROPC_Do(t *testing.T) {
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
-		want := &Output{
+		want := &oidc.TokenSet{
 			IDToken:       "YOUR_ID_TOKEN",
 			RefreshToken:  "YOUR_REFRESH_TOKEN",
 			IDTokenClaims: dummyTokenClaims,
@@ -133,7 +134,7 @@ func TestROPC_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		o := &ROPCOption{
+		o := &Option{
 			Username: "USER",
 		}
 		mockEnv := mock_reader.NewMockInterface(ctrl)

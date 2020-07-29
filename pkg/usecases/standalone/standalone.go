@@ -107,15 +107,15 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	if err != nil {
 		return xerrors.Errorf("authentication error: %w", err)
 	}
-	u.Logger.V(1).Infof("you got a token: %s", out.IDTokenClaims.Pretty)
+	u.Logger.V(1).Infof("you got a token: %s", out.TokenSet.IDTokenClaims.Pretty)
 	if out.AlreadyHasValidIDToken {
-		u.Logger.Printf("You already have a valid token until %s", out.IDTokenClaims.Expiry)
+		u.Logger.Printf("You already have a valid token until %s", out.TokenSet.IDTokenClaims.Expiry)
 		return nil
 	}
 
-	u.Logger.Printf("You got a valid token until %s", out.IDTokenClaims.Expiry)
-	authProvider.IDToken = out.IDToken
-	authProvider.RefreshToken = out.RefreshToken
+	u.Logger.Printf("You got a valid token until %s", out.TokenSet.IDTokenClaims.Expiry)
+	authProvider.IDToken = out.TokenSet.IDToken
+	authProvider.RefreshToken = out.TokenSet.RefreshToken
 	u.Logger.V(1).Infof("writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
 	if err := u.Kubeconfig.UpdateAuthProvider(authProvider); err != nil {
 		return xerrors.Errorf("could not update the kubeconfig: %w", err)
