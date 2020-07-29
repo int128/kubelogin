@@ -127,6 +127,7 @@ Flags:
       --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
       --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --skip-open-browser                               [authcode] Do not open the browser automatically
+      --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
       --oidc-redirect-url-hostname string               [authcode] Hostname of the redirect URL (default "localhost")
       --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
@@ -202,6 +203,13 @@ You can add extra parameters to the authentication request.
 
 ```yaml
       - --oidc-auth-request-extra-params=ttl=86400
+```
+
+When authentication completed, kubelogin shows a message to close the browser.
+You can change the URL to show after authentication.
+
+```yaml
+      - --open-url-after-authentication=https://example.com/success.html
 ```
 
 #### Authorization code flow with keyboard interactive
