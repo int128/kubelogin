@@ -6,8 +6,8 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	"github.com/int128/kubelogin/pkg/domain/oidc"
-	"github.com/int128/kubelogin/pkg/domain/pkce"
+	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/pkce"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
