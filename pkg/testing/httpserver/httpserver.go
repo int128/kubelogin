@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/int128/kubelogin/pkg/templates"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 )
 
 func main() {
-	http.HandleFunc("/AuthCodeBrowserSuccessHTML", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/BrowserSuccessHTML", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("content-type", "text/html")
-		_, _ = w.Write([]byte(templates.AuthCodeBrowserSuccessHTML))
+		_, _ = w.Write([]byte(authcode.BrowserSuccessHTML))
 	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("content-type", "text/html")
@@ -18,7 +18,7 @@ func main() {
 <html>
 <body>
 <ul>
-<li><a href="AuthCodeBrowserSuccessHTML">AuthCodeBrowserSuccessHTML</a></li>
+<li><a href="BrowserSuccessHTML">BrowserSuccessHTML</a></li>
 </ul>
 </body>
 </html>

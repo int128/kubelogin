@@ -8,7 +8,6 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/domain/pkce"
-	"github.com/int128/kubelogin/pkg/templates"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
@@ -47,7 +46,7 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 		PKCEParams:             p,
 		RedirectURLHostname:    o.RedirectURLHostname,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
-		LocalServerSuccessHTML: templates.AuthCodeBrowserSuccessHTML,
+		LocalServerSuccessHTML: BrowserSuccessHTML,
 	}
 	readyChan := make(chan string, 1)
 	defer close(readyChan)

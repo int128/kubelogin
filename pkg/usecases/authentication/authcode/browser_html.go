@@ -1,7 +1,7 @@
-package templates
+package authcode
 
-// AuthCodeBrowserSuccessHTML is the success page on browser based authentication.
-const AuthCodeBrowserSuccessHTML = `
+// BrowserSuccessHTML is the success page on browser based authentication.
+const BrowserSuccessHTML = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
