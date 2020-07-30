@@ -51,7 +51,7 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 	}
 	readyChan := make(chan string, 1)
 	defer close(readyChan)
-	var out oidc.TokenSet
+	var out *oidc.TokenSet
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		select {
@@ -80,11 +80,7 @@ Please visit the following URL in your browser manually: %s`, err, url)
 		if err != nil {
 			return xerrors.Errorf("authorization code flow error: %w", err)
 		}
-		out = oidc.TokenSet{
-			IDToken:       tokenSet.IDToken,
-			IDTokenClaims: tokenSet.IDTokenClaims,
-			RefreshToken:  tokenSet.RefreshToken,
-		}
+		out = tokenSet
 		u.Logger.V(1).Infof("got a token set by the authorization code flow")
 		return nil
 	})
@@ -92,5 +88,5 @@ Please visit the following URL in your browser manually: %s`, err, url)
 		return nil, xerrors.Errorf("authentication error: %w", err)
 	}
 	u.Logger.V(1).Infof("finished the authorization code flow via the browser")
-	return &out, nil
+	return out, nil
 }

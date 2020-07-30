@@ -50,7 +50,7 @@ func TestBrowser_Do(t *testing.T) {
 				}
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
-			Return(&oidcclient.TokenSet{
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
@@ -87,7 +87,7 @@ func TestBrowser_Do(t *testing.T) {
 			Do(func(_ context.Context, _ oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
-			Return(&oidcclient.TokenSet{
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,

@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/coreos/go-oidc"
+	gooidc "github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/domain/oidc"
 	"github.com/int128/kubelogin/pkg/domain/pkce"
 	"github.com/int128/oauth2cli"
 	"golang.org/x/oauth2"
@@ -19,10 +20,10 @@ import (
 
 type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string
-	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*TokenSet, error)
-	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*TokenSet, error)
-	GetTokenByROPC(ctx context.Context, username, password string) (*TokenSet, error)
-	Refresh(ctx context.Context, refreshToken string) (*TokenSet, error)
+	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
+	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
+	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
+	Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error)
 	SupportedPKCEMethods() []string
 }
 
@@ -51,17 +52,9 @@ type GetTokenByAuthCodeInput struct {
 	LocalServerSuccessHTML string
 }
 
-// TokenSet represents an output DTO of
-// Interface.GetTokenByAuthCode, Interface.GetTokenByROPC and Interface.Refresh.
-type TokenSet struct {
-	IDToken       string
-	RefreshToken  string
-	IDTokenClaims jwt.Claims
-}
-
 type client struct {
 	httpClient           *http.Client
-	provider             *oidc.Provider
+	provider             *gooidc.Provider
 	oauth2Config         oauth2.Config
 	clock                clock.Interface
 	logger               logger.Interface
@@ -76,7 +69,7 @@ func (c *client) wrapContext(ctx context.Context) context.Context {
 }
 
 // GetTokenByAuthCode performs the authorization code flow.
-func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*TokenSet, error) {
+func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	config := oauth2cli.Config{
 		OAuth2Config:           c.oauth2Config,
@@ -105,7 +98,7 @@ func (c *client) GetAuthCodeURL(in AuthCodeURLInput) string {
 }
 
 // ExchangeAuthCode exchanges the authorization code and token.
-func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*TokenSet, error) {
+func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	cfg := c.oauth2Config
 	cfg.RedirectURL = in.RedirectURI
@@ -120,7 +113,7 @@ func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput)
 func authorizationRequestOptions(n string, p pkce.Params, e map[string]string) []oauth2.AuthCodeOption {
 	o := []oauth2.AuthCodeOption{
 		oauth2.AccessTypeOffline,
-		oidc.Nonce(n),
+		gooidc.Nonce(n),
 	}
 	if !p.IsZero() {
 		o = append(o,
@@ -148,7 +141,7 @@ func (c *client) SupportedPKCEMethods() []string {
 }
 
 // GetTokenByROPC performs the resource owner password credentials flow.
-func (c *client) GetTokenByROPC(ctx context.Context, username, password string) (*TokenSet, error) {
+func (c *client) GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, username, password)
 	if err != nil {
@@ -158,7 +151,7 @@ func (c *client) GetTokenByROPC(ctx context.Context, username, password string) 
 }
 
 // Refresh sends a refresh token request and returns a token set.
-func (c *client) Refresh(ctx context.Context, refreshToken string) (*TokenSet, error) {
+func (c *client) Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	currentToken := &oauth2.Token{
 		Expiry:       time.Now(),
@@ -174,12 +167,12 @@ func (c *client) Refresh(ctx context.Context, refreshToken string) (*TokenSet, e
 
 // verifyToken verifies the token with the certificates of the provider and the nonce.
 // If the nonce is an empty string, it does not verify the nonce.
-func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce string) (*TokenSet, error) {
+func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce string) (*oidc.TokenSet, error) {
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
 	}
-	verifier := c.provider.Verifier(&oidc.Config{ClientID: c.oauth2Config.ClientID, Now: c.clock.Now})
+	verifier := c.provider.Verifier(&gooidc.Config{ClientID: c.oauth2Config.ClientID, Now: c.clock.Now})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
 		return nil, xerrors.Errorf("could not verify the ID token: %w", err)
@@ -191,7 +184,7 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 	if err != nil {
 		return nil, xerrors.Errorf("could not decode the token: %w", err)
 	}
-	return &TokenSet{
+	return &oidc.TokenSet{
 		IDToken: idToken,
 		IDTokenClaims: jwt.Claims{
 			Subject: verifiedIDToken.Subject,

@@ -62,9 +62,5 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, client oidcclient.
 		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)
 	}
 	u.Logger.V(1).Infof("finished the authorization code flow with keyboard interactive")
-	return &oidc.TokenSet{
-		IDToken:       tokenSet.IDToken,
-		IDTokenClaims: tokenSet.IDTokenClaims,
-		RefreshToken:  tokenSet.RefreshToken,
-	}, nil
+	return tokenSet, nil
 }

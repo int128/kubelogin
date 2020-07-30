@@ -50,7 +50,7 @@ func TestKeyboard_Do(t *testing.T) {
 					t.Errorf("Code wants YOUR_AUTH_CODE but was %s", in.Code)
 				}
 			}).
-			Return(&oidcclient.TokenSet{
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
 				RefreshToken:  "YOUR_REFRESH_TOKEN",

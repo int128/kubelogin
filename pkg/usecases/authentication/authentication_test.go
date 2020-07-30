@@ -87,7 +87,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "VALID_REFRESH_TOKEN").
-			Return(&oidcclient.TokenSet{
+			Return(&oidc.TokenSet{
 				IDToken:       "NEW_ID_TOKEN",
 				RefreshToken:  "NEW_REFRESH_TOKEN",
 				IDTokenClaims: dummyClaims,
@@ -149,7 +149,7 @@ func TestAuthentication_Do(t *testing.T) {
 			Do(func(_ context.Context, _ oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
-			Return(&oidcclient.TokenSet{
+			Return(&oidc.TokenSet{
 				IDToken:       "NEW_ID_TOKEN",
 				RefreshToken:  "NEW_REFRESH_TOKEN",
 				IDTokenClaims: dummyClaims,
@@ -205,7 +205,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
-			Return(&oidcclient.TokenSet{
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyClaims,
