@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader/mock_reader"
 	"github.com/int128/kubelogin/pkg/domain/jwt"
@@ -33,7 +32,7 @@ func TestROPC_Do(t *testing.T) {
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
-			Return(&oidcclient.TokenSet{
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
@@ -71,7 +70,7 @@ func TestROPC_Do(t *testing.T) {
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
-			Return(&oidcclient.TokenSet{
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,
@@ -104,7 +103,7 @@ func TestROPC_Do(t *testing.T) {
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
-			Return(&oidcclient.TokenSet{
+			Return(&oidc.TokenSet{
 				IDToken:       "YOUR_ID_TOKEN",
 				RefreshToken:  "YOUR_REFRESH_TOKEN",
 				IDTokenClaims: dummyTokenClaims,

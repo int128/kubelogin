@@ -8,6 +8,7 @@ import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
 	oidcclient "github.com/int128/kubelogin/pkg/adaptors/oidcclient"
+	oidc "github.com/int128/kubelogin/pkg/domain/oidc"
 	reflect "reflect"
 )
 
@@ -35,10 +36,10 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // ExchangeAuthCode mocks base method.
-func (m *MockInterface) ExchangeAuthCode(arg0 context.Context, arg1 oidcclient.ExchangeAuthCodeInput) (*oidcclient.TokenSet, error) {
+func (m *MockInterface) ExchangeAuthCode(arg0 context.Context, arg1 oidcclient.ExchangeAuthCodeInput) (*oidc.TokenSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExchangeAuthCode", arg0, arg1)
-	ret0, _ := ret[0].(*oidcclient.TokenSet)
+	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -64,10 +65,10 @@ func (mr *MockInterfaceMockRecorder) GetAuthCodeURL(arg0 interface{}) *gomock.Ca
 }
 
 // GetTokenByAuthCode mocks base method.
-func (m *MockInterface) GetTokenByAuthCode(arg0 context.Context, arg1 oidcclient.GetTokenByAuthCodeInput, arg2 chan<- string) (*oidcclient.TokenSet, error) {
+func (m *MockInterface) GetTokenByAuthCode(arg0 context.Context, arg1 oidcclient.GetTokenByAuthCodeInput, arg2 chan<- string) (*oidc.TokenSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTokenByAuthCode", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*oidcclient.TokenSet)
+	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -79,10 +80,10 @@ func (mr *MockInterfaceMockRecorder) GetTokenByAuthCode(arg0, arg1, arg2 interfa
 }
 
 // GetTokenByROPC mocks base method.
-func (m *MockInterface) GetTokenByROPC(arg0 context.Context, arg1, arg2 string) (*oidcclient.TokenSet, error) {
+func (m *MockInterface) GetTokenByROPC(arg0 context.Context, arg1, arg2 string) (*oidc.TokenSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTokenByROPC", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*oidcclient.TokenSet)
+	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -94,10 +95,10 @@ func (mr *MockInterfaceMockRecorder) GetTokenByROPC(arg0, arg1, arg2 interface{}
 }
 
 // Refresh mocks base method.
-func (m *MockInterface) Refresh(arg0 context.Context, arg1 string) (*oidcclient.TokenSet, error) {
+func (m *MockInterface) Refresh(arg0 context.Context, arg1 string) (*oidc.TokenSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Refresh", arg0, arg1)
-	ret0, _ := ret[0].(*oidcclient.TokenSet)
+	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
