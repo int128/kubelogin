@@ -8,7 +8,7 @@ import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
 	oidcclient "github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	oidc "github.com/int128/kubelogin/pkg/domain/oidc"
+	oidc "github.com/int128/kubelogin/pkg/oidc"
 	reflect "reflect"
 )
 

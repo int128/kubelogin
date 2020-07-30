@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 
-	"github.com/int128/kubelogin/pkg/domain/jwt"
+	"github.com/int128/kubelogin/pkg/jwt"
 	"golang.org/x/xerrors"
 )
 

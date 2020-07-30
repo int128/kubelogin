@@ -10,8 +10,8 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
-	"github.com/int128/kubelogin/pkg/domain/jwt"
-	"github.com/int128/kubelogin/pkg/domain/oidc"
+	"github.com/int128/kubelogin/pkg/jwt"
+	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
