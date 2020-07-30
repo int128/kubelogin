@@ -36,6 +36,11 @@ func TestStandalone(t *testing.T) {
 			keyPair: keypair.Server,
 		},
 	} {
+		httpDriverOption := httpdriver.Option{
+			TLSConfig:    tc.keyPair.TLSConfig,
+			BodyContains: "Authenticated",
+		}
+
 		t.Run(name, func(t *testing.T) {
 			t.Run("AuthCode", func(t *testing.T) {
 				t.Parallel()
@@ -59,7 +64,7 @@ func TestStandalone(t *testing.T) {
 				runStandalone(t, ctx, standaloneConfig{
 					issuerURL:          sv.IssuerURL(),
 					kubeConfigFilename: kubeConfigFilename,
-					httpDriver:         httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+					httpDriver:         httpdriver.New(ctx, t, httpDriverOption),
 					now:                now,
 				})
 				kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
@@ -131,7 +136,7 @@ func TestStandalone(t *testing.T) {
 					runStandalone(t, ctx, standaloneConfig{
 						issuerURL:          sv.IssuerURL(),
 						kubeConfigFilename: kubeConfigFilename,
-						httpDriver:         httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+						httpDriver:         httpdriver.New(ctx, t, httpDriverOption),
 						now:                now,
 					})
 					kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
@@ -167,7 +172,7 @@ func TestStandalone(t *testing.T) {
 					runStandalone(t, ctx, standaloneConfig{
 						issuerURL:          sv.IssuerURL(),
 						kubeConfigFilename: kubeConfigFilename,
-						httpDriver:         httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+						httpDriver:         httpdriver.New(ctx, t, httpDriverOption),
 						now:                now.Add(2 * time.Hour),
 					})
 					kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
@@ -189,7 +194,7 @@ func TestStandalone(t *testing.T) {
 					runStandalone(t, ctx, standaloneConfig{
 						issuerURL:          sv.IssuerURL(),
 						kubeConfigFilename: kubeConfigFilename,
-						httpDriver:         httpdriver.New(ctx, t, tc.keyPair.TLSConfig),
+						httpDriver:         httpdriver.New(ctx, t, httpDriverOption),
 						now:                now.Add(4 * time.Hour),
 					})
 					kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
@@ -223,7 +228,7 @@ func TestStandalone(t *testing.T) {
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:          sv.IssuerURL(),
 			kubeConfigFilename: kubeConfigFilename,
-			httpDriver:         httpdriver.New(ctx, t, keypair.Server.TLSConfig),
+			httpDriver:         httpdriver.New(ctx, t, httpdriver.Option{TLSConfig: keypair.Server.TLSConfig}),
 			now:                now,
 		})
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
@@ -253,7 +258,7 @@ func TestStandalone(t *testing.T) {
 		defer unsetenv(t, "KUBECONFIG")
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:  sv.IssuerURL(),
-			httpDriver: httpdriver.New(ctx, t, nil),
+			httpDriver: httpdriver.New(ctx, t, httpdriver.Option{}),
 			now:        now,
 		})
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
@@ -284,7 +289,7 @@ func TestStandalone(t *testing.T) {
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:          sv.IssuerURL(),
 			kubeConfigFilename: kubeConfigFilename,
-			httpDriver:         httpdriver.New(ctx, t, nil),
+			httpDriver:         httpdriver.New(ctx, t, httpdriver.Option{}),
 			now:                now,
 		})
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
