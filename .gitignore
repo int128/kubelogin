@@ -9,3 +9,5 @@
 
 /kubelogin
 /kubectl-oidc_login
+
+/.circleci/go/

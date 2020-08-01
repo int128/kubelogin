@@ -5,16 +5,13 @@ jobs:
     docker:
       - image: cimg/go:1.14.4
     steps:
-      - run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
       - checkout
       - restore_cache:
           keys:
             - go-sum-{{ checksum "go.sum" }}
+      - run: make -C .circleci install-test-deps
       - run: make check
       - run: bash <(curl -s https://codecov.io/bash)
-      - run:
-          command: go get -v github.com/int128/goxzst
-          working_directory: .circleci
       - run: make dist
       - save_cache:
           key: go-sum-{{ checksum "go.sum" }}
@@ -25,20 +22,20 @@ jobs:
 
   release:
     macos:
+      # https://circleci.com/docs/2.0/testing-ios/
       xcode: 11.5.0
     steps:
-      - run: |
-          curl -sSfL https://dl.google.com/go/go1.14.4.darwin-amd64.tar.gz | tar -C /tmp -xz
-          echo 'export PATH="$PATH:/tmp/go/bin:$HOME/go/bin"' >> $BASH_ENV
+      - run: echo 'export PATH="$HOME/go/bin:$PWD/.circleci/go/bin:$PATH"' >> $BASH_ENV
       - checkout
       - restore_cache:
           keys:
             - go-macos-{{ checksum "go.sum" }}
-      - run:
-          command: go get -v github.com/int128/goxzst github.com/int128/ghcp
-          working_directory: .circleci
+      - run: make -C .circleci install-release-deps
       - run: make dist
-      - run: make release
+      - run: |
+          if [ "$CIRCLE_TAG" ]; then
+            make release
+          fi
       - save_cache:
           key: go-macos-{{ checksum "go.sum" }}
           paths:
@@ -58,6 +55,6 @@ workflows:
             - test
           filters:
             branches:
-              ignore: /.*/
+              only: /^release-feature.*/
             tags:
               only: /^v.*/
