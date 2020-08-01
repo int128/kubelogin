@@ -15,6 +15,7 @@ import (
 type BrowserOption struct {
 	SkipOpenBrowser        bool
 	BindAddress            []string
+	OpenURLAfterAuthentication string
 	RedirectURLHostname    string
 	AuthRequestExtraParams map[string]string
 }
@@ -39,6 +40,10 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
 	}
+	successHTML := BrowserSuccessHTML
+	if o.OpenURLAfterAuthentication != "" {
+		successHTML = BrowserRedirectHTML(o.OpenURLAfterAuthentication)
+	}
 	in := oidcclient.GetTokenByAuthCodeInput{
 		BindAddress:            o.BindAddress,
 		State:                  state,
@@ -46,7 +51,7 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 		PKCEParams:             p,
 		RedirectURLHostname:    o.RedirectURLHostname,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
-		LocalServerSuccessHTML: BrowserSuccessHTML,
+		LocalServerSuccessHTML: successHTML,
 	}
 	readyChan := make(chan string, 1)
 	defer close(readyChan)

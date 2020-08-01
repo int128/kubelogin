@@ -12,14 +12,15 @@ import (
 )
 
 type authenticationOptions struct {
-	GrantType              string
-	ListenAddress          []string
-	ListenPort             []int // deprecated
-	SkipOpenBrowser        bool
-	RedirectURLHostname    string
-	AuthRequestExtraParams map[string]string
-	Username               string
-	Password               string
+	GrantType                  string
+	ListenAddress              []string
+	ListenPort                 []int // deprecated
+	SkipOpenBrowser            bool
+	OpenURLAfterAuthentication string
+	RedirectURLHostname        string
+	AuthRequestExtraParams     map[string]string
+	Username                   string
+	Password                   string
 }
 
 // determineListenAddress returns the addresses from the flags.
@@ -53,6 +54,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 		panic(err)
 	}
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
+	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
 	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "[authcode] Hostname of the redirect URL")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
@@ -63,10 +65,11 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 	switch {
 	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == ""):
 		s.AuthCodeBrowserOption = &authcode.BrowserOption{
-			BindAddress:            o.determineListenAddress(),
-			SkipOpenBrowser:        o.SkipOpenBrowser,
-			RedirectURLHostname:    o.RedirectURLHostname,
-			AuthRequestExtraParams: o.AuthRequestExtraParams,
+			BindAddress:                o.determineListenAddress(),
+			SkipOpenBrowser:            o.SkipOpenBrowser,
+			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,
+			RedirectURLHostname:        o.RedirectURLHostname,
+			AuthRequestExtraParams:     o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "authcode-keyboard":
 		s.AuthCodeKeyboardOption = &authcode.KeyboardOption{

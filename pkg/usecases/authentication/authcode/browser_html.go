@@ -1,5 +1,10 @@
 package authcode
 
+import (
+	"fmt"
+	"net/url"
+)
+
 // BrowserSuccessHTML is the success page on browser based authentication.
 const BrowserSuccessHTML = `
 <!DOCTYPE html>
@@ -33,3 +38,23 @@ const BrowserSuccessHTML = `
 </body>
 </html>
 `
+
+func BrowserRedirectHTML(target string) string {
+	targetURL, err := url.Parse(target)
+	if err != nil {
+		return fmt.Sprintf(`invalid URL is set: %s`, err)
+	}
+	return fmt.Sprintf(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="refresh" content="0;URL=%s">
+	<meta charset="UTF-8">
+	<title>Authenticated</title>
+</head>
+<body>
+	<a href="%s">redirecting...</a>
+</body>
+</html>
+`, targetURL, targetURL)
+}

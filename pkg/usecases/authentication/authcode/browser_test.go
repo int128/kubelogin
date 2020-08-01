@@ -29,10 +29,11 @@ func TestBrowser_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		o := &BrowserOption{
-			BindAddress:            []string{"127.0.0.1:8000"},
-			SkipOpenBrowser:        true,
-			RedirectURLHostname:    "localhost",
-			AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
+			BindAddress:                []string{"127.0.0.1:8000"},
+			SkipOpenBrowser:            true,
+			OpenURLAfterAuthentication: "https://example.com/success.html",
+			RedirectURLHostname:        "localhost",
+			AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().SupportedPKCEMethods()
@@ -41,6 +42,9 @@ func TestBrowser_Do(t *testing.T) {
 			Do(func(_ context.Context, in oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				if diff := cmp.Diff(o.BindAddress, in.BindAddress); diff != "" {
 					t.Errorf("BindAddress mismatch (-want +got):\n%s", diff)
+				}
+				if diff := cmp.Diff(BrowserRedirectHTML("https://example.com/success.html"), in.LocalServerSuccessHTML); diff != "" {
+					t.Errorf("LocalServerSuccessHTML mismatch (-want +got):\n%s", diff)
 				}
 				if diff := cmp.Diff(o.RedirectURLHostname, in.RedirectURLHostname); diff != "" {
 					t.Errorf("RedirectURLHostname mismatch (-want +got):\n%s", diff)
