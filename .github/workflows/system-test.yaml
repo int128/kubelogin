@@ -15,12 +15,6 @@ jobs:
           key: go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             go-
-      # https://kind.sigs.k8s.io/docs/user/quick-start/
-      - run: |
-          wget -q -O ./kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.8.1/kind-linux-amd64"
-          chmod +x ./kind
-          sudo mv ./kind /usr/local/bin/kind
-          kind version
       # https://packages.ubuntu.com/xenial/libnss3-tools
       - run: sudo apt update
       - run: sudo apt install -y libnss3-tools
