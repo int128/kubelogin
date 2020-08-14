@@ -69,6 +69,12 @@ See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyF
 
 ## Authentication flows
 
+Kubelogin support the following flows:
+
+- Authorization code flow
+- Authorization code flow with a keyboard
+- Resource owner password credentials grant flow
+
 ### Authorization code flow
 
 Kubelogin performs the authorization code flow by default.
@@ -105,9 +111,17 @@ You can change the URL to show after authentication.
       - --open-url-after-authentication=https://example.com/success.html
 ```
 
-### Authorization code flow with keyboard interactive
+You can skip opening the browser if you encounter some environment problem.
 
-If you cannot access the browser, instead use the authorization code flow with keyboard interactive.
+```yaml
+      - --skip-open-browser
+```
+
+For Linux users, you change the default browser by `BROWSER` environment variable.
+
+### Authorization code flow with a keyboard
+
+If you cannot access the browser, instead use the authorization code flow with a keyboard.
 
 ```yaml
       - --grant-type=authcode-keyboard
@@ -122,8 +136,7 @@ Open https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&client_id=
 Enter code: YOUR_CODE
 ```
 
-Note that this flow uses the redirect URI `urn:ietf:wg:oauth:2.0:oob` and
-some OIDC providers do not support it.
+Note that this flow uses the redirect URI `urn:ietf:wg:oauth:2.0:oob` and some OIDC providers do not support it.
 
 You can add extra parameters to the authentication request.
 
