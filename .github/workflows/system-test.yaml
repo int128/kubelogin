@@ -4,6 +4,7 @@ on:
       - .github/workflows/**
       - system_test/**
       - pkg/**
+      - go.*
 jobs:
   system-test:
     # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#ubuntu-1804-lts
