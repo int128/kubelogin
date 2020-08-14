@@ -6,6 +6,7 @@ require (
 	github.com/chromedp/chromedp v0.5.3
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/evanphx/json-patch v4.2.0+incompatible // indirect
 	github.com/golang/mock v1.4.4
 	github.com/google/go-cmp v0.5.1
 	github.com/google/wire v0.4.0
@@ -20,7 +21,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/square/go-jose.v2 v2.3.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/apimachinery v0.18.6
-	k8s.io/client-go v0.18.6
+	k8s.io/apimachinery v0.18.8
+	k8s.io/client-go v0.18.8
 	k8s.io/klog v1.0.0
 )
