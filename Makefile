@@ -15,7 +15,6 @@ $(TARGET): $(wildcard **/*.go)
 
 .PHONY: check
 check:
-	golangci-lint run
 	go test -v -race -cover -coverprofile=coverage.out ./... > gotest.log
 
 .PHONY: dist

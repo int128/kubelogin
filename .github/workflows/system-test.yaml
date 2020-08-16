@@ -1,7 +1,7 @@
 on:
   push:
     paths: 
-      - .github/workflows/**
+      - .github/workflows/system-test.yaml
       - system_test/**
       - pkg/**
       - go.*
