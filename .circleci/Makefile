@@ -3,7 +3,6 @@ all:
 
 .PHONY: install-test-deps
 install-test-deps:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(HOME)/go/bin v1.30.0
 	go get -v github.com/int128/goxzst
 
 .PHONY: install-release-deps
