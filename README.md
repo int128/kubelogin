@@ -18,7 +18,7 @@ Take a look at the diagram:
 
 ### Setup
 
-Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew) or [GitHub Releases](https://github.com/int128/kubelogin/releases).
+Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://github.com/kubernetes-sigs/krew), [Chocolatey](https://chocolatey.org/packages/kubelogin) or [GitHub Releases](https://github.com/int128/kubelogin/releases).
 
 ```sh
 # Homebrew (macOS and Linux)
@@ -26,6 +26,9 @@ brew install int128/kubelogin/kubelogin
 
 # Krew (macOS, Linux, Windows and ARM)
 kubectl krew install oidc-login
+
+# Chocolatey (Windows)
+choco install kubelogin
 ```
 
 You need to set up the OIDC provider, cluster role binding, Kubernetes API server and kubeconfig.
