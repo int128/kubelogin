@@ -13,11 +13,11 @@ import (
 )
 
 type BrowserOption struct {
-	SkipOpenBrowser        bool
-	BindAddress            []string
+	SkipOpenBrowser            bool
+	BindAddress                []string
 	OpenURLAfterAuthentication string
-	RedirectURLHostname    string
-	AuthRequestExtraParams map[string]string
+	RedirectURLHostname        string
+	AuthRequestExtraParams     map[string]string
 }
 
 // Browser provides the authentication code flow using the browser.
@@ -54,9 +54,8 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 		LocalServerSuccessHTML: successHTML,
 	}
 	readyChan := make(chan string, 1)
-	defer close(readyChan)
 	var out *oidc.TokenSet
-	eg, ctx := errgroup.WithContext(ctx)
+	var eg errgroup.Group
 	eg.Go(func() error {
 		select {
 		case url, ok := <-readyChan:
@@ -80,6 +79,7 @@ Please visit the following URL in your browser manually: %s`, err, url)
 		}
 	})
 	eg.Go(func() error {
+		defer close(readyChan)
 		tokenSet, err := client.GetTokenByAuthCode(ctx, in, readyChan)
 		if err != nil {
 			return xerrors.Errorf("authorization code flow error: %w", err)
