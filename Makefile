@@ -13,10 +13,6 @@ all: $(TARGET)
 $(TARGET): $(wildcard **/*.go)
 	go build -o $@ -ldflags "$(LDFLAGS)"
 
-.PHONY: check
-check:
-	go test -v -race -cover -coverprofile=coverage.out ./... > gotest.log
-
 .PHONY: dist
 dist: dist/output
 dist/output:
