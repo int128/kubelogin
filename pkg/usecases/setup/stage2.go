@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -140,6 +141,20 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 	if in.GrantOptionSet.AuthCodeBrowserOption != nil {
 		if in.GrantOptionSet.AuthCodeBrowserOption.SkipOpenBrowser {
 			args = append(args, "--skip-open-browser")
+		}
+		if in.GrantOptionSet.AuthCodeBrowserOption.LocalServerCertFile != "" {
+			// Resolve the absolute path for the cert files so the user doesn't have to know
+			// to use one when running setup.
+			certpath, err := filepath.Abs(in.GrantOptionSet.AuthCodeBrowserOption.LocalServerCertFile)
+			if err != nil {
+				panic(err)
+			}
+			keypath, err := filepath.Abs(in.GrantOptionSet.AuthCodeBrowserOption.LocalServerKeyFile)
+			if err != nil {
+				panic(err)
+			}
+			args = append(args, "--server-cert="+certpath)
+			args = append(args, "--server-key="+keypath)
 		}
 	}
 	args = append(args, in.ListenAddressArgs...)

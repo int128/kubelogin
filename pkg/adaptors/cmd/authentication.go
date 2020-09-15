@@ -21,6 +21,8 @@ type authenticationOptions struct {
 	AuthRequestExtraParams     map[string]string
 	Username                   string
 	Password                   string
+	LocalServerCertFile        string
+	LocalServerKeyFile         string
 }
 
 // determineListenAddress returns the addresses from the flags.
@@ -54,6 +56,8 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 		panic(err)
 	}
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
+	f.StringVar(&o.LocalServerCertFile, "server-cert", "", "[authcode] Certificate path for local webserver")
+	f.StringVar(&o.LocalServerKeyFile, "server-key", "", "[authcode] Certificate key path for local webserver")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
 	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "[authcode] Hostname of the redirect URL")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
@@ -70,6 +74,8 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,
 			RedirectURLHostname:        o.RedirectURLHostname,
 			AuthRequestExtraParams:     o.AuthRequestExtraParams,
+			LocalServerCertFile:        o.LocalServerCertFile,
+			LocalServerKeyFile:         o.LocalServerKeyFile,
 		}
 	case o.GrantType == "authcode-keyboard":
 		s.AuthCodeKeyboardOption = &authcode.KeyboardOption{

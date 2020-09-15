@@ -18,6 +18,8 @@ type BrowserOption struct {
 	OpenURLAfterAuthentication string
 	RedirectURLHostname        string
 	AuthRequestExtraParams     map[string]string
+	LocalServerCertFile        string
+	LocalServerKeyFile         string
 }
 
 // Browser provides the authentication code flow using the browser.
@@ -52,6 +54,8 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 		RedirectURLHostname:    o.RedirectURLHostname,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 		LocalServerSuccessHTML: successHTML,
+		LocalServerCertFile:    o.LocalServerCertFile,
+		LocalServerKeyFile:     o.LocalServerKeyFile,
 	}
 	readyChan := make(chan string, 1)
 	var out *oidc.TokenSet
