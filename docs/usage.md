@@ -66,6 +66,14 @@ You can use your self-signed certificate for the provider.
 You can set the following environment variables if you are behind a proxy: `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
 See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyFromEnvironment).
 
+### Local Server HTTPS
+
+You can specify a certificate for the local webserver if HTTPS is required by your identity provider.
+
+```yaml
+      - --server-cert=localhost.crt
+      - --server-key=localhost.key
+```
 
 ## Authentication flows
 
