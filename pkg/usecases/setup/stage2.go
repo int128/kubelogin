@@ -39,8 +39,9 @@ Run the following command:
 	  --exec-command=kubectl \
 	  --exec-arg=oidc-login \
 	  --exec-arg=get-token \
-{{- range .Args }}
-	  --exec-arg={{ . }} \
+{{- range $index, $arg := .Args }}
+	  {{- if $index}} \{{end}}
+	  --exec-arg={{ $arg }}
 {{- end }}
 
 ## 6. Verify cluster access
