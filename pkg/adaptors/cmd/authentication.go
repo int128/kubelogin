@@ -56,8 +56,8 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 		panic(err)
 	}
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
-	f.StringVar(&o.LocalServerCertFile, "server-cert", "", "[authcode] Certificate path for local webserver")
-	f.StringVar(&o.LocalServerKeyFile, "server-key", "", "[authcode] Certificate key path for local webserver")
+	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode] Certificate path for the local server")
+	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
 	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "[authcode] Hostname of the redirect URL")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")

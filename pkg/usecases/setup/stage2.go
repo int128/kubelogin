@@ -154,8 +154,8 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 			if err != nil {
 				panic(err)
 			}
-			args = append(args, "--server-cert="+certpath)
-			args = append(args, "--server-key="+keypath)
+			args = append(args, "--local-server-cert="+certpath)
+			args = append(args, "--local-server-key="+keypath)
 		}
 	}
 	args = append(args, in.ListenAddressArgs...)
