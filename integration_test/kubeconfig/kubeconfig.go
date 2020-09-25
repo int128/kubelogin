@@ -2,8 +2,8 @@ package kubeconfig
 
 import (
 	"html/template"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"gopkg.in/yaml.v2"
@@ -22,7 +22,7 @@ type Values struct {
 // Create creates a kubeconfig file and returns path to it.
 func Create(t *testing.T, v *Values) string {
 	t.Helper()
-	f, err := ioutil.TempFile("", "kubeconfig")
+	f, err := os.Create(filepath.Join(t.TempDir(), "kubeconfig"))
 	if err != nil {
 		t.Fatal(err)
 	}

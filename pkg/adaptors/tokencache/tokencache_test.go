@@ -2,7 +2,6 @@ package tokencache
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -13,15 +12,7 @@ func TestRepository_FindByKey(t *testing.T) {
 	var r Repository
 
 	t.Run("Success", func(t *testing.T) {
-		dir, err := ioutil.TempDir("", "kube")
-		if err != nil {
-			t.Fatalf("could not create a temp dir: %s", err)
-		}
-		defer func() {
-			if err := os.RemoveAll(dir); err != nil {
-				t.Errorf("could not clean up the temp dir: %s", err)
-			}
-		}()
+		dir := t.TempDir()
 		key := Key{
 			IssuerURL:      "YOUR_ISSUER",
 			ClientID:       "YOUR_CLIENT_ID",
@@ -55,16 +46,7 @@ func TestRepository_Save(t *testing.T) {
 	var r Repository
 
 	t.Run("Success", func(t *testing.T) {
-		dir, err := ioutil.TempDir("", "kube")
-		if err != nil {
-			t.Fatalf("could not create a temp dir: %s", err)
-		}
-		defer func() {
-			if err := os.RemoveAll(dir); err != nil {
-				t.Errorf("could not clean up the temp dir: %s", err)
-			}
-		}()
-
+		dir := t.TempDir()
 		key := Key{
 			IssuerURL:      "YOUR_ISSUER",
 			ClientID:       "YOUR_CLIENT_ID",
