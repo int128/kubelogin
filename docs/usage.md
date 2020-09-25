@@ -18,6 +18,8 @@ Flags:
       --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
       --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --skip-open-browser                               [authcode] Do not open the browser automatically
+      --local-server-cert string                        [authcode] Certificate path for the local server
+      --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
       --oidc-redirect-url-hostname string               [authcode] Hostname of the redirect URL (default "localhost")
       --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard] Extra query parameters to send with an authentication request (default [])
@@ -66,6 +68,14 @@ You can use your self-signed certificate for the provider.
 You can set the following environment variables if you are behind a proxy: `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
 See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyFromEnvironment).
 
+### Local Server HTTPS
+
+You can specify a certificate for the local webserver if HTTPS is required by your identity provider.
+
+```yaml
+      - --local-server-cert=localhost.crt
+      - --local-server-key=localhost.key
+```
 
 ## Authentication flows
 

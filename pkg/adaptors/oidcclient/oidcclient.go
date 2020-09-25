@@ -50,6 +50,8 @@ type GetTokenByAuthCodeInput struct {
 	RedirectURLHostname    string
 	AuthRequestExtraParams map[string]string
 	LocalServerSuccessHTML string
+	LocalServerCertFile    string
+	LocalServerKeyFile     string
 }
 
 type client struct {
@@ -80,6 +82,8 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		LocalServerReadyChan:   localServerReadyChan,
 		RedirectURLHostname:    in.RedirectURLHostname,
 		LocalServerSuccessHTML: in.LocalServerSuccessHTML,
+		LocalServerCertFile:    in.LocalServerCertFile,
+		LocalServerKeyFile:     in.LocalServerKeyFile,
 		Logf:                   c.logger.V(1).Infof,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)

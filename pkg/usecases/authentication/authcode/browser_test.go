@@ -31,6 +31,8 @@ func TestBrowser_Do(t *testing.T) {
 		o := &BrowserOption{
 			BindAddress:                []string{"127.0.0.1:8000"},
 			SkipOpenBrowser:            true,
+			LocalServerCertFile:        "/path/to/local-server-cert",
+			LocalServerKeyFile:         "/path/to/local-server-key",
 			OpenURLAfterAuthentication: "https://example.com/success.html",
 			RedirectURLHostname:        "localhost",
 			AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
@@ -51,6 +53,12 @@ func TestBrowser_Do(t *testing.T) {
 				}
 				if diff := cmp.Diff(o.AuthRequestExtraParams, in.AuthRequestExtraParams); diff != "" {
 					t.Errorf("AuthRequestExtraParams mismatch (-want +got):\n%s", diff)
+				}
+				if diff := cmp.Diff(o.LocalServerKeyFile, in.LocalServerKeyFile); diff != "" {
+					t.Errorf("LocalServerKeyFile mismatch (-want +got):\n%s", diff)
+				}
+				if diff := cmp.Diff(o.LocalServerCertFile, in.LocalServerCertFile); diff != "" {
+					t.Errorf("LocalServerCertFile mismatch (-want +got):\n%s", diff)
 				}
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
