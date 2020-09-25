@@ -16,13 +16,13 @@ type authenticationOptions struct {
 	ListenAddress              []string
 	ListenPort                 []int // deprecated
 	SkipOpenBrowser            bool
+	LocalServerCertFile        string
+	LocalServerKeyFile         string
 	OpenURLAfterAuthentication string
 	RedirectURLHostname        string
 	AuthRequestExtraParams     map[string]string
 	Username                   string
 	Password                   string
-	LocalServerCertFile        string
-	LocalServerKeyFile         string
 }
 
 // determineListenAddress returns the addresses from the flags.
@@ -71,11 +71,11 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 		s.AuthCodeBrowserOption = &authcode.BrowserOption{
 			BindAddress:                o.determineListenAddress(),
 			SkipOpenBrowser:            o.SkipOpenBrowser,
+			LocalServerCertFile:        o.LocalServerCertFile,
+			LocalServerKeyFile:         o.LocalServerKeyFile,
 			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,
 			RedirectURLHostname:        o.RedirectURLHostname,
 			AuthRequestExtraParams:     o.AuthRequestExtraParams,
-			LocalServerCertFile:        o.LocalServerCertFile,
-			LocalServerKeyFile:         o.LocalServerKeyFile,
 		}
 	case o.GrantType == "authcode-keyboard":
 		s.AuthCodeKeyboardOption = &authcode.KeyboardOption{
