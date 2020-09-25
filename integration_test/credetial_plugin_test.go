@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -32,15 +31,7 @@ import (
 func TestCredentialPlugin(t *testing.T) {
 	timeout := 3 * time.Second
 	now := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
-	tokenCacheDir, err := ioutil.TempDir("", "kube")
-	if err != nil {
-		t.Fatalf("could not create a cache dir: %s", err)
-	}
-	defer func() {
-		if err := os.RemoveAll(tokenCacheDir); err != nil {
-			t.Errorf("could not clean up the cache dir: %s", err)
-		}
-	}()
+	tokenCacheDir := t.TempDir()
 
 	for name, tc := range map[string]struct {
 		keyPair keypair.KeyPair
