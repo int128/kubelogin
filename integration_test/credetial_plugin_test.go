@@ -331,6 +331,38 @@ func TestCredentialPlugin(t *testing.T) {
 		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
+	t.Run("RedirectURLHTTPS", func(t *testing.T) {
+		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
+			Want: oidcserver.Want{
+				Scope:             "openid",
+				RedirectURIPrefix: "https://localhost:",
+			},
+			Response: oidcserver.Response{
+				IDTokenExpiry: now.Add(time.Hour),
+			},
+		})
+		defer sv.Shutdown(t, ctx)
+		var stdout bytes.Buffer
+		runGetToken(t, ctx, getTokenConfig{
+			tokenCacheDir: tokenCacheDir,
+			issuerURL:     sv.IssuerURL(),
+			httpDriver: httpdriver.New(ctx, t, httpdriver.Option{
+				TLSConfig:    keypair.Server.TLSConfig,
+				BodyContains: "Authenticated",
+			}),
+			now:    now,
+			stdout: &stdout,
+			args: []string{
+				"--local-server-cert", keypair.Server.CertPath,
+				"--local-server-key", keypair.Server.KeyPath,
+			},
+		})
+		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+	})
+
 	t.Run("ExtraParams", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
