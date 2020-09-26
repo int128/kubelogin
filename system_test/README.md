@@ -30,14 +30,14 @@ It prepares the following resources:
 1. Generate a pair of CA certificate and TLS server certificate for Dex.
 1. Run Dex on a container.
 1. Create a Kubernetes cluster using Kind.
-1. Mutate `/etc/hosts` of the CI machine to access Dex.
-1. Mutate `/etc/hosts` of the kube-apiserver pod to access Dex.
+1. Mutate `/etc/hosts` of the machine so that the browser access Dex.
+1. Mutate `/etc/hosts` of the kind container so that kube-apiserver access Dex.
 
 It performs the test by the following steps:
 
 1. Run kubectl.
 1. kubectl automatically runs kubelogin.
-1. kubelogin automatically runs [chromelogin](chromelogin).
+1. kubelogin automatically runs [chromelogin](login/chromelogin).
 1. chromelogin opens the browser, navigates to `http://localhost:8000` and enter the username and password.
 1. kubelogin gets an authorization code from the browser.
 1. kubelogin gets a token.
@@ -54,21 +54,30 @@ You need to set up the following components:
 - Kind
 - Chrome or Chromium
 
-You need to add the following line to `/etc/hosts` so that the browser can access the Dex.
+Add the following line to `/etc/hosts` so that the browser can access the Dex.
 
 ```
 127.0.0.1 dex-server
 ```
 
+Generate CA certificate and add `cert/ca.crt` into your trust store.
+For macOS, you can add it by Keychain.
+
+```shell script
+make -C cert
+```
+
 Run the test.
 
 ```shell script
-# run the test
 make
+```
 
-# clean up
-make delete-cluster
-make delete-dex
+Clean up.
+
+```shell script
+make terminate
+make clean
 ```
 
 
@@ -102,11 +111,11 @@ Consider the following issues:
 
 As a result,
 
-- kube-apiserver uses the CA certificate of `/usr/local/share/ca-certificates/dex-ca.crt`. See the `extraMounts` section of [`cluster.yaml`](cluster.yaml).
+- kube-apiserver uses the CA certificate of `/usr/local/share/ca-certificates/dex-ca.crt`. See the `extraMounts` section of [`cluster.yaml`](cluster/cluster.yaml).
 - kubelogin uses the CA certificate in `output/ca.crt`.
 - Chrome uses the CA certificate in `~/.pki/nssdb`.
 
 ### Test environment
 
-- Set the issuer URL to kube-apiserver. See [`cluster.yaml`](cluster.yaml).
-- Set `BROWSER` environment variable to run [`chromelogin`](chromelogin) by `xdg-open`.
+- Set the issuer URL to kube-apiserver. See [`cluster.yaml`](cluster/cluster.yaml).
+- Set `BROWSER` environment variable to run [`chromelogin`](login/chromelogin) by `xdg-open`.
