@@ -82,9 +82,9 @@ $(OUTPUT_DIR)/server.crt: openssl.cnf $(OUTPUT_DIR)/server.csr $(OUTPUT_DIR)/ca.
 # create a Kubernetes cluster
 .PHONY: cluster
 cluster: dex create-cluster
-	# add the Dex container IP to /etc/hosts of kube-apiserver
-	docker inspect -f '{{.NetworkSettings.IPAddress}}' dex-server | sed -e 's,$$, dex-server,' | \
-		kubectl -n kube-system exec -i kube-apiserver-$(CLUSTER_NAME)-control-plane -- tee -a /etc/hosts
+	# add the Dex container IP to /etc/hosts
+	docker inspect -f '{{.NetworkSettings.Networks.kind.IPAddress}}' dex-server | sed -e 's,$$, dex-server,' | \
+		docker exec -i $(CLUSTER_NAME)-control-plane tee -a /etc/hosts
 	# wait for kube-apiserver oidc initialization
 	# (oidc authenticator will retry oidc discovery every 10s)
 	sleep 10
