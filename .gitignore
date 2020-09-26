@@ -1,6 +1,5 @@
 /.idea
 
-/system_test/output/
 /acceptance_test/output/
 
 /dist/output
