@@ -46,6 +46,18 @@ Global Flags:
 
 ## Options
 
+### Authentication timeout
+
+By default, you need to log in to your provider on the browser within 60 seconds.
+This prevents a process from remaining forever.
+You can change the timeout by the following flag:
+
+```yaml
+      - --authentication-timeout-sec=3600
+```
+
+For now this timeout works only for the authorization code flow.
+
 ### Extra scopes
 
 You can set the extra scopes to request to the provider by `--oidc-extra-scope`.
@@ -55,7 +67,7 @@ You can set the extra scopes to request to the provider by `--oidc-extra-scope`.
       - --oidc-extra-scope=profile
 ```
 
-### CA Certificate
+### CA certificate
 
 You can use your self-signed certificate for the provider.
 
@@ -64,19 +76,10 @@ You can use your self-signed certificate for the provider.
       - --certificate-authority-data=LS0t...
 ```
 
-### HTTP Proxy
+### HTTP proxy
 
 You can set the following environment variables if you are behind a proxy: `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
 See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyFromEnvironment).
-
-### Local Server HTTPS
-
-You can specify a certificate for the local webserver if HTTPS is required by your identity provider.
-
-```yaml
-      - --local-server-cert=localhost.crt
-      - --local-server-key=localhost.key
-```
 
 ## Authentication flows
 
@@ -101,6 +104,13 @@ You can change the listening address.
 ```yaml
       - --listen-address=127.0.0.1:12345
       - --listen-address=127.0.0.1:23456
+```
+
+You can specify a certificate for the local webserver if HTTPS is required by your identity provider.
+
+```yaml
+      - --local-server-cert=localhost.crt
+      - --local-server-key=localhost.key
 ```
 
 You can change the hostname of redirect URI from the default value `localhost`.
