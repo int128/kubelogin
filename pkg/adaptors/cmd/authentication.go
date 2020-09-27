@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
@@ -15,6 +16,7 @@ type authenticationOptions struct {
 	GrantType                  string
 	ListenAddress              []string
 	ListenPort                 []int // deprecated
+	AuthenticationTimeoutSec   int
 	SkipOpenBrowser            bool
 	LocalServerCertFile        string
 	LocalServerKeyFile         string
@@ -56,6 +58,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 		panic(err)
 	}
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
+	f.IntVar(&o.AuthenticationTimeoutSec, "authentication-timeout-sec", defaultAuthenticationTimeoutSec, "[authcode] Timeout of authentication in seconds")
 	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode] Certificate path for the local server")
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
@@ -71,6 +74,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 		s.AuthCodeBrowserOption = &authcode.BrowserOption{
 			BindAddress:                o.determineListenAddress(),
 			SkipOpenBrowser:            o.SkipOpenBrowser,
+			AuthenticationTimeout:      time.Duration(o.AuthenticationTimeoutSec) * time.Second,
 			LocalServerCertFile:        o.LocalServerCertFile,
 			LocalServerKeyFile:         o.LocalServerKeyFile,
 			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,

@@ -129,8 +129,9 @@ func TestAuthentication_Do(t *testing.T) {
 		in := Input{
 			GrantOptionSet: GrantOptionSet{
 				AuthCodeBrowserOption: &authcode.BrowserOption{
-					BindAddress:     []string{"127.0.0.1:8000"},
-					SkipOpenBrowser: true,
+					BindAddress:           []string{"127.0.0.1:8000"},
+					SkipOpenBrowser:       true,
+					AuthenticationTimeout: 10 * time.Second,
 				},
 			},
 			IssuerURL:    "https://issuer.example.com",

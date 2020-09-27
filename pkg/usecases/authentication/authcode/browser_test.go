@@ -31,6 +31,7 @@ func TestBrowser_Do(t *testing.T) {
 		o := &BrowserOption{
 			BindAddress:                []string{"127.0.0.1:8000"},
 			SkipOpenBrowser:            true,
+			AuthenticationTimeout:      10 * time.Second,
 			LocalServerCertFile:        "/path/to/local-server-cert",
 			LocalServerKeyFile:         "/path/to/local-server-key",
 			OpenURLAfterAuthentication: "https://example.com/success.html",
@@ -90,7 +91,8 @@ func TestBrowser_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		o := &BrowserOption{
-			BindAddress: []string{"127.0.0.1:8000"},
+			BindAddress:           []string{"127.0.0.1:8000"},
+			AuthenticationTimeout: 10 * time.Second,
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().SupportedPKCEMethods()

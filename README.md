@@ -61,7 +61,7 @@ kubectl get pods
 ```
 
 Kubectl executes kubelogin before calling the Kubernetes APIs.
-Kubelogin automatically opens the browser and you can log in to the provider.
+Kubelogin automatically opens the browser, and you can log in to the provider.
 
 <img src="docs/keycloak-login.png" alt="keycloak-login" width="455" height="329">
 
