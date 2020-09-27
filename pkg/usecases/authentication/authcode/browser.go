@@ -2,6 +2,7 @@ package authcode
 
 import (
 	"context"
+	"time"
 
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
@@ -15,6 +16,7 @@ import (
 type BrowserOption struct {
 	SkipOpenBrowser            bool
 	BindAddress                []string
+	AuthenticationTimeout      time.Duration
 	OpenURLAfterAuthentication string
 	RedirectURLHostname        string
 	AuthRequestExtraParams     map[string]string
@@ -57,6 +59,8 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 		LocalServerCertFile:    o.LocalServerCertFile,
 		LocalServerKeyFile:     o.LocalServerKeyFile,
 	}
+	ctx, cancel := context.WithTimeout(ctx, o.AuthenticationTimeout)
+	defer cancel()
 	readyChan := make(chan string, 1)
 	var out *oidc.TokenSet
 	var eg errgroup.Group

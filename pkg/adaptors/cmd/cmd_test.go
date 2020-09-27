@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -29,8 +30,9 @@ func TestCmd_Run(t *testing.T) {
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
-							BindAddress:         defaultListenAddress,
-							RedirectURLHostname: "localhost",
+							BindAddress:           defaultListenAddress,
+							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+							RedirectURLHostname:   "localhost",
 						},
 					},
 				},
@@ -44,8 +46,9 @@ func TestCmd_Run(t *testing.T) {
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
-							BindAddress:         []string{"127.0.0.1:10080", "127.0.0.1:20080"},
-							RedirectURLHostname: "localhost",
+							BindAddress:           []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+							RedirectURLHostname:   "localhost",
 						},
 					},
 				},
@@ -61,8 +64,9 @@ func TestCmd_Run(t *testing.T) {
 				in: standalone.Input{
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
-							BindAddress:         []string{"127.0.0.1:10080", "127.0.0.1:20080"},
-							RedirectURLHostname: "localhost",
+							BindAddress:           []string{"127.0.0.1:10080", "127.0.0.1:20080"},
+							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+							RedirectURLHostname:   "localhost",
 						},
 					},
 				},
@@ -80,6 +84,7 @@ func TestCmd_Run(t *testing.T) {
 					"--listen-address", "127.0.0.1:10080",
 					"--listen-address", "127.0.0.1:20080",
 					"--skip-open-browser",
+					"--authentication-timeout-sec", "10",
 					"--local-server-cert", "/path/to/local-server-cert",
 					"--local-server-key", "/path/to/local-server-key",
 					"--open-url-after-authentication", "https://example.com/success.html",
@@ -97,6 +102,7 @@ func TestCmd_Run(t *testing.T) {
 						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:                []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 							SkipOpenBrowser:            true,
+							AuthenticationTimeout:      10 * time.Second,
 							LocalServerCertFile:        "/path/to/local-server-cert",
 							LocalServerKeyFile:         "/path/to/local-server-key",
 							OpenURLAfterAuthentication: "https://example.com/success.html",
@@ -205,8 +211,9 @@ func TestCmd_Run(t *testing.T) {
 					ClientID:      "YOUR_CLIENT_ID",
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
-							BindAddress:         []string{"127.0.0.1:8000", "127.0.0.1:18000"},
-							RedirectURLHostname: "localhost",
+							BindAddress:           []string{"127.0.0.1:8000", "127.0.0.1:18000"},
+							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+							RedirectURLHostname:   "localhost",
 						},
 					},
 				},
@@ -227,6 +234,7 @@ func TestCmd_Run(t *testing.T) {
 					"--listen-address", "127.0.0.1:10080",
 					"--listen-address", "127.0.0.1:20080",
 					"--skip-open-browser",
+					"--authentication-timeout-sec", "10",
 					"--local-server-cert", "/path/to/local-server-cert",
 					"--local-server-key", "/path/to/local-server-key",
 					"--open-url-after-authentication", "https://example.com/success.html",
@@ -248,6 +256,7 @@ func TestCmd_Run(t *testing.T) {
 						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:                []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 							SkipOpenBrowser:            true,
+							AuthenticationTimeout:      10 * time.Second,
 							LocalServerCertFile:        "/path/to/local-server-cert",
 							LocalServerKeyFile:         "/path/to/local-server-key",
 							OpenURLAfterAuthentication: "https://example.com/success.html",
