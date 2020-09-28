@@ -7,17 +7,14 @@ assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Describe the issue
+A clear and concise description of what the issue is.
 
-**To Reproduce**
-Steps to reproduce the behavior.
+## To reproduce
+A console log or steps to reproduce the issue.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
-
-**Environment**
- - OS: [e.g. macOS, Linux]
- - kubelogin version: [e.g. 1.19.3]
- - kubectl version: [e.g. 1.19]
- - OpenID Connect provider: [e.g. Google, Okta]
+## Your environment
+- OS: e.g. macOS
+- kubelogin version: e.g. v1.19
+- kubectl version: e.g. v1.19
+- OpenID Connect provider: e.g. Google
