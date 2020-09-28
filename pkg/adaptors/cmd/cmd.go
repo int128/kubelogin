@@ -26,7 +26,7 @@ type Interface interface {
 var defaultListenAddress = []string{"127.0.0.1:8000", "127.0.0.1:18000"}
 var defaultTokenCacheDir = homedir.HomeDir() + "/.kube/cache/oidc-login"
 
-const defaultAuthenticationTimeoutSec = 60
+const defaultAuthenticationTimeoutSec = 180
 
 // Cmd provides interaction with command line interface (CLI).
 type Cmd struct {

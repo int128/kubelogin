@@ -18,7 +18,7 @@ Flags:
       --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
       --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --skip-open-browser                               [authcode] Do not open the browser automatically
-      --authentication-timeout-sec int                  [authcode] Timeout of authentication in seconds (default 60)
+      --authentication-timeout-sec int                  [authcode] Timeout of authentication in seconds (default 180)
       --local-server-cert string                        [authcode] Certificate path for the local server
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
@@ -48,12 +48,12 @@ Global Flags:
 
 ### Authentication timeout
 
-By default, you need to log in to your provider on the browser within 60 seconds.
+By default, you need to log in to your provider in the browser within 3 minutes.
 This prevents a process from remaining forever.
 You can change the timeout by the following flag:
 
 ```yaml
-      - --authentication-timeout-sec=3600
+      - --authentication-timeout-sec=60
 ```
 
 For now this timeout works only for the authorization code flow.
