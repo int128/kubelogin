@@ -50,11 +50,13 @@ func TestGetToken_Do(t *testing.T) {
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				IssuerURL:      "https://accounts.google.com",
-				ClientID:       "YOUR_CLIENT_ID",
-				ClientSecret:   "YOUR_CLIENT_SECRET",
-				CertPool:       mockCertPool,
-				SkipTLSVerify:  true,
+				Provider: oidc.Provider{
+					IssuerURL:     "https://accounts.google.com",
+					ClientID:      "YOUR_CLIENT_ID",
+					ClientSecret:  "YOUR_CLIENT_SECRET",
+					CertPool:      mockCertPool,
+					SkipTLSVerify: true,
+				},
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{
@@ -122,11 +124,13 @@ func TestGetToken_Do(t *testing.T) {
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				IssuerURL:    "https://accounts.google.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-				IDToken:      "VALID_ID_TOKEN",
-				CertPool:     mockCertPool,
+				Provider: oidc.Provider{
+					IssuerURL:    "https://accounts.google.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
+					CertPool:     mockCertPool,
+				},
+				IDToken: "VALID_ID_TOKEN",
 			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
@@ -177,10 +181,12 @@ func TestGetToken_Do(t *testing.T) {
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				IssuerURL:    "https://accounts.google.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
-				CertPool:     mockCertPool,
+				Provider: oidc.Provider{
+					IssuerURL:    "https://accounts.google.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
+					CertPool:     mockCertPool,
+				},
 			}).
 			Return(nil, xerrors.New("authentication error"))
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)

@@ -7,6 +7,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
@@ -94,12 +95,14 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
-		IssuerURL:      authProvider.IDPIssuerURL,
-		ClientID:       authProvider.ClientID,
-		ClientSecret:   authProvider.ClientSecret,
-		ExtraScopes:    authProvider.ExtraScopes,
-		CertPool:       certPool,
-		SkipTLSVerify:  in.SkipTLSVerify,
+		Provider: oidc.Provider{
+			IssuerURL:     authProvider.IDPIssuerURL,
+			ClientID:      authProvider.ClientID,
+			ClientSecret:  authProvider.ClientSecret,
+			ExtraScopes:   authProvider.ExtraScopes,
+			CertPool:      certPool,
+			SkipTLSVerify: in.SkipTLSVerify,
+		},
 		IDToken:        authProvider.IDToken,
 		RefreshToken:   authProvider.RefreshToken,
 		GrantOptionSet: in.GrantOptionSet,

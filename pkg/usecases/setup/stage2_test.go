@@ -37,12 +37,14 @@ func TestSetup_DoStage2(t *testing.T) {
 	mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 	mockAuthentication.EXPECT().
 		Do(ctx, authentication.Input{
-			IssuerURL:      "https://accounts.google.com",
-			ClientID:       "YOUR_CLIENT_ID",
-			ClientSecret:   "YOUR_CLIENT_SECRET",
-			ExtraScopes:    []string{"email"},
-			CertPool:       mockCertPool,
-			SkipTLSVerify:  true,
+			Provider: oidc.Provider{
+				IssuerURL:     "https://accounts.google.com",
+				ClientID:      "YOUR_CLIENT_ID",
+				ClientSecret:  "YOUR_CLIENT_SECRET",
+				ExtraScopes:   []string{"email"},
+				CertPool:      mockCertPool,
+				SkipTLSVerify: true,
+			},
 			GrantOptionSet: grantOptionSet,
 		}).
 		Return(&authentication.Output{
