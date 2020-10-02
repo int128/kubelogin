@@ -5,9 +5,20 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 
+	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/jwt"
 	"golang.org/x/xerrors"
 )
+
+// Provider represents an OIDC provider.
+type Provider struct {
+	IssuerURL     string
+	ClientID      string
+	ClientSecret  string             // optional
+	ExtraScopes   []string           // optional
+	CertPool      certpool.Interface // optional
+	SkipTLSVerify bool               // optional
+}
 
 // TokenSet represents an output DTO of
 // Interface.GetTokenByAuthCode, Interface.GetTokenByROPC and Interface.Refresh.

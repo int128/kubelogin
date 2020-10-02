@@ -6,6 +6,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
@@ -92,12 +93,14 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
-		IssuerURL:      in.IssuerURL,
-		ClientID:       in.ClientID,
-		ClientSecret:   in.ClientSecret,
-		ExtraScopes:    in.ExtraScopes,
-		CertPool:       certPool,
-		SkipTLSVerify:  in.SkipTLSVerify,
+		Provider: oidc.Provider{
+			IssuerURL:     in.IssuerURL,
+			ClientID:      in.ClientID,
+			ClientSecret:  in.ClientSecret,
+			ExtraScopes:   in.ExtraScopes,
+			CertPool:      certPool,
+			SkipTLSVerify: in.SkipTLSVerify,
+		},
 		GrantOptionSet: in.GrantOptionSet,
 	})
 	if err != nil {

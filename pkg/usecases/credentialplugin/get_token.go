@@ -11,6 +11,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
+	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
@@ -88,12 +89,14 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
-		IssuerURL:      in.IssuerURL,
-		ClientID:       in.ClientID,
-		ClientSecret:   in.ClientSecret,
-		ExtraScopes:    in.ExtraScopes,
-		CertPool:       certPool,
-		SkipTLSVerify:  in.SkipTLSVerify,
+		Provider: oidc.Provider{
+			IssuerURL:     in.IssuerURL,
+			ClientID:      in.ClientID,
+			ClientSecret:  in.ClientSecret,
+			ExtraScopes:   in.ExtraScopes,
+			CertPool:      certPool,
+			SkipTLSVerify: in.SkipTLSVerify,
+		},
 		IDToken:        tokenCacheValue.IDToken,
 		RefreshToken:   tokenCacheValue.RefreshToken,
 		GrantOptionSet: in.GrantOptionSet,

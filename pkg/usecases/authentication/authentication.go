@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
@@ -32,12 +31,7 @@ type Interface interface {
 
 // Input represents an input DTO of the Authentication use-case.
 type Input struct {
-	IssuerURL      string
-	ClientID       string
-	ClientSecret   string
-	ExtraScopes    []string // optional
-	CertPool       certpool.Interface
-	SkipTLSVerify  bool
+	Provider       oidc.Provider
 	IDToken        string // optional, from the token cache
 	RefreshToken   string // optional, from the token cache
 	GrantOptionSet GrantOptionSet
@@ -102,14 +96,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	}
 
 	u.Logger.V(1).Infof("initializing an OpenID Connect client")
-	client, err := u.OIDCClient.New(ctx, oidcclient.Config{
-		IssuerURL:     in.IssuerURL,
-		ClientID:      in.ClientID,
-		ClientSecret:  in.ClientSecret,
-		ExtraScopes:   in.ExtraScopes,
-		CertPool:      in.CertPool,
-		SkipTLSVerify: in.SkipTLSVerify,
-	})
+	client, err := u.OIDCClient.New(ctx, in.Provider)
 	if err != nil {
 		return nil, xerrors.Errorf("oidc error: %w", err)
 	}
