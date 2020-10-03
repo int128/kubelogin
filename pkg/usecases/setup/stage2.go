@@ -106,13 +106,17 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	if err != nil {
 		return xerrors.Errorf("authentication error: %w", err)
 	}
+	idTokenClaims, err := out.TokenSet.DecodeWithoutVerify()
+	if err != nil {
+		return xerrors.Errorf("you got an invalid token: %w", err)
+	}
 
 	v := stage2Vars{
-		IDTokenPrettyJSON: out.TokenSet.IDTokenClaims.Pretty,
+		IDTokenPrettyJSON: idTokenClaims.Pretty,
 		IssuerURL:         in.IssuerURL,
 		ClientID:          in.ClientID,
 		Args:              makeCredentialPluginArgs(in),
-		Subject:           out.TokenSet.IDTokenClaims.Subject,
+		Subject:           idTokenClaims.Subject,
 	}
 	var b strings.Builder
 	if err := stage2Tpl.Execute(&b, &v); err != nil {

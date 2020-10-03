@@ -8,7 +8,6 @@ import (
 	gooidc "github.com/coreos/go-oidc"
 	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/jwt"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/pkce"
 	"github.com/int128/oauth2cli"
@@ -184,17 +183,8 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 	if nonce != "" && nonce != verifiedIDToken.Nonce {
 		return nil, xerrors.Errorf("nonce did not match (wants %s but got %s)", nonce, verifiedIDToken.Nonce)
 	}
-	pretty, err := jwt.DecodePayloadAsPrettyJSON(idToken)
-	if err != nil {
-		return nil, xerrors.Errorf("could not decode the token: %w", err)
-	}
 	return &oidc.TokenSet{
-		IDToken: idToken,
-		IDTokenClaims: jwt.Claims{
-			Subject: verifiedIDToken.Subject,
-			Expiry:  verifiedIDToken.Expiry,
-			Pretty:  pretty,
-		},
+		IDToken:      idToken,
 		RefreshToken: token.RefreshToken,
 	}, nil
 }

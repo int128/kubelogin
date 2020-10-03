@@ -8,14 +8,20 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
-	"github.com/int128/kubelogin/pkg/jwt"
 	"github.com/int128/kubelogin/pkg/oidc"
+	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 )
 
 func TestSetup_DoStage2(t *testing.T) {
+	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
+		claims.Issuer = "https://issuer.example.com"
+		claims.Subject = "YOUR_SUBJECT"
+		claims.ExpiresAt = time.Now().Add(1 * time.Hour).Unix()
+	})
+
 	var grantOptionSet authentication.GrantOptionSet
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -49,13 +55,8 @@ func TestSetup_DoStage2(t *testing.T) {
 		}).
 		Return(&authentication.Output{
 			TokenSet: oidc.TokenSet{
-				IDToken:      "YOUR_ID_TOKEN",
+				IDToken:      issuedIDToken,
 				RefreshToken: "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: jwt.Claims{
-					Subject: "YOUR_SUBJECT",
-					Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
-					Pretty:  "PRETTY_JSON",
-				},
 			},
 		}, nil)
 	u := Setup{

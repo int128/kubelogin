@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/int128/kubelogin/pkg/oidc"
 )
 
 func TestRepository_FindByKey(t *testing.T) {
@@ -31,12 +32,12 @@ func TestRepository_FindByKey(t *testing.T) {
 			t.Fatalf("could not write to the temp file: %s", err)
 		}
 
-		value, err := r.FindByKey(dir, key)
+		got, err := r.FindByKey(dir, key)
 		if err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
-		want := &Value{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
-		if diff := cmp.Diff(want, value); diff != "" {
+		want := &oidc.TokenSet{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
+		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
@@ -55,8 +56,8 @@ func TestRepository_Save(t *testing.T) {
 			CACertFilename: "/path/to/cert",
 			SkipTLSVerify:  false,
 		}
-		value := Value{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
-		if err := r.Save(dir, key, value); err != nil {
+		tokenSet := oidc.TokenSet{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
+		if err := r.Save(dir, key, tokenSet); err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
 

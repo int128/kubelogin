@@ -20,12 +20,14 @@ type Provider struct {
 	SkipTLSVerify bool               // optional
 }
 
-// TokenSet represents an output DTO of
-// Interface.GetTokenByAuthCode, Interface.GetTokenByROPC and Interface.Refresh.
+// TokenSet represents a set of ID token and refresh token.
 type TokenSet struct {
-	IDToken       string
-	RefreshToken  string
-	IDTokenClaims jwt.Claims
+	IDToken      string
+	RefreshToken string
+}
+
+func (ts TokenSet) DecodeWithoutVerify() (*jwt.Claims, error) {
+	return jwt.DecodeWithoutVerify(ts.IDToken)
 }
 
 func NewState() (string, error) {

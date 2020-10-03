@@ -7,7 +7,6 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	"github.com/int128/kubelogin/pkg/jwt"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
@@ -32,9 +31,8 @@ type Interface interface {
 // Input represents an input DTO of the Authentication use-case.
 type Input struct {
 	Provider       oidc.Provider
-	IDToken        string // optional, from the token cache
-	RefreshToken   string // optional, from the token cache
 	GrantOptionSet GrantOptionSet
+	CachedTokenSet *oidc.TokenSet // optional
 }
 
 type GrantOptionSet struct {
@@ -72,12 +70,12 @@ type Authentication struct {
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
-	if in.IDToken != "" {
+	if in.CachedTokenSet != nil {
 		u.Logger.V(1).Infof("checking expiration of the existing token")
 		// Skip verification of the token to reduce time of a discovery request.
 		// Here it trusts the signature and claims and checks only expiration,
 		// because the token has been verified before caching.
-		claims, err := jwt.DecodeWithoutVerify(in.IDToken)
+		claims, err := in.CachedTokenSet.DecodeWithoutVerify()
 		if err != nil {
 			return nil, xerrors.Errorf("invalid token cache (you may need to remove): %w", err)
 		}
@@ -85,11 +83,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 			u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
 			return &Output{
 				AlreadyHasValidIDToken: true,
-				TokenSet: oidc.TokenSet{
-					IDToken:       in.IDToken,
-					RefreshToken:  in.RefreshToken,
-					IDTokenClaims: *claims,
-				},
+				TokenSet:               *in.CachedTokenSet,
 			}, nil
 		}
 		u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
@@ -101,17 +95,11 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		return nil, xerrors.Errorf("oidc error: %w", err)
 	}
 
-	if in.RefreshToken != "" {
+	if in.CachedTokenSet != nil && in.CachedTokenSet.RefreshToken != "" {
 		u.Logger.V(1).Infof("refreshing the token")
-		out, err := client.Refresh(ctx, in.RefreshToken)
+		tokenSet, err := client.Refresh(ctx, in.CachedTokenSet.RefreshToken)
 		if err == nil {
-			return &Output{
-				TokenSet: oidc.TokenSet{
-					IDToken:       out.IDToken,
-					IDTokenClaims: out.IDTokenClaims,
-					RefreshToken:  out.RefreshToken,
-				},
-			}, nil
+			return &Output{TokenSet: *tokenSet}, nil
 		}
 		u.Logger.V(1).Infof("could not refresh the token: %s", err)
 	}

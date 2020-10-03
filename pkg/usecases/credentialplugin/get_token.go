@@ -50,18 +50,7 @@ type GetToken struct {
 
 func (u *GetToken) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
-	out, err := u.getTokenFromCacheOrProvider(ctx, in)
-	if err != nil {
-		return xerrors.Errorf("could not get a token: %w", err)
-	}
-	u.Logger.V(1).Infof("writing the token to client-go")
-	if err := u.Writer.Write(credentialpluginwriter.Output{Token: out.TokenSet.IDToken, Expiry: out.TokenSet.IDTokenClaims.Expiry}); err != nil {
-		return xerrors.Errorf("could not write the token to client-go: %w", err)
-	}
-	return nil
-}
 
-func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*authentication.Output, error) {
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
 	tokenCacheKey := tokencache.Key{
 		IssuerURL:      in.IssuerURL,
@@ -72,20 +61,19 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 		CACertData:     in.CACertData,
 		SkipTLSVerify:  in.SkipTLSVerify,
 	}
-	tokenCacheValue, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
+	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
-		tokenCacheValue = &tokencache.Value{}
 	}
 	certPool := u.NewCertPool()
 	if in.CACertFilename != "" {
 		if err := certPool.AddFile(in.CACertFilename); err != nil {
-			return nil, xerrors.Errorf("could not load the certificate file: %w", err)
+			return xerrors.Errorf("could not load the certificate file: %w", err)
 		}
 	}
 	if in.CACertData != "" {
 		if err := certPool.AddBase64Encoded(in.CACertData); err != nil {
-			return nil, xerrors.Errorf("could not load the certificate data: %w", err)
+			return xerrors.Errorf("could not load the certificate data: %w", err)
 		}
 	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
@@ -97,26 +85,33 @@ func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*
 			CertPool:      certPool,
 			SkipTLSVerify: in.SkipTLSVerify,
 		},
-		IDToken:        tokenCacheValue.IDToken,
-		RefreshToken:   tokenCacheValue.RefreshToken,
 		GrantOptionSet: in.GrantOptionSet,
+		CachedTokenSet: cachedTokenSet,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("authentication error: %w", err)
+		return xerrors.Errorf("authentication error: %w", err)
 	}
-	u.Logger.V(1).Infof("you got a token: %s", out.TokenSet.IDTokenClaims.Pretty)
+	idTokenClaims, err := out.TokenSet.DecodeWithoutVerify()
+	if err != nil {
+		return xerrors.Errorf("you got an invalid token: %w", err)
+	}
+	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
 	if out.AlreadyHasValidIDToken {
-		u.Logger.V(1).Infof("you already have a valid token until %s", out.TokenSet.IDTokenClaims.Expiry)
-		return out, nil
+		u.Logger.V(1).Infof("you already have a valid token until %s", idTokenClaims.Expiry)
+		u.Logger.V(1).Infof("writing the token to client-go")
+		if err := u.Writer.Write(credentialpluginwriter.Output{Token: out.TokenSet.IDToken, Expiry: idTokenClaims.Expiry}); err != nil {
+			return xerrors.Errorf("could not write the token to client-go: %w", err)
+		}
+		return nil
 	}
 
-	u.Logger.V(1).Infof("you got a valid token until %s", out.TokenSet.IDTokenClaims.Expiry)
-	newTokenCacheValue := tokencache.Value{
-		IDToken:      out.TokenSet.IDToken,
-		RefreshToken: out.TokenSet.RefreshToken,
+	u.Logger.V(1).Infof("you got a valid token until %s", idTokenClaims.Expiry)
+	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, out.TokenSet); err != nil {
+		return xerrors.Errorf("could not write the token cache: %w", err)
 	}
-	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, newTokenCacheValue); err != nil {
-		return nil, xerrors.Errorf("could not write the token cache: %w", err)
+	u.Logger.V(1).Infof("writing the token to client-go")
+	if err := u.Writer.Write(credentialpluginwriter.Output{Token: out.TokenSet.IDToken, Expiry: idTokenClaims.Expiry}); err != nil {
+		return xerrors.Errorf("could not write the token to client-go: %w", err)
 	}
-	return out, nil
+	return nil
 }

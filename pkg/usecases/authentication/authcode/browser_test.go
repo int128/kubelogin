@@ -10,17 +10,11 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
-	"github.com/int128/kubelogin/pkg/jwt"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
 func TestBrowser_Do(t *testing.T) {
-	dummyTokenClaims := jwt.Claims{
-		Subject: "YOUR_SUBJECT",
-		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
-		Pretty:  "PRETTY_JSON",
-	}
 	timeout := 5 * time.Second
 
 	t.Run("Success", func(t *testing.T) {
@@ -64,9 +58,8 @@ func TestBrowser_Do(t *testing.T) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
 		u := Browser{
 			Logger: logger.New(t),
@@ -76,9 +69,8 @@ func TestBrowser_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &oidc.TokenSet{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:      "YOUR_ID_TOKEN",
+			RefreshToken: "YOUR_REFRESH_TOKEN",
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
@@ -102,9 +94,8 @@ func TestBrowser_Do(t *testing.T) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
 		mockBrowser := mock_browser.NewMockInterface(ctrl)
 		mockBrowser.EXPECT().
@@ -118,9 +109,8 @@ func TestBrowser_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &oidc.TokenSet{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:      "YOUR_ID_TOKEN",
+			RefreshToken: "YOUR_REFRESH_TOKEN",
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
