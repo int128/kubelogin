@@ -10,7 +10,6 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader/mock_reader"
-	"github.com/int128/kubelogin/pkg/jwt"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
@@ -18,11 +17,6 @@ import (
 var nonNil = gomock.Not(gomock.Nil())
 
 func TestKeyboard_Do(t *testing.T) {
-	dummyTokenClaims := jwt.Claims{
-		Subject: "YOUR_SUBJECT",
-		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
-		Pretty:  "PRETTY_JSON",
-	}
 	timeout := 5 * time.Second
 
 	t.Run("Success", func(t *testing.T) {
@@ -51,9 +45,8 @@ func TestKeyboard_Do(t *testing.T) {
 				}
 			}).
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
 		mockReader := mock_reader.NewMockInterface(ctrl)
 		mockReader.EXPECT().
@@ -68,9 +61,8 @@ func TestKeyboard_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &oidc.TokenSet{
-			IDToken:       "YOUR_ID_TOKEN",
-			IDTokenClaims: dummyTokenClaims,
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
+			IDToken:      "YOUR_ID_TOKEN",
+			RefreshToken: "YOUR_REFRESH_TOKEN",
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)

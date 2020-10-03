@@ -110,13 +110,17 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	if err != nil {
 		return xerrors.Errorf("authentication error: %w", err)
 	}
-	u.Logger.V(1).Infof("you got a token: %s", out.TokenSet.IDTokenClaims.Pretty)
+	idTokenClaims, err := out.TokenSet.DecodeWithoutVerify()
+	if err != nil {
+		return xerrors.Errorf("you got an invalid token: %w", err)
+	}
+	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
 	if out.AlreadyHasValidIDToken {
-		u.Logger.Printf("You already have a valid token until %s", out.TokenSet.IDTokenClaims.Expiry)
+		u.Logger.Printf("You already have a valid token until %s", idTokenClaims.Expiry)
 		return nil
 	}
 
-	u.Logger.Printf("You got a valid token until %s", out.TokenSet.IDTokenClaims.Expiry)
+	u.Logger.Printf("You got a valid token until %s", idTokenClaims.Expiry)
 	authProvider.IDToken = out.TokenSet.IDToken
 	authProvider.RefreshToken = out.TokenSet.RefreshToken
 	u.Logger.V(1).Infof("writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)

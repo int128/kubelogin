@@ -86,9 +86,8 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 			return &Output{
 				AlreadyHasValidIDToken: true,
 				TokenSet: oidc.TokenSet{
-					IDToken:       in.IDToken,
-					RefreshToken:  in.RefreshToken,
-					IDTokenClaims: *claims,
+					IDToken:      in.IDToken,
+					RefreshToken: in.RefreshToken,
 				},
 			}, nil
 		}
@@ -103,15 +102,9 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 
 	if in.RefreshToken != "" {
 		u.Logger.V(1).Infof("refreshing the token")
-		out, err := client.Refresh(ctx, in.RefreshToken)
+		tokenSet, err := client.Refresh(ctx, in.RefreshToken)
 		if err == nil {
-			return &Output{
-				TokenSet: oidc.TokenSet{
-					IDToken:       out.IDToken,
-					IDTokenClaims: out.IDTokenClaims,
-					RefreshToken:  out.RefreshToken,
-				},
-			}, nil
+			return &Output{TokenSet: *tokenSet}, nil
 		}
 		u.Logger.V(1).Infof("could not refresh the token: %s", err)
 	}

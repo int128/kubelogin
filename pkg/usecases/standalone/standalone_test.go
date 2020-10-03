@@ -10,8 +10,8 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
-	"github.com/int128/kubelogin/pkg/jwt"
 	"github.com/int128/kubelogin/pkg/oidc"
+	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
@@ -19,11 +19,12 @@ import (
 )
 
 func TestStandalone_Do(t *testing.T) {
-	dummyTokenClaims := jwt.Claims{
-		Subject: "YOUR_SUBJECT",
-		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
-		Pretty:  "PRETTY_JSON",
-	}
+	issuedIDTokenExpiration := time.Now().Add(1 * time.Hour).Round(time.Second)
+	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
+		claims.Issuer = "https://accounts.google.com"
+		claims.Subject = "YOUR_SUBJECT"
+		claims.ExpiresAt = issuedIDTokenExpiration.Unix()
+	})
 
 	t.Run("FullOptions", func(t *testing.T) {
 		var grantOptionSet authentication.GrantOptionSet
@@ -70,7 +71,7 @@ func TestStandalone_Do(t *testing.T) {
 				ClientSecret:                "YOUR_CLIENT_SECRET",
 				IDPCertificateAuthority:     "/path/to/cert2",
 				IDPCertificateAuthorityData: "BASE64ENCODED2",
-				IDToken:                     "YOUR_ID_TOKEN",
+				IDToken:                     issuedIDToken,
 				RefreshToken:                "YOUR_REFRESH_TOKEN",
 			})
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
@@ -87,9 +88,8 @@ func TestStandalone_Do(t *testing.T) {
 			}).
 			Return(&authentication.Output{
 				TokenSet: oidc.TokenSet{
-					IDToken:       "YOUR_ID_TOKEN",
-					RefreshToken:  "YOUR_REFRESH_TOKEN",
-					IDTokenClaims: dummyTokenClaims,
+					IDToken:      issuedIDToken,
+					RefreshToken: "YOUR_REFRESH_TOKEN",
 				},
 			}, nil)
 		u := Standalone{
@@ -114,7 +114,7 @@ func TestStandalone_Do(t *testing.T) {
 			IDPIssuerURL:     "https://accounts.google.com",
 			ClientID:         "YOUR_CLIENT_ID",
 			ClientSecret:     "YOUR_CLIENT_SECRET",
-			IDToken:          "VALID_ID_TOKEN",
+			IDToken:          issuedIDToken,
 		}
 		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
@@ -130,13 +130,12 @@ func TestStandalone_Do(t *testing.T) {
 					ClientSecret: "YOUR_CLIENT_SECRET",
 					CertPool:     mockCertPool,
 				},
-				IDToken: "VALID_ID_TOKEN",
+				IDToken: issuedIDToken,
 			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
 				TokenSet: oidc.TokenSet{
-					IDToken:       "VALID_ID_TOKEN",
-					IDTokenClaims: dummyTokenClaims,
+					IDToken: issuedIDToken,
 				},
 			}, nil)
 		u := Standalone{
@@ -233,7 +232,7 @@ func TestStandalone_Do(t *testing.T) {
 				IDPIssuerURL:     "https://accounts.google.com",
 				ClientID:         "YOUR_CLIENT_ID",
 				ClientSecret:     "YOUR_CLIENT_SECRET",
-				IDToken:          "YOUR_ID_TOKEN",
+				IDToken:          issuedIDToken,
 				RefreshToken:     "YOUR_REFRESH_TOKEN",
 			}).
 			Return(xerrors.New("I/O error"))
@@ -249,9 +248,8 @@ func TestStandalone_Do(t *testing.T) {
 			}).
 			Return(&authentication.Output{
 				TokenSet: oidc.TokenSet{
-					IDToken:       "YOUR_ID_TOKEN",
-					RefreshToken:  "YOUR_REFRESH_TOKEN",
-					IDTokenClaims: dummyTokenClaims,
+					IDToken:      issuedIDToken,
+					RefreshToken: "YOUR_REFRESH_TOKEN",
 				},
 			}, nil)
 		u := Standalone{

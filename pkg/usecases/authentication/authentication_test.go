@@ -9,7 +9,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
-	"github.com/int128/kubelogin/pkg/jwt"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/clock"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
@@ -27,16 +26,11 @@ func TestAuthentication_Do(t *testing.T) {
 		ClientID:     "YOUR_CLIENT_ID",
 		ClientSecret: "YOUR_CLIENT_SECRET",
 	}
-	cachedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
-		claims.Issuer = "https://issuer.example.com"
-		claims.Subject = "SUBJECT"
+	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
+		claims.Issuer = "https://accounts.google.com"
+		claims.Subject = "YOUR_SUBJECT"
 		claims.ExpiresAt = expiryTime.Unix()
 	})
-	dummyClaims := jwt.Claims{
-		Subject: "SUBJECT",
-		Expiry:  time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-		Pretty:  "PRETTY_JSON",
-	}
 
 	t.Run("HasValidIDToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
@@ -45,7 +39,7 @@ func TestAuthentication_Do(t *testing.T) {
 		defer cancel()
 		in := Input{
 			Provider: dummyProvider,
-			IDToken:  cachedIDToken,
+			IDToken:  issuedIDToken,
 		}
 		u := Authentication{
 			Logger: testingLogger.New(t),
@@ -58,16 +52,7 @@ func TestAuthentication_Do(t *testing.T) {
 		want := &Output{
 			AlreadyHasValidIDToken: true,
 			TokenSet: oidc.TokenSet{
-				IDToken: cachedIDToken,
-				IDTokenClaims: jwt.Claims{
-					Subject: "SUBJECT",
-					Expiry:  expiryTime,
-					Pretty: `{
-  "exp": 1577934245,
-  "iss": "https://issuer.example.com",
-  "sub": "SUBJECT"
-}`,
-				},
+				IDToken: issuedIDToken,
 			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
@@ -82,16 +67,15 @@ func TestAuthentication_Do(t *testing.T) {
 		defer cancel()
 		in := Input{
 			Provider:     dummyProvider,
-			IDToken:      cachedIDToken,
+			IDToken:      issuedIDToken,
 			RefreshToken: "VALID_REFRESH_TOKEN",
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
 			Refresh(ctx, "VALID_REFRESH_TOKEN").
 			Return(&oidc.TokenSet{
-				IDToken:       "NEW_ID_TOKEN",
-				RefreshToken:  "NEW_REFRESH_TOKEN",
-				IDTokenClaims: dummyClaims,
+				IDToken:      "NEW_ID_TOKEN",
+				RefreshToken: "NEW_REFRESH_TOKEN",
 			}, nil)
 		u := Authentication{
 			OIDCClient: &oidcclientFactory{
@@ -112,9 +96,8 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		want := &Output{
 			TokenSet: oidc.TokenSet{
-				IDToken:       "NEW_ID_TOKEN",
-				RefreshToken:  "NEW_REFRESH_TOKEN",
-				IDTokenClaims: dummyClaims,
+				IDToken:      "NEW_ID_TOKEN",
+				RefreshToken: "NEW_REFRESH_TOKEN",
 			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
@@ -136,7 +119,7 @@ func TestAuthentication_Do(t *testing.T) {
 				},
 			},
 			Provider:     dummyProvider,
-			IDToken:      cachedIDToken,
+			IDToken:      issuedIDToken,
 			RefreshToken: "EXPIRED_REFRESH_TOKEN",
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
@@ -150,9 +133,8 @@ func TestAuthentication_Do(t *testing.T) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
-				IDToken:       "NEW_ID_TOKEN",
-				RefreshToken:  "NEW_REFRESH_TOKEN",
-				IDTokenClaims: dummyClaims,
+				IDToken:      "NEW_ID_TOKEN",
+				RefreshToken: "NEW_REFRESH_TOKEN",
 			}, nil)
 		u := Authentication{
 			OIDCClient: &oidcclientFactory{
@@ -176,9 +158,8 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		want := &Output{
 			TokenSet: oidc.TokenSet{
-				IDToken:       "NEW_ID_TOKEN",
-				RefreshToken:  "NEW_REFRESH_TOKEN",
-				IDTokenClaims: dummyClaims,
+				IDToken:      "NEW_ID_TOKEN",
+				RefreshToken: "NEW_REFRESH_TOKEN",
 			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
@@ -204,9 +185,8 @@ func TestAuthentication_Do(t *testing.T) {
 		mockOIDCClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyClaims,
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
 		u := Authentication{
 			OIDCClient: &oidcclientFactory{
@@ -229,9 +209,8 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		want := &Output{
 			TokenSet: oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyClaims,
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
 			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {

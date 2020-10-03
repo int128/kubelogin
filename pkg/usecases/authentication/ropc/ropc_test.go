@@ -9,18 +9,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader/mock_reader"
-	"github.com/int128/kubelogin/pkg/jwt"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"golang.org/x/xerrors"
 )
 
 func TestROPC_Do(t *testing.T) {
-	dummyTokenClaims := jwt.Claims{
-		Subject: "YOUR_SUBJECT",
-		Expiry:  time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
-		Pretty:  "PRETTY_JSON",
-	}
 	timeout := 5 * time.Second
 
 	t.Run("AskUsernameAndPassword", func(t *testing.T) {
@@ -33,9 +27,8 @@ func TestROPC_Do(t *testing.T) {
 		mockOIDCClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
 		mockReader := mock_reader.NewMockInterface(ctrl)
 		mockReader.EXPECT().ReadString(usernamePrompt).Return("USER", nil)
@@ -49,9 +42,8 @@ func TestROPC_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &oidc.TokenSet{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:      "YOUR_ID_TOKEN",
+			RefreshToken: "YOUR_REFRESH_TOKEN",
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
@@ -71,9 +63,8 @@ func TestROPC_Do(t *testing.T) {
 		mockOIDCClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
 		u := ROPC{
 			Logger: logger.New(t),
@@ -83,9 +74,8 @@ func TestROPC_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &oidc.TokenSet{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:      "YOUR_ID_TOKEN",
+			RefreshToken: "YOUR_REFRESH_TOKEN",
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
@@ -104,9 +94,8 @@ func TestROPC_Do(t *testing.T) {
 		mockOIDCClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenClaims: dummyTokenClaims,
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
 		mockEnv := mock_reader.NewMockInterface(ctrl)
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
@@ -119,9 +108,8 @@ func TestROPC_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &oidc.TokenSet{
-			IDToken:       "YOUR_ID_TOKEN",
-			RefreshToken:  "YOUR_REFRESH_TOKEN",
-			IDTokenClaims: dummyTokenClaims,
+			IDToken:      "YOUR_ID_TOKEN",
+			RefreshToken: "YOUR_REFRESH_TOKEN",
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
