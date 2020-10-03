@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/oidc"
 	"golang.org/x/xerrors"
 )
 
@@ -21,8 +22,8 @@ var Set = wire.NewSet(
 )
 
 type Interface interface {
-	FindByKey(dir string, key Key) (*Value, error)
-	Save(dir string, key Key, value Value) error
+	FindByKey(dir string, key Key) (*oidc.TokenSet, error)
+	Save(dir string, key Key, tokenSet oidc.TokenSet) error
 }
 
 // Key represents a key of a token cache.
@@ -36,8 +37,7 @@ type Key struct {
 	SkipTLSVerify  bool
 }
 
-// Value represents a value of a token cache.
-type Value struct {
+type entity struct {
 	IDToken      string `json:"id_token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 }
@@ -46,7 +46,7 @@ type Value struct {
 // Filename of a token cache is sha256 digest of the issuer, zero-character and client ID.
 type Repository struct{}
 
-func (r *Repository) FindByKey(dir string, key Key) (*Value, error) {
+func (r *Repository) FindByKey(dir string, key Key) (*oidc.TokenSet, error) {
 	filename, err := computeFilename(key)
 	if err != nil {
 		return nil, xerrors.Errorf("could not compute the key: %w", err)
@@ -58,14 +58,17 @@ func (r *Repository) FindByKey(dir string, key Key) (*Value, error) {
 	}
 	defer f.Close()
 	d := json.NewDecoder(f)
-	var c Value
-	if err := d.Decode(&c); err != nil {
+	var e entity
+	if err := d.Decode(&e); err != nil {
 		return nil, xerrors.Errorf("invalid json file %s: %w", p, err)
 	}
-	return &c, nil
+	return &oidc.TokenSet{
+		IDToken:      e.IDToken,
+		RefreshToken: e.RefreshToken,
+	}, nil
 }
 
-func (r *Repository) Save(dir string, key Key, value Value) error {
+func (r *Repository) Save(dir string, key Key, tokenSet oidc.TokenSet) error {
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return xerrors.Errorf("could not create directory %s: %w", dir, err)
 	}
@@ -79,8 +82,11 @@ func (r *Repository) Save(dir string, key Key, value Value) error {
 		return xerrors.Errorf("could not create file %s: %w", p, err)
 	}
 	defer f.Close()
-	e := json.NewEncoder(f)
-	if err := e.Encode(&value); err != nil {
+	e := entity{
+		IDToken:      tokenSet.IDToken,
+		RefreshToken: tokenSet.RefreshToken,
+	}
+	if err := json.NewEncoder(f).Encode(&e); err != nil {
 		return xerrors.Errorf("json encode error: %w", err)
 	}
 	return nil

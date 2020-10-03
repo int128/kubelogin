@@ -88,7 +88,7 @@ func TestGetToken_Do(t *testing.T) {
 					CACertData:     "BASE64ENCODED",
 					SkipTLSVerify:  true,
 				},
-				tokencache.Value{
+				oidc.TokenSet{
 					IDToken:      issuedIDToken,
 					RefreshToken: "YOUR_REFRESH_TOKEN",
 				})
@@ -130,7 +130,9 @@ func TestGetToken_Do(t *testing.T) {
 					ClientSecret: "YOUR_CLIENT_SECRET",
 					CertPool:     mockCertPool,
 				},
-				IDToken: issuedIDToken,
+				CachedTokenSet: &oidc.TokenSet{
+					IDToken: issuedIDToken,
+				},
 			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
@@ -145,7 +147,7 @@ func TestGetToken_Do(t *testing.T) {
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
-			Return(&tokencache.Value{
+			Return(&oidc.TokenSet{
 				IDToken: issuedIDToken,
 			}, nil)
 		credentialPluginWriter := mock_credentialpluginwriter.NewMockInterface(ctrl)

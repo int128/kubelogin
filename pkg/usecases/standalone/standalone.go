@@ -94,6 +94,13 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 			return xerrors.Errorf("could not load the certificate data: %w", err)
 		}
 	}
+	var cachedTokenSet *oidc.TokenSet
+	if authProvider.IDToken != "" {
+		cachedTokenSet = &oidc.TokenSet{
+			IDToken:      authProvider.IDToken,
+			RefreshToken: authProvider.RefreshToken,
+		}
+	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
 		Provider: oidc.Provider{
 			IssuerURL:     authProvider.IDPIssuerURL,
@@ -103,9 +110,8 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 			CertPool:      certPool,
 			SkipTLSVerify: in.SkipTLSVerify,
 		},
-		IDToken:        authProvider.IDToken,
-		RefreshToken:   authProvider.RefreshToken,
 		GrantOptionSet: in.GrantOptionSet,
+		CachedTokenSet: cachedTokenSet,
 	})
 	if err != nil {
 		return xerrors.Errorf("authentication error: %w", err)

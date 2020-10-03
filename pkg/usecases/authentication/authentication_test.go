@@ -39,7 +39,9 @@ func TestAuthentication_Do(t *testing.T) {
 		defer cancel()
 		in := Input{
 			Provider: dummyProvider,
-			IDToken:  issuedIDToken,
+			CachedTokenSet: &oidc.TokenSet{
+				IDToken: issuedIDToken,
+			},
 		}
 		u := Authentication{
 			Logger: testingLogger.New(t),
@@ -66,9 +68,11 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
-			Provider:     dummyProvider,
-			IDToken:      issuedIDToken,
-			RefreshToken: "VALID_REFRESH_TOKEN",
+			Provider: dummyProvider,
+			CachedTokenSet: &oidc.TokenSet{
+				IDToken:      issuedIDToken,
+				RefreshToken: "VALID_REFRESH_TOKEN",
+			},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().
@@ -111,6 +115,7 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
+			Provider: dummyProvider,
 			GrantOptionSet: GrantOptionSet{
 				AuthCodeBrowserOption: &authcode.BrowserOption{
 					BindAddress:           []string{"127.0.0.1:8000"},
@@ -118,9 +123,10 @@ func TestAuthentication_Do(t *testing.T) {
 					AuthenticationTimeout: 10 * time.Second,
 				},
 			},
-			Provider:     dummyProvider,
-			IDToken:      issuedIDToken,
-			RefreshToken: "EXPIRED_REFRESH_TOKEN",
+			CachedTokenSet: &oidc.TokenSet{
+				IDToken:      issuedIDToken,
+				RefreshToken: "EXPIRED_REFRESH_TOKEN",
+			},
 		}
 		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
 		mockOIDCClient.EXPECT().SupportedPKCEMethods()

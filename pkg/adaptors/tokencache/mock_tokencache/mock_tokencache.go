@@ -7,6 +7,7 @@ package mock_tokencache
 import (
 	gomock "github.com/golang/mock/gomock"
 	tokencache "github.com/int128/kubelogin/pkg/adaptors/tokencache"
+	oidc "github.com/int128/kubelogin/pkg/oidc"
 	reflect "reflect"
 )
 
@@ -34,10 +35,10 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // FindByKey mocks base method.
-func (m *MockInterface) FindByKey(arg0 string, arg1 tokencache.Key) (*tokencache.Value, error) {
+func (m *MockInterface) FindByKey(arg0 string, arg1 tokencache.Key) (*oidc.TokenSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByKey", arg0, arg1)
-	ret0, _ := ret[0].(*tokencache.Value)
+	ret0, _ := ret[0].(*oidc.TokenSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -49,7 +50,7 @@ func (mr *MockInterfaceMockRecorder) FindByKey(arg0, arg1 interface{}) *gomock.C
 }
 
 // Save mocks base method.
-func (m *MockInterface) Save(arg0 string, arg1 tokencache.Key, arg2 tokencache.Value) error {
+func (m *MockInterface) Save(arg0 string, arg1 tokencache.Key, arg2 oidc.TokenSet) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Save", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

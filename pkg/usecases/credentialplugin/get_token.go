@@ -61,10 +61,9 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		CACertData:     in.CACertData,
 		SkipTLSVerify:  in.SkipTLSVerify,
 	}
-	tokenCacheValue, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
+	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
-		tokenCacheValue = &tokencache.Value{}
 	}
 	certPool := u.NewCertPool()
 	if in.CACertFilename != "" {
@@ -86,9 +85,8 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 			CertPool:      certPool,
 			SkipTLSVerify: in.SkipTLSVerify,
 		},
-		IDToken:        tokenCacheValue.IDToken,
-		RefreshToken:   tokenCacheValue.RefreshToken,
 		GrantOptionSet: in.GrantOptionSet,
+		CachedTokenSet: cachedTokenSet,
 	})
 	if err != nil {
 		return xerrors.Errorf("authentication error: %w", err)
@@ -108,11 +106,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}
 
 	u.Logger.V(1).Infof("you got a valid token until %s", idTokenClaims.Expiry)
-	newTokenCacheValue := tokencache.Value{
-		IDToken:      out.TokenSet.IDToken,
-		RefreshToken: out.TokenSet.RefreshToken,
-	}
-	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, newTokenCacheValue); err != nil {
+	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, out.TokenSet); err != nil {
 		return xerrors.Errorf("could not write the token cache: %w", err)
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")

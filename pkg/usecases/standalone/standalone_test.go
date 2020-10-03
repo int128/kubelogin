@@ -130,7 +130,9 @@ func TestStandalone_Do(t *testing.T) {
 					ClientSecret: "YOUR_CLIENT_SECRET",
 					CertPool:     mockCertPool,
 				},
-				IDToken: issuedIDToken,
+				CachedTokenSet: &oidc.TokenSet{
+					IDToken: issuedIDToken,
+				},
 			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
