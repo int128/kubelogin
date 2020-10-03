@@ -76,7 +76,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 			return xerrors.Errorf("could not load the certificate data: %w", err)
 		}
 	}
-	out, err := u.Authentication.Do(ctx, authentication.Input{
+	authenticationInput := authentication.Input{
 		Provider: oidc.Provider{
 			IssuerURL:     in.IssuerURL,
 			ClientID:      in.ClientID,
@@ -87,30 +87,31 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		},
 		GrantOptionSet: in.GrantOptionSet,
 		CachedTokenSet: cachedTokenSet,
-	})
+	}
+	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
 	if err != nil {
 		return xerrors.Errorf("authentication error: %w", err)
 	}
-	idTokenClaims, err := out.TokenSet.DecodeWithoutVerify()
+	idTokenClaims, err := authenticationOutput.TokenSet.DecodeWithoutVerify()
 	if err != nil {
 		return xerrors.Errorf("you got an invalid token: %w", err)
 	}
 	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
-	if out.AlreadyHasValidIDToken {
-		u.Logger.V(1).Infof("you already have a valid token until %s", idTokenClaims.Expiry)
-		u.Logger.V(1).Infof("writing the token to client-go")
-		if err := u.Writer.Write(credentialpluginwriter.Output{Token: out.TokenSet.IDToken, Expiry: idTokenClaims.Expiry}); err != nil {
-			return xerrors.Errorf("could not write the token to client-go: %w", err)
-		}
-		return nil
-	}
 
-	u.Logger.V(1).Infof("you got a valid token until %s", idTokenClaims.Expiry)
-	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, out.TokenSet); err != nil {
-		return xerrors.Errorf("could not write the token cache: %w", err)
+	if authenticationOutput.AlreadyHasValidIDToken {
+		u.Logger.V(1).Infof("you already have a valid token until %s", idTokenClaims.Expiry)
+	} else {
+		u.Logger.V(1).Infof("you got a valid token until %s", idTokenClaims.Expiry)
+		if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, authenticationOutput.TokenSet); err != nil {
+			return xerrors.Errorf("could not write the token cache: %w", err)
+		}
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
-	if err := u.Writer.Write(credentialpluginwriter.Output{Token: out.TokenSet.IDToken, Expiry: idTokenClaims.Expiry}); err != nil {
+	out := credentialpluginwriter.Output{
+		Token:  authenticationOutput.TokenSet.IDToken,
+		Expiry: idTokenClaims.Expiry,
+	}
+	if err := u.Writer.Write(out); err != nil {
 		return xerrors.Errorf("could not write the token to client-go: %w", err)
 	}
 	return nil

@@ -59,6 +59,7 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 		LocalServerCertFile:    o.LocalServerCertFile,
 		LocalServerKeyFile:     o.LocalServerKeyFile,
 	}
+
 	ctx, cancel := context.WithTimeout(ctx, o.AuthenticationTimeout)
 	defer cancel()
 	readyChan := make(chan string, 1)
