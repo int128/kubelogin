@@ -101,7 +101,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 			RefreshToken: authProvider.RefreshToken,
 		}
 	}
-	out, err := u.Authentication.Do(ctx, authentication.Input{
+	authenticationInput := authentication.Input{
 		Provider: oidc.Provider{
 			IssuerURL:     authProvider.IDPIssuerURL,
 			ClientID:      authProvider.ClientID,
@@ -112,23 +112,25 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 		},
 		GrantOptionSet: in.GrantOptionSet,
 		CachedTokenSet: cachedTokenSet,
-	})
+	}
+	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
 	if err != nil {
 		return xerrors.Errorf("authentication error: %w", err)
 	}
-	idTokenClaims, err := out.TokenSet.DecodeWithoutVerify()
+
+	idTokenClaims, err := authenticationOutput.TokenSet.DecodeWithoutVerify()
 	if err != nil {
 		return xerrors.Errorf("you got an invalid token: %w", err)
 	}
 	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
-	if out.AlreadyHasValidIDToken {
+	if authenticationOutput.AlreadyHasValidIDToken {
 		u.Logger.Printf("You already have a valid token until %s", idTokenClaims.Expiry)
 		return nil
 	}
 
 	u.Logger.Printf("You got a valid token until %s", idTokenClaims.Expiry)
-	authProvider.IDToken = out.TokenSet.IDToken
-	authProvider.RefreshToken = out.TokenSet.RefreshToken
+	authProvider.IDToken = authenticationOutput.TokenSet.IDToken
+	authProvider.RefreshToken = authenticationOutput.TokenSet.RefreshToken
 	u.Logger.V(1).Infof("writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
 	if err := u.Kubeconfig.UpdateAuthProvider(authProvider); err != nil {
 		return xerrors.Errorf("could not update the kubeconfig: %w", err)
