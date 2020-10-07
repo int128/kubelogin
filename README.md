@@ -47,6 +47,7 @@ users:
       - --oidc-issuer-url=ISSUER_URL
       - --oidc-client-id=YOUR_CLIENT_ID
       - --oidc-client-secret=YOUR_CLIENT_SECRET
+      - --oidc-extra-scope=offline_access
 ```
 
 See [setup guide](docs/setup.md) for more.
