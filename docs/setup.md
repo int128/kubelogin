@@ -138,7 +138,8 @@ Run the following command:
 kubectl oidc-login setup \
   --oidc-issuer-url=ISSUER_URL \
   --oidc-client-id=YOUR_CLIENT_ID \
-  --oidc-client-secret=YOUR_CLIENT_SECRET
+  --oidc-client-secret=YOUR_CLIENT_SECRET \
+  --oidc-extra-scope=offline_access
 ```
 
 It launches the browser and navigates to `http://localhost:8000`.
@@ -205,7 +206,8 @@ kubectl config set-credentials oidc \
   --exec-arg=get-token \
   --exec-arg=--oidc-issuer-url=ISSUER_URL \
   --exec-arg=--oidc-client-id=YOUR_CLIENT_ID \
-  --exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET
+  --exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET \
+  --exec-arg=--oidc-extra-scope=offline_access
 ```
 
 
