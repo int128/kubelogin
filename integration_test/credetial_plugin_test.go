@@ -29,7 +29,7 @@ import (
 // 4. Verify the output.
 //
 func TestCredentialPlugin(t *testing.T) {
-	timeout := 3 * time.Second
+	timeout := 10 * time.Second
 	now := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 	tokenCacheDir := t.TempDir()
 
