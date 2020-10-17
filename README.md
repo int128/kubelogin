@@ -101,6 +101,21 @@ You got a token with the following claims:
 }
 ```
 
+You can increase the log level by `-v1` option.
+
+```yaml
+users:
+- name: oidc
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: kubectl
+      args:
+      - oidc-login
+      - get-token
+      - -v1
+```
+
 You can verify kubelogin works with your provider using [acceptance test](acceptance_test).
 
 
@@ -123,19 +138,18 @@ You can access the Kubernetes Dashboard using kubelogin and [kauthproxy](https:/
 This is an open source software licensed under Apache License 2.0.
 Feel free to open issues and pull requests for improving code and documents.
 
+Your pull request will be merged into master with squash.
+
 ### Development
 
-Go 1.13 or later is required.
+Go 1.15+ is required.
 
 ```sh
-# Run lint and tests
-make check
-
-# Compile and run the command
 make
 ./kubelogin
 ```
 
-### System test
+See also:
 
-See [system test](system_test) for more.
+- [system test](system_test)
+- [acceptance_test](acceptance_test)
