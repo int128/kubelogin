@@ -1,5 +1,5 @@
 on:
-  push:
+  pull_request:
     paths:
       - .github/workflows/golangci-lint.yaml
       - '**.go'
