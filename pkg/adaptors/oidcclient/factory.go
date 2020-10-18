@@ -35,6 +35,7 @@ type Factory struct {
 func (f *Factory) New(ctx context.Context, p oidc.Provider) (Interface, error) {
 	var tlsConfig tls.Config
 	tlsConfig.InsecureSkipVerify = p.SkipTLSVerify
+	tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 	if p.CertPool != nil {
 		p.CertPool.SetRootCAs(&tlsConfig)
 	}
