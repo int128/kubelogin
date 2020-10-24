@@ -19,6 +19,7 @@ import (
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"golang.org/x/xerrors"
 )
 
@@ -110,6 +111,161 @@ func TestGetToken_Do(t *testing.T) {
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
+	t.Run("MultiUserOption", func(t *testing.T) {
+		username := "YOUR_USERNAME"
+		grantOptionSetWithUsername := authentication.GrantOptionSet{
+			ROPCOption: &ropc.Option{
+				Username: username,
+			},
+		}
+		grantOptionSetWithoutUsername := authentication.GrantOptionSet{}
+
+		anotherIssuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
+			claims.Issuer = "https://accounts.google.com"
+			claims.Subject = "YOUR_SUBJECT_2"
+			claims.ExpiresAt = issuedIDTokenExpiration.Unix()
+		})
+		tokenSetForUsername := oidc.TokenSet{
+			IDToken:      issuedIDToken,
+			RefreshToken: "YOUR_REFRESH_TOKEN",
+		}
+		tokenSetForWithoutUsername := oidc.TokenSet{
+			IDToken:      anotherIssuedIDToken,
+			RefreshToken: "YOUR_REFRESH_TOKEN",
+		}
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+		inWithUsername := Input{
+			IssuerURL:      "https://accounts.google.com",
+			ClientID:       "YOUR_CLIENT_ID",
+			ClientSecret:   "YOUR_CLIENT_SECRET",
+			TokenCacheDir:  "/path/to/token-cache",
+			CACertFilename: "/path/to/cert",
+			CACertData:     "BASE64ENCODED",
+			SkipTLSVerify:  true,
+			GrantOptionSet: grantOptionSetWithUsername,
+		}
+		inWithoutUsername := Input{
+			IssuerURL:      "https://accounts.google.com",
+			ClientID:       "YOUR_CLIENT_ID",
+			ClientSecret:   "YOUR_CLIENT_SECRET",
+			TokenCacheDir:  "/path/to/token-cache",
+			CACertFilename: "/path/to/cert",
+			CACertData:     "BASE64ENCODED",
+			SkipTLSVerify:  true,
+			GrantOptionSet: grantOptionSetWithoutUsername,
+		}
+		mockCertPool := mock_certpool.NewMockInterface(ctrl)
+		mockCertPool.EXPECT().
+			AddFile("/path/to/cert").Times(2)
+		mockCertPool.EXPECT().
+			AddBase64Encoded("BASE64ENCODED").Times(2)
+		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
+		mockAuthentication.EXPECT().
+			Do(ctx, authentication.Input{
+				Provider: oidc.Provider{
+					IssuerURL:     "https://accounts.google.com",
+					ClientID:      "YOUR_CLIENT_ID",
+					ClientSecret:  "YOUR_CLIENT_SECRET",
+					CertPool:      mockCertPool,
+					SkipTLSVerify: true,
+				},
+				GrantOptionSet: grantOptionSetWithUsername,
+				CachedTokenSet: &tokenSetForUsername,
+			}).
+			Return(&authentication.Output{
+				TokenSet: tokenSetForUsername,
+			}, nil)
+		mockAuthentication.EXPECT().
+			Do(ctx, authentication.Input{
+				Provider: oidc.Provider{
+					IssuerURL:     "https://accounts.google.com",
+					ClientID:      "YOUR_CLIENT_ID",
+					ClientSecret:  "YOUR_CLIENT_SECRET",
+					CertPool:      mockCertPool,
+					SkipTLSVerify: true,
+				},
+				GrantOptionSet: grantOptionSetWithoutUsername,
+				CachedTokenSet: &tokenSetForWithoutUsername,
+			}).
+			Return(&authentication.Output{
+				TokenSet: tokenSetForWithoutUsername,
+			}, nil)
+		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
+		tokenCacheRepository.EXPECT().
+			FindByKey("/path/to/token-cache", tokencache.Key{
+				IssuerURL:      "https://accounts.google.com",
+				ClientID:       "YOUR_CLIENT_ID",
+				ClientSecret:   "YOUR_CLIENT_SECRET",
+				CACertFilename: "/path/to/cert",
+				CACertData:     "BASE64ENCODED",
+				SkipTLSVerify:  true,
+				Username:       username,
+			}).
+			Return(&tokenSetForUsername, nil)
+		tokenCacheRepository.EXPECT().
+			FindByKey("/path/to/token-cache", tokencache.Key{
+				IssuerURL:      "https://accounts.google.com",
+				ClientID:       "YOUR_CLIENT_ID",
+				ClientSecret:   "YOUR_CLIENT_SECRET",
+				CACertFilename: "/path/to/cert",
+				CACertData:     "BASE64ENCODED",
+				SkipTLSVerify:  true,
+				Username:       "",
+			}).
+			Return(&tokenSetForWithoutUsername, nil)
+		tokenCacheRepository.EXPECT().
+			Save("/path/to/token-cache",
+				tokencache.Key{
+					IssuerURL:      "https://accounts.google.com",
+					ClientID:       "YOUR_CLIENT_ID",
+					ClientSecret:   "YOUR_CLIENT_SECRET",
+					CACertFilename: "/path/to/cert",
+					CACertData:     "BASE64ENCODED",
+					SkipTLSVerify:  true,
+					Username:       username,
+				},
+				tokenSetForUsername)
+		tokenCacheRepository.EXPECT().
+			Save("/path/to/token-cache",
+				tokencache.Key{
+					IssuerURL:      "https://accounts.google.com",
+					ClientID:       "YOUR_CLIENT_ID",
+					ClientSecret:   "YOUR_CLIENT_SECRET",
+					CACertFilename: "/path/to/cert",
+					CACertData:     "BASE64ENCODED",
+					SkipTLSVerify:  true,
+					Username:       "",
+				},
+				tokenSetForWithoutUsername)
+		credentialPluginWriter := mock_credentialpluginwriter.NewMockInterface(ctrl)
+		credentialPluginWriter.EXPECT().
+			Write(credentialpluginwriter.Output{
+				Token:  issuedIDToken,
+				Expiry: issuedIDTokenExpiration,
+			})
+		credentialPluginWriter.EXPECT().
+			Write(credentialpluginwriter.Output{
+				Token:  anotherIssuedIDToken,
+				Expiry: issuedIDTokenExpiration,
+			})
+		u := GetToken{
+			Authentication:       mockAuthentication,
+			TokenCacheRepository: tokenCacheRepository,
+			NewCertPool:          func() certpool.Interface { return mockCertPool },
+			Writer:               credentialPluginWriter,
+			Logger:               logger.New(t),
+		}
+		if err := u.Do(ctx, inWithUsername); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+		if err := u.Do(ctx, inWithoutUsername); err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
 	})
