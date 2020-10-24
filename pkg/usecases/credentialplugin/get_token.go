@@ -61,6 +61,11 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		CACertData:     in.CACertData,
 		SkipTLSVerify:  in.SkipTLSVerify,
 	}
+
+	if in.GrantOptionSet.ROPCOption != nil {
+		tokenCacheKey.Username = in.GrantOptionSet.ROPCOption.Username
+	}
+
 	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
