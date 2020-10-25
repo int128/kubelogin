@@ -5,6 +5,7 @@ package credentialplugin
 
 import (
 	"context"
+	"github.com/int128/kubelogin/pkg/adaptors/mutex"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
@@ -45,11 +46,21 @@ type GetToken struct {
 	TokenCacheRepository tokencache.Interface
 	NewCertPool          certpool.NewFunc
 	Writer               credentialpluginwriter.Interface
+	Mutex                mutex.Interface
 	Logger               logger.Interface
 }
 
 func (u *GetToken) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
+
+	// Prevent multiple concurrent token query using a file mutex. See https://github.com/int128/kubelogin/issues/389
+	lock, err := u.Mutex.Acquire(ctx, "get-token")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = u.Mutex.Release(lock)
+	}()
 
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
 	tokenCacheKey := tokencache.Key{

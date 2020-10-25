@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/int128/kubelogin/pkg/adaptors/mutex"
+	"github.com/int128/kubelogin/pkg/adaptors/mutex/mock_mutex"
+
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
@@ -78,6 +81,7 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
+			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -151,6 +155,7 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
+			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -209,6 +214,7 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
+			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -251,10 +257,20 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               mock_credentialpluginwriter.NewMockInterface(ctrl),
+			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
 		}
 	})
+}
+
+// Setup a mock that expect the mutex to be lock and unlock
+func setupMutexMock(ctrl *gomock.Controller) *mock_mutex.MockInterface {
+	mockMutex := mock_mutex.NewMockInterface(ctrl)
+	lockValue := &mutex.Lock{Data: "testData"}
+	acquireCall := mockMutex.EXPECT().Acquire(gomock.Not(gomock.Nil()), "get-token").Return(lockValue, nil)
+	mockMutex.EXPECT().Release(lockValue).Return(nil).After(acquireCall)
+	return mockMutex
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/adaptors/mutex"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
@@ -28,7 +29,6 @@ import (
 
 // Injectors from di.go:
 
-// NewCmd returns an instance of adaptors.Cmd.
 func NewCmd() cmd.Interface {
 	clockReal := &clock.Real{}
 	stdin := _wireFileValue
@@ -44,7 +44,6 @@ var (
 	_wireOsFileValue = os.Stdout
 )
 
-// NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
 func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface logger.Interface, browserInterface browser.Interface) cmd.Interface {
 	factory := &oidcclient.Factory{
 		Clock:  clockInterface,
@@ -91,11 +90,15 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	writer := &credentialpluginwriter.Writer{
 		Stdout: stdout,
 	}
+	mutexMutex := &mutex.Mutex{
+		Logger: loggerInterface,
+	}
 	getToken := &credentialplugin.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
 		NewCertPool:          newFunc,
 		Writer:               writer,
+		Mutex:                mutexMutex,
 		Logger:               loggerInterface,
 	}
 	cmdGetToken := &cmd.GetToken{
