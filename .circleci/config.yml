@@ -10,15 +10,15 @@ jobs:
           keys:
             - go-sum-{{ checksum "go.sum" }}
       - run: make -C .circleci install-test-deps
-      - run: make check
-      - run: bash <(curl -s https://codecov.io/bash)
-      - run: make dist
+      - run: mkdir -p /tmp/gotest
+      - run: gotestsum --junitfile /tmp/gotest/gotest.xml -- -v -race -cover -coverprofile=coverage.out ./...
+      - store_test_results:
+          path: /tmp/gotest
       - save_cache:
           key: go-sum-{{ checksum "go.sum" }}
           paths:
             - ~/go/pkg
-      - store_artifacts:
-          path: gotest.log
+      - run: bash <(curl -s https://codecov.io/bash)
 
   release:
     macos:
