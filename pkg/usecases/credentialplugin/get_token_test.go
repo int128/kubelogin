@@ -76,13 +76,12 @@ func TestGetToken_Do(t *testing.T) {
 				Token:  issuedIDToken,
 				Expiry: issuedIDTokenExpiration,
 			})
-		mutex := setupMutexMock(ctrl)
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
-			Mutex:                mutex,
+			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -151,13 +150,12 @@ func TestGetToken_Do(t *testing.T) {
 				Token:  issuedIDToken,
 				Expiry: issuedIDTokenExpiration,
 			})
-		mutex := setupMutexMock(ctrl)
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
-			Mutex:                mutex,
+			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -211,13 +209,12 @@ func TestGetToken_Do(t *testing.T) {
 				Token:  issuedIDToken,
 				Expiry: issuedIDTokenExpiration,
 			})
-		mutex := setupMutexMock(ctrl)
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
-			Mutex:                mutex,
+			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -255,13 +252,12 @@ func TestGetToken_Do(t *testing.T) {
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(nil, xerrors.New("file not found"))
-		mutex := setupMutexMock(ctrl)
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               mock_credentialpluginwriter.NewMockInterface(ctrl),
-			Mutex:                mutex,
+			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
