@@ -2,10 +2,11 @@ package credentialplugin
 
 import (
 	"context"
-	"github.com/int128/kubelogin/pkg/adaptors/mutex"
-	"github.com/int128/kubelogin/pkg/adaptors/mutex/mock_mutex"
 	"testing"
 	"time"
+
+	"github.com/int128/kubelogin/pkg/adaptors/mutex"
+	"github.com/int128/kubelogin/pkg/adaptors/mutex/mock_mutex"
 
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/adaptors/certpool"
@@ -150,11 +151,13 @@ func TestGetToken_Do(t *testing.T) {
 				Token:  issuedIDToken,
 				Expiry: issuedIDTokenExpiration,
 			})
+		mutex := setupMutexMock(ctrl)
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
 			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
+			Mutex:                mutex,
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
