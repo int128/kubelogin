@@ -9,8 +9,6 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/mutex/mock_mutex"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter/mock_credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
@@ -18,6 +16,7 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
@@ -52,14 +51,12 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheDir:  "/path/to/token-cache",
 			GrantOptionSet: grantOptionSet,
 		}
-		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
 				Provider: oidc.Provider{
 					IssuerURL: "https://accounts.google.com",
 					ClientID:  "YOUR_CLIENT_ID",
-					CertPool:  mockCertPool,
 				},
 				GrantOptionSet: grantOptionSet,
 			}).
@@ -79,7 +76,6 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
-			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
 			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
@@ -106,36 +102,33 @@ func TestGetToken_Do(t *testing.T) {
 			CACertData:     "BASE64ENCODED",
 			SkipTLSVerify:  true,
 		}
+		tlsClientConfig := tlsclientconfig.Config{
+			CACertFilename: []string{"/path/to/cert"},
+			CACertData:     []string{"BASE64ENCODED"},
+			SkipTLSVerify:  true,
+		}
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{
-			IssuerURL:      "https://accounts.google.com",
-			ClientID:       "YOUR_CLIENT_ID",
-			ClientSecret:   "YOUR_CLIENT_SECRET",
-			TokenCacheDir:  "/path/to/token-cache",
-			CACertFilename: "/path/to/cert",
-			CACertData:     "BASE64ENCODED",
-			SkipTLSVerify:  true,
-			GrantOptionSet: grantOptionSet,
+			IssuerURL:       "https://accounts.google.com",
+			ClientID:        "YOUR_CLIENT_ID",
+			ClientSecret:    "YOUR_CLIENT_SECRET",
+			TokenCacheDir:   "/path/to/token-cache",
+			GrantOptionSet:  grantOptionSet,
+			TLSClientConfig: tlsClientConfig,
 		}
-		mockCertPool := mock_certpool.NewMockInterface(ctrl)
-		mockCertPool.EXPECT().
-			AddFile("/path/to/cert")
-		mockCertPool.EXPECT().
-			AddBase64Encoded("BASE64ENCODED")
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
 				Provider: oidc.Provider{
-					IssuerURL:     "https://accounts.google.com",
-					ClientID:      "YOUR_CLIENT_ID",
-					ClientSecret:  "YOUR_CLIENT_SECRET",
-					CertPool:      mockCertPool,
-					SkipTLSVerify: true,
+					IssuerURL:    "https://accounts.google.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
 				},
-				GrantOptionSet: grantOptionSet,
+				GrantOptionSet:  grantOptionSet,
+				TLSClientConfig: tlsClientConfig,
 			}).
 			Return(&authentication.Output{TokenSet: tokenSet}, nil)
 		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
@@ -153,7 +146,6 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
-			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
 			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
@@ -173,7 +165,6 @@ func TestGetToken_Do(t *testing.T) {
 			ClientSecret:  "YOUR_CLIENT_SECRET",
 			TokenCacheDir: "/path/to/token-cache",
 		}
-		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
@@ -181,7 +172,6 @@ func TestGetToken_Do(t *testing.T) {
 					IssuerURL:    "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
-					CertPool:     mockCertPool,
 				},
 				CachedTokenSet: &oidc.TokenSet{
 					IDToken: issuedIDToken,
@@ -212,7 +202,6 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
-			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               credentialPluginWriter,
 			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
@@ -232,7 +221,6 @@ func TestGetToken_Do(t *testing.T) {
 			ClientSecret:  "YOUR_CLIENT_SECRET",
 			TokenCacheDir: "/path/to/token-cache",
 		}
-		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
@@ -240,7 +228,6 @@ func TestGetToken_Do(t *testing.T) {
 					IssuerURL:    "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
-					CertPool:     mockCertPool,
 				},
 			}).
 			Return(nil, xerrors.New("authentication error"))
@@ -255,7 +242,6 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
-			NewCertPool:          func() certpool.Interface { return mockCertPool },
 			Writer:               mock_credentialpluginwriter.NewMockInterface(ctrl),
 			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),

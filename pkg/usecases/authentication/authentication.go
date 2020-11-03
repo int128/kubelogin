@@ -8,6 +8,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"golang.org/x/xerrors"
@@ -30,9 +31,10 @@ type Interface interface {
 
 // Input represents an input DTO of the Authentication use-case.
 type Input struct {
-	Provider       oidc.Provider
-	GrantOptionSet GrantOptionSet
-	CachedTokenSet *oidc.TokenSet // optional
+	Provider        oidc.Provider
+	GrantOptionSet  GrantOptionSet
+	CachedTokenSet  *oidc.TokenSet // optional
+	TLSClientConfig tlsclientconfig.Config
 }
 
 type GrantOptionSet struct {
@@ -90,7 +92,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	}
 
 	u.Logger.V(1).Infof("initializing an OpenID Connect client")
-	client, err := u.OIDCClient.New(ctx, in.Provider)
+	client, err := u.OIDCClient.New(ctx, in.Provider, in.TLSClientConfig)
 	if err != nil {
 		return nil, xerrors.Errorf("oidc error: %w", err)
 	}

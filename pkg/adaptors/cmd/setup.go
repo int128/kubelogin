@@ -42,14 +42,12 @@ func (cmd *Setup) New() *cobra.Command {
 				return xerrors.Errorf("setup: %w", err)
 			}
 			in := setup.Stage2Input{
-				IssuerURL:      o.IssuerURL,
-				ClientID:       o.ClientID,
-				ClientSecret:   o.ClientSecret,
-				ExtraScopes:    o.ExtraScopes,
-				CACertFilename: o.tlsOptions.CACertFilename,
-				CACertData:     o.tlsOptions.CACertData,
-				SkipTLSVerify:  o.tlsOptions.SkipTLSVerify,
-				GrantOptionSet: grantOptionSet,
+				IssuerURL:       o.IssuerURL,
+				ClientID:        o.ClientID,
+				ClientSecret:    o.ClientSecret,
+				ExtraScopes:     o.ExtraScopes,
+				GrantOptionSet:  grantOptionSet,
+				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
 			}
 			if c.Flags().Lookup("listen-address").Changed {
 				in.ListenAddressArgs = o.authenticationOptions.ListenAddress

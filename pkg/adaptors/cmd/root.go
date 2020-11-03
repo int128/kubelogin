@@ -57,10 +57,8 @@ func (cmd *Root) New() *cobra.Command {
 				KubeconfigFilename: o.Kubeconfig,
 				KubeconfigContext:  kubeconfig.ContextName(o.Context),
 				KubeconfigUser:     kubeconfig.UserName(o.User),
-				CACertFilename:     o.tlsOptions.CACertFilename,
-				CACertData:         o.tlsOptions.CACertData,
-				SkipTLSVerify:      o.tlsOptions.SkipTLSVerify,
 				GrantOptionSet:     grantOptionSet,
+				TLSClientConfig:    o.tlsOptions.tlsClientConfig(),
 			}
 			if err := cmd.Standalone.Do(c.Context(), in); err != nil {
 				return xerrors.Errorf("login: %w", err)

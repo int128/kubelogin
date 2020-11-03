@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
@@ -29,10 +29,8 @@ type Input struct {
 	KubeconfigFilename string                 // Default to the environment variable or global config as kubectl
 	KubeconfigContext  kubeconfig.ContextName // Default to the current context but ignored if KubeconfigUser is set
 	KubeconfigUser     kubeconfig.UserName    // Default to the user of the context
-	CACertFilename     string                 // optional
-	CACertData         string                 // optional
-	SkipTLSVerify      bool
 	GrantOptionSet     authentication.GrantOptionSet
+	TLSClientConfig    tlsclientconfig.Config
 }
 
 const oidcConfigErrorMessage = `No configuration found.
@@ -58,7 +56,6 @@ See https://github.com/int128/kubelogin for more.
 type Standalone struct {
 	Authentication authentication.Interface
 	Kubeconfig     kubeconfig.Interface
-	NewCertPool    certpool.NewFunc
 	Logger         logger.Interface
 }
 
@@ -73,26 +70,13 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	u.Logger.Printf(deprecationMessage)
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
-	certPool := u.NewCertPool()
 	if authProvider.IDPCertificateAuthority != "" {
-		if err := certPool.AddFile(authProvider.IDPCertificateAuthority); err != nil {
-			return xerrors.Errorf("could not load the certificate of idp-certificate-authority: %w", err)
-		}
+		u.Logger.V(1).Infof("using the certificate %s", authProvider.IDPCertificateAuthority)
+		in.TLSClientConfig.CACertFilename = append(in.TLSClientConfig.CACertFilename, authProvider.IDPCertificateAuthority)
 	}
 	if authProvider.IDPCertificateAuthorityData != "" {
-		if err := certPool.AddBase64Encoded(authProvider.IDPCertificateAuthorityData); err != nil {
-			return xerrors.Errorf("could not load the certificate of idp-certificate-authority-data: %w", err)
-		}
-	}
-	if in.CACertFilename != "" {
-		if err := certPool.AddFile(in.CACertFilename); err != nil {
-			return xerrors.Errorf("could not load the certificate file: %w", err)
-		}
-	}
-	if in.CACertData != "" {
-		if err := certPool.AddBase64Encoded(in.CACertData); err != nil {
-			return xerrors.Errorf("could not load the certificate data: %w", err)
-		}
+		u.Logger.V(1).Infof("using the certificate in %s", authProvider.LocationOfOrigin)
+		in.TLSClientConfig.CACertData = append(in.TLSClientConfig.CACertData, authProvider.IDPCertificateAuthorityData)
 	}
 	var cachedTokenSet *oidc.TokenSet
 	if authProvider.IDToken != "" {
@@ -101,17 +85,17 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 			RefreshToken: authProvider.RefreshToken,
 		}
 	}
+
 	authenticationInput := authentication.Input{
 		Provider: oidc.Provider{
-			IssuerURL:     authProvider.IDPIssuerURL,
-			ClientID:      authProvider.ClientID,
-			ClientSecret:  authProvider.ClientSecret,
-			ExtraScopes:   authProvider.ExtraScopes,
-			CertPool:      certPool,
-			SkipTLSVerify: in.SkipTLSVerify,
+			IssuerURL:    authProvider.IDPIssuerURL,
+			ClientID:     authProvider.ClientID,
+			ClientSecret: authProvider.ClientSecret,
+			ExtraScopes:  authProvider.ExtraScopes,
 		},
-		GrantOptionSet: in.GrantOptionSet,
-		CachedTokenSet: cachedTokenSet,
+		GrantOptionSet:  in.GrantOptionSet,
+		CachedTokenSet:  cachedTokenSet,
+		TLSClientConfig: in.TLSClientConfig,
 	}
 	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
 	if err != nil {

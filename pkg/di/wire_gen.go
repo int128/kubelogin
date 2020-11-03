@@ -7,7 +7,6 @@ package di
 
 import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
@@ -18,6 +17,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
@@ -29,6 +29,7 @@ import (
 
 // Injectors from di.go:
 
+// NewCmd returns an instance of adaptors.Cmd.
 func NewCmd() cmd.Interface {
 	clockReal := &clock.Real{}
 	stdin := _wireFileValue
@@ -44,8 +45,11 @@ var (
 	_wireOsFileValue = os.Stdout
 )
 
+// NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
 func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface logger.Interface, browserInterface browser.Interface) cmd.Interface {
+	loaderLoader := loader.Loader{}
 	factory := &oidcclient.Factory{
+		Loader: loaderLoader,
 		Clock:  clockInterface,
 		Logger: loggerInterface,
 	}
@@ -75,11 +79,9 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
 		Logger: loggerInterface,
 	}
-	newFunc := _wireNewFuncValue
 	standaloneStandalone := &standalone.Standalone{
 		Authentication: authenticationAuthentication,
 		Kubeconfig:     kubeconfigKubeconfig,
-		NewCertPool:    newFunc,
 		Logger:         loggerInterface,
 	}
 	root := &cmd.Root{
@@ -96,7 +98,6 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	getToken := &credentialplugin.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
-		NewCertPool:          newFunc,
 		Writer:               writer,
 		Mutex:                mutexMutex,
 		Logger:               loggerInterface,
@@ -107,7 +108,6 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	}
 	setupSetup := &setup.Setup{
 		Authentication: authenticationAuthentication,
-		NewCertPool:    newFunc,
 		Logger:         loggerInterface,
 	}
 	cmdSetup := &cmd.Setup{
@@ -121,7 +121,3 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	}
 	return cmdCmd
 }
-
-var (
-	_wireNewFuncValue = certpool.NewFunc(certpool.New)
-)

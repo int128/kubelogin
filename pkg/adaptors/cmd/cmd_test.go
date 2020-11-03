@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/testing/logger"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
@@ -95,9 +96,6 @@ func TestCmd_Run(t *testing.T) {
 					KubeconfigFilename: "/path/to/kubeconfig",
 					KubeconfigContext:  "hello.k8s.local",
 					KubeconfigUser:     "google",
-					CACertFilename:     "/path/to/cacert",
-					CACertData:         "BASE64ENCODED",
-					SkipTLSVerify:      true,
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:                []string{"127.0.0.1:10080", "127.0.0.1:20080"},
@@ -108,6 +106,11 @@ func TestCmd_Run(t *testing.T) {
 							OpenURLAfterAuthentication: "https://example.com/success.html",
 							RedirectURLHostname:        "localhost",
 						},
+					},
+					TLSClientConfig: tlsclientconfig.Config{
+						CACertFilename: []string{"/path/to/cacert"},
+						CACertData:     []string{"BASE64ENCODED"},
+						SkipTLSVerify:  true,
 					},
 				},
 			},
@@ -244,14 +247,11 @@ func TestCmd_Run(t *testing.T) {
 					"--password", "PASS",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir:  defaultTokenCacheDir,
-					IssuerURL:      "https://issuer.example.com",
-					ClientID:       "YOUR_CLIENT_ID",
-					ClientSecret:   "YOUR_CLIENT_SECRET",
-					ExtraScopes:    []string{"email", "profile"},
-					CACertFilename: "/path/to/cacert",
-					CACertData:     "BASE64ENCODED",
-					SkipTLSVerify:  true,
+					TokenCacheDir: defaultTokenCacheDir,
+					IssuerURL:     "https://issuer.example.com",
+					ClientID:      "YOUR_CLIENT_ID",
+					ClientSecret:  "YOUR_CLIENT_SECRET",
+					ExtraScopes:   []string{"email", "profile"},
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:                []string{"127.0.0.1:10080", "127.0.0.1:20080"},
@@ -263,6 +263,11 @@ func TestCmd_Run(t *testing.T) {
 							RedirectURLHostname:        "localhost",
 							AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
 						},
+					},
+					TLSClientConfig: tlsclientconfig.Config{
+						CACertFilename: []string{"/path/to/cacert"},
+						CACertData:     []string{"BASE64ENCODED"},
+						SkipTLSVerify:  true,
 					},
 				},
 			},

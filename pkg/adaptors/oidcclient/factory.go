@@ -3,7 +3,6 @@ package oidcclient
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net/http"
 
@@ -13,9 +12,13 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/logging"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
 )
+
+//go:generate mockgen -destination mock_oidcclient/mock_factory.go github.com/int128/kubelogin/pkg/adaptors/oidcclient FactoryInterface
 
 var Set = wire.NewSet(
 	wire.Struct(new(Factory), "*"),
@@ -23,23 +26,23 @@ var Set = wire.NewSet(
 )
 
 type FactoryInterface interface {
-	New(ctx context.Context, p oidc.Provider) (Interface, error)
+	New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error)
 }
 
 type Factory struct {
+	Loader loader.Loader
 	Clock  clock.Interface
 	Logger logger.Interface
 }
 
 // New returns an instance of adaptors.Interface with the given configuration.
-func (f *Factory) New(ctx context.Context, p oidc.Provider) (Interface, error) {
-	var tlsConfig tls.Config
-	tlsConfig.InsecureSkipVerify = p.SkipTLSVerify
-	if p.CertPool != nil {
-		p.CertPool.SetRootCAs(&tlsConfig)
+func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error) {
+	rawTLSClientConfig, err := f.Loader.Load(tlsClientConfig)
+	if err != nil {
+		return nil, xerrors.Errorf("could not load the TLS client config: %w", err)
 	}
 	baseTransport := &http.Transport{
-		TLSClientConfig: &tlsConfig,
+		TLSClientConfig: rawTLSClientConfig,
 		Proxy:           http.ProxyFromEnvironment,
 	}
 	loggingTransport := &logging.Transport{

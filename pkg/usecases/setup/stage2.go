@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
@@ -72,36 +73,22 @@ type Stage2Input struct {
 	ClientID          string
 	ClientSecret      string
 	ExtraScopes       []string // optional
-	CACertFilename    string   // optional
-	CACertData        string   // optional
-	SkipTLSVerify     bool
 	ListenAddressArgs []string // non-nil if set by the command arg
 	GrantOptionSet    authentication.GrantOptionSet
+	TLSClientConfig   tlsclientconfig.Config
 }
 
 func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	u.Logger.Printf("authentication in progress...")
-	certPool := u.NewCertPool()
-	if in.CACertFilename != "" {
-		if err := certPool.AddFile(in.CACertFilename); err != nil {
-			return xerrors.Errorf("could not load the certificate file: %w", err)
-		}
-	}
-	if in.CACertData != "" {
-		if err := certPool.AddBase64Encoded(in.CACertData); err != nil {
-			return xerrors.Errorf("could not load the certificate data: %w", err)
-		}
-	}
 	out, err := u.Authentication.Do(ctx, authentication.Input{
 		Provider: oidc.Provider{
-			IssuerURL:     in.IssuerURL,
-			ClientID:      in.ClientID,
-			ClientSecret:  in.ClientSecret,
-			ExtraScopes:   in.ExtraScopes,
-			CertPool:      certPool,
-			SkipTLSVerify: in.SkipTLSVerify,
+			IssuerURL:    in.IssuerURL,
+			ClientID:     in.ClientID,
+			ClientSecret: in.ClientSecret,
+			ExtraScopes:  in.ExtraScopes,
 		},
-		GrantOptionSet: in.GrantOptionSet,
+		GrantOptionSet:  in.GrantOptionSet,
+		TLSClientConfig: in.TLSClientConfig,
 	})
 	if err != nil {
 		return xerrors.Errorf("authentication error: %w", err)
@@ -136,13 +123,13 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 	for _, extraScope := range in.ExtraScopes {
 		args = append(args, "--oidc-extra-scope="+extraScope)
 	}
-	if in.CACertFilename != "" {
-		args = append(args, "--certificate-authority="+in.CACertFilename)
+	for _, f := range in.TLSClientConfig.CACertFilename {
+		args = append(args, "--certificate-authority="+f)
 	}
-	if in.CACertData != "" {
-		args = append(args, "--certificate-authority-data="+in.CACertData)
+	for _, d := range in.TLSClientConfig.CACertData {
+		args = append(args, "--certificate-authority-data="+d)
 	}
-	if in.SkipTLSVerify {
+	if in.TLSClientConfig.SkipTLSVerify {
 		args = append(args, "--insecure-skip-tls-verify")
 	}
 
