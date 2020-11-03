@@ -6,13 +6,12 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool/mock_certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"golang.org/x/xerrors"
@@ -35,9 +34,6 @@ func TestStandalone_Do(t *testing.T) {
 			KubeconfigFilename: "/path/to/kubeconfig",
 			KubeconfigContext:  "theContext",
 			KubeconfigUser:     "theUser",
-			CACertFilename:     "/path/to/cert1",
-			CACertData:         "BASE64ENCODED1",
-			SkipTLSVerify:      true,
 			GrantOptionSet:     grantOptionSet,
 		}
 		currentAuthProvider := &kubeconfig.AuthProvider{
@@ -49,15 +45,6 @@ func TestStandalone_Do(t *testing.T) {
 			IDPCertificateAuthority:     "/path/to/cert2",
 			IDPCertificateAuthorityData: "BASE64ENCODED2",
 		}
-		mockCertPool := mock_certpool.NewMockInterface(ctrl)
-		mockCertPool.EXPECT().
-			AddFile("/path/to/cert1")
-		mockCertPool.EXPECT().
-			AddFile("/path/to/cert2")
-		mockCertPool.EXPECT().
-			AddBase64Encoded("BASE64ENCODED1")
-		mockCertPool.EXPECT().
-			AddBase64Encoded("BASE64ENCODED2")
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
@@ -78,13 +65,15 @@ func TestStandalone_Do(t *testing.T) {
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
 				Provider: oidc.Provider{
-					IssuerURL:     "https://accounts.google.com",
-					ClientID:      "YOUR_CLIENT_ID",
-					ClientSecret:  "YOUR_CLIENT_SECRET",
-					CertPool:      mockCertPool,
-					SkipTLSVerify: true,
+					IssuerURL:    "https://accounts.google.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
 				},
 				GrantOptionSet: grantOptionSet,
+				TLSClientConfig: tlsclientconfig.Config{
+					CACertFilename: []string{"/path/to/cert2"},
+					CACertData:     []string{"BASE64ENCODED2"},
+				},
 			}).
 			Return(&authentication.Output{
 				TokenSet: oidc.TokenSet{
@@ -95,7 +84,6 @@ func TestStandalone_Do(t *testing.T) {
 		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			NewCertPool:    func() certpool.Interface { return mockCertPool },
 			Logger:         logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -116,7 +104,6 @@ func TestStandalone_Do(t *testing.T) {
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 			IDToken:          issuedIDToken,
 		}
-		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
@@ -128,7 +115,6 @@ func TestStandalone_Do(t *testing.T) {
 					IssuerURL:    "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
-					CertPool:     mockCertPool,
 				},
 				CachedTokenSet: &oidc.TokenSet{
 					IDToken: issuedIDToken,
@@ -143,7 +129,6 @@ func TestStandalone_Do(t *testing.T) {
 		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			NewCertPool:    func() certpool.Interface { return mockCertPool },
 			Logger:         logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -183,7 +168,6 @@ func TestStandalone_Do(t *testing.T) {
 			ClientID:         "YOUR_CLIENT_ID",
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
-		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
@@ -195,14 +179,12 @@ func TestStandalone_Do(t *testing.T) {
 					IssuerURL:    "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
-					CertPool:     mockCertPool,
 				},
 			}).
 			Return(nil, xerrors.New("authentication error"))
 		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			NewCertPool:    func() certpool.Interface { return mockCertPool },
 			Logger:         logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
@@ -222,7 +204,6 @@ func TestStandalone_Do(t *testing.T) {
 			ClientID:         "YOUR_CLIENT_ID",
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
-		mockCertPool := mock_certpool.NewMockInterface(ctrl)
 		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
 		mockKubeconfig.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
@@ -245,7 +226,6 @@ func TestStandalone_Do(t *testing.T) {
 					IssuerURL:    "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
-					CertPool:     mockCertPool,
 				},
 			}).
 			Return(&authentication.Output{
@@ -257,7 +237,6 @@ func TestStandalone_Do(t *testing.T) {
 		u := Standalone{
 			Authentication: mockAuthentication,
 			Kubeconfig:     mockKubeconfig,
-			NewCertPool:    func() certpool.Interface { return mockCertPool },
 			Logger:         logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {

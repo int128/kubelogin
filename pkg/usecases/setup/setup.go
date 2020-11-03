@@ -5,7 +5,6 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
@@ -22,6 +21,5 @@ type Interface interface {
 
 type Setup struct {
 	Authentication authentication.Interface
-	NewCertPool    certpool.NewFunc
 	Logger         logger.Interface
 }

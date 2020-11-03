@@ -5,14 +5,16 @@ package credentialplugin
 
 import (
 	"context"
+	"strings"
+
 	"github.com/int128/kubelogin/pkg/adaptors/mutex"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
@@ -30,21 +32,18 @@ type Interface interface {
 
 // Input represents an input DTO of the GetToken use-case.
 type Input struct {
-	IssuerURL      string
-	ClientID       string
-	ClientSecret   string
-	ExtraScopes    []string // optional
-	CACertFilename string   // optional
-	CACertData     string   // optional
-	SkipTLSVerify  bool
-	TokenCacheDir  string
-	GrantOptionSet authentication.GrantOptionSet
+	IssuerURL       string
+	ClientID        string
+	ClientSecret    string
+	ExtraScopes     []string // optional
+	TokenCacheDir   string
+	GrantOptionSet  authentication.GrantOptionSet
+	TLSClientConfig tlsclientconfig.Config
 }
 
 type GetToken struct {
 	Authentication       authentication.Interface
 	TokenCacheRepository tokencache.Interface
-	NewCertPool          certpool.NewFunc
 	Writer               credentialpluginwriter.Interface
 	Mutex                mutex.Interface
 	Logger               logger.Interface
@@ -68,9 +67,9 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		ClientID:       in.ClientID,
 		ClientSecret:   in.ClientSecret,
 		ExtraScopes:    in.ExtraScopes,
-		CACertFilename: in.CACertFilename,
-		CACertData:     in.CACertData,
-		SkipTLSVerify:  in.SkipTLSVerify,
+		CACertFilename: strings.Join(in.TLSClientConfig.CACertFilename, ","),
+		CACertData:     strings.Join(in.TLSClientConfig.CACertData, ","),
+		SkipTLSVerify:  in.TLSClientConfig.SkipTLSVerify,
 	}
 	if in.GrantOptionSet.ROPCOption != nil {
 		tokenCacheKey.Username = in.GrantOptionSet.ROPCOption.Username
@@ -80,28 +79,16 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
 	}
 
-	certPool := u.NewCertPool()
-	if in.CACertFilename != "" {
-		if err := certPool.AddFile(in.CACertFilename); err != nil {
-			return xerrors.Errorf("could not load the certificate file: %w", err)
-		}
-	}
-	if in.CACertData != "" {
-		if err := certPool.AddBase64Encoded(in.CACertData); err != nil {
-			return xerrors.Errorf("could not load the certificate data: %w", err)
-		}
-	}
 	authenticationInput := authentication.Input{
 		Provider: oidc.Provider{
-			IssuerURL:     in.IssuerURL,
-			ClientID:      in.ClientID,
-			ClientSecret:  in.ClientSecret,
-			ExtraScopes:   in.ExtraScopes,
-			CertPool:      certPool,
-			SkipTLSVerify: in.SkipTLSVerify,
+			IssuerURL:    in.IssuerURL,
+			ClientID:     in.ClientID,
+			ClientSecret: in.ClientSecret,
+			ExtraScopes:  in.ExtraScopes,
 		},
-		GrantOptionSet: in.GrantOptionSet,
-		CachedTokenSet: cachedTokenSet,
+		GrantOptionSet:  in.GrantOptionSet,
+		CachedTokenSet:  cachedTokenSet,
+		TLSClientConfig: in.TLSClientConfig,
 	}
 	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
 	if err != nil {

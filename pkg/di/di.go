@@ -6,7 +6,6 @@ package di
 import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/certpool"
 	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
@@ -17,6 +16,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
@@ -52,7 +52,7 @@ func NewCmdForHeadless(clock.Interface, stdio.Stdin, stdio.Stdout, logger.Interf
 		kubeconfig.Set,
 		tokencache.Set,
 		oidcclient.Set,
-		certpool.Set,
+		loader.Set,
 		credentialpluginwriter.Set,
 		mutex.Set,
 	)
