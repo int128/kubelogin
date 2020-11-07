@@ -40,6 +40,7 @@ func (l *Loader) Load(config tlsclientconfig.Config) (*tls.Config, error) {
 	return &tls.Config{
 		RootCAs:            rootCAs,
 		InsecureSkipVerify: config.SkipTLSVerify,
+		Renegotiation:      config.Renegotiation,
 	}, nil
 }
 
