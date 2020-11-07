@@ -12,9 +12,11 @@ Flags:
       --oidc-client-secret string                       Client secret of the provider
       --oidc-extra-scope strings                        Scopes to request to the provider
       --token-cache-dir string                          Path to a directory for token cache (default "~/.kube/cache/oidc-login")
-      --certificate-authority string                    Path to a cert file for the certificate authority
-      --certificate-authority-data string               Base64 encoded cert for the certificate authority
+      --certificate-authority stringArray               Path to a cert file for the certificate authority
+      --certificate-authority-data stringArray          Base64 encoded cert for the certificate authority
       --insecure-skip-tls-verify                        If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+      --tls-renegotiation-once                          If set, allow a remote server to request renegotiation once per connection
+      --tls-renegotiation-freely                        If set, allow a remote server to repeatedly request renegotiation
       --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
       --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --skip-open-browser                               [authcode] Do not open the browser automatically
