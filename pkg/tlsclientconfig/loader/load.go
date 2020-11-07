@@ -37,6 +37,10 @@ func (l *Loader) Load(config tlsclientconfig.Config) (*tls.Config, error) {
 			return nil, xerrors.Errorf("could not load the certificate: %w", err)
 		}
 	}
+	if len(rootCAs.Subjects()) == 0 {
+		// use the host's root CA set
+		rootCAs = nil
+	}
 	return &tls.Config{
 		RootCAs:            rootCAs,
 		InsecureSkipVerify: config.SkipTLSVerify,

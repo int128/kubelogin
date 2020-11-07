@@ -9,6 +9,15 @@ import (
 
 func TestLoader_Load(t *testing.T) {
 	var loader Loader
+	t.Run("Zero", func(t *testing.T) {
+		cfg, err := loader.Load(tlsclientconfig.Config{})
+		if err != nil {
+			t.Errorf("Load error: %s", err)
+		}
+		if cfg.RootCAs != nil {
+			t.Errorf("RootCAs wants nil but was %+v", cfg.RootCAs)
+		}
+	})
 	t.Run("ValidFile", func(t *testing.T) {
 		cfg, err := loader.Load(tlsclientconfig.Config{
 			CACertFilename: []string{"testdata/ca1.crt"},
