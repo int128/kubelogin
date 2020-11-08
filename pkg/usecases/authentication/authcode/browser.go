@@ -14,14 +14,15 @@ import (
 )
 
 type BrowserOption struct {
-	SkipOpenBrowser            bool
-	BindAddress                []string
-	AuthenticationTimeout      time.Duration
-	OpenURLAfterAuthentication string
-	RedirectURLHostname        string
-	AuthRequestExtraParams     map[string]string
-	LocalServerCertFile        string
-	LocalServerKeyFile         string
+	// require omitempty for tokencache.Key
+	SkipOpenBrowser            bool              `json:",omitempty"`
+	BindAddress                []string          `json:",omitempty"`
+	AuthenticationTimeout      time.Duration     `json:",omitempty"`
+	OpenURLAfterAuthentication string            `json:",omitempty"`
+	RedirectURLHostname        string            `json:",omitempty"`
+	AuthRequestExtraParams     map[string]string `json:",omitempty"`
+	LocalServerCertFile        string            `json:",omitempty"`
+	LocalServerKeyFile         string            `json:",omitempty"`
 }
 
 // Browser provides the authentication code flow using the browser.

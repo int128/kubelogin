@@ -5,7 +5,6 @@ package credentialplugin
 
 import (
 	"context"
-	"strings"
 
 	"github.com/int128/kubelogin/pkg/adaptors/mutex"
 
@@ -62,17 +61,16 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}()
 
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
-	tokenCacheKey := tokencache.Key{
-		IssuerURL:      in.IssuerURL,
-		ClientID:       in.ClientID,
-		ClientSecret:   in.ClientSecret,
-		ExtraScopes:    in.ExtraScopes,
-		CACertFilename: strings.Join(in.TLSClientConfig.CACertFilename, ","),
-		CACertData:     strings.Join(in.TLSClientConfig.CACertData, ","),
-		SkipTLSVerify:  in.TLSClientConfig.SkipTLSVerify,
+	provider := oidc.Provider{
+		IssuerURL:    in.IssuerURL,
+		ClientID:     in.ClientID,
+		ClientSecret: in.ClientSecret,
+		ExtraScopes:  in.ExtraScopes,
 	}
-	if in.GrantOptionSet.ROPCOption != nil {
-		tokenCacheKey.Username = in.GrantOptionSet.ROPCOption.Username
+	tokenCacheKey := tokencache.Key{
+		Provider:        provider,
+		GrantOptionSet:  in.GrantOptionSet,
+		TLSClientConfig: in.TLSClientConfig,
 	}
 	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
 	if err != nil {
@@ -80,12 +78,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}
 
 	authenticationInput := authentication.Input{
-		Provider: oidc.Provider{
-			IssuerURL:    in.IssuerURL,
-			ClientID:     in.ClientID,
-			ClientSecret: in.ClientSecret,
-			ExtraScopes:  in.ExtraScopes,
-		},
+		Provider:        provider,
 		GrantOptionSet:  in.GrantOptionSet,
 		CachedTokenSet:  cachedTokenSet,
 		TLSClientConfig: in.TLSClientConfig,

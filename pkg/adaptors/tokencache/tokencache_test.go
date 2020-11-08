@@ -7,6 +7,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 )
 
 func TestRepository_FindByKey(t *testing.T) {
@@ -15,12 +18,19 @@ func TestRepository_FindByKey(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		dir := t.TempDir()
 		key := Key{
-			IssuerURL:      "YOUR_ISSUER",
-			ClientID:       "YOUR_CLIENT_ID",
-			ClientSecret:   "YOUR_CLIENT_SECRET",
-			ExtraScopes:    []string{"openid", "email"},
-			CACertFilename: "/path/to/cert",
-			SkipTLSVerify:  false,
+			Provider: oidc.Provider{
+				IssuerURL:    "YOUR_ISSUER",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+			GrantOptionSet: authentication.GrantOptionSet{
+				ROPCOption: &ropc.Option{
+					Username: "YOUR_USERNAME",
+				},
+			},
+			TLSClientConfig: tlsclientconfig.Config{
+				CACertData: []string{"BASE64ENCODED"},
+			},
 		}
 		json := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}`
 		filename, err := computeFilename(key)
@@ -49,12 +59,19 @@ func TestRepository_Save(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		dir := t.TempDir()
 		key := Key{
-			IssuerURL:      "YOUR_ISSUER",
-			ClientID:       "YOUR_CLIENT_ID",
-			ClientSecret:   "YOUR_CLIENT_SECRET",
-			ExtraScopes:    []string{"openid", "email"},
-			CACertFilename: "/path/to/cert",
-			SkipTLSVerify:  false,
+			Provider: oidc.Provider{
+				IssuerURL:    "YOUR_ISSUER",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+			GrantOptionSet: authentication.GrantOptionSet{
+				ROPCOption: &ropc.Option{
+					Username: "YOUR_USERNAME",
+				},
+			},
+			TLSClientConfig: tlsclientconfig.Config{
+				CACertData: []string{"BASE64ENCODED"},
+			},
 		}
 		tokenSet := oidc.TokenSet{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
 		if err := r.Save(dir, key, tokenSet); err != nil {
