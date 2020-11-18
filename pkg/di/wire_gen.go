@@ -9,14 +9,15 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/mutex"
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
+	writer2 "github.com/int128/kubelogin/pkg/credentialplugin/writer"
+	loader2 "github.com/int128/kubelogin/pkg/kubeconfig/loader"
+	"github.com/int128/kubelogin/pkg/kubeconfig/writer"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
@@ -74,20 +75,20 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		AuthCodeKeyboard: keyboard,
 		ROPC:             ropcROPC,
 	}
-	kubeconfigKubeconfig := &kubeconfig.Kubeconfig{
-		Logger: loggerInterface,
-	}
+	loader3 := &loader2.Loader{}
+	writerWriter := &writer.Writer{}
 	standaloneStandalone := &standalone.Standalone{
-		Authentication: authenticationAuthentication,
-		Kubeconfig:     kubeconfigKubeconfig,
-		Logger:         loggerInterface,
+		Authentication:   authenticationAuthentication,
+		KubeconfigLoader: loader3,
+		KubeconfigWriter: writerWriter,
+		Logger:           loggerInterface,
 	}
 	root := &cmd.Root{
 		Standalone: standaloneStandalone,
 		Logger:     loggerInterface,
 	}
 	repository := &tokencache.Repository{}
-	writerWriter := &writer.Writer{
+	writer3 := &writer2.Writer{
 		Stdout: stdout,
 	}
 	mutexMutex := &mutex.Mutex{
@@ -96,7 +97,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	getToken := &credentialplugin.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
-		Writer:               writerWriter,
+		Writer:               writer3,
 		Mutex:                mutexMutex,
 		Logger:               loggerInterface,
 	}

@@ -1,10 +1,11 @@
-package kubeconfig
+package loader
 
 import (
 	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/int128/kubelogin/pkg/kubeconfig"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
@@ -105,7 +106,7 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Could not find the current auth: %s", err)
 		}
-		want := &AuthProvider{
+		want := &kubeconfig.AuthProvider{
 			LocationOfOrigin:            "/path/to/kubeconfig",
 			UserName:                    "theUser",
 			ContextName:                 "theContext",
@@ -145,7 +146,7 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Could not find the current auth: %s", err)
 		}
-		want := &AuthProvider{
+		want := &kubeconfig.AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "theUser",
 			ContextName:      "theContext",
@@ -173,7 +174,7 @@ func Test_findCurrentAuthProvider(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Could not find the current auth: %s", err)
 		}
-		want := &AuthProvider{
+		want := &kubeconfig.AuthProvider{
 			LocationOfOrigin: "/path/to/kubeconfig",
 			UserName:         "theUser",
 			IDPIssuerURL:     "https://accounts.google.com",

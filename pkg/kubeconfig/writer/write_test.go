@@ -1,4 +1,4 @@
-package kubeconfig
+package writer
 
 import (
 	"io/ioutil"
@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/int128/kubelogin/pkg/kubeconfig"
 )
 
 func TestKubeconfig_UpdateAuth(t *testing.T) {
-	var k Kubeconfig
+	var w Writer
 
 	t.Run("MinimumKeys", func(t *testing.T) {
 		f := newKubeconfigFile(t)
@@ -18,7 +19,7 @@ func TestKubeconfig_UpdateAuth(t *testing.T) {
 				t.Errorf("Could not remove the temp file: %s", err)
 			}
 		}()
-		if err := k.UpdateAuthProvider(&AuthProvider{
+		if err := w.UpdateAuthProvider(kubeconfig.AuthProvider{
 			LocationOfOrigin: f.Name(),
 			UserName:         "google",
 			IDPIssuerURL:     "https://accounts.google.com",
@@ -65,7 +66,7 @@ users:
 				t.Errorf("Could not remove the temp file: %s", err)
 			}
 		}()
-		if err := k.UpdateAuthProvider(&AuthProvider{
+		if err := w.UpdateAuthProvider(kubeconfig.AuthProvider{
 			LocationOfOrigin:            f.Name(),
 			UserName:                    "google",
 			IDPIssuerURL:                "https://accounts.google.com",

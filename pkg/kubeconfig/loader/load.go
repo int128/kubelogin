@@ -1,14 +1,29 @@
-package kubeconfig
+package loader
 
 import (
 	"strings"
 
+	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/kubeconfig"
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-func (*Kubeconfig) GetCurrentAuthProvider(explicitFilename string, contextName ContextName, userName UserName) (*AuthProvider, error) {
+//go:generate mockgen -destination mock_loader/mock_loader.go github.com/int128/kubelogin/pkg/kubeconfig/loader Interface
+
+var Set = wire.NewSet(
+	wire.Struct(new(Loader), "*"),
+	wire.Bind(new(Interface), new(*Loader)),
+)
+
+type Interface interface {
+	GetCurrentAuthProvider(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error)
+}
+
+type Loader struct{}
+
+func (Loader) GetCurrentAuthProvider(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error) {
 	config, err := loadByDefaultRules(explicitFilename)
 	if err != nil {
 		return nil, xerrors.Errorf("could not load the kubeconfig: %w", err)
@@ -34,16 +49,16 @@ func loadByDefaultRules(explicitFilename string) (*api.Config, error) {
 // If contextName is given, this returns the user of the context.
 // If userName is given, this ignores the context and returns the user.
 // If any context or user is not found, this returns an error.
-func findCurrentAuthProvider(config *api.Config, contextName ContextName, userName UserName) (*AuthProvider, error) {
+func findCurrentAuthProvider(config *api.Config, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error) {
 	if userName == "" {
 		if contextName == "" {
-			contextName = ContextName(config.CurrentContext)
+			contextName = kubeconfig.ContextName(config.CurrentContext)
 		}
 		contextNode, ok := config.Contexts[string(contextName)]
 		if !ok {
 			return nil, xerrors.Errorf("context %s does not exist", contextName)
 		}
-		userName = UserName(contextNode.AuthInfo)
+		userName = kubeconfig.UserName(contextNode.AuthInfo)
 	}
 	userNode, ok := config.AuthInfos[string(userName)]
 	if !ok {
@@ -64,7 +79,7 @@ func findCurrentAuthProvider(config *api.Config, contextName ContextName, userNa
 	if m["extra-scopes"] != "" {
 		extraScopes = strings.Split(m["extra-scopes"], ",")
 	}
-	return &AuthProvider{
+	return &kubeconfig.AuthProvider{
 		LocationOfOrigin:            userNode.LocationOfOrigin,
 		UserName:                    userName,
 		ContextName:                 contextName,

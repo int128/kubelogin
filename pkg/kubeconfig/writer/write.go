@@ -1,13 +1,28 @@
-package kubeconfig
+package writer
 
 import (
 	"strings"
 
+	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/kubeconfig"
 	"golang.org/x/xerrors"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func (*Kubeconfig) UpdateAuthProvider(p *AuthProvider) error {
+//go:generate mockgen -destination mock_writer/mock_writer.go github.com/int128/kubelogin/pkg/kubeconfig/writer Interface
+
+var Set = wire.NewSet(
+	wire.Struct(new(Writer), "*"),
+	wire.Bind(new(Interface), new(*Writer)),
+)
+
+type Interface interface {
+	UpdateAuthProvider(p kubeconfig.AuthProvider) error
+}
+
+type Writer struct{}
+
+func (Writer) UpdateAuthProvider(p kubeconfig.AuthProvider) error {
 	config, err := clientcmd.LoadFromFile(p.LocationOfOrigin)
 	if err != nil {
 		return xerrors.Errorf("could not load %s: %w", p.LocationOfOrigin, err)
@@ -29,7 +44,7 @@ func (*Kubeconfig) UpdateAuthProvider(p *AuthProvider) error {
 	return nil
 }
 
-func copyAuthProviderConfig(p *AuthProvider, m map[string]string) {
+func copyAuthProviderConfig(p kubeconfig.AuthProvider, m map[string]string) {
 	setOrDeleteKey(m, "idp-issuer-url", p.IDPIssuerURL)
 	setOrDeleteKey(m, "client-id", p.ClientID)
 	setOrDeleteKey(m, "client-secret", p.ClientSecret)
