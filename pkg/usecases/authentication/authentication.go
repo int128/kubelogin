@@ -38,9 +38,10 @@ type Input struct {
 }
 
 type GrantOptionSet struct {
-	AuthCodeBrowserOption  *authcode.BrowserOption
-	AuthCodeKeyboardOption *authcode.KeyboardOption
-	ROPCOption             *ropc.Option
+	// require omitempty for tokencache.Key
+	AuthCodeBrowserOption  *authcode.BrowserOption  `json:",omitempty"`
+	AuthCodeKeyboardOption *authcode.KeyboardOption `json:",omitempty"`
+	ROPCOption             *ropc.Option             `json:",omitempty"`
 }
 
 // Output represents an output DTO of the Authentication use-case.

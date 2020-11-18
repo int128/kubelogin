@@ -15,7 +15,8 @@ const keyboardPrompt = "Enter code: "
 const oobRedirectURI = "urn:ietf:wg:oauth:2.0:oob"
 
 type KeyboardOption struct {
-	AuthRequestExtraParams map[string]string
+	// require omitempty for tokencache.Key
+	AuthRequestExtraParams map[string]string `json:",omitempty"`
 }
 
 // Keyboard provides the authorization code flow with keyboard interactive.

@@ -2,7 +2,6 @@ package tokencache
 
 import (
 	"crypto/sha256"
-	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
 	"os"
@@ -10,6 +9,8 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
 
@@ -28,14 +29,9 @@ type Interface interface {
 
 // Key represents a key of a token cache.
 type Key struct {
-	IssuerURL      string
-	ClientID       string
-	ClientSecret   string
-	Username       string
-	ExtraScopes    []string
-	CACertFilename string
-	CACertData     string
-	SkipTLSVerify  bool
+	Provider        oidc.Provider                 `json:",omitempty"`
+	GrantOptionSet  authentication.GrantOptionSet `json:",omitempty"`
+	TLSClientConfig tlsclientconfig.Config        `json:",omitempty"`
 }
 
 type entity struct {
@@ -95,7 +91,7 @@ func (r *Repository) Save(dir string, key Key, tokenSet oidc.TokenSet) error {
 
 func computeFilename(key Key) (string, error) {
 	s := sha256.New()
-	e := gob.NewEncoder(s)
+	e := json.NewEncoder(s)
 	if err := e.Encode(&key); err != nil {
 		return "", xerrors.Errorf("could not encode the key: %w", err)
 	}

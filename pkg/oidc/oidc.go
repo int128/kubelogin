@@ -11,10 +11,11 @@ import (
 
 // Provider represents an OIDC provider.
 type Provider struct {
-	IssuerURL    string
-	ClientID     string
-	ClientSecret string   // optional
-	ExtraScopes  []string // optional
+	// require omitempty for tokencache.Key
+	IssuerURL    string   `json:",omitempty"`
+	ClientID     string   `json:",omitempty"`
+	ClientSecret string   `json:",omitempty"` // optional
+	ExtraScopes  []string `json:",omitempty"` // optional
 }
 
 // TokenSet represents a set of ID token and refresh token.
