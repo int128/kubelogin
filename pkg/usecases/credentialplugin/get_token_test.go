@@ -10,13 +10,13 @@ import (
 	"github.com/int128/kubelogin/pkg/credentialplugin"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
 	"github.com/int128/kubelogin/pkg/credentialplugin/writer/mock_writer"
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
+	"github.com/int128/kubelogin/pkg/tokencache"
+	"github.com/int128/kubelogin/pkg/tokencache/repository/mock_repository"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
@@ -61,7 +61,7 @@ func TestGetToken_Do(t *testing.T) {
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{TokenSet: tokenSet}, nil)
-		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
+		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokenCacheKey).
 			Return(nil, xerrors.New("file not found"))
@@ -131,7 +131,7 @@ func TestGetToken_Do(t *testing.T) {
 				TLSClientConfig: tlsClientConfig,
 			}).
 			Return(&authentication.Output{TokenSet: tokenSet}, nil)
-		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
+		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokenCacheKey).
 			Return(nil, xerrors.New("file not found"))
@@ -183,7 +183,7 @@ func TestGetToken_Do(t *testing.T) {
 					IDToken: issuedIDToken,
 				},
 			}, nil)
-		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
+		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
 				IssuerURL:    "https://accounts.google.com",
@@ -231,7 +231,7 @@ func TestGetToken_Do(t *testing.T) {
 				},
 			}).
 			Return(nil, xerrors.New("authentication error"))
-		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
+		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
 				IssuerURL:    "https://accounts.google.com",

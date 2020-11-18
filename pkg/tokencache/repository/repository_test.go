@@ -1,4 +1,4 @@
-package tokencache
+package repository
 
 import (
 	"io/ioutil"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tokencache"
 )
 
 func TestRepository_FindByKey(t *testing.T) {
@@ -14,7 +15,7 @@ func TestRepository_FindByKey(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		dir := t.TempDir()
-		key := Key{
+		key := tokencache.Key{
 			IssuerURL:      "YOUR_ISSUER",
 			ClientID:       "YOUR_CLIENT_ID",
 			ClientSecret:   "YOUR_CLIENT_SECRET",
@@ -48,7 +49,7 @@ func TestRepository_Save(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		dir := t.TempDir()
-		key := Key{
+		key := tokencache.Key{
 			IssuerURL:      "YOUR_ISSUER",
 			ClientID:       "YOUR_CLIENT_ID",
 			ClientSecret:   "YOUR_CLIENT_SECRET",

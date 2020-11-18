@@ -14,11 +14,11 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	writer2 "github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	loader2 "github.com/int128/kubelogin/pkg/kubeconfig/loader"
 	"github.com/int128/kubelogin/pkg/kubeconfig/writer"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
+	"github.com/int128/kubelogin/pkg/tokencache/repository"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
@@ -87,7 +87,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		Standalone: standaloneStandalone,
 		Logger:     loggerInterface,
 	}
-	repository := &tokencache.Repository{}
+	repositoryRepository := &repository.Repository{}
 	writer3 := &writer2.Writer{
 		Stdout: stdout,
 	}
@@ -96,7 +96,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	}
 	getToken := &credentialplugin.GetToken{
 		Authentication:       authenticationAuthentication,
-		TokenCacheRepository: repository,
+		TokenCacheRepository: repositoryRepository,
 		Writer:               writer3,
 		Mutex:                mutexMutex,
 		Logger:               loggerInterface,

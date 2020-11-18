@@ -9,13 +9,14 @@ import (
 
 	"github.com/int128/kubelogin/pkg/adaptors/mutex"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
+	"github.com/int128/kubelogin/pkg/tokencache/repository"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
+	"github.com/int128/kubelogin/pkg/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"golang.org/x/xerrors"
 )
@@ -44,7 +45,7 @@ type Input struct {
 
 type GetToken struct {
 	Authentication       authentication.Interface
-	TokenCacheRepository tokencache.Interface
+	TokenCacheRepository repository.Interface
 	Writer               writer.Interface
 	Mutex                mutex.Interface
 	Logger               logger.Interface
