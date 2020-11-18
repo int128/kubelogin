@@ -7,12 +7,12 @@ import (
 
 	"github.com/int128/kubelogin/pkg/adaptors/mutex"
 	"github.com/int128/kubelogin/pkg/adaptors/mutex/mock_mutex"
+	"github.com/int128/kubelogin/pkg/credentialplugin"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter/mock_credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
+	"github.com/int128/kubelogin/pkg/credentialplugin/writer/mock_writer"
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -67,9 +67,9 @@ func TestGetToken_Do(t *testing.T) {
 			Return(nil, xerrors.New("file not found"))
 		tokenCacheRepository.EXPECT().
 			Save("/path/to/token-cache", tokenCacheKey, tokenSet)
-		credentialPluginWriter := mock_credentialpluginwriter.NewMockInterface(ctrl)
+		credentialPluginWriter := mock_writer.NewMockInterface(ctrl)
 		credentialPluginWriter.EXPECT().
-			Write(credentialpluginwriter.Output{
+			Write(credentialplugin.Output{
 				Token:  issuedIDToken,
 				Expiry: issuedIDTokenExpiration,
 			})
@@ -137,9 +137,9 @@ func TestGetToken_Do(t *testing.T) {
 			Return(nil, xerrors.New("file not found"))
 		tokenCacheRepository.EXPECT().
 			Save("/path/to/token-cache", tokenCacheKey, tokenSet)
-		credentialPluginWriter := mock_credentialpluginwriter.NewMockInterface(ctrl)
+		credentialPluginWriter := mock_writer.NewMockInterface(ctrl)
 		credentialPluginWriter.EXPECT().
-			Write(credentialpluginwriter.Output{
+			Write(credentialplugin.Output{
 				Token:  issuedIDToken,
 				Expiry: issuedIDTokenExpiration,
 			})
@@ -193,9 +193,9 @@ func TestGetToken_Do(t *testing.T) {
 			Return(&oidc.TokenSet{
 				IDToken: issuedIDToken,
 			}, nil)
-		credentialPluginWriter := mock_credentialpluginwriter.NewMockInterface(ctrl)
+		credentialPluginWriter := mock_writer.NewMockInterface(ctrl)
 		credentialPluginWriter.EXPECT().
-			Write(credentialpluginwriter.Output{
+			Write(credentialplugin.Output{
 				Token:  issuedIDToken,
 				Expiry: issuedIDTokenExpiration,
 			})
@@ -242,7 +242,7 @@ func TestGetToken_Do(t *testing.T) {
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,
-			Writer:               mock_credentialpluginwriter.NewMockInterface(ctrl),
+			Writer:               mock_writer.NewMockInterface(ctrl),
 			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}

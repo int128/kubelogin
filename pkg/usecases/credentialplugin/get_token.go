@@ -8,11 +8,12 @@ import (
 	"strings"
 
 	"github.com/int128/kubelogin/pkg/adaptors/mutex"
+	"github.com/int128/kubelogin/pkg/credentialplugin"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
+	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
@@ -44,7 +45,7 @@ type Input struct {
 type GetToken struct {
 	Authentication       authentication.Interface
 	TokenCacheRepository tokencache.Interface
-	Writer               credentialpluginwriter.Interface
+	Writer               writer.Interface
 	Mutex                mutex.Interface
 	Logger               logger.Interface
 }
@@ -109,7 +110,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		}
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
-	out := credentialpluginwriter.Output{
+	out := credentialplugin.Output{
 		Token:  authenticationOutput.TokenSet.IDToken,
 		Expiry: idTokenClaims.Expiry,
 	}

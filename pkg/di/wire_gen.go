@@ -9,7 +9,6 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/clock"
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter"
 	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/mutex"
@@ -17,6 +16,7 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
 	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
+	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
@@ -29,7 +29,6 @@ import (
 
 // Injectors from di.go:
 
-// NewCmd returns an instance of adaptors.Cmd.
 func NewCmd() cmd.Interface {
 	clockReal := &clock.Real{}
 	stdin := _wireFileValue
@@ -45,7 +44,6 @@ var (
 	_wireOsFileValue = os.Stdout
 )
 
-// NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
 func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface logger.Interface, browserInterface browser.Interface) cmd.Interface {
 	loaderLoader := loader.Loader{}
 	factory := &oidcclient.Factory{
@@ -89,7 +87,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		Logger:     loggerInterface,
 	}
 	repository := &tokencache.Repository{}
-	writer := &credentialpluginwriter.Writer{
+	writerWriter := &writer.Writer{
 		Stdout: stdout,
 	}
 	mutexMutex := &mutex.Mutex{
@@ -98,7 +96,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	getToken := &credentialplugin.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repository,
-		Writer:               writer,
+		Writer:               writerWriter,
 		Mutex:                mutexMutex,
 		Logger:               loggerInterface,
 	}

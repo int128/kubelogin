@@ -1,18 +1,18 @@
-// Package credentialpluginwriter provides a writer for a credential plugin.
-package credentialpluginwriter
+// Package writer provides a writer for a credential plugin.
+package writer
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
+	"github.com/int128/kubelogin/pkg/credentialplugin"
 	"golang.org/x/xerrors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
 )
 
-//go:generate mockgen -destination mock_credentialpluginwriter/mock_credentialpluginwriter.go github.com/int128/kubelogin/pkg/adaptors/credentialpluginwriter Interface
+//go:generate mockgen -destination mock_writer/mock_writer.go github.com/int128/kubelogin/pkg/credentialplugin/writer Interface
 
 var Set = wire.NewSet(
 	wire.Struct(new(Writer), "*"),
@@ -20,13 +20,7 @@ var Set = wire.NewSet(
 )
 
 type Interface interface {
-	Write(out Output) error
-}
-
-// Output represents an output object of the credential plugin.
-type Output struct {
-	Token  string
-	Expiry time.Time
+	Write(out credentialplugin.Output) error
 }
 
 type Writer struct {
@@ -34,7 +28,7 @@ type Writer struct {
 }
 
 // Write writes the ExecCredential to standard output for kubectl.
-func (w *Writer) Write(out Output) error {
+func (w *Writer) Write(out credentialplugin.Output) error {
 	ec := &clientauthenticationv1beta1.ExecCredential{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "client.authentication.k8s.io/v1beta1",
