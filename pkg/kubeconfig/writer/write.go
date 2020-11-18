@@ -17,12 +17,12 @@ var Set = wire.NewSet(
 )
 
 type Interface interface {
-	UpdateAuthProvider(auth *kubeconfig.AuthProvider) error
+	UpdateAuthProvider(p kubeconfig.AuthProvider) error
 }
 
 type Writer struct{}
 
-func (Writer) UpdateAuthProvider(p *kubeconfig.AuthProvider) error {
+func (Writer) UpdateAuthProvider(p kubeconfig.AuthProvider) error {
 	config, err := clientcmd.LoadFromFile(p.LocationOfOrigin)
 	if err != nil {
 		return xerrors.Errorf("could not load %s: %w", p.LocationOfOrigin, err)
@@ -44,7 +44,7 @@ func (Writer) UpdateAuthProvider(p *kubeconfig.AuthProvider) error {
 	return nil
 }
 
-func copyAuthProviderConfig(p *kubeconfig.AuthProvider, m map[string]string) {
+func copyAuthProviderConfig(p kubeconfig.AuthProvider, m map[string]string) {
 	setOrDeleteKey(m, "idp-issuer-url", p.IDPIssuerURL)
 	setOrDeleteKey(m, "client-id", p.ClientID)
 	setOrDeleteKey(m, "client-secret", p.ClientSecret)

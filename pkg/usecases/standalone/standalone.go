@@ -119,7 +119,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	authProvider.IDToken = authenticationOutput.TokenSet.IDToken
 	authProvider.RefreshToken = authenticationOutput.TokenSet.RefreshToken
 	u.Logger.V(1).Infof("writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
-	if err := u.KubeconfigWriter.UpdateAuthProvider(authProvider); err != nil {
+	if err := u.KubeconfigWriter.UpdateAuthProvider(*authProvider); err != nil {
 		return xerrors.Errorf("could not update the kubeconfig: %w", err)
 	}
 	return nil

@@ -34,7 +34,7 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // UpdateAuthProvider mocks base method
-func (m *MockInterface) UpdateAuthProvider(arg0 *kubeconfig.AuthProvider) error {
+func (m *MockInterface) UpdateAuthProvider(arg0 kubeconfig.AuthProvider) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAuthProvider", arg0)
 	ret0, _ := ret[0].(error)

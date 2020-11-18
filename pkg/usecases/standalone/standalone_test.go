@@ -52,7 +52,7 @@ func TestStandalone_Do(t *testing.T) {
 			Return(currentAuthProvider, nil)
 		mockWriter := mock_writer.NewMockInterface(ctrl)
 		mockWriter.EXPECT().
-			UpdateAuthProvider(&kubeconfig.AuthProvider{
+			UpdateAuthProvider(kubeconfig.AuthProvider{
 				LocationOfOrigin:            "/path/to/kubeconfig",
 				UserName:                    "theUser",
 				IDPIssuerURL:                "https://accounts.google.com",
@@ -213,7 +213,7 @@ func TestStandalone_Do(t *testing.T) {
 			Return(currentAuthProvider, nil)
 		mockWriter := mock_writer.NewMockInterface(ctrl)
 		mockWriter.EXPECT().
-			UpdateAuthProvider(&kubeconfig.AuthProvider{
+			UpdateAuthProvider(kubeconfig.AuthProvider{
 				LocationOfOrigin: "/path/to/kubeconfig",
 				UserName:         "google",
 				IDPIssuerURL:     "https://accounts.google.com",
