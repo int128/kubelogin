@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/kubeconfig"
+	"github.com/int128/kubelogin/pkg/kubeconfig/loader"
+	"github.com/int128/kubelogin/pkg/kubeconfig/writer"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
@@ -54,15 +56,16 @@ See https://github.com/int128/kubelogin for more.
 // Otherwise, update the kubeconfig.
 //
 type Standalone struct {
-	Authentication authentication.Interface
-	Kubeconfig     kubeconfig.Interface
-	Logger         logger.Interface
+	Authentication   authentication.Interface
+	KubeconfigLoader loader.Interface
+	KubeconfigWriter writer.Interface
+	Logger           logger.Interface
 }
 
 func (u *Standalone) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
 
-	authProvider, err := u.Kubeconfig.GetCurrentAuthProvider(in.KubeconfigFilename, in.KubeconfigContext, in.KubeconfigUser)
+	authProvider, err := u.KubeconfigLoader.GetCurrentAuthProvider(in.KubeconfigFilename, in.KubeconfigContext, in.KubeconfigUser)
 	if err != nil {
 		u.Logger.Printf(oidcConfigErrorMessage)
 		return xerrors.Errorf("could not find the current authentication provider: %w", err)
@@ -116,7 +119,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	authProvider.IDToken = authenticationOutput.TokenSet.IDToken
 	authProvider.RefreshToken = authenticationOutput.TokenSet.RefreshToken
 	u.Logger.V(1).Infof("writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
-	if err := u.Kubeconfig.UpdateAuthProvider(authProvider); err != nil {
+	if err := u.KubeconfigWriter.UpdateAuthProvider(authProvider); err != nil {
 		return xerrors.Errorf("could not update the kubeconfig: %w", err)
 	}
 	return nil

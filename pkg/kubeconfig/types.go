@@ -1,23 +1,5 @@
 package kubeconfig
 
-import (
-	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-)
-
-//go:generate mockgen -destination mock_kubeconfig/mock_kubeconfig.go github.com/int128/kubelogin/pkg/adaptors/kubeconfig Interface
-
-// Set provides an implementation and interface for Kubeconfig.
-var Set = wire.NewSet(
-	wire.Struct(new(Kubeconfig), "*"),
-	wire.Bind(new(Interface), new(*Kubeconfig)),
-)
-
-type Interface interface {
-	GetCurrentAuthProvider(explicitFilename string, contextName ContextName, userName UserName) (*AuthProvider, error)
-	UpdateAuthProvider(auth *AuthProvider) error
-}
-
 // ContextName represents name of a context.
 type ContextName string
 
@@ -38,8 +20,4 @@ type AuthProvider struct {
 	ExtraScopes                 []string    // (optional) extra-scopes
 	IDToken                     string      // (optional) id-token
 	RefreshToken                string      // (optional) refresh-token
-}
-
-type Kubeconfig struct {
-	Logger logger.Interface
 }

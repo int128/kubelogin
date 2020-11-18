@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig/mock_kubeconfig"
+	"github.com/int128/kubelogin/pkg/kubeconfig"
+	"github.com/int128/kubelogin/pkg/kubeconfig/loader/mock_loader"
+	"github.com/int128/kubelogin/pkg/kubeconfig/writer/mock_writer"
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -45,11 +46,12 @@ func TestStandalone_Do(t *testing.T) {
 			IDPCertificateAuthority:     "/path/to/cert2",
 			IDPCertificateAuthorityData: "BASE64ENCODED2",
 		}
-		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
-		mockKubeconfig.EXPECT().
+		mockLoader := mock_loader.NewMockInterface(ctrl)
+		mockLoader.EXPECT().
 			GetCurrentAuthProvider("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
 			Return(currentAuthProvider, nil)
-		mockKubeconfig.EXPECT().
+		mockWriter := mock_writer.NewMockInterface(ctrl)
+		mockWriter.EXPECT().
 			UpdateAuthProvider(&kubeconfig.AuthProvider{
 				LocationOfOrigin:            "/path/to/kubeconfig",
 				UserName:                    "theUser",
@@ -82,9 +84,10 @@ func TestStandalone_Do(t *testing.T) {
 				},
 			}, nil)
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         logger.New(t),
+			Authentication:   mockAuthentication,
+			KubeconfigLoader: mockLoader,
+			KubeconfigWriter: mockWriter,
+			Logger:           logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -104,8 +107,8 @@ func TestStandalone_Do(t *testing.T) {
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 			IDToken:          issuedIDToken,
 		}
-		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
-		mockKubeconfig.EXPECT().
+		mockLoader := mock_loader.NewMockInterface(ctrl)
+		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
@@ -127,9 +130,9 @@ func TestStandalone_Do(t *testing.T) {
 				},
 			}, nil)
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         logger.New(t),
+			Authentication:   mockAuthentication,
+			KubeconfigLoader: mockLoader,
+			Logger:           logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -141,15 +144,15 @@ func TestStandalone_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{}
-		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
-		mockKubeconfig.EXPECT().
+		mockLoader := mock_loader.NewMockInterface(ctrl)
+		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(nil, xerrors.New("no oidc config"))
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         logger.New(t),
+			Authentication:   mockAuthentication,
+			KubeconfigLoader: mockLoader,
+			Logger:           logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -168,8 +171,8 @@ func TestStandalone_Do(t *testing.T) {
 			ClientID:         "YOUR_CLIENT_ID",
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
-		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
-		mockKubeconfig.EXPECT().
+		mockLoader := mock_loader.NewMockInterface(ctrl)
+		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
@@ -183,9 +186,9 @@ func TestStandalone_Do(t *testing.T) {
 			}).
 			Return(nil, xerrors.New("authentication error"))
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         logger.New(t),
+			Authentication:   mockAuthentication,
+			KubeconfigLoader: mockLoader,
+			Logger:           logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -204,11 +207,12 @@ func TestStandalone_Do(t *testing.T) {
 			ClientID:         "YOUR_CLIENT_ID",
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
-		mockKubeconfig := mock_kubeconfig.NewMockInterface(ctrl)
-		mockKubeconfig.EXPECT().
+		mockLoader := mock_loader.NewMockInterface(ctrl)
+		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
-		mockKubeconfig.EXPECT().
+		mockWriter := mock_writer.NewMockInterface(ctrl)
+		mockWriter.EXPECT().
 			UpdateAuthProvider(&kubeconfig.AuthProvider{
 				LocationOfOrigin: "/path/to/kubeconfig",
 				UserName:         "google",
@@ -235,9 +239,10 @@ func TestStandalone_Do(t *testing.T) {
 				},
 			}, nil)
 		u := Standalone{
-			Authentication: mockAuthentication,
-			Kubeconfig:     mockKubeconfig,
-			Logger:         logger.New(t),
+			Authentication:   mockAuthentication,
+			KubeconfigLoader: mockLoader,
+			KubeconfigWriter: mockWriter,
+			Logger:           logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")

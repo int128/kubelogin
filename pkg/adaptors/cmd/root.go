@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
