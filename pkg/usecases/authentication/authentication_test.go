@@ -7,9 +7,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/oidc/client"
+	"github.com/int128/kubelogin/pkg/oidc/client/mock_client"
 	"github.com/int128/kubelogin/pkg/testing/clock"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	testingLogger "github.com/int128/kubelogin/pkg/testing/logger"
@@ -80,21 +80,21 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken: "VALID_REFRESH_TOKEN",
 			},
 		}
-		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
-		mockOIDCClient.EXPECT().
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().
 			Refresh(ctx, "VALID_REFRESH_TOKEN").
 			Return(&oidc.TokenSet{
 				IDToken:      "NEW_ID_TOKEN",
 				RefreshToken: "NEW_REFRESH_TOKEN",
 			}, nil)
-		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
-		mockOIDCClientFactory.EXPECT().
+		mockClientFactory := mock_client.NewMockFactoryInterface(ctrl)
+		mockClientFactory.EXPECT().
 			New(ctx, dummyProvider, dummyTLSClientConfig).
-			Return(mockOIDCClient, nil)
+			Return(mockClient, nil)
 		u := Authentication{
-			OIDCClient: mockOIDCClientFactory,
-			Logger:     testingLogger.New(t),
-			Clock:      clock.Fake(expiryTime.Add(+time.Hour)),
+			ClientFactory: mockClientFactory,
+			Logger:        testingLogger.New(t),
+			Clock:         clock.Fake(expiryTime.Add(+time.Hour)),
 		}
 		got, err := u.Do(ctx, in)
 		if err != nil {
@@ -131,28 +131,28 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken: "EXPIRED_REFRESH_TOKEN",
 			},
 		}
-		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
-		mockOIDCClient.EXPECT().SupportedPKCEMethods()
-		mockOIDCClient.EXPECT().
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().SupportedPKCEMethods()
+		mockClient.EXPECT().
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
 			Return(nil, xerrors.New("token has expired"))
-		mockOIDCClient.EXPECT().
+		mockClient.EXPECT().
 			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, _ oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
+			Do(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
 				IDToken:      "NEW_ID_TOKEN",
 				RefreshToken: "NEW_REFRESH_TOKEN",
 			}, nil)
-		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
-		mockOIDCClientFactory.EXPECT().
+		mockClientFactory := mock_client.NewMockFactoryInterface(ctrl)
+		mockClientFactory.EXPECT().
 			New(ctx, dummyProvider, dummyTLSClientConfig).
-			Return(mockOIDCClient, nil)
+			Return(mockClient, nil)
 		u := Authentication{
-			OIDCClient: mockOIDCClientFactory,
-			Logger:     testingLogger.New(t),
-			Clock:      clock.Fake(expiryTime.Add(+time.Hour)),
+			ClientFactory: mockClientFactory,
+			Logger:        testingLogger.New(t),
+			Clock:         clock.Fake(expiryTime.Add(+time.Hour)),
 			AuthCodeBrowser: &authcode.Browser{
 				Logger: testingLogger.New(t),
 			},
@@ -187,20 +187,20 @@ func TestAuthentication_Do(t *testing.T) {
 				},
 			},
 		}
-		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
-		mockOIDCClient.EXPECT().
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockOIDCClientFactory := mock_oidcclient.NewMockFactoryInterface(ctrl)
-		mockOIDCClientFactory.EXPECT().
+		mockClientFactory := mock_client.NewMockFactoryInterface(ctrl)
+		mockClientFactory.EXPECT().
 			New(ctx, dummyProvider, dummyTLSClientConfig).
-			Return(mockOIDCClient, nil)
+			Return(mockClient, nil)
 		u := Authentication{
-			OIDCClient: mockOIDCClientFactory,
-			Logger:     testingLogger.New(t),
+			ClientFactory: mockClientFactory,
+			Logger:        testingLogger.New(t),
 			ROPC: &ropc.ROPC{
 				Logger: testingLogger.New(t),
 			},

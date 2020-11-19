@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/oidc/client"
 	"golang.org/x/xerrors"
 )
 
@@ -24,7 +24,7 @@ type ROPC struct {
 	Logger logger.Interface
 }
 
-func (u *ROPC) Do(ctx context.Context, in *Option, client oidcclient.Interface) (*oidc.TokenSet, error) {
+func (u *ROPC) Do(ctx context.Context, in *Option, oidcClient client.Interface) (*oidc.TokenSet, error) {
 	u.Logger.V(1).Infof("starting the resource owner password credentials flow")
 	if in.Username == "" {
 		var err error
@@ -40,7 +40,7 @@ func (u *ROPC) Do(ctx context.Context, in *Option, client oidcclient.Interface) 
 			return nil, xerrors.Errorf("could not read a password: %w", err)
 		}
 	}
-	tokenSet, err := client.GetTokenByROPC(ctx, in.Username, in.Password)
+	tokenSet, err := oidcClient.GetTokenByROPC(ctx, in.Username, in.Password)
 	if err != nil {
 		return nil, xerrors.Errorf("resource owner password credentials flow error: %w", err)
 	}

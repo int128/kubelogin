@@ -11,12 +11,12 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/cmd"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/adaptors/mutex"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
 	writer2 "github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	loader2 "github.com/int128/kubelogin/pkg/kubeconfig/loader"
 	"github.com/int128/kubelogin/pkg/kubeconfig/writer"
+	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
 	"github.com/int128/kubelogin/pkg/tokencache/repository"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
@@ -47,7 +47,7 @@ var (
 
 func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout stdio.Stdout, loggerInterface logger.Interface, browserInterface browser.Interface) cmd.Interface {
 	loaderLoader := loader.Loader{}
-	factory := &oidcclient.Factory{
+	factory := &client.Factory{
 		Loader: loaderLoader,
 		Clock:  clockInterface,
 		Logger: loggerInterface,
@@ -68,7 +68,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		Logger: loggerInterface,
 	}
 	authenticationAuthentication := &authentication.Authentication{
-		OIDCClient:       factory,
+		ClientFactory:    factory,
 		Logger:           loggerInterface,
 		Clock:            clockInterface,
 		AuthCodeBrowser:  authcodeBrowser,
