@@ -13,11 +13,11 @@ import (
 	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/adaptors/stdio"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
 	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	kubeconfigLoader "github.com/int128/kubelogin/pkg/kubeconfig/loader"
 	kubeconfigWriter "github.com/int128/kubelogin/pkg/kubeconfig/writer"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
+	"github.com/int128/kubelogin/pkg/tokencache/repository"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
@@ -52,7 +52,7 @@ func NewCmdForHeadless(clock.Interface, stdio.Stdin, stdio.Stdout, logger.Interf
 		reader.Set,
 		kubeconfigLoader.Set,
 		kubeconfigWriter.Set,
-		tokencache.Set,
+		repository.Set,
 		oidcclient.Set,
 		loader.Set,
 		writer.Set,
