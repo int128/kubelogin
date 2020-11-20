@@ -6,8 +6,8 @@ import (
 
 	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/pkce"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
@@ -30,7 +30,7 @@ type Browser struct {
 	Logger  logger.Interface
 }
 
-func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.Interface) (*oidc.TokenSet, error) {
+func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.Interface) (*oidc.TokenSet, error) {
 	u.Logger.V(1).Infof("starting the authentication code flow using the browser")
 	state, err := oidc.NewState()
 	if err != nil {
@@ -40,7 +40,7 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a nonce: %w", err)
 	}
-	p, err := pkce.New(client.SupportedPKCEMethods())
+	p, err := pkce.New(oidcClient.SupportedPKCEMethods())
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
 	}
@@ -48,7 +48,7 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, client oidcclient.In
 	if o.OpenURLAfterAuthentication != "" {
 		successHTML = BrowserRedirectHTML(o.OpenURLAfterAuthentication)
 	}
-	in := oidcclient.GetTokenByAuthCodeInput{
+	in := client.GetTokenByAuthCodeInput{
 		BindAddress:            o.BindAddress,
 		State:                  state,
 		Nonce:                  nonce,
@@ -89,7 +89,7 @@ Please visit the following URL in your browser manually: %s`, err, url)
 	})
 	eg.Go(func() error {
 		defer close(readyChan)
-		tokenSet, err := client.GetTokenByAuthCode(ctx, in, readyChan)
+		tokenSet, err := oidcClient.GetTokenByAuthCode(ctx, in, readyChan)
 		if err != nil {
 			return xerrors.Errorf("authorization code flow error: %w", err)
 		}

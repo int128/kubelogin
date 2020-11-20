@@ -1,4 +1,4 @@
-package oidcclient
+package client
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-//go:generate mockgen -destination mock_oidcclient/mock_oidcclient.go github.com/int128/kubelogin/pkg/adaptors/oidcclient Interface
+//go:generate mockgen -destination mock_client/mock_client.go github.com/int128/kubelogin/pkg/oidc/client Interface
 
 type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string

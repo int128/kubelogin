@@ -7,9 +7,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader/mock_reader"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/oidc/client/mock_client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"golang.org/x/xerrors"
 )
@@ -23,8 +23,8 @@ func TestROPC_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		o := &Option{}
-		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
-		mockOIDCClient.EXPECT().
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
@@ -37,7 +37,7 @@ func TestROPC_Do(t *testing.T) {
 			Reader: mockReader,
 			Logger: logger.New(t),
 		}
-		got, err := u.Do(ctx, o, mockOIDCClient)
+		got, err := u.Do(ctx, o, mockClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -59,8 +59,8 @@ func TestROPC_Do(t *testing.T) {
 			Username: "USER",
 			Password: "PASS",
 		}
-		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
-		mockOIDCClient.EXPECT().
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
@@ -69,7 +69,7 @@ func TestROPC_Do(t *testing.T) {
 		u := ROPC{
 			Logger: logger.New(t),
 		}
-		got, err := u.Do(ctx, o, mockOIDCClient)
+		got, err := u.Do(ctx, o, mockClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -90,8 +90,8 @@ func TestROPC_Do(t *testing.T) {
 		o := &Option{
 			Username: "USER",
 		}
-		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
-		mockOIDCClient.EXPECT().
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().
 			GetTokenByROPC(gomock.Any(), "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
@@ -103,7 +103,7 @@ func TestROPC_Do(t *testing.T) {
 			Reader: mockEnv,
 			Logger: logger.New(t),
 		}
-		got, err := u.Do(ctx, o, mockOIDCClient)
+		got, err := u.Do(ctx, o, mockClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -130,7 +130,7 @@ func TestROPC_Do(t *testing.T) {
 			Reader: mockEnv,
 			Logger: logger.New(t),
 		}
-		out, err := u.Do(ctx, o, mock_oidcclient.NewMockInterface(ctrl))
+		out, err := u.Do(ctx, o, mock_client.NewMockInterface(ctrl))
 		if err == nil {
 			t.Errorf("err wants non-nil but nil")
 		}

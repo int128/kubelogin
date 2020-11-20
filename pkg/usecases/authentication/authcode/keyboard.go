@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/pkce"
 	"golang.org/x/xerrors"
 )
@@ -24,7 +24,7 @@ type Keyboard struct {
 	Logger logger.Interface
 }
 
-func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, client oidcclient.Interface) (*oidc.TokenSet, error) {
+func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.Interface) (*oidc.TokenSet, error) {
 	u.Logger.V(1).Infof("starting the authorization code flow with keyboard interactive")
 	state, err := oidc.NewState()
 	if err != nil {
@@ -34,11 +34,11 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, client oidcclient.
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate a nonce: %w", err)
 	}
-	p, err := pkce.New(client.SupportedPKCEMethods())
+	p, err := pkce.New(oidcClient.SupportedPKCEMethods())
 	if err != nil {
 		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
 	}
-	authCodeURL := client.GetAuthCodeURL(oidcclient.AuthCodeURLInput{
+	authCodeURL := oidcClient.GetAuthCodeURL(client.AuthCodeURLInput{
 		State:                  state,
 		Nonce:                  nonce,
 		PKCEParams:             p,
@@ -52,7 +52,7 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, client oidcclient.
 	}
 
 	u.Logger.V(1).Infof("exchanging the code and token")
-	tokenSet, err := client.ExchangeAuthCode(ctx, oidcclient.ExchangeAuthCodeInput{
+	tokenSet, err := oidcClient.ExchangeAuthCode(ctx, client.ExchangeAuthCodeInput{
 		Code:        code,
 		PKCEParams:  p,
 		Nonce:       nonce,

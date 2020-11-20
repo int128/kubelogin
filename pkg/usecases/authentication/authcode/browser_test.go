@@ -8,9 +8,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/adaptors/browser/mock_browser"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/oidc/client"
+	"github.com/int128/kubelogin/pkg/oidc/client/mock_client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
@@ -32,11 +32,11 @@ func TestBrowser_Do(t *testing.T) {
 			RedirectURLHostname:        "localhost",
 			AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
 		}
-		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
-		mockOIDCClient.EXPECT().SupportedPKCEMethods()
-		mockOIDCClient.EXPECT().
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().SupportedPKCEMethods()
+		mockClient.EXPECT().
 			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, in oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
+			Do(func(_ context.Context, in client.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				if diff := cmp.Diff(o.BindAddress, in.BindAddress); diff != "" {
 					t.Errorf("BindAddress mismatch (-want +got):\n%s", diff)
 				}
@@ -64,7 +64,7 @@ func TestBrowser_Do(t *testing.T) {
 		u := Browser{
 			Logger: logger.New(t),
 		}
-		got, err := u.Do(ctx, o, mockOIDCClient)
+		got, err := u.Do(ctx, o, mockClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
@@ -86,11 +86,11 @@ func TestBrowser_Do(t *testing.T) {
 			BindAddress:           []string{"127.0.0.1:8000"},
 			AuthenticationTimeout: 10 * time.Second,
 		}
-		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
-		mockOIDCClient.EXPECT().SupportedPKCEMethods()
-		mockOIDCClient.EXPECT().
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().SupportedPKCEMethods()
+		mockClient.EXPECT().
 			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, _ oidcclient.GetTokenByAuthCodeInput, readyChan chan<- string) {
+			Do(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
@@ -104,7 +104,7 @@ func TestBrowser_Do(t *testing.T) {
 			Logger:  logger.New(t),
 			Browser: mockBrowser,
 		}
-		got, err := u.Do(ctx, o, mockOIDCClient)
+		got, err := u.Do(ctx, o, mockClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}

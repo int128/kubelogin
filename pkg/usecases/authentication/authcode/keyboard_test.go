@@ -7,10 +7,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient"
-	"github.com/int128/kubelogin/pkg/adaptors/oidcclient/mock_oidcclient"
 	"github.com/int128/kubelogin/pkg/adaptors/reader/mock_reader"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/oidc/client"
+	"github.com/int128/kubelogin/pkg/oidc/client/mock_client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
@@ -27,19 +27,19 @@ func TestKeyboard_Do(t *testing.T) {
 		o := &KeyboardOption{
 			AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 		}
-		mockOIDCClient := mock_oidcclient.NewMockInterface(ctrl)
-		mockOIDCClient.EXPECT().SupportedPKCEMethods()
-		mockOIDCClient.EXPECT().
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().SupportedPKCEMethods()
+		mockClient.EXPECT().
 			GetAuthCodeURL(nonNil).
-			Do(func(in oidcclient.AuthCodeURLInput) {
+			Do(func(in client.AuthCodeURLInput) {
 				if diff := cmp.Diff(o.AuthRequestExtraParams, in.AuthRequestExtraParams); diff != "" {
 					t.Errorf("AuthRequestExtraParams mismatch (-want +got):\n%s", diff)
 				}
 			}).
 			Return("https://issuer.example.com/auth")
-		mockOIDCClient.EXPECT().
+		mockClient.EXPECT().
 			ExchangeAuthCode(nonNil, nonNil).
-			Do(func(_ context.Context, in oidcclient.ExchangeAuthCodeInput) {
+			Do(func(_ context.Context, in client.ExchangeAuthCodeInput) {
 				if in.Code != "YOUR_AUTH_CODE" {
 					t.Errorf("Code wants YOUR_AUTH_CODE but was %s", in.Code)
 				}
@@ -56,7 +56,7 @@ func TestKeyboard_Do(t *testing.T) {
 			Reader: mockReader,
 			Logger: logger.New(t),
 		}
-		got, err := u.Do(ctx, o, mockOIDCClient)
+		got, err := u.Do(ctx, o, mockClient)
 		if err != nil {
 			t.Errorf("Do returned error: %+v", err)
 		}
