@@ -8,8 +8,8 @@ import (
 
 	gooidc "github.com/coreos/go-oidc"
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/clock"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/clock"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client/logging"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
@@ -35,7 +35,7 @@ type Factory struct {
 	Logger logger.Interface
 }
 
-// New returns an instance of adaptors.Interface with the given configuration.
+// New returns an instance of infrastructure.Interface with the given configuration.
 func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error) {
 	rawTLSClientConfig, err := f.Loader.Load(tlsClientConfig)
 	if err != nil {

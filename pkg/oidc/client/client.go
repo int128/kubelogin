@@ -6,8 +6,8 @@ import (
 	"time"
 
 	gooidc "github.com/coreos/go-oidc"
-	"github.com/int128/kubelogin/pkg/adaptors/clock"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/clock"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/pkce"
 	"github.com/int128/oauth2cli"

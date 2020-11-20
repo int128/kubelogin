@@ -3,8 +3,8 @@ package ropc
 import (
 	"context"
 
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/reader"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/reader"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"golang.org/x/xerrors"

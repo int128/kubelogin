@@ -6,14 +6,14 @@
 package di
 
 import (
-	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/clock"
-	"github.com/int128/kubelogin/pkg/adaptors/cmd"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/mutex"
-	"github.com/int128/kubelogin/pkg/adaptors/reader"
-	"github.com/int128/kubelogin/pkg/adaptors/stdio"
+	"github.com/int128/kubelogin/pkg/cmd"
 	writer2 "github.com/int128/kubelogin/pkg/credentialplugin/writer"
+	"github.com/int128/kubelogin/pkg/infrastructure/browser"
+	"github.com/int128/kubelogin/pkg/infrastructure/clock"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/mutex"
+	"github.com/int128/kubelogin/pkg/infrastructure/reader"
+	"github.com/int128/kubelogin/pkg/infrastructure/stdio"
 	loader2 "github.com/int128/kubelogin/pkg/kubeconfig/loader"
 	"github.com/int128/kubelogin/pkg/kubeconfig/writer"
 	"github.com/int128/kubelogin/pkg/oidc/client"

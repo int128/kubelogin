@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/kubeconfig"
 	"github.com/int128/kubelogin/pkg/kubeconfig/loader"
 	"github.com/int128/kubelogin/pkg/kubeconfig/writer"

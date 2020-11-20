@@ -10,8 +10,8 @@ import (
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/kubeconfig"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
-	"github.com/int128/kubelogin/pkg/adaptors/browser"
 	"github.com/int128/kubelogin/pkg/di"
+	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/testing/clock"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/int128/kubelogin/pkg/adaptors/mutex"
-	"github.com/int128/kubelogin/pkg/adaptors/mutex/mock_mutex"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
+	"github.com/int128/kubelogin/pkg/infrastructure/mutex"
+	"github.com/int128/kubelogin/pkg/infrastructure/mutex/mock_mutex"
 
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/credentialplugin/writer/mock_writer"
