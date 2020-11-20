@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"

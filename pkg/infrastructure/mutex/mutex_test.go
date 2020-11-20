@@ -1,7 +1,7 @@
 package mutex
 
 import (
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"golang.org/x/net/context"
 	"golang.org/x/xerrors"
 	"math/rand"

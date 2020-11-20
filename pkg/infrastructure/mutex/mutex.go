@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/alexflint/go-filemutex"
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"golang.org/x/xerrors"
 	"os"
 	"path"
 )
 
-//go:generate mockgen -destination mock_mutex/mock_mutex.go github.com/int128/kubelogin/pkg/adaptors/mutex Interface
+//go:generate mockgen -destination mock_mutex/mock_mutex.go github.com/int128/kubelogin/pkg/infrastructure/mutex Interface
 
 var Set = wire.NewSet(
 	wire.Struct(new(Mutex), "*"),

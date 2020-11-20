@@ -5,14 +5,14 @@ package di
 
 import (
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/browser"
-	"github.com/int128/kubelogin/pkg/adaptors/clock"
-	"github.com/int128/kubelogin/pkg/adaptors/cmd"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/mutex"
-	"github.com/int128/kubelogin/pkg/adaptors/reader"
-	"github.com/int128/kubelogin/pkg/adaptors/stdio"
+	"github.com/int128/kubelogin/pkg/cmd"
 	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
+	"github.com/int128/kubelogin/pkg/infrastructure/browser"
+	"github.com/int128/kubelogin/pkg/infrastructure/clock"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/mutex"
+	"github.com/int128/kubelogin/pkg/infrastructure/reader"
+	"github.com/int128/kubelogin/pkg/infrastructure/stdio"
 	kubeconfigLoader "github.com/int128/kubelogin/pkg/kubeconfig/loader"
 	kubeconfigWriter "github.com/int128/kubelogin/pkg/kubeconfig/writer"
 	"github.com/int128/kubelogin/pkg/oidc/client"
@@ -24,7 +24,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
 )
 
-// NewCmd returns an instance of adaptors.Cmd.
+// NewCmd returns an instance of infrastructure.Cmd.
 func NewCmd() cmd.Interface {
 	wire.Build(
 		NewCmdForHeadless,
@@ -38,7 +38,7 @@ func NewCmd() cmd.Interface {
 	return nil
 }
 
-// NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
+// NewCmdForHeadless returns an instance of infrastructure.Cmd for headless testing.
 func NewCmdForHeadless(clock.Interface, stdio.Stdin, stdio.Stdout, logger.Interface, browser.Interface) cmd.Interface {
 	wire.Build(
 		// use-cases
@@ -47,7 +47,7 @@ func NewCmdForHeadless(clock.Interface, stdio.Stdin, stdio.Stdout, logger.Interf
 		credentialplugin.Set,
 		setup.Set,
 
-		// adaptors
+		// infrastructure
 		cmd.Set,
 		reader.Set,
 		kubeconfigLoader.Set,

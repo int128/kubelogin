@@ -7,13 +7,13 @@ import (
 	"context"
 	"strings"
 
-	"github.com/int128/kubelogin/pkg/adaptors/mutex"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
+	"github.com/int128/kubelogin/pkg/infrastructure/mutex"
 	"github.com/int128/kubelogin/pkg/tokencache/repository"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
 	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/tokencache"

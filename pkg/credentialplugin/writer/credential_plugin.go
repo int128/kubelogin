@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/stdio"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
+	"github.com/int128/kubelogin/pkg/infrastructure/stdio"
 	"golang.org/x/xerrors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"

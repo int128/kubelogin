@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
 
