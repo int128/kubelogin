@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/int128/kubelogin/pkg/pkce"
 	"github.com/int128/oauth2cli"
 	"golang.org/x/oauth2"
-	"golang.org/x/xerrors"
 )
 
 //go:generate mockgen -destination mock_client/mock_client.go github.com/int128/kubelogin/pkg/oidc/client Interface
@@ -87,7 +87,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
-		return nil, xerrors.Errorf("oauth2 error: %w", err)
+		return nil, fmt.Errorf("oauth2 error: %w", err)
 	}
 	return c.verifyToken(ctx, token, in.Nonce)
 }
@@ -108,7 +108,7 @@ func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput)
 	opts := tokenRequestOptions(in.PKCEParams)
 	token, err := cfg.Exchange(ctx, in.Code, opts...)
 	if err != nil {
-		return nil, xerrors.Errorf("exchange error: %w", err)
+		return nil, fmt.Errorf("exchange error: %w", err)
 	}
 	return c.verifyToken(ctx, token, in.Nonce)
 }
@@ -148,7 +148,7 @@ func (c *client) GetTokenByROPC(ctx context.Context, username, password string) 
 	ctx = c.wrapContext(ctx)
 	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, username, password)
 	if err != nil {
-		return nil, xerrors.Errorf("resource owner password credentials flow error: %w", err)
+		return nil, fmt.Errorf("resource owner password credentials flow error: %w", err)
 	}
 	return c.verifyToken(ctx, token, "")
 }
@@ -163,7 +163,7 @@ func (c *client) Refresh(ctx context.Context, refreshToken string) (*oidc.TokenS
 	source := c.oauth2Config.TokenSource(ctx, currentToken)
 	token, err := source.Token()
 	if err != nil {
-		return nil, xerrors.Errorf("could not refresh the token: %w", err)
+		return nil, fmt.Errorf("could not refresh the token: %w", err)
 	}
 	return c.verifyToken(ctx, token, "")
 }
@@ -173,15 +173,15 @@ func (c *client) Refresh(ctx context.Context, refreshToken string) (*oidc.TokenS
 func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce string) (*oidc.TokenSet, error) {
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		return nil, xerrors.Errorf("id_token is missing in the token response: %s", token)
+		return nil, fmt.Errorf("id_token is missing in the token response: %s", token)
 	}
 	verifier := c.provider.Verifier(&gooidc.Config{ClientID: c.oauth2Config.ClientID, Now: c.clock.Now})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
 	if err != nil {
-		return nil, xerrors.Errorf("could not verify the ID token: %w", err)
+		return nil, fmt.Errorf("could not verify the ID token: %w", err)
 	}
 	if nonce != "" && nonce != verifiedIDToken.Nonce {
-		return nil, xerrors.Errorf("nonce did not match (wants %s but got %s)", nonce, verifiedIDToken.Nonce)
+		return nil, fmt.Errorf("nonce did not match (wants %s but got %s)", nonce, verifiedIDToken.Nonce)
 	}
 	return &oidc.TokenSet{
 		IDToken:      idToken,

@@ -2,6 +2,7 @@ package standalone
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
-	"golang.org/x/xerrors"
 )
 
 func TestStandalone_Do(t *testing.T) {
@@ -147,7 +147,7 @@ func TestStandalone_Do(t *testing.T) {
 		mockLoader := mock_loader.NewMockInterface(ctrl)
 		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
-			Return(nil, xerrors.New("no oidc config"))
+			Return(nil, errors.New("no oidc config"))
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		u := Standalone{
 			Authentication:   mockAuthentication,
@@ -184,7 +184,7 @@ func TestStandalone_Do(t *testing.T) {
 					ClientSecret: "YOUR_CLIENT_SECRET",
 				},
 			}).
-			Return(nil, xerrors.New("authentication error"))
+			Return(nil, errors.New("authentication error"))
 		u := Standalone{
 			Authentication:   mockAuthentication,
 			KubeconfigLoader: mockLoader,
@@ -222,7 +222,7 @@ func TestStandalone_Do(t *testing.T) {
 				IDToken:          issuedIDToken,
 				RefreshToken:     "YOUR_REFRESH_TOKEN",
 			}).
-			Return(xerrors.New("I/O error"))
+			Return(errors.New("I/O error"))
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{

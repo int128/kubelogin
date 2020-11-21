@@ -5,6 +5,7 @@ package credentialplugin
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/int128/kubelogin/pkg/credentialplugin"
@@ -18,7 +19,6 @@ import (
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
-	"golang.org/x/xerrors"
 )
 
 //go:generate mockgen -destination mock_credentialplugin/mock_credentialplugin.go github.com/int128/kubelogin/pkg/usecases/credentialplugin Interface
@@ -94,11 +94,11 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}
 	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
 	if err != nil {
-		return xerrors.Errorf("authentication error: %w", err)
+		return fmt.Errorf("authentication error: %w", err)
 	}
 	idTokenClaims, err := authenticationOutput.TokenSet.DecodeWithoutVerify()
 	if err != nil {
-		return xerrors.Errorf("you got an invalid token: %w", err)
+		return fmt.Errorf("you got an invalid token: %w", err)
 	}
 	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
 
@@ -107,7 +107,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	} else {
 		u.Logger.V(1).Infof("you got a valid token until %s", idTokenClaims.Expiry)
 		if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, authenticationOutput.TokenSet); err != nil {
-			return xerrors.Errorf("could not write the token cache: %w", err)
+			return fmt.Errorf("could not write the token cache: %w", err)
 		}
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
@@ -116,7 +116,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		Expiry: idTokenClaims.Expiry,
 	}
 	if err := u.Writer.Write(out); err != nil {
-		return xerrors.Errorf("could not write the token to client-go: %w", err)
+		return fmt.Errorf("could not write the token to client-go: %w", err)
 	}
 	return nil
 }

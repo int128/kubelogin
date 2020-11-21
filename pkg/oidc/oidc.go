@@ -4,9 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 
 	"github.com/int128/kubelogin/pkg/jwt"
-	"golang.org/x/xerrors"
 )
 
 // Provider represents an OIDC provider.
@@ -30,7 +30,7 @@ func (ts TokenSet) DecodeWithoutVerify() (*jwt.Claims, error) {
 func NewState() (string, error) {
 	b, err := random32()
 	if err != nil {
-		return "", xerrors.Errorf("could not generate a random: %w", err)
+		return "", fmt.Errorf("could not generate a random: %w", err)
 	}
 	return base64URLEncode(b), nil
 }
@@ -38,7 +38,7 @@ func NewState() (string, error) {
 func NewNonce() (string, error) {
 	b, err := random32()
 	if err != nil {
-		return "", xerrors.Errorf("could not generate a random: %w", err)
+		return "", fmt.Errorf("could not generate a random: %w", err)
 	}
 	return base64URLEncode(b), nil
 }
@@ -46,7 +46,7 @@ func NewNonce() (string, error) {
 func random32() ([]byte, error) {
 	b := make([]byte, 32)
 	if err := binary.Read(rand.Reader, binary.LittleEndian, b); err != nil {
-		return nil, xerrors.Errorf("read error: %w", err)
+		return nil, fmt.Errorf("read error: %w", err)
 	}
 	return b, nil
 }

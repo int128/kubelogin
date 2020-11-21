@@ -1,11 +1,11 @@
 package writer
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/kubeconfig"
-	"golang.org/x/xerrors"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -25,21 +25,21 @@ type Writer struct{}
 func (Writer) UpdateAuthProvider(p kubeconfig.AuthProvider) error {
 	config, err := clientcmd.LoadFromFile(p.LocationOfOrigin)
 	if err != nil {
-		return xerrors.Errorf("could not load %s: %w", p.LocationOfOrigin, err)
+		return fmt.Errorf("could not load %s: %w", p.LocationOfOrigin, err)
 	}
 	userNode, ok := config.AuthInfos[string(p.UserName)]
 	if !ok {
-		return xerrors.Errorf("user %s does not exist", p.UserName)
+		return fmt.Errorf("user %s does not exist", p.UserName)
 	}
 	if userNode.AuthProvider == nil {
-		return xerrors.Errorf("auth-provider is missing")
+		return fmt.Errorf("auth-provider is missing")
 	}
 	if userNode.AuthProvider.Name != "oidc" {
-		return xerrors.Errorf("auth-provider must be oidc but is %s", userNode.AuthProvider.Name)
+		return fmt.Errorf("auth-provider must be oidc but is %s", userNode.AuthProvider.Name)
 	}
 	copyAuthProviderConfig(p, userNode.AuthProvider.Config)
 	if err := clientcmd.WriteToFile(*config, p.LocationOfOrigin); err != nil {
-		return xerrors.Errorf("could not update %s: %w", p.LocationOfOrigin, err)
+		return fmt.Errorf("could not update %s: %w", p.LocationOfOrigin, err)
 	}
 	return nil
 }

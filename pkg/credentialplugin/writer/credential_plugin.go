@@ -3,11 +3,11 @@ package writer
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
 	"github.com/int128/kubelogin/pkg/infrastructure/stdio"
-	"golang.org/x/xerrors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
 )
@@ -41,7 +41,7 @@ func (w *Writer) Write(out credentialplugin.Output) error {
 	}
 	e := json.NewEncoder(w.Stdout)
 	if err := e.Encode(ec); err != nil {
-		return xerrors.Errorf("could not write the ExecCredential: %w", err)
+		return fmt.Errorf("could not write the ExecCredential: %w", err)
 	}
 	return nil
 }

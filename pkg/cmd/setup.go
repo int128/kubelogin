@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/xerrors"
 )
 
 // setupOptions represents the options for setup command.
@@ -39,7 +39,7 @@ func (cmd *Setup) New() *cobra.Command {
 		RunE: func(c *cobra.Command, _ []string) error {
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
-				return xerrors.Errorf("setup: %w", err)
+				return fmt.Errorf("setup: %w", err)
 			}
 			in := setup.Stage2Input{
 				IssuerURL:       o.IssuerURL,
@@ -57,7 +57,7 @@ func (cmd *Setup) New() *cobra.Command {
 				return nil
 			}
 			if err := cmd.Setup.DoStage2(c.Context(), in); err != nil {
-				return xerrors.Errorf("setup: %w", err)
+				return fmt.Errorf("setup: %w", err)
 			}
 			return nil
 		},

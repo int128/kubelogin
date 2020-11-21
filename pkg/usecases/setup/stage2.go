@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -9,7 +10,6 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
-	"golang.org/x/xerrors"
 )
 
 var stage2Tpl = template.Must(template.New("").Parse(`
@@ -91,11 +91,11 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 		TLSClientConfig: in.TLSClientConfig,
 	})
 	if err != nil {
-		return xerrors.Errorf("authentication error: %w", err)
+		return fmt.Errorf("authentication error: %w", err)
 	}
 	idTokenClaims, err := out.TokenSet.DecodeWithoutVerify()
 	if err != nil {
-		return xerrors.Errorf("you got an invalid token: %w", err)
+		return fmt.Errorf("you got an invalid token: %w", err)
 	}
 
 	v := stage2Vars{
@@ -107,7 +107,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	}
 	var b strings.Builder
 	if err := stage2Tpl.Execute(&b, &v); err != nil {
-		return xerrors.Errorf("could not render the template: %w", err)
+		return fmt.Errorf("could not render the template: %w", err)
 	}
 	u.Logger.Printf(b.String())
 	return nil

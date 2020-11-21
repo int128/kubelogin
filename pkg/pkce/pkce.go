@@ -7,8 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
-
-	"golang.org/x/xerrors"
+	"fmt"
 )
 
 var Plain Params
@@ -45,7 +44,7 @@ func New(methods []string) (Params, error) {
 func NewS256() (Params, error) {
 	b, err := random32()
 	if err != nil {
-		return Plain, xerrors.Errorf("could not generate a random: %w", err)
+		return Plain, fmt.Errorf("could not generate a random: %w", err)
 	}
 	return computeS256(b), nil
 }
@@ -53,7 +52,7 @@ func NewS256() (Params, error) {
 func random32() ([]byte, error) {
 	b := make([]byte, 32)
 	if err := binary.Read(rand.Reader, binary.LittleEndian, b); err != nil {
-		return nil, xerrors.Errorf("read error: %w", err)
+		return nil, fmt.Errorf("read error: %w", err)
 	}
 	return b, nil
 }

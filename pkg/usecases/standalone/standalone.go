@@ -2,6 +2,7 @@ package standalone
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
@@ -11,7 +12,6 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
-	"golang.org/x/xerrors"
 )
 
 //go:generate mockgen -destination mock_standalone/mock_standalone.go github.com/int128/kubelogin/pkg/usecases/standalone Interface
@@ -68,7 +68,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	authProvider, err := u.KubeconfigLoader.GetCurrentAuthProvider(in.KubeconfigFilename, in.KubeconfigContext, in.KubeconfigUser)
 	if err != nil {
 		u.Logger.Printf(oidcConfigErrorMessage)
-		return xerrors.Errorf("could not find the current authentication provider: %w", err)
+		return fmt.Errorf("could not find the current authentication provider: %w", err)
 	}
 	u.Logger.Printf(deprecationMessage)
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
@@ -102,12 +102,12 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	}
 	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
 	if err != nil {
-		return xerrors.Errorf("authentication error: %w", err)
+		return fmt.Errorf("authentication error: %w", err)
 	}
 
 	idTokenClaims, err := authenticationOutput.TokenSet.DecodeWithoutVerify()
 	if err != nil {
-		return xerrors.Errorf("you got an invalid token: %w", err)
+		return fmt.Errorf("you got an invalid token: %w", err)
 	}
 	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
 	if authenticationOutput.AlreadyHasValidIDToken {
@@ -120,7 +120,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 	authProvider.RefreshToken = authenticationOutput.TokenSet.RefreshToken
 	u.Logger.V(1).Infof("writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
 	if err := u.KubeconfigWriter.UpdateAuthProvider(*authProvider); err != nil {
-		return xerrors.Errorf("could not update the kubeconfig: %w", err)
+		return fmt.Errorf("could not update the kubeconfig: %w", err)
 	}
 	return nil
 }

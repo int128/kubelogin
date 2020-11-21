@@ -6,7 +6,6 @@ import (
 	"github.com/alexflint/go-filemutex"
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
-	"golang.org/x/xerrors"
 	"os"
 	"path"
 )
@@ -64,7 +63,7 @@ func (m *Mutex) Acquire(ctx context.Context, name string) (*Lock, error) {
 	lfn := LockFileName(name)
 	fm, err := filemutex.New(lfn)
 	if err != nil {
-		return nil, xerrors.Errorf("error creating mutex file %s: %w", lfn, err)
+		return nil, fmt.Errorf("error creating mutex file %s: %w", lfn, err)
 	}
 
 	lockChan := internalAcquire(fm)
@@ -75,7 +74,7 @@ func (m *Mutex) Acquire(ctx context.Context, name string) (*Lock, error) {
 	case err := <-lockChan:
 		if err != nil {
 			_ = internalRelease(fm, lfn, m.Logger)
-			return nil, xerrors.Errorf("error acquiring lock on file %s: %w", lfn, err)
+			return nil, fmt.Errorf("error acquiring lock on file %s: %w", lfn, err)
 		}
 		return &Lock{Data: fm, Name: name}, nil
 	}

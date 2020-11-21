@@ -15,7 +15,6 @@ import (
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
 	"golang.org/x/oauth2"
-	"golang.org/x/xerrors"
 )
 
 //go:generate mockgen -destination mock_client/mock_factory.go github.com/int128/kubelogin/pkg/oidc/client FactoryInterface
@@ -39,7 +38,7 @@ type Factory struct {
 func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error) {
 	rawTLSClientConfig, err := f.Loader.Load(tlsClientConfig)
 	if err != nil {
-		return nil, xerrors.Errorf("could not load the TLS client config: %w", err)
+		return nil, fmt.Errorf("could not load the TLS client config: %w", err)
 	}
 	baseTransport := &http.Transport{
 		TLSClientConfig: rawTLSClientConfig,
@@ -56,11 +55,11 @@ func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsc
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	provider, err := gooidc.NewProvider(ctx, p.IssuerURL)
 	if err != nil {
-		return nil, xerrors.Errorf("oidc discovery error: %w", err)
+		return nil, fmt.Errorf("oidc discovery error: %w", err)
 	}
 	supportedPKCEMethods, err := extractSupportedPKCEMethods(provider)
 	if err != nil {
-		return nil, xerrors.Errorf("could not determine supported PKCE methods: %w", err)
+		return nil, fmt.Errorf("could not determine supported PKCE methods: %w", err)
 	}
 	return &client{
 		httpClient: httpClient,

@@ -2,6 +2,7 @@ package credentialplugin
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -20,7 +21,6 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
-	"golang.org/x/xerrors"
 )
 
 func TestGetToken_Do(t *testing.T) {
@@ -64,7 +64,7 @@ func TestGetToken_Do(t *testing.T) {
 		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokenCacheKey).
-			Return(nil, xerrors.New("file not found"))
+			Return(nil, errors.New("file not found"))
 		tokenCacheRepository.EXPECT().
 			Save("/path/to/token-cache", tokenCacheKey, tokenSet)
 		credentialPluginWriter := mock_writer.NewMockInterface(ctrl)
@@ -134,7 +134,7 @@ func TestGetToken_Do(t *testing.T) {
 		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokenCacheKey).
-			Return(nil, xerrors.New("file not found"))
+			Return(nil, errors.New("file not found"))
 		tokenCacheRepository.EXPECT().
 			Save("/path/to/token-cache", tokenCacheKey, tokenSet)
 		credentialPluginWriter := mock_writer.NewMockInterface(ctrl)
@@ -230,7 +230,7 @@ func TestGetToken_Do(t *testing.T) {
 					ClientSecret: "YOUR_CLIENT_SECRET",
 				},
 			}).
-			Return(nil, xerrors.New("authentication error"))
+			Return(nil, errors.New("authentication error"))
 		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
 		tokenCacheRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
@@ -238,7 +238,7 @@ func TestGetToken_Do(t *testing.T) {
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
-			Return(nil, xerrors.New("file not found"))
+			Return(nil, errors.New("file not found"))
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: tokenCacheRepository,

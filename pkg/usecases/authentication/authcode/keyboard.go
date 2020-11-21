@@ -2,13 +2,13 @@ package authcode
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/infrastructure/reader"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/pkce"
-	"golang.org/x/xerrors"
 )
 
 const keyboardPrompt = "Enter code: "
@@ -28,15 +28,15 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 	u.Logger.V(1).Infof("starting the authorization code flow with keyboard interactive")
 	state, err := oidc.NewState()
 	if err != nil {
-		return nil, xerrors.Errorf("could not generate a state: %w", err)
+		return nil, fmt.Errorf("could not generate a state: %w", err)
 	}
 	nonce, err := oidc.NewNonce()
 	if err != nil {
-		return nil, xerrors.Errorf("could not generate a nonce: %w", err)
+		return nil, fmt.Errorf("could not generate a nonce: %w", err)
 	}
 	p, err := pkce.New(oidcClient.SupportedPKCEMethods())
 	if err != nil {
-		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
+		return nil, fmt.Errorf("could not generate PKCE parameters: %w", err)
 	}
 	authCodeURL := oidcClient.GetAuthCodeURL(client.AuthCodeURLInput{
 		State:                  state,
@@ -48,7 +48,7 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 	u.Logger.Printf("Please visit the following URL in your browser: %s", authCodeURL)
 	code, err := u.Reader.ReadString(keyboardPrompt)
 	if err != nil {
-		return nil, xerrors.Errorf("could not read an authorization code: %w", err)
+		return nil, fmt.Errorf("could not read an authorization code: %w", err)
 	}
 
 	u.Logger.V(1).Infof("exchanging the code and token")
@@ -59,7 +59,7 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 		RedirectURI: oobRedirectURI,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("could not exchange the authorization code: %w", err)
+		return nil, fmt.Errorf("could not exchange the authorization code: %w", err)
 	}
 	u.Logger.V(1).Infof("finished the authorization code flow with keyboard interactive")
 	return tokenSet, nil

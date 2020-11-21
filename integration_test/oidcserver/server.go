@@ -4,6 +4,7 @@ package oidcserver
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"math/big"
 	"strings"
 	"testing"
@@ -13,7 +14,6 @@ import (
 	"github.com/int128/kubelogin/integration_test/oidcserver/handler"
 	"github.com/int128/kubelogin/integration_test/oidcserver/http"
 	"github.com/int128/kubelogin/pkg/testing/jwt"
-	"golang.org/x/xerrors"
 )
 
 type Server interface {
@@ -133,7 +133,7 @@ func (sv *server) AuthenticateCode(req handler.AuthenticationRequest) (code stri
 
 func (sv *server) Exchange(req handler.TokenRequest) (*handler.TokenResponse, error) {
 	if req.Code != "YOUR_AUTH_CODE" {
-		return nil, xerrors.Errorf("code wants %s but was %s", "YOUR_AUTH_CODE", req.Code)
+		return nil, fmt.Errorf("code wants %s but was %s", "YOUR_AUTH_CODE", req.Code)
 	}
 	if sv.lastAuthenticationRequest.CodeChallengeMethod == "S256" {
 		// https://tools.ietf.org/html/rfc7636#section-4.6
