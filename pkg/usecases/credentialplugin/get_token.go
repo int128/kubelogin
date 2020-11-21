@@ -34,10 +34,7 @@ type Interface interface {
 
 // Input represents an input DTO of the GetToken use-case.
 type Input struct {
-	IssuerURL       string
-	ClientID        string
-	ClientSecret    string
-	ExtraScopes     []string // optional
+	Provider        oidc.Provider
 	TokenCacheDir   string
 	GrantOptionSet  authentication.GrantOptionSet
 	TLSClientConfig tlsclientconfig.Config
@@ -65,10 +62,10 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
 	tokenCacheKey := tokencache.Key{
-		IssuerURL:      in.IssuerURL,
-		ClientID:       in.ClientID,
-		ClientSecret:   in.ClientSecret,
-		ExtraScopes:    in.ExtraScopes,
+		IssuerURL:      in.Provider.IssuerURL,
+		ClientID:       in.Provider.ClientID,
+		ClientSecret:   in.Provider.ClientSecret,
+		ExtraScopes:    in.Provider.ExtraScopes,
 		CACertFilename: strings.Join(in.TLSClientConfig.CACertFilename, ","),
 		CACertData:     strings.Join(in.TLSClientConfig.CACertData, ","),
 		SkipTLSVerify:  in.TLSClientConfig.SkipTLSVerify,
@@ -82,12 +79,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}
 
 	authenticationInput := authentication.Input{
-		Provider: oidc.Provider{
-			IssuerURL:    in.IssuerURL,
-			ClientID:     in.ClientID,
-			ClientSecret: in.ClientSecret,
-			ExtraScopes:  in.ExtraScopes,
-		},
+		Provider:        in.Provider,
 		GrantOptionSet:  in.GrantOptionSet,
 		CachedTokenSet:  cachedTokenSet,
 		TLSClientConfig: in.TLSClientConfig,

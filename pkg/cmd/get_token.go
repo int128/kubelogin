@@ -3,7 +3,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
+
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
+	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -58,10 +60,12 @@ func (cmd *GetToken) New() *cobra.Command {
 				return fmt.Errorf("get-token: %w", err)
 			}
 			in := credentialplugin.Input{
-				IssuerURL:       o.IssuerURL,
-				ClientID:        o.ClientID,
-				ClientSecret:    o.ClientSecret,
-				ExtraScopes:     o.ExtraScopes,
+				Provider: oidc.Provider{
+					IssuerURL:    o.IssuerURL,
+					ClientID:     o.ClientID,
+					ClientSecret: o.ClientSecret,
+					ExtraScopes:  o.ExtraScopes,
+				},
 				TokenCacheDir:   o.TokenCacheDir,
 				GrantOptionSet:  grantOptionSet,
 				TLSClientConfig: o.tlsOptions.tlsClientConfig(),

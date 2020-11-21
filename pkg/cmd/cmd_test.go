@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
@@ -210,8 +211,10 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: credentialplugin.Input{
 					TokenCacheDir: defaultTokenCacheDir,
-					IssuerURL:     "https://issuer.example.com",
-					ClientID:      "YOUR_CLIENT_ID",
+					Provider: oidc.Provider{
+						IssuerURL: "https://issuer.example.com",
+						ClientID:  "YOUR_CLIENT_ID",
+					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:           []string{"127.0.0.1:8000", "127.0.0.1:18000"},
@@ -248,10 +251,12 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: credentialplugin.Input{
 					TokenCacheDir: defaultTokenCacheDir,
-					IssuerURL:     "https://issuer.example.com",
-					ClientID:      "YOUR_CLIENT_ID",
-					ClientSecret:  "YOUR_CLIENT_SECRET",
-					ExtraScopes:   []string{"email", "profile"},
+					Provider: oidc.Provider{
+						IssuerURL:    "https://issuer.example.com",
+						ClientID:     "YOUR_CLIENT_ID",
+						ClientSecret: "YOUR_CLIENT_SECRET",
+						ExtraScopes:  []string{"email", "profile"},
+					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:                []string{"127.0.0.1:10080", "127.0.0.1:20080"},
@@ -281,8 +286,10 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: credentialplugin.Input{
 					TokenCacheDir: defaultTokenCacheDir,
-					IssuerURL:     "https://issuer.example.com",
-					ClientID:      "YOUR_CLIENT_ID",
+					Provider: oidc.Provider{
+						IssuerURL: "https://issuer.example.com",
+						ClientID:  "YOUR_CLIENT_ID",
+					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeKeyboardOption: &authcode.KeyboardOption{
 							AuthRequestExtraParams: map[string]string{"ttl": "86400"},
@@ -303,8 +310,10 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: credentialplugin.Input{
 					TokenCacheDir: defaultTokenCacheDir,
-					IssuerURL:     "https://issuer.example.com",
-					ClientID:      "YOUR_CLIENT_ID",
+					Provider: oidc.Provider{
+						IssuerURL: "https://issuer.example.com",
+						ClientID:  "YOUR_CLIENT_ID",
+					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						ROPCOption: &ropc.Option{
 							Username: "USER",
@@ -325,8 +334,10 @@ func TestCmd_Run(t *testing.T) {
 				},
 				in: credentialplugin.Input{
 					TokenCacheDir: defaultTokenCacheDir,
-					IssuerURL:     "https://issuer.example.com",
-					ClientID:      "YOUR_CLIENT_ID",
+					Provider: oidc.Provider{
+						IssuerURL: "https://issuer.example.com",
+						ClientID:  "YOUR_CLIENT_ID",
+					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						ROPCOption: &ropc.Option{
 							Username: "USER",
