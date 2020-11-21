@@ -30,6 +30,11 @@ func TestGetToken_Do(t *testing.T) {
 		claims.Subject = "YOUR_SUBJECT"
 		claims.ExpiresAt = issuedIDTokenExpiration.Unix()
 	})
+	dummyProvider := oidc.Provider{
+		IssuerURL:    "https://accounts.google.com",
+		ClientID:     "YOUR_CLIENT_ID",
+		ClientSecret: "YOUR_CLIENT_SECRET",
+	}
 
 	t.Run("LeastOptions", func(t *testing.T) {
 		var grantOptionSet authentication.GrantOptionSet
@@ -38,26 +43,23 @@ func TestGetToken_Do(t *testing.T) {
 			RefreshToken: "YOUR_REFRESH_TOKEN",
 		}
 		tokenCacheKey := tokencache.Key{
-			IssuerURL: "https://accounts.google.com",
-			ClientID:  "YOUR_CLIENT_ID",
+			IssuerURL:    "https://accounts.google.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
 		}
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{
-			IssuerURL:      "https://accounts.google.com",
-			ClientID:       "YOUR_CLIENT_ID",
+			Provider:       dummyProvider,
 			TokenCacheDir:  "/path/to/token-cache",
 			GrantOptionSet: grantOptionSet,
 		}
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				Provider: oidc.Provider{
-					IssuerURL: "https://accounts.google.com",
-					ClientID:  "YOUR_CLIENT_ID",
-				},
+				Provider:       dummyProvider,
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{TokenSet: tokenSet}, nil)
@@ -112,9 +114,7 @@ func TestGetToken_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{
-			IssuerURL:       "https://accounts.google.com",
-			ClientID:        "YOUR_CLIENT_ID",
-			ClientSecret:    "YOUR_CLIENT_SECRET",
+			Provider:        dummyProvider,
 			TokenCacheDir:   "/path/to/token-cache",
 			GrantOptionSet:  grantOptionSet,
 			TLSClientConfig: tlsClientConfig,
@@ -122,11 +122,7 @@ func TestGetToken_Do(t *testing.T) {
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				Provider: oidc.Provider{
-					IssuerURL:    "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
+				Provider:        dummyProvider,
 				GrantOptionSet:  grantOptionSet,
 				TLSClientConfig: tlsClientConfig,
 			}).
@@ -160,19 +156,13 @@ func TestGetToken_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{
-			IssuerURL:     "https://accounts.google.com",
-			ClientID:      "YOUR_CLIENT_ID",
-			ClientSecret:  "YOUR_CLIENT_SECRET",
+			Provider:      dummyProvider,
 			TokenCacheDir: "/path/to/token-cache",
 		}
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				Provider: oidc.Provider{
-					IssuerURL:    "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
+				Provider: dummyProvider,
 				CachedTokenSet: &oidc.TokenSet{
 					IDToken: issuedIDToken,
 				},
@@ -216,19 +206,13 @@ func TestGetToken_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{
-			IssuerURL:     "https://accounts.google.com",
-			ClientID:      "YOUR_CLIENT_ID",
-			ClientSecret:  "YOUR_CLIENT_SECRET",
+			Provider:      dummyProvider,
 			TokenCacheDir: "/path/to/token-cache",
 		}
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				Provider: oidc.Provider{
-					IssuerURL:    "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
+				Provider: dummyProvider,
 			}).
 			Return(nil, errors.New("authentication error"))
 		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
