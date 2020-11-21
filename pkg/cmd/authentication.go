@@ -9,7 +9,6 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"github.com/spf13/pflag"
-	"golang.org/x/xerrors"
 )
 
 type authenticationOptions struct {
@@ -91,7 +90,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			Password: o.Password,
 		}
 	default:
-		err = xerrors.Errorf("grant-type must be one of (%s)", allGrantType)
+		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
 	}
 	return
 }

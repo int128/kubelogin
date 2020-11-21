@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
-	"golang.org/x/xerrors"
 )
 
 func TestAuthentication_Do(t *testing.T) {
@@ -135,7 +135,7 @@ func TestAuthentication_Do(t *testing.T) {
 		mockClient.EXPECT().SupportedPKCEMethods()
 		mockClient.EXPECT().
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
-			Return(nil, xerrors.New("token has expired"))
+			Return(nil, errors.New("token has expired"))
 		mockClient.EXPECT().
 			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
 			Do(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {

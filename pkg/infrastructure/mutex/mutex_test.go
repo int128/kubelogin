@@ -1,9 +1,9 @@
 package mutex
 
 import (
+	"fmt"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"golang.org/x/net/context"
-	"golang.org/x/xerrors"
 	"math/rand"
 	"sync"
 	"testing"
@@ -33,10 +33,10 @@ func TestMutex(t *testing.T) {
 				time.Sleep(dur * time.Microsecond)
 				events <- -1
 				if err := m.Release(mutex); err != nil {
-					errors <- xerrors.Errorf("Release error: %w", err)
+					errors <- fmt.Errorf("Release error: %w", err)
 				}
 			} else {
-				errors <- xerrors.Errorf("Acquire error: %w", err)
+				errors <- fmt.Errorf("Acquire error: %w", err)
 			}
 		}
 

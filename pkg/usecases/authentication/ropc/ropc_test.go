@@ -2,6 +2,7 @@ package ropc
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client/mock_client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
-	"golang.org/x/xerrors"
 )
 
 func TestROPC_Do(t *testing.T) {
@@ -125,7 +125,7 @@ func TestROPC_Do(t *testing.T) {
 			Username: "USER",
 		}
 		mockEnv := mock_reader.NewMockInterface(ctrl)
-		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", xerrors.New("error"))
+		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", errors.New("error"))
 		u := ROPC{
 			Reader: mockEnv,
 			Logger: logger.New(t),

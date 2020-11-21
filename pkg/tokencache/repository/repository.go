@@ -5,13 +5,13 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tokencache"
-	"golang.org/x/xerrors"
 )
 
 //go:generate mockgen -destination mock_repository/mock_repository.go github.com/int128/kubelogin/pkg/tokencache/repository Interface
@@ -39,18 +39,18 @@ type Repository struct{}
 func (r *Repository) FindByKey(dir string, key tokencache.Key) (*oidc.TokenSet, error) {
 	filename, err := computeFilename(key)
 	if err != nil {
-		return nil, xerrors.Errorf("could not compute the key: %w", err)
+		return nil, fmt.Errorf("could not compute the key: %w", err)
 	}
 	p := filepath.Join(dir, filename)
 	f, err := os.Open(p)
 	if err != nil {
-		return nil, xerrors.Errorf("could not open file %s: %w", p, err)
+		return nil, fmt.Errorf("could not open file %s: %w", p, err)
 	}
 	defer f.Close()
 	d := json.NewDecoder(f)
 	var e entity
 	if err := d.Decode(&e); err != nil {
-		return nil, xerrors.Errorf("invalid json file %s: %w", p, err)
+		return nil, fmt.Errorf("invalid json file %s: %w", p, err)
 	}
 	return &oidc.TokenSet{
 		IDToken:      e.IDToken,
@@ -60,16 +60,16 @@ func (r *Repository) FindByKey(dir string, key tokencache.Key) (*oidc.TokenSet, 
 
 func (r *Repository) Save(dir string, key tokencache.Key, tokenSet oidc.TokenSet) error {
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		return xerrors.Errorf("could not create directory %s: %w", dir, err)
+		return fmt.Errorf("could not create directory %s: %w", dir, err)
 	}
 	filename, err := computeFilename(key)
 	if err != nil {
-		return xerrors.Errorf("could not compute the key: %w", err)
+		return fmt.Errorf("could not compute the key: %w", err)
 	}
 	p := filepath.Join(dir, filename)
 	f, err := os.OpenFile(p, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return xerrors.Errorf("could not create file %s: %w", p, err)
+		return fmt.Errorf("could not create file %s: %w", p, err)
 	}
 	defer f.Close()
 	e := entity{
@@ -77,7 +77,7 @@ func (r *Repository) Save(dir string, key tokencache.Key, tokenSet oidc.TokenSet
 		RefreshToken: tokenSet.RefreshToken,
 	}
 	if err := json.NewEncoder(f).Encode(&e); err != nil {
-		return xerrors.Errorf("json encode error: %w", err)
+		return fmt.Errorf("json encode error: %w", err)
 	}
 	return nil
 }
@@ -86,7 +86,7 @@ func computeFilename(key tokencache.Key) (string, error) {
 	s := sha256.New()
 	e := gob.NewEncoder(s)
 	if err := e.Encode(&key); err != nil {
-		return "", xerrors.Errorf("could not encode the key: %w", err)
+		return "", fmt.Errorf("could not encode the key: %w", err)
 	}
 	h := hex.EncodeToString(s.Sum(nil))
 	return h, nil

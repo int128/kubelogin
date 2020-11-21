@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/kubeconfig"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/xerrors"
 )
 
 const rootDescription = `Log in to the OpenID Connect provider.
@@ -51,7 +51,7 @@ func (cmd *Root) New() *cobra.Command {
 		RunE: func(c *cobra.Command, _ []string) error {
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
-				return xerrors.Errorf("invalid option: %w", err)
+				return fmt.Errorf("invalid option: %w", err)
 			}
 			in := standalone.Input{
 				KubeconfigFilename: o.Kubeconfig,
@@ -61,7 +61,7 @@ func (cmd *Root) New() *cobra.Command {
 				TLSClientConfig:    o.tlsOptions.tlsClientConfig(),
 			}
 			if err := cmd.Standalone.Do(c.Context(), in); err != nil {
-				return xerrors.Errorf("login: %w", err)
+				return fmt.Errorf("login: %w", err)
 			}
 			return nil
 		},

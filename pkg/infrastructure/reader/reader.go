@@ -11,7 +11,6 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/infrastructure/stdio"
 	"golang.org/x/crypto/ssh/terminal"
-	"golang.org/x/xerrors"
 )
 
 //go:generate mockgen -destination mock_reader/mock_reader.go github.com/int128/kubelogin/pkg/infrastructure/reader Interface
@@ -34,12 +33,12 @@ type Reader struct {
 // ReadString reads a string from the stdin.
 func (x *Reader) ReadString(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
-		return "", xerrors.Errorf("write error: %w", err)
+		return "", fmt.Errorf("write error: %w", err)
 	}
 	r := bufio.NewReader(x.Stdin)
 	s, err := r.ReadString('\n')
 	if err != nil {
-		return "", xerrors.Errorf("read error: %w", err)
+		return "", fmt.Errorf("read error: %w", err)
 	}
 	s = strings.TrimRight(s, "\r\n")
 	return s, nil
@@ -48,14 +47,14 @@ func (x *Reader) ReadString(prompt string) (string, error) {
 // ReadPassword reads a password from the stdin without echo back.
 func (*Reader) ReadPassword(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
-		return "", xerrors.Errorf("write error: %w", err)
+		return "", fmt.Errorf("write error: %w", err)
 	}
 	b, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
-		return "", xerrors.Errorf("read error: %w", err)
+		return "", fmt.Errorf("read error: %w", err)
 	}
 	if _, err := fmt.Fprintln(os.Stderr); err != nil {
-		return "", xerrors.Errorf("write error: %w", err)
+		return "", fmt.Errorf("write error: %w", err)
 	}
 	return string(b), nil
 }

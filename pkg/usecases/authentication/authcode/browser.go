@@ -2,6 +2,7 @@ package authcode
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
@@ -10,7 +11,6 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/pkce"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/xerrors"
 )
 
 type BrowserOption struct {
@@ -34,15 +34,15 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 	u.Logger.V(1).Infof("starting the authentication code flow using the browser")
 	state, err := oidc.NewState()
 	if err != nil {
-		return nil, xerrors.Errorf("could not generate a state: %w", err)
+		return nil, fmt.Errorf("could not generate a state: %w", err)
 	}
 	nonce, err := oidc.NewNonce()
 	if err != nil {
-		return nil, xerrors.Errorf("could not generate a nonce: %w", err)
+		return nil, fmt.Errorf("could not generate a nonce: %w", err)
 	}
 	p, err := pkce.New(oidcClient.SupportedPKCEMethods())
 	if err != nil {
-		return nil, xerrors.Errorf("could not generate PKCE parameters: %w", err)
+		return nil, fmt.Errorf("could not generate PKCE parameters: %w", err)
 	}
 	successHTML := BrowserSuccessHTML
 	if o.OpenURLAfterAuthentication != "" {
@@ -84,21 +84,21 @@ Please visit the following URL in your browser manually: %s`, err, url)
 			}
 			return nil
 		case <-ctx.Done():
-			return xerrors.Errorf("context cancelled while waiting for the local server: %w", ctx.Err())
+			return fmt.Errorf("context cancelled while waiting for the local server: %w", ctx.Err())
 		}
 	})
 	eg.Go(func() error {
 		defer close(readyChan)
 		tokenSet, err := oidcClient.GetTokenByAuthCode(ctx, in, readyChan)
 		if err != nil {
-			return xerrors.Errorf("authorization code flow error: %w", err)
+			return fmt.Errorf("authorization code flow error: %w", err)
 		}
 		out = tokenSet
 		u.Logger.V(1).Infof("got a token set by the authorization code flow")
 		return nil
 	})
 	if err := eg.Wait(); err != nil {
-		return nil, xerrors.Errorf("authentication error: %w", err)
+		return nil, fmt.Errorf("authentication error: %w", err)
 	}
 	u.Logger.V(1).Infof("finished the authorization code flow via the browser")
 	return out, nil

@@ -1,11 +1,12 @@
 package loader
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/kubeconfig"
-	"golang.org/x/xerrors"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
@@ -26,11 +27,11 @@ type Loader struct{}
 func (Loader) GetCurrentAuthProvider(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName) (*kubeconfig.AuthProvider, error) {
 	config, err := loadByDefaultRules(explicitFilename)
 	if err != nil {
-		return nil, xerrors.Errorf("could not load the kubeconfig: %w", err)
+		return nil, fmt.Errorf("could not load the kubeconfig: %w", err)
 	}
 	auth, err := findCurrentAuthProvider(config, contextName, userName)
 	if err != nil {
-		return nil, xerrors.Errorf("could not find the current auth provider: %w", err)
+		return nil, fmt.Errorf("could not find the current auth provider: %w", err)
 	}
 	return auth, nil
 }
@@ -40,7 +41,7 @@ func loadByDefaultRules(explicitFilename string) (*api.Config, error) {
 	rules.ExplicitPath = explicitFilename
 	config, err := rules.Load()
 	if err != nil {
-		return nil, xerrors.Errorf("load error: %w", err)
+		return nil, fmt.Errorf("load error: %w", err)
 	}
 	return config, err
 }
@@ -56,22 +57,22 @@ func findCurrentAuthProvider(config *api.Config, contextName kubeconfig.ContextN
 		}
 		contextNode, ok := config.Contexts[string(contextName)]
 		if !ok {
-			return nil, xerrors.Errorf("context %s does not exist", contextName)
+			return nil, fmt.Errorf("context %s does not exist", contextName)
 		}
 		userName = kubeconfig.UserName(contextNode.AuthInfo)
 	}
 	userNode, ok := config.AuthInfos[string(userName)]
 	if !ok {
-		return nil, xerrors.Errorf("user %s does not exist", userName)
+		return nil, fmt.Errorf("user %s does not exist", userName)
 	}
 	if userNode.AuthProvider == nil {
-		return nil, xerrors.New("auth-provider is missing")
+		return nil, errors.New("auth-provider is missing")
 	}
 	if userNode.AuthProvider.Name != "oidc" {
-		return nil, xerrors.Errorf("auth-provider.name must be oidc but is %s", userNode.AuthProvider.Name)
+		return nil, fmt.Errorf("auth-provider.name must be oidc but is %s", userNode.AuthProvider.Name)
 	}
 	if userNode.AuthProvider.Config == nil {
-		return nil, xerrors.New("auth-provider.config is missing")
+		return nil, errors.New("auth-provider.config is missing")
 	}
 
 	m := userNode.AuthProvider.Config

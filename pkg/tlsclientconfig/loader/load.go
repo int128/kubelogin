@@ -5,11 +5,12 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
-	"golang.org/x/xerrors"
 )
 
 // Set provides an implementation and interface.
@@ -29,12 +30,12 @@ func (l *Loader) Load(config tlsclientconfig.Config) (*tls.Config, error) {
 	rootCAs := x509.NewCertPool()
 	for _, f := range config.CACertFilename {
 		if err := addFile(rootCAs, f); err != nil {
-			return nil, xerrors.Errorf("could not load the certificate from %s: %w", f, err)
+			return nil, fmt.Errorf("could not load the certificate from %s: %w", f, err)
 		}
 	}
 	for _, d := range config.CACertData {
 		if err := addBase64Encoded(rootCAs, d); err != nil {
-			return nil, xerrors.Errorf("could not load the certificate: %w", err)
+			return nil, fmt.Errorf("could not load the certificate: %w", err)
 		}
 	}
 	if len(rootCAs.Subjects()) == 0 {
@@ -51,10 +52,10 @@ func (l *Loader) Load(config tlsclientconfig.Config) (*tls.Config, error) {
 func addFile(p *x509.CertPool, filename string) error {
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return xerrors.Errorf("could not read: %w", err)
+		return fmt.Errorf("could not read: %w", err)
 	}
 	if !p.AppendCertsFromPEM(b) {
-		return xerrors.New("invalid certificate")
+		return errors.New("invalid certificate")
 	}
 	return nil
 }
@@ -62,10 +63,10 @@ func addFile(p *x509.CertPool, filename string) error {
 func addBase64Encoded(p *x509.CertPool, s string) error {
 	b, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
-		return xerrors.Errorf("could not decode base64: %w", err)
+		return fmt.Errorf("could not decode base64: %w", err)
 	}
 	if !p.AppendCertsFromPEM(b) {
-		return xerrors.New("invalid certificate")
+		return errors.New("invalid certificate")
 	}
 	return nil
 }

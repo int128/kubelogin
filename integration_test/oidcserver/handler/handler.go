@@ -3,11 +3,10 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
-
-	"golang.org/x/xerrors"
 )
 
 func New(t *testing.T, provider Provider) *Handler {
@@ -29,7 +28,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.t.Logf("%d %s %s", wr.statusCode, r.Method, r.RequestURI)
 		return
 	}
-	if errResp := new(ErrorResponse); xerrors.As(err, &errResp) {
+	if errResp := new(ErrorResponse); errors.As(err, &errResp) {
 		h.t.Logf("400 %s %s: %s", r.Method, r.RequestURI, err)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(400)
@@ -62,14 +61,14 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		w.Header().Add("Content-Type", "application/json")
 		e := json.NewEncoder(w)
 		if err := e.Encode(discoveryResponse); err != nil {
-			return xerrors.Errorf("could not render json: %w", err)
+			return fmt.Errorf("could not render json: %w", err)
 		}
 	case m == "GET" && p == "/certs":
 		certificatesResponse := h.provider.GetCertificates()
 		w.Header().Add("Content-Type", "application/json")
 		e := json.NewEncoder(w)
 		if err := e.Encode(certificatesResponse); err != nil {
-			return xerrors.Errorf("could not render json: %w", err)
+			return fmt.Errorf("could not render json: %w", err)
 		}
 	case m == "GET" && p == "/auth":
 		q := r.URL.Query()
@@ -84,13 +83,13 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			RawQuery:            q,
 		})
 		if err != nil {
-			return xerrors.Errorf("authentication error: %w", err)
+			return fmt.Errorf("authentication error: %w", err)
 		}
 		to := fmt.Sprintf("%s?state=%s&code=%s", redirectURI, state, code)
 		http.Redirect(w, r, to, 302)
 	case m == "POST" && p == "/token":
 		if err := r.ParseForm(); err != nil {
-			return xerrors.Errorf("could not parse the form: %w", err)
+			return fmt.Errorf("could not parse the form: %w", err)
 		}
 		grantType := r.Form.Get("grant_type")
 		switch grantType {
@@ -100,12 +99,12 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 				CodeVerifier: r.Form.Get("code_verifier"),
 			})
 			if err != nil {
-				return xerrors.Errorf("token request error: %w", err)
+				return fmt.Errorf("token request error: %w", err)
 			}
 			w.Header().Add("Content-Type", "application/json")
 			e := json.NewEncoder(w)
 			if err := e.Encode(tokenResponse); err != nil {
-				return xerrors.Errorf("could not render json: %w", err)
+				return fmt.Errorf("could not render json: %w", err)
 			}
 		case "password":
 			// 4.3. Resource Owner Password Credentials Grant
@@ -113,12 +112,12 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			username, password, scope := r.Form.Get("username"), r.Form.Get("password"), r.Form.Get("scope")
 			tokenResponse, err := h.provider.AuthenticatePassword(username, password, scope)
 			if err != nil {
-				return xerrors.Errorf("authentication error: %w", err)
+				return fmt.Errorf("authentication error: %w", err)
 			}
 			w.Header().Add("Content-Type", "application/json")
 			e := json.NewEncoder(w)
 			if err := e.Encode(tokenResponse); err != nil {
-				return xerrors.Errorf("could not render json: %w", err)
+				return fmt.Errorf("could not render json: %w", err)
 			}
 		case "refresh_token":
 			// 12.1. Refresh Request
@@ -126,12 +125,12 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			refreshToken := r.Form.Get("refresh_token")
 			tokenResponse, err := h.provider.Refresh(refreshToken)
 			if err != nil {
-				return xerrors.Errorf("token refresh error: %w", err)
+				return fmt.Errorf("token refresh error: %w", err)
 			}
 			w.Header().Add("Content-Type", "application/json")
 			e := json.NewEncoder(w)
 			if err := e.Encode(tokenResponse); err != nil {
-				return xerrors.Errorf("could not render json: %w", err)
+				return fmt.Errorf("could not render json: %w", err)
 			}
 		default:
 			// 5.2. Error Response

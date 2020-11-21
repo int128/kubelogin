@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/xerrors"
 )
 
 // getTokenOptions represents the options for get-token command.
@@ -44,17 +45,17 @@ func (cmd *GetToken) New() *cobra.Command {
 				return err
 			}
 			if o.IssuerURL == "" {
-				return xerrors.New("--oidc-issuer-url is missing")
+				return errors.New("--oidc-issuer-url is missing")
 			}
 			if o.ClientID == "" {
-				return xerrors.New("--oidc-client-id is missing")
+				return errors.New("--oidc-client-id is missing")
 			}
 			return nil
 		},
 		RunE: func(c *cobra.Command, _ []string) error {
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
-				return xerrors.Errorf("get-token: %w", err)
+				return fmt.Errorf("get-token: %w", err)
 			}
 			in := credentialplugin.Input{
 				IssuerURL:       o.IssuerURL,
@@ -66,7 +67,7 @@ func (cmd *GetToken) New() *cobra.Command {
 				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
 			}
 			if err := cmd.GetToken.Do(c.Context(), in); err != nil {
-				return xerrors.Errorf("get-token: %w", err)
+				return fmt.Errorf("get-token: %w", err)
 			}
 			return nil
 		},

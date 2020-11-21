@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
@@ -11,7 +12,6 @@ import (
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
-	"golang.org/x/xerrors"
 )
 
 //go:generate mockgen -destination mock_authentication/mock_authentication.go github.com/int128/kubelogin/pkg/usecases/authentication Interface
@@ -79,7 +79,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		// because the token has been verified before caching.
 		claims, err := in.CachedTokenSet.DecodeWithoutVerify()
 		if err != nil {
-			return nil, xerrors.Errorf("invalid token cache (you may need to remove): %w", err)
+			return nil, fmt.Errorf("invalid token cache (you may need to remove): %w", err)
 		}
 		if !claims.IsExpired(u.Clock) {
 			u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
@@ -94,7 +94,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	u.Logger.V(1).Infof("initializing an OpenID Connect client")
 	oidcClient, err := u.ClientFactory.New(ctx, in.Provider, in.TLSClientConfig)
 	if err != nil {
-		return nil, xerrors.Errorf("oidc error: %w", err)
+		return nil, fmt.Errorf("oidc error: %w", err)
 	}
 
 	if in.CachedTokenSet != nil && in.CachedTokenSet.RefreshToken != "" {
@@ -109,23 +109,23 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	if in.GrantOptionSet.AuthCodeBrowserOption != nil {
 		tokenSet, err := u.AuthCodeBrowser.Do(ctx, in.GrantOptionSet.AuthCodeBrowserOption, oidcClient)
 		if err != nil {
-			return nil, xerrors.Errorf("authcode-browser error: %w", err)
+			return nil, fmt.Errorf("authcode-browser error: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}
 	if in.GrantOptionSet.AuthCodeKeyboardOption != nil {
 		tokenSet, err := u.AuthCodeKeyboard.Do(ctx, in.GrantOptionSet.AuthCodeKeyboardOption, oidcClient)
 		if err != nil {
-			return nil, xerrors.Errorf("authcode-keyboard error: %w", err)
+			return nil, fmt.Errorf("authcode-keyboard error: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}
 	if in.GrantOptionSet.ROPCOption != nil {
 		tokenSet, err := u.ROPC.Do(ctx, in.GrantOptionSet.ROPCOption, oidcClient)
 		if err != nil {
-			return nil, xerrors.Errorf("ropc error: %w", err)
+			return nil, fmt.Errorf("ropc error: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}
-	return nil, xerrors.Errorf("any authorization grant must be set")
+	return nil, fmt.Errorf("any authorization grant must be set")
 }
