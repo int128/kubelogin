@@ -24,24 +24,28 @@ import (
 )
 
 func TestGetToken_Do(t *testing.T) {
+	dummyProvider := oidc.Provider{
+		IssuerURL:    "https://accounts.google.com",
+		ClientID:     "YOUR_CLIENT_ID",
+		ClientSecret: "YOUR_CLIENT_SECRET",
+	}
 	issuedIDTokenExpiration := time.Now().Add(1 * time.Hour).Round(time.Second)
 	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
 		claims.Issuer = "https://accounts.google.com"
 		claims.Subject = "YOUR_SUBJECT"
 		claims.ExpiresAt = issuedIDTokenExpiration.Unix()
 	})
-	dummyProvider := oidc.Provider{
-		IssuerURL:    "https://accounts.google.com",
-		ClientID:     "YOUR_CLIENT_ID",
-		ClientSecret: "YOUR_CLIENT_SECRET",
+	issuedTokenSet := oidc.TokenSet{
+		IDToken:      issuedIDToken,
+		RefreshToken: "YOUR_REFRESH_TOKEN",
+	}
+	issuedOutput := credentialplugin.Output{
+		Token:  issuedIDToken,
+		Expiry: issuedIDTokenExpiration,
 	}
 
 	t.Run("LeastOptions", func(t *testing.T) {
 		var grantOptionSet authentication.GrantOptionSet
-		tokenSet := oidc.TokenSet{
-			IDToken:      issuedIDToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
-		}
 		tokenCacheKey := tokencache.Key{
 			IssuerURL:    "https://accounts.google.com",
 			ClientID:     "YOUR_CLIENT_ID",
@@ -62,23 +66,19 @@ func TestGetToken_Do(t *testing.T) {
 				Provider:       dummyProvider,
 				GrantOptionSet: grantOptionSet,
 			}).
-			Return(&authentication.Output{TokenSet: tokenSet}, nil)
-		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
-		tokenCacheRepository.EXPECT().
+			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
+		mockRepository := mock_repository.NewMockInterface(ctrl)
+		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokenCacheKey).
 			Return(nil, errors.New("file not found"))
-		tokenCacheRepository.EXPECT().
-			Save("/path/to/token-cache", tokenCacheKey, tokenSet)
-		credentialPluginWriter := mock_writer.NewMockInterface(ctrl)
-		credentialPluginWriter.EXPECT().
-			Write(credentialplugin.Output{
-				Token:  issuedIDToken,
-				Expiry: issuedIDTokenExpiration,
-			})
+		mockRepository.EXPECT().
+			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet)
+		mockWriter := mock_writer.NewMockInterface(ctrl)
+		mockWriter.EXPECT().Write(issuedOutput)
 		u := GetToken{
 			Authentication:       mockAuthentication,
-			TokenCacheRepository: tokenCacheRepository,
-			Writer:               credentialPluginWriter,
+			TokenCacheRepository: mockRepository,
+			Writer:               mockWriter,
 			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
@@ -90,10 +90,6 @@ func TestGetToken_Do(t *testing.T) {
 	t.Run("FullOptions", func(t *testing.T) {
 		grantOptionSet := authentication.GrantOptionSet{
 			ROPCOption: &ropc.Option{Username: "YOUR_USERNAME"},
-		}
-		tokenSet := oidc.TokenSet{
-			IDToken:      issuedIDToken,
-			RefreshToken: "YOUR_REFRESH_TOKEN",
 		}
 		tokenCacheKey := tokencache.Key{
 			IssuerURL:      "https://accounts.google.com",
@@ -126,23 +122,19 @@ func TestGetToken_Do(t *testing.T) {
 				GrantOptionSet:  grantOptionSet,
 				TLSClientConfig: tlsClientConfig,
 			}).
-			Return(&authentication.Output{TokenSet: tokenSet}, nil)
-		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
-		tokenCacheRepository.EXPECT().
+			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
+		mockRepository := mock_repository.NewMockInterface(ctrl)
+		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokenCacheKey).
 			Return(nil, errors.New("file not found"))
-		tokenCacheRepository.EXPECT().
-			Save("/path/to/token-cache", tokenCacheKey, tokenSet)
-		credentialPluginWriter := mock_writer.NewMockInterface(ctrl)
-		credentialPluginWriter.EXPECT().
-			Write(credentialplugin.Output{
-				Token:  issuedIDToken,
-				Expiry: issuedIDTokenExpiration,
-			})
+		mockRepository.EXPECT().
+			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet)
+		mockWriter := mock_writer.NewMockInterface(ctrl)
+		mockWriter.EXPECT().Write(issuedOutput)
 		u := GetToken{
 			Authentication:       mockAuthentication,
-			TokenCacheRepository: tokenCacheRepository,
-			Writer:               credentialPluginWriter,
+			TokenCacheRepository: mockRepository,
+			Writer:               mockWriter,
 			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
@@ -162,37 +154,27 @@ func TestGetToken_Do(t *testing.T) {
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				Provider: dummyProvider,
-				CachedTokenSet: &oidc.TokenSet{
-					IDToken: issuedIDToken,
-				},
+				Provider:       dummyProvider,
+				CachedTokenSet: &issuedTokenSet,
 			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
-				TokenSet: oidc.TokenSet{
-					IDToken: issuedIDToken,
-				},
+				TokenSet:               issuedTokenSet,
 			}, nil)
-		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
-		tokenCacheRepository.EXPECT().
+		mockRepository := mock_repository.NewMockInterface(ctrl)
+		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
 				IssuerURL:    "https://accounts.google.com",
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
-			Return(&oidc.TokenSet{
-				IDToken: issuedIDToken,
-			}, nil)
-		credentialPluginWriter := mock_writer.NewMockInterface(ctrl)
-		credentialPluginWriter.EXPECT().
-			Write(credentialplugin.Output{
-				Token:  issuedIDToken,
-				Expiry: issuedIDTokenExpiration,
-			})
+			Return(&issuedTokenSet, nil)
+		mockWriter := mock_writer.NewMockInterface(ctrl)
+		mockWriter.EXPECT().Write(issuedOutput)
 		u := GetToken{
 			Authentication:       mockAuthentication,
-			TokenCacheRepository: tokenCacheRepository,
-			Writer:               credentialPluginWriter,
+			TokenCacheRepository: mockRepository,
+			Writer:               mockWriter,
 			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
 		}
@@ -215,8 +197,8 @@ func TestGetToken_Do(t *testing.T) {
 				Provider: dummyProvider,
 			}).
 			Return(nil, errors.New("authentication error"))
-		tokenCacheRepository := mock_repository.NewMockInterface(ctrl)
-		tokenCacheRepository.EXPECT().
+		mockRepository := mock_repository.NewMockInterface(ctrl)
+		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
 				IssuerURL:    "https://accounts.google.com",
 				ClientID:     "YOUR_CLIENT_ID",
@@ -225,7 +207,7 @@ func TestGetToken_Do(t *testing.T) {
 			Return(nil, errors.New("file not found"))
 		u := GetToken{
 			Authentication:       mockAuthentication,
-			TokenCacheRepository: tokenCacheRepository,
+			TokenCacheRepository: mockRepository,
 			Writer:               mock_writer.NewMockInterface(ctrl),
 			Mutex:                setupMutexMock(ctrl),
 			Logger:               logger.New(t),
