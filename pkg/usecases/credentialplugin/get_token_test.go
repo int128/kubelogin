@@ -9,13 +9,13 @@ import (
 	"github.com/int128/kubelogin/pkg/credentialplugin"
 	"github.com/int128/kubelogin/pkg/infrastructure/mutex"
 	"github.com/int128/kubelogin/pkg/infrastructure/mutex/mock_mutex"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/credentialplugin/writer/mock_writer"
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
-	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/tokencache"
 	"github.com/int128/kubelogin/pkg/tokencache/repository/mock_repository"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
@@ -43,13 +43,62 @@ func TestGetToken_Do(t *testing.T) {
 		Token:  issuedIDToken,
 		Expiry: issuedIDTokenExpiration,
 	}
+	grantOptionSet := authentication.GrantOptionSet{
+		AuthCodeBrowserOption: &authcode.BrowserOption{
+			BindAddress: []string{"127.0.0.1:8080"},
+		},
+	}
 
-	t.Run("LeastOptions", func(t *testing.T) {
-		var grantOptionSet authentication.GrantOptionSet
+	t.Run("NoTokenCache", func(t *testing.T) {
 		tokenCacheKey := tokencache.Key{
 			IssuerURL:    "https://accounts.google.com",
 			ClientID:     "YOUR_CLIENT_ID",
 			ClientSecret: "YOUR_CLIENT_SECRET",
+		}
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+		in := Input{
+			Provider:       dummyProvider,
+			TokenCacheDir:  "/path/to/token-cache",
+			GrantOptionSet: grantOptionSet,
+		}
+		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
+		mockAuthentication.EXPECT().
+			Do(ctx, authentication.Input{
+				Provider:       dummyProvider,
+				GrantOptionSet: grantOptionSet,
+			}).
+			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
+		mockRepository := mock_repository.NewMockInterface(ctrl)
+		mockRepository.EXPECT().
+			FindByKey("/path/to/token-cache", tokenCacheKey).
+			Return(nil, errors.New("file not found"))
+		mockRepository.EXPECT().
+			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet)
+		mockWriter := mock_writer.NewMockInterface(ctrl)
+		mockWriter.EXPECT().Write(issuedOutput)
+		u := GetToken{
+			Authentication:       mockAuthentication,
+			TokenCacheRepository: mockRepository,
+			Writer:               mockWriter,
+			Mutex:                setupMutexMock(ctrl),
+			Logger:               logger.New(t),
+		}
+		if err := u.Do(ctx, in); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
+	t.Run("ROPC", func(t *testing.T) {
+		grantOptionSet := authentication.GrantOptionSet{
+			ROPCOption: &ropc.Option{Username: "YOUR_USERNAME"},
+		}
+		tokenCacheKey := tokencache.Key{
+			IssuerURL:    "https://accounts.google.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
+			Username:     "YOUR_USERNAME",
 		}
 
 		ctrl := gomock.NewController(t)
@@ -87,75 +136,21 @@ func TestGetToken_Do(t *testing.T) {
 		}
 	})
 
-	t.Run("FullOptions", func(t *testing.T) {
-		grantOptionSet := authentication.GrantOptionSet{
-			ROPCOption: &ropc.Option{Username: "YOUR_USERNAME"},
-		}
-		tokenCacheKey := tokencache.Key{
-			IssuerURL:      "https://accounts.google.com",
-			ClientID:       "YOUR_CLIENT_ID",
-			ClientSecret:   "YOUR_CLIENT_SECRET",
-			Username:       "YOUR_USERNAME",
-			CACertFilename: "/path/to/cert",
-			CACertData:     "BASE64ENCODED",
-			SkipTLSVerify:  true,
-		}
-		tlsClientConfig := tlsclientconfig.Config{
-			CACertFilename: []string{"/path/to/cert"},
-			CACertData:     []string{"BASE64ENCODED"},
-			SkipTLSVerify:  true,
-		}
-
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		ctx := context.TODO()
-		in := Input{
-			Provider:        dummyProvider,
-			TokenCacheDir:   "/path/to/token-cache",
-			GrantOptionSet:  grantOptionSet,
-			TLSClientConfig: tlsClientConfig,
-		}
-		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
-		mockAuthentication.EXPECT().
-			Do(ctx, authentication.Input{
-				Provider:        dummyProvider,
-				GrantOptionSet:  grantOptionSet,
-				TLSClientConfig: tlsClientConfig,
-			}).
-			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
-		mockRepository := mock_repository.NewMockInterface(ctrl)
-		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokenCacheKey).
-			Return(nil, errors.New("file not found"))
-		mockRepository.EXPECT().
-			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet)
-		mockWriter := mock_writer.NewMockInterface(ctrl)
-		mockWriter.EXPECT().Write(issuedOutput)
-		u := GetToken{
-			Authentication:       mockAuthentication,
-			TokenCacheRepository: mockRepository,
-			Writer:               mockWriter,
-			Mutex:                setupMutexMock(ctrl),
-			Logger:               logger.New(t),
-		}
-		if err := u.Do(ctx, in); err != nil {
-			t.Errorf("Do returned error: %+v", err)
-		}
-	})
-
 	t.Run("HasValidIDToken", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{
-			Provider:      dummyProvider,
-			TokenCacheDir: "/path/to/token-cache",
+			Provider:       dummyProvider,
+			TokenCacheDir:  "/path/to/token-cache",
+			GrantOptionSet: grantOptionSet,
 		}
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
 				Provider:       dummyProvider,
 				CachedTokenSet: &issuedTokenSet,
+				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{
 				AlreadyHasValidIDToken: true,
@@ -188,13 +183,15 @@ func TestGetToken_Do(t *testing.T) {
 		defer ctrl.Finish()
 		ctx := context.TODO()
 		in := Input{
-			Provider:      dummyProvider,
-			TokenCacheDir: "/path/to/token-cache",
+			Provider:       dummyProvider,
+			TokenCacheDir:  "/path/to/token-cache",
+			GrantOptionSet: grantOptionSet,
 		}
 		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
-				Provider: dummyProvider,
+				Provider:       dummyProvider,
+				GrantOptionSet: grantOptionSet,
 			}).
 			Return(nil, errors.New("authentication error"))
 		mockRepository := mock_repository.NewMockInterface(ctrl)
