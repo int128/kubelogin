@@ -45,7 +45,7 @@ func TestGetToken_Do(t *testing.T) {
 	}
 	grantOptionSet := authentication.GrantOptionSet{
 		AuthCodeBrowserOption: &authcode.BrowserOption{
-			BindAddress: []string{"127.0.0.1:8080"},
+			BindAddress: []string{"127.0.0.1:0"},
 		},
 	}
 
@@ -82,7 +82,60 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
-			Mutex:                setupMutexMock(ctrl),
+			Mutex:                mock_mutex.NewMockInterface(ctrl),
+			Logger:               logger.New(t),
+		}
+		if err := u.Do(ctx, in); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
+	t.Run("NeedBindPortMutex", func(t *testing.T) {
+		grantOptionSet := authentication.GrantOptionSet{
+			AuthCodeBrowserOption: &authcode.BrowserOption{
+				BindAddress: []string{"127.0.0.1:8080"},
+			},
+		}
+		tokenCacheKey := tokencache.Key{
+			IssuerURL:    "https://accounts.google.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
+		}
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.TODO()
+		in := Input{
+			Provider:       dummyProvider,
+			TokenCacheDir:  "/path/to/token-cache",
+			GrantOptionSet: grantOptionSet,
+		}
+		mockAuthentication := mock_authentication.NewMockInterface(ctrl)
+		mockAuthentication.EXPECT().
+			Do(ctx, authentication.Input{
+				Provider:       dummyProvider,
+				GrantOptionSet: grantOptionSet,
+			}).
+			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
+		mockRepository := mock_repository.NewMockInterface(ctrl)
+		mockRepository.EXPECT().
+			FindByKey("/path/to/token-cache", tokenCacheKey).
+			Return(nil, errors.New("file not found"))
+		mockRepository.EXPECT().
+			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet)
+		mockWriter := mock_writer.NewMockInterface(ctrl)
+		mockWriter.EXPECT().Write(issuedOutput)
+		mockMutex := mock_mutex.NewMockInterface(ctrl)
+		mockMutex.EXPECT().
+			Acquire(ctx, "get-token-8080").
+			Return(&mutex.Lock{Data: "testData"}, nil)
+		mockMutex.EXPECT().
+			Release(&mutex.Lock{Data: "testData"})
+		u := GetToken{
+			Authentication:       mockAuthentication,
+			TokenCacheRepository: mockRepository,
+			Writer:               mockWriter,
+			Mutex:                mockMutex,
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -128,7 +181,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
-			Mutex:                setupMutexMock(ctrl),
+			Mutex:                mock_mutex.NewMockInterface(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -170,7 +223,7 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
-			Mutex:                setupMutexMock(ctrl),
+			Mutex:                mock_mutex.NewMockInterface(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -206,20 +259,11 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               mock_writer.NewMockInterface(ctrl),
-			Mutex:                setupMutexMock(ctrl),
+			Mutex:                mock_mutex.NewMockInterface(ctrl),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
 		}
 	})
-}
-
-// Setup a mock that expect the mutex to be lock and unlock
-func setupMutexMock(ctrl *gomock.Controller) *mock_mutex.MockInterface {
-	mockMutex := mock_mutex.NewMockInterface(ctrl)
-	lockValue := &mutex.Lock{Data: "testData"}
-	acquireCall := mockMutex.EXPECT().Acquire(gomock.Not(gomock.Nil()), "get-token").Return(lockValue, nil)
-	mockMutex.EXPECT().Release(lockValue).Return(nil).After(acquireCall)
-	return mockMutex
 }
