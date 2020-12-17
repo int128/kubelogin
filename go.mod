@@ -1,6 +1,6 @@
 module github.com/int128/kubelogin
 
-go 1.12
+go 1.13
 
 require (
 	github.com/alexflint/go-filemutex v1.1.0
@@ -23,5 +23,5 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/apimachinery v0.19.4
 	k8s.io/client-go v0.19.4
-	k8s.io/klog v1.0.0
+	k8s.io/klog/v2 v2.2.0
 )
