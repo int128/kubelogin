@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/spf13/pflag"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // Set provides an implementation and interface for Logger.
@@ -56,5 +56,5 @@ func (*Logger) V(level int) Verbose {
 
 // IsEnabled returns true if the level is enabled.
 func (*Logger) IsEnabled(level int) bool {
-	return bool(klog.V(klog.Level(level)))
+	return klog.V(klog.Level(level)).Enabled()
 }
