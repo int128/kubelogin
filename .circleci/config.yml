@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: cimg/go:1.15.5
+      - image: cimg/go:1.15.6
     steps:
       - checkout
       - restore_cache:
