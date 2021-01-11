@@ -1,4 +1,0 @@
-* @int128
-
-go.*                 @int128 app/renovate-approve
-.circleci/config.yml @int128 app/renovate-approve
