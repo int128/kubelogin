@@ -11,7 +11,7 @@ require (
 	github.com/google/go-cmp v0.5.4
 	github.com/google/wire v0.4.0
 	github.com/int128/oauth2cli v1.13.0
-	github.com/pkg/browser v0.0.0-20201207095918-0426ae3fba23
+	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
