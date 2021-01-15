@@ -1,4 +1,4 @@
-FROM alpine:3.12
+FROM alpine:3.13
 
 ARG KUBELOGIN_VERSION="{{ env "VERSION" }}"
 ARG KUBELOGIN_SHA256="{{ sha256 .linux_amd64_archive }}"
