@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/alexflint/go-filemutex v1.1.0
-	github.com/chromedp/chromedp v0.6.4
+	github.com/chromedp/chromedp v0.6.5
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang/mock v1.4.4
