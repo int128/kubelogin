@@ -17,7 +17,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
-	golang.org/x/oauth2 v0.0.0-20210125201302-af13f521f196
+	golang.org/x/oauth2 v0.0.0-20210126194326-f9ce19ea3013
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0
