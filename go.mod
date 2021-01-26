@@ -9,7 +9,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang/mock v1.4.4
 	github.com/google/go-cmp v0.5.4
-	github.com/google/wire v0.4.0
+	github.com/google/wire v0.5.0
 	github.com/int128/oauth2cli v1.13.0
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
