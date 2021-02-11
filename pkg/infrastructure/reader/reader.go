@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/infrastructure/stdio"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 //go:generate mockgen -destination mock_reader/mock_reader.go github.com/int128/kubelogin/pkg/infrastructure/reader Interface
@@ -49,7 +49,7 @@ func (*Reader) ReadPassword(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", fmt.Errorf("write error: %w", err)
 	}
-	b, err := terminal.ReadPassword(int(syscall.Stdin))
+	b, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return "", fmt.Errorf("read error: %w", err)
 	}
