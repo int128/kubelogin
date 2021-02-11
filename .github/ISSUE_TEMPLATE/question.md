@@ -1,0 +1,20 @@
+---
+name: Question
+about: Feel free to ask a question
+title: ''
+labels: question
+assignees: ''
+
+---
+
+## Describe the question
+A clear and concise description of what the issue is.
+
+## To reproduce
+A console log or steps to reproduce the issue.
+
+## Your environment
+- OS: e.g. macOS
+- kubelogin version: e.g. v1.19
+- kubectl version: e.g. v1.19
+- OpenID Connect provider: e.g. Google
