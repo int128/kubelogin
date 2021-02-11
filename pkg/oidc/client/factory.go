@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	gooidc "github.com/coreos/go-oidc"
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
