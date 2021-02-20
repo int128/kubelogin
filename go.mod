@@ -7,7 +7,7 @@ require (
 	github.com/chromedp/chromedp v0.6.5
 	github.com/coreos/go-oidc/v3 v3.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/golang/mock v1.4.4
+	github.com/golang/mock v1.5.0
 	github.com/google/go-cmp v0.5.4
 	github.com/google/wire v0.5.0
 	github.com/int128/oauth2cli v1.13.0
