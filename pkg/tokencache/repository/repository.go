@@ -12,6 +12,7 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tokencache"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 //go:generate mockgen -destination mock_repository/mock_repository.go github.com/int128/kubelogin/pkg/tokencache/repository Interface
@@ -41,6 +42,10 @@ func (r *Repository) FindByKey(dir string, key tokencache.Key) (*oidc.TokenSet, 
 	if err != nil {
 		return nil, fmt.Errorf("could not compute the key: %w", err)
 	}
+	dir, err = homedir.Expand(dir)
+	if err != nil {
+		return nil, fmt.Errorf("could not expand homedir: %w", err)
+	}
 	p := filepath.Join(dir, filename)
 	f, err := os.Open(p)
 	if err != nil {
@@ -59,6 +64,10 @@ func (r *Repository) FindByKey(dir string, key tokencache.Key) (*oidc.TokenSet, 
 }
 
 func (r *Repository) Save(dir string, key tokencache.Key, tokenSet oidc.TokenSet) error {
+	dir, err := homedir.Expand(dir)
+	if err != nil {
+		return fmt.Errorf("could not expand homedir: %w", err)
+	}
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("could not create directory %s: %w", dir, err)
 	}

@@ -7,7 +7,6 @@ import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/util/homedir"
 )
 
 // Set provides an implementation and interface for Cmd.
@@ -24,7 +23,7 @@ type Interface interface {
 }
 
 var defaultListenAddress = []string{"127.0.0.1:8000", "127.0.0.1:18000"}
-var defaultTokenCacheDir = homedir.HomeDir() + "/.kube/cache/oidc-login"
+var defaultTokenCacheDir = "~/.kube/cache/oidc-login"
 
 const defaultAuthenticationTimeoutSec = 180
 
