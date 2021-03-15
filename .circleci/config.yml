@@ -1,25 +1,6 @@
 version: 2.1
 
 jobs:
-  test:
-    docker:
-      - image: cimg/go:1.16.2
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - go-sum-{{ checksum "go.sum" }}
-      - run: make -C .circleci install-test-deps
-      - run: mkdir -p /tmp/gotest
-      - run: gotestsum --junitfile /tmp/gotest/gotest.xml -- -v -race -cover -coverprofile=coverage.out ./...
-      - store_test_results:
-          path: /tmp/gotest
-      - save_cache:
-          key: go-sum-{{ checksum "go.sum" }}
-          paths:
-            - ~/go/pkg
-      - run: bash <(curl -s https://codecov.io/bash)
-
   release:
     macos:
       # https://circleci.com/docs/2.0/testing-ios/
@@ -45,14 +26,8 @@ workflows:
   version: 2
   build:
     jobs:
-      - test:
-          filters:
-            tags:
-              only: /^v.*/
       - release:
           context: open-source
-          requires:
-            - test
           filters:
             branches:
               only: /^release-feature.*/
