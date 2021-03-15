@@ -7,6 +7,7 @@ import (
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -32,6 +33,21 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	o.authenticationOptions.addFlags(f)
 }
 
+func (o *getTokenOptions) expandHomedir() error {
+	var err error
+	o.TokenCacheDir, err = homedir.Expand(o.TokenCacheDir)
+	if err != nil {
+		return fmt.Errorf("invalid --token-cache-dir: %w", err)
+	}
+	if err = o.authenticationOptions.expandHomedir(); err != nil {
+		return err
+	}
+	if err = o.tlsOptions.expandHomedir(); err != nil {
+		return err
+	}
+	return nil
+}
+
 type GetToken struct {
 	GetToken credentialplugin.Interface
 	Logger   logger.Interface
@@ -55,6 +71,9 @@ func (cmd *GetToken) New() *cobra.Command {
 			return nil
 		},
 		RunE: func(c *cobra.Command, _ []string) error {
+			if err := o.expandHomedir(); err != nil {
+				return err
+			}
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
 				return fmt.Errorf("get-token: %w", err)

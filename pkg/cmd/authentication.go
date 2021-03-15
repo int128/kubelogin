@@ -8,6 +8,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/pflag"
 )
 
@@ -65,6 +66,19 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
+}
+
+func (o *authenticationOptions) expandHomedir() error {
+	var err error
+	o.LocalServerCertFile, err = homedir.Expand(o.LocalServerCertFile)
+	if err != nil {
+		return fmt.Errorf("invalid --local-server-cert: %w", err)
+	}
+	o.LocalServerKeyFile, err = homedir.Expand(o.LocalServerKeyFile)
+	if err != nil {
+		return fmt.Errorf("invalid --local-server-key: %w", err)
+	}
+	return nil
 }
 
 func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {

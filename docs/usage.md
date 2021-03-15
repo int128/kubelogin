@@ -83,6 +83,16 @@ You can use your self-signed certificate for the provider.
 You can set the following environment variables if you are behind a proxy: `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
 See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyFromEnvironment).
 
+### Home directory expansion
+
+If a value in the following options begins with a tilde character `~`, it is expanded to the home directory.
+
+- `--certificate-authority`
+- `--local-server-cert`
+- `--local-server-key`
+- `--token-cache-dir`
+
+
 ## Authentication flows
 
 Kubelogin support the following flows:
