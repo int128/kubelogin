@@ -3,6 +3,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
@@ -32,6 +34,21 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	o.authenticationOptions.addFlags(f)
 }
 
+func (o *getTokenOptions) expandHomedir() error {
+	var err error
+	o.TokenCacheDir, err = expandHomedir(o.TokenCacheDir)
+	if err != nil {
+		return fmt.Errorf("invalid --token-cache-dir: %w", err)
+	}
+	if err = o.authenticationOptions.expandHomedir(); err != nil {
+		return err
+	}
+	if err = o.tlsOptions.expandHomedir(); err != nil {
+		return err
+	}
+	return nil
+}
+
 type GetToken struct {
 	GetToken credentialplugin.Interface
 	Logger   logger.Interface
@@ -55,6 +72,9 @@ func (cmd *GetToken) New() *cobra.Command {
 			return nil
 		},
 		RunE: func(c *cobra.Command, _ []string) error {
+			if err := o.expandHomedir(); err != nil {
+				return err
+			}
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
 				return fmt.Errorf("get-token: %w", err)
@@ -79,4 +99,15 @@ func (cmd *GetToken) New() *cobra.Command {
 	c.Flags().SortFlags = false
 	o.addFlags(c.Flags())
 	return c
+}
+
+func expandHomedir(s string) (string, error) {
+	if !strings.HasPrefix(s, "~"+string(os.PathSeparator)) {
+		return s, nil
+	}
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("could not expand homedir: %w", err)
+	}
+	return userHomeDir + strings.TrimPrefix(s, "~"), nil
 }

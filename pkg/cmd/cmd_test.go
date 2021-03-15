@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
@@ -98,6 +100,11 @@ func TestCmd_Run(t *testing.T) {
 	})
 
 	t.Run("get-token", func(t *testing.T) {
+		userHomeDir, err := os.UserHomeDir()
+		if err != nil {
+			t.Fatalf("os.UserHomeDir error: %s", err)
+		}
+
 		tests := map[string]struct {
 			args []string
 			in   credentialplugin.Input
@@ -109,7 +116,7 @@ func TestCmd_Run(t *testing.T) {
 					"--oidc-client-id", "YOUR_CLIENT_ID",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir: defaultTokenCacheDir,
+					TokenCacheDir: userHomeDir + "/.kube/cache/oidc-login",
 					Provider: oidc.Provider{
 						IssuerURL: "https://issuer.example.com",
 						ClientID:  "YOUR_CLIENT_ID",
@@ -134,7 +141,7 @@ func TestCmd_Run(t *testing.T) {
 					"-v1",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir: defaultTokenCacheDir,
+					TokenCacheDir: userHomeDir + "/.kube/cache/oidc-login",
 					Provider: oidc.Provider{
 						IssuerURL:    "https://issuer.example.com",
 						ClientID:     "YOUR_CLIENT_ID",
@@ -147,6 +154,36 @@ func TestCmd_Run(t *testing.T) {
 							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
 							RedirectURLHostname:   "localhost",
 						},
+					},
+				},
+			},
+			"HomedirExpansion": {
+				args: []string{executable,
+					"get-token",
+					"--oidc-issuer-url", "https://issuer.example.com",
+					"--oidc-client-id", "YOUR_CLIENT_ID",
+					"--certificate-authority", "~/.kube/ca.crt",
+					"--local-server-cert", "~/.kube/oidc-server.crt",
+					"--local-server-key", "~/.kube/oidc-server.key",
+					"--token-cache-dir", "~/.kube/oidc-cache",
+				},
+				in: credentialplugin.Input{
+					TokenCacheDir: userHomeDir + "/.kube/oidc-cache",
+					Provider: oidc.Provider{
+						IssuerURL: "https://issuer.example.com",
+						ClientID:  "YOUR_CLIENT_ID",
+					},
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeBrowserOption: &authcode.BrowserOption{
+							BindAddress:           defaultListenAddress,
+							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+							RedirectURLHostname:   "localhost",
+							LocalServerCertFile:   userHomeDir + "/.kube/oidc-server.crt",
+							LocalServerKeyFile:    userHomeDir + "/.kube/oidc-server.key",
+						},
+					},
+					TLSClientConfig: tlsclientconfig.Config{
+						CACertFilename: []string{userHomeDir + "/.kube/ca.crt"},
 					},
 				},
 			},

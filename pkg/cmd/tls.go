@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"crypto/tls"
+	"fmt"
 
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/spf13/pflag"
@@ -21,6 +22,19 @@ func (o *tlsOptions) addFlags(f *pflag.FlagSet) {
 	f.BoolVar(&o.SkipTLSVerify, "insecure-skip-tls-verify", false, "If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	f.BoolVar(&o.RenegotiateOnceAsClient, "tls-renegotiation-once", false, "If set, allow a remote server to request renegotiation once per connection")
 	f.BoolVar(&o.RenegotiateFreelyAsClient, "tls-renegotiation-freely", false, "If set, allow a remote server to repeatedly request renegotiation")
+}
+
+func (o *tlsOptions) expandHomedir() error {
+	var caCertFilenames []string
+	for _, caCertFilename := range o.CACertFilename {
+		expanded, err := expandHomedir(caCertFilename)
+		if err != nil {
+			return fmt.Errorf("invalid --certificate-authority: %w", err)
+		}
+		caCertFilenames = append(caCertFilenames, expanded)
+	}
+	o.CACertFilename = caCertFilenames
+	return nil
 }
 
 func (o tlsOptions) tlsClientConfig() tlsclientconfig.Config {
