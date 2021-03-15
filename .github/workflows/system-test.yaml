@@ -2,15 +2,21 @@ name: system-test
 
 on:
   pull_request:
-    paths: 
+    branches:
+      - master
+    paths:
       - .github/workflows/system-test.yaml
       - system_test/**
       - pkg/**
       - go.*
   push:
-    # for go mod tidy
-    branches: [master]
-    paths: [go.*]
+    branches:
+      - master
+    paths:
+      - .github/workflows/system-test.yaml
+      - system_test/**
+      - pkg/**
+      - go.*
 
 jobs:
   system-test:
