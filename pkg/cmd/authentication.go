@@ -8,7 +8,6 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/pflag"
 )
 
@@ -70,11 +69,11 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 
 func (o *authenticationOptions) expandHomedir() error {
 	var err error
-	o.LocalServerCertFile, err = homedir.Expand(o.LocalServerCertFile)
+	o.LocalServerCertFile, err = expandHomedir(o.LocalServerCertFile)
 	if err != nil {
 		return fmt.Errorf("invalid --local-server-cert: %w", err)
 	}
-	o.LocalServerKeyFile, err = homedir.Expand(o.LocalServerKeyFile)
+	o.LocalServerKeyFile, err = expandHomedir(o.LocalServerKeyFile)
 	if err != nil {
 		return fmt.Errorf("invalid --local-server-key: %w", err)
 	}

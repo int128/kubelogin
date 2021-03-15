@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/pflag"
 )
 
@@ -28,7 +27,7 @@ func (o *tlsOptions) addFlags(f *pflag.FlagSet) {
 func (o *tlsOptions) expandHomedir() error {
 	var caCertFilenames []string
 	for _, caCertFilename := range o.CACertFilename {
-		expanded, err := homedir.Expand(caCertFilename)
+		expanded, err := expandHomedir(caCertFilename)
 		if err != nil {
 			return fmt.Errorf("invalid --certificate-authority: %w", err)
 		}
