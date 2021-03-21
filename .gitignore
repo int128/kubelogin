@@ -2,10 +2,9 @@
 
 /acceptance_test/output/
 
-/dist/output
 /coverage.out
 
 /kubelogin
 /kubectl-oidc_login
-
-/.circleci/go/
+/kubelogin_*.zip
+/kubelogin_*.zip.sha256

@@ -8,6 +8,8 @@ on:
       - .github/workflows/go.yaml
       - pkg/**
       - go.*
+    tags:
+      - v*
   pull_request:
     branches:
       - master
@@ -43,3 +45,43 @@ jobs:
             go-${{ runner.os }}-
       - run: go test -v -race -cover -coverprofile=coverage.out ./...
       - uses: codecov/codecov-action@v1
+
+  release:
+    strategy:
+      matrix:
+        platform:
+          - os: ubuntu-latest
+            GOOS: linux
+            GOARCH: amd64
+          - os: ubuntu-latest
+            GOOS: linux
+            GOARCH: arm64
+          - os: macos-latest
+            GOOS: darwin
+            GOARCH: amd64
+          - os: macos-latest
+            GOOS: darwin
+            GOARCH: arm64
+          - os: windows-latest
+            GOOS: windows
+            GOARCH: amd64
+    runs-on: ${{ matrix.platform.os }}
+    env:
+      GOOS: ${{ matrix.platform.GOOS }}
+      GOARCH: ${{ matrix.platform.GOARCH }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: go-${{ matrix.platform.GOOS }}-${{ matrix.platform.GOARCH }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            go-${{ matrix.platform.GOOS }}-${{ matrix.platform.GOARCH }}-
+      - run: make dist
+      - run: make dist-release
+        if: startswith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
