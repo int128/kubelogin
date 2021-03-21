@@ -6,21 +6,7 @@ jobs:
       # https://circleci.com/docs/2.0/testing-ios/
       xcode: 11.5.0
     steps:
-      - run: echo 'export PATH="$HOME/go/bin:$PWD/.circleci/go/bin:$PATH"' >> $BASH_ENV
       - checkout
-      - restore_cache:
-          keys:
-            - go-macos-{{ checksum "go.sum" }}
-      - run: make -C .circleci install-release-deps
-      - run: make dist
-      - run: |
-          if [ "$CIRCLE_TAG" ]; then
-            make release
-          fi
-      - save_cache:
-          key: go-macos-{{ checksum "go.sum" }}
-          paths:
-            - ~/go/pkg
 
 workflows:
   version: 2
@@ -30,6 +16,4 @@ workflows:
           context: open-source
           filters:
             branches:
-              only: /^release-feature.*/
-            tags:
-              only: /^v.*/
+              only: /^dummy.*/
