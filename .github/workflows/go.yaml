@@ -56,6 +56,9 @@ jobs:
           - os: ubuntu-latest
             GOOS: linux
             GOARCH: arm64
+          - os: ubuntu-latest
+            GOOS: linux
+            GOARCH: arm
           - os: macos-latest
             GOOS: darwin
             GOARCH: amd64
@@ -85,3 +88,13 @@ jobs:
         if: startswith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    if: startswith(github.ref, 'refs/tags/')
+    needs:
+      - release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update new version in krew-index
+        uses: rajatjindal/krew-release-bot@v0.0.39
