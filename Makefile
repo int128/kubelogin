@@ -30,6 +30,17 @@ endif
 dist-release: dist
 	gh release upload $(VERSION) $(TARGET_ARCHIVE) $(TARGET_DIGEST) --clobber
 
+DOCKER_REPOSITORY := ghcr.io/int128/kubelogin
+
+.PHONY: docker-build-push
+docker-build-push: Dockerfile $(TARGET)
+	docker buildx build . \
+		--tag=$(DOCKER_REPOSITORY):$(VERSION) \
+		--cache-from=type=registry,ref=$(DOCKER_REPOSITORY):master \
+		--cache-to=type=inline \
+		--platform=$(GOOS)/$(GOARCH) \
+		--push
+
 .PHONY: clean
 clean:
 	-rm $(TARGET)

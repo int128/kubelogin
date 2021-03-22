@@ -218,7 +218,7 @@ Password:
 
 ## Run in Docker
 
-You can run [the Docker image](https://quay.io/repository/int128/kubelogin) instead of the binary.
+You can run [the Docker image](https://ghcr.io/int128/kubelogin) instead of the binary.
 The kubeconfig looks like:
 
 ```yaml
@@ -235,7 +235,7 @@ users:
       - /tmp/.token-cache:/.token-cache
       - -p
       - 8000:8000
-      - quay.io/int128/kubelogin
+      - ghcr.io/int128/kubelogin
       - get-token
       - --token-cache-dir=/.token-cache
       - --listen-address=0.0.0.0:8000
