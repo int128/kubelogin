@@ -84,20 +84,6 @@ jobs:
           restore-keys: |
             go-${{ matrix.platform.GOOS }}-${{ matrix.platform.GOARCH }}-
       - run: make dist
-
-      # Docker image (Linux only)
-      - uses: docker/setup-buildx-action@v1
-        if: runner.os == 'Linux'
-      - uses: docker/login-action@v1
-        if: runner.os == 'Linux'
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.CR_PAT }}
-      - run: make docker-build-push
-        if: runner.os == 'Linux'
-
-      # GitHub Releases
       - run: make dist-release
         if: startswith(github.ref, 'refs/tags/')
         env:
