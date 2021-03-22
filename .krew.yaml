@@ -24,39 +24,39 @@ spec:
     You need to setup the OIDC provider, Kubernetes API server, role binding and kubeconfig.
   version: {{ .TagName }}
   platforms:
-    - bin: kubelogin
-      {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_linux_amd64.zip" .TagName }}
-      selector:
-        matchLabels:
-          os: linux
-          arch: amd64
-    - bin: kubelogin
-      {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_linux_arm64.zip" .TagName }}
-      selector:
-        matchLabels:
-          os: linux
-          arch: arm64
-    - bin: kubelogin
-      {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_linux_arm.zip" .TagName }}
-      selector:
-        matchLabels:
-          os: linux
-          arch: arm
-    - bin: kubelogin
-      {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_darwin_amd64.zip" .TagName }}
-      selector:
-        matchLabels:
-          os: darwin
-          arch: amd64
-    - bin: kubelogin
-      {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_darwin_arm64.zip" .TagName }}
-      selector:
-        matchLabels:
-          os: darwin
-          arch: arm64
-    - bin: kubelogin
-      {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_windows_amd64.zip" .TagName }}
-      selector:
-        matchLabels:
-          os: windows
-          arch: amd64
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_linux_amd64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_linux_arm64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: linux
+        arch: arm64
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_linux_arm.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: linux
+        arch: arm
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_darwin_amd64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_darwin_arm64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_windows_amd64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: windows
+        arch: amd64
