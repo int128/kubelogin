@@ -38,6 +38,12 @@ dist-release: dist
 
 DOCKER_REPOSITORY := ghcr.io/int128/kubelogin
 
+.PHONY: docker-build
+docker-build: Dockerfile
+	docker buildx build . \
+		--cache-from=type=registry,ref=$(DOCKER_REPOSITORY):latest \
+		--platform=linux/amd64,linux/arm64
+
 .PHONY: docker-build-push
 docker-build-push: Dockerfile
 	docker buildx build . \
