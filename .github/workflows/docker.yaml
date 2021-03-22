@@ -11,14 +11,6 @@ on:
       - Dockerfile
     tags:
       - v*
-  pull_request:
-    branches:
-      - master
-    paths:
-      - .github/workflows/docker.yaml
-      - pkg/**
-      - go.*
-      - Dockerfile
 
 jobs:
   build-and-push:
