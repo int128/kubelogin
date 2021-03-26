@@ -2,11 +2,11 @@ TARGET := kubelogin
 TARGET_ARCHIVE := $(TARGET)_$(GOOS)_$(GOARCH).zip
 TARGET_DIGEST := $(TARGET)_$(GOOS)_$(GOARCH).zip.sha256
 
-# determine the version from ref
-ifeq ($(GITHUB_REF), refs/heads/master)
-  VERSION := latest
+# extract version from tag or default to latest
+ifeq ($(dir $(GITHUB_REF)), refs/tags/)
+  VERSION := $(notdir $(GITHUB_REF))
 else
-  VERSION ?= $(notdir $(GITHUB_REF))
+  VERSION := latest
 endif
 
 LDFLAGS := -X main.version=$(VERSION)
