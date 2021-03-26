@@ -36,26 +36,32 @@ endif
 dist-release: dist
 	gh release upload $(VERSION) $(TARGET_ARCHIVE) $(TARGET_DIGEST) --clobber
 
-DOCKER_REPOSITORY := ghcr.io/int128/kubelogin
-
-.PHONY: docker-build
-docker-build: Dockerfile
-	docker buildx build . \
-		--cache-from=type=registry,ref=$(DOCKER_REPOSITORY):latest \
-		--platform=linux/amd64,linux/arm64
-
-.PHONY: docker-build-push
-docker-build-push: Dockerfile
-	docker buildx build . \
-		--build-arg=VERSION=$(VERSION) \
-		--tag=$(DOCKER_REPOSITORY):$(VERSION) \
-		--cache-from=type=registry,ref=$(DOCKER_REPOSITORY):latest \
-		--cache-to=type=inline \
-		--platform=linux/amd64,linux/arm64 \
-		--push
-
 .PHONY: clean
 clean:
 	-rm $(TARGET)
 	-rm -r dist/output/
 	-rm coverage.out gotest.log
+
+DOCKER_REPOSITORY := ghcr.io/int128/kubelogin
+DOCKER_PLATFORM := linux/amd64,linux/arm64
+
+.PHONY: docker-build
+docker-build: Dockerfile
+	docker buildx build . \
+		--build-arg=VERSION=$(VERSION) \
+		--platform=$(DOCKER_PLATFORM) \
+		--output=type=image,push=false \
+		--cache-from=type=local,src=/tmp/buildx \
+		--cache-to=type=local,mode=max,dest=/tmp/buildx
+
+.PHONY: docker-build-push
+docker-build-push: Dockerfile
+	docker buildx build . \
+		--push \
+		--build-arg=VERSION=$(VERSION) \
+		--platform=$(DOCKER_PLATFORM) \
+		--tag=$(DOCKER_REPOSITORY):$(VERSION) \
+		--cache-from=type=local,src=/tmp/buildx \
+		--cache-to=type=local,mode=max,dest=/tmp/buildx.new
+	rm -fr /tmp/buildx
+	mv /tmp/buildx.new /tmp/buildx
