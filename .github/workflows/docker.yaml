@@ -1,6 +1,15 @@
 name: docker
 
 on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/workflows/docker.yaml
+      - pkg/**
+      - go.*
+      - Dockerfile
+      - Makefile
   push:
     branches:
       - master
@@ -9,6 +18,7 @@ on:
       - pkg/**
       - go.*
       - Dockerfile
+      - Makefile
     tags:
       - v*
 
@@ -19,9 +29,17 @@ jobs:
       - uses: actions/checkout@v2
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
+      - uses: actions/cache@v2
+        with:
+          path: /tmp/buildx
+          key: buildx-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            buildx-${{ runner.os }}-
       - uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.CR_PAT }}
-      - run: make docker-build-push
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: int128/buildx-push-action@v1
+        with:
+          extra-args: --platform=linux/amd64,linux/arm64
