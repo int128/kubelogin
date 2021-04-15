@@ -129,6 +129,25 @@ You do not need to set `YOUR_CLIENT_SECRET`.
 If you need `groups` claim for access control,
 see [jetstack/okta-kubectl-auth](https://github.com/jetstack/okta-kubectl-auth/blob/master/docs/okta-setup.md) and [#250](https://github.com/int128/kubelogin/issues/250).
 
+### Ping Identity
+
+Login with an account that has permissions to create applications.
+Create an OIDC application with the following configuration:
+
+- Redirect URIs:
+    - `http://localhost:8000`
+    - `http://localhost:18000` (used if the port 8000 is already in use)
+- Grant type: Authorization Code
+- PKCE Enforcement: Required
+
+Leverage the following variables in the next steps.
+
+Variable                | Value
+------------------------|------
+`ISSUER_URL`            | `https://auth.pingone.com/<PingOne Tenant Id>/as`
+`YOUR_CLIENT_ID`        |  random string
+
+`YOUR_CLIENT_SECRET` is not required for this configuration.
 
 ## 2. Verify authentication
 
