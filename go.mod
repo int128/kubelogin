@@ -14,13 +14,12 @@ require (
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/net v0.0.0-20210415231046-e915ea6b2b7d
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/term v0.0.0-20210406210042-72f3dc4e9b72
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.21.0
-	k8s.io/client-go v0.20.5
+	k8s.io/client-go v0.21.0
 	k8s.io/klog/v2 v2.8.0
 )
