@@ -1,6 +1,12 @@
-TARGET := kubelogin
-TARGET_ARCHIVE := $(TARGET)_$(GOOS)_$(GOARCH).zip
-TARGET_DIGEST := $(TARGET)_$(GOOS)_$(GOARCH).zip.sha256
+PRODUCT := kubelogin
+TARGET_ARCHIVE := $(PRODUCT)_$(GOOS)_$(GOARCH).zip
+TARGET_DIGEST := $(PRODUCT)_$(GOOS)_$(GOARCH).zip.sha256
+
+ifeq ($(GOOS), windows)
+  TARGET := $(PRODUCT).exe
+else
+  TARGET := $(PRODUCT)
+endif
 
 # determine the version from ref
 ifeq ($(GITHUB_REF), refs/heads/master)

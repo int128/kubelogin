@@ -8,6 +8,7 @@ on:
       - .github/workflows/go.yaml
       - pkg/**
       - go.*
+      - Makefile
     tags:
       - v*
   pull_request:
@@ -17,6 +18,7 @@ on:
       - .github/workflows/go.yaml
       - pkg/**
       - go.*
+      - Makefile
 
 jobs:
   lint:
