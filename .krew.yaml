@@ -54,7 +54,7 @@ spec:
       matchLabels:
         os: darwin
         arch: arm64
-  - bin: kubelogin
+  - bin: kubelogin.exe
     {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_windows_amd64.zip" .TagName }}
     selector:
       matchLabels:
