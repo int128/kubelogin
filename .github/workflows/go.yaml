@@ -42,11 +42,38 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/go/pkg/mod
-          key: go-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+          key: go-linux-amd64-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            go-${{ runner.os }}-
+            go-linux-amd64-
       - run: go test -v -race -cover -coverprofile=coverage.out ./...
       - uses: codecov/codecov-action@v1
+
+  test-platform-dependent:
+    strategy:
+      matrix:
+        platform:
+          - os: windows-latest
+            GOOS: windows
+            GOARCH: amd64
+          - os: macos-latest
+            GOOS: darwin
+            GOARCH: amd64
+    runs-on: ${{ matrix.platform.os }}
+    env:
+      GOOS: ${{ matrix.platform.GOOS }}
+      GOARCH: ${{ matrix.platform.GOARCH }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: go-${{ matrix.platform.GOOS }}-${{ matrix.platform.GOARCH }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            go-${{ matrix.platform.GOOS }}-${{ matrix.platform.GOARCH }}-
+      - run: go test -race ./...
 
   release:
     strategy:
