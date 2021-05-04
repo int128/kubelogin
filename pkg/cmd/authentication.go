@@ -67,17 +67,9 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
 }
 
-func (o *authenticationOptions) expandHomedir() error {
-	var err error
-	o.LocalServerCertFile, err = expandHomedir(o.LocalServerCertFile)
-	if err != nil {
-		return fmt.Errorf("invalid --local-server-cert: %w", err)
-	}
-	o.LocalServerKeyFile, err = expandHomedir(o.LocalServerKeyFile)
-	if err != nil {
-		return fmt.Errorf("invalid --local-server-key: %w", err)
-	}
-	return nil
+func (o *authenticationOptions) expandHomedir() {
+	o.LocalServerCertFile = expandHomedir(o.LocalServerCertFile)
+	o.LocalServerKeyFile = expandHomedir(o.LocalServerKeyFile)
 }
 
 func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {
