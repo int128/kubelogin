@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"path/filepath"
 	"runtime"
 
 	"github.com/google/wire"
@@ -23,7 +24,7 @@ type Interface interface {
 }
 
 var defaultListenAddress = []string{"127.0.0.1:8000", "127.0.0.1:18000"}
-var defaultTokenCacheDir = "~/.kube/cache/oidc-login"
+var defaultTokenCacheDir = filepath.Join("~", ".kube", "cache", "oidc-login")
 
 const defaultAuthenticationTimeoutSec = 180
 

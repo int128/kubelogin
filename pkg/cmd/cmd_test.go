@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -116,7 +117,7 @@ func TestCmd_Run(t *testing.T) {
 					"--oidc-client-id", "YOUR_CLIENT_ID",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir: userHomeDir + "/.kube/cache/oidc-login",
+					TokenCacheDir: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 					Provider: oidc.Provider{
 						IssuerURL: "https://issuer.example.com",
 						ClientID:  "YOUR_CLIENT_ID",
@@ -141,7 +142,7 @@ func TestCmd_Run(t *testing.T) {
 					"-v1",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir: userHomeDir + "/.kube/cache/oidc-login",
+					TokenCacheDir: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 					Provider: oidc.Provider{
 						IssuerURL:    "https://issuer.example.com",
 						ClientID:     "YOUR_CLIENT_ID",
@@ -168,7 +169,7 @@ func TestCmd_Run(t *testing.T) {
 					"--token-cache-dir", "~/.kube/oidc-cache",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir: userHomeDir + "/.kube/oidc-cache",
+					TokenCacheDir: filepath.Join(userHomeDir, ".kube/oidc-cache"),
 					Provider: oidc.Provider{
 						IssuerURL: "https://issuer.example.com",
 						ClientID:  "YOUR_CLIENT_ID",
@@ -178,12 +179,12 @@ func TestCmd_Run(t *testing.T) {
 							BindAddress:           defaultListenAddress,
 							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
 							RedirectURLHostname:   "localhost",
-							LocalServerCertFile:   userHomeDir + "/.kube/oidc-server.crt",
-							LocalServerKeyFile:    userHomeDir + "/.kube/oidc-server.key",
+							LocalServerCertFile:   filepath.Join(userHomeDir, ".kube/oidc-server.crt"),
+							LocalServerKeyFile:    filepath.Join(userHomeDir, ".kube/oidc-server.key"),
 						},
 					},
 					TLSClientConfig: tlsclientconfig.Config{
-						CACertFilename: []string{userHomeDir + "/.kube/ca.crt"},
+						CACertFilename: []string{filepath.Join(userHomeDir, ".kube/ca.crt")},
 					},
 				},
 			},
