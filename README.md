@@ -78,13 +78,13 @@ Kubelogin writes the ID token and refresh token to the token cache file.
 
 If the cached ID token is valid, kubelogin just returns it.
 If the cached ID token has expired, kubelogin will refresh the token using the refresh token.
-If the refresh token has expired, kubelogin will perform reauthentication.
+If the refresh token has expired, kubelogin will perform re-authentication (you will have to login via browser again).
 
 
 ### Troubleshoot
 
 You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
-Kubelogin will ask you to login via browser again if the token cache file does not exist i.e., you start from scratch
+Kubelogin will ask you to login via browser again if the token cache file does not exist i.e., it starts with clean slate
 
 You can dump claims of an ID token by `setup` command.
 
