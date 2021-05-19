@@ -65,7 +65,7 @@ Kubelogin automatically opens the browser, and you can log in to the provider.
 
 <img src="docs/keycloak-login.png" alt="keycloak-login" width="455" height="329">
 
-After authentication, kubelogin returns the credentials to kubectl and finally kubectl calls the Kubernetes APIs with the credential.
+After authentication, kubelogin returns the credentials to kubectl and kubectl then calls the Kubernetes APIs with these credentials.
 
 ```
 % kubectl get pods
@@ -84,7 +84,7 @@ If the refresh token has expired, kubelogin will perform reauthentication.
 ### Troubleshoot
 
 You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
-Kubelogin will perform authentication if the token cache file does not exist.
+Kubelogin will ask you to login via browser again if the token cache file does not exist i.e., you start from scratch
 
 You can dump claims of an ID token by `setup` command.
 
