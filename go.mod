@@ -12,7 +12,7 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/int128/oauth2cli v1.13.0
 	github.com/pkg/browser v0.0.0-20210621091255-c198bc921a84
-	github.com/spf13/cobra v1.2.0
+	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
