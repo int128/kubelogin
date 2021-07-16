@@ -18,7 +18,7 @@ cluster: cert
 .PHONY: setup-chrome
 setup-chrome: cert
 	# add the dex server certificate to the trust store
-	if [ -d ~/.pki/nssdb ]; then certutil -A -d sql:$(HOME)/.pki/nssdb -n dex -i $(CERT_DIR)/ca.crt -t "TC,,"; fi
+	certutil -A -d sql:$(HOME)/.pki/nssdb -n dex -i $(CERT_DIR)/ca.crt -t "TC,,"
 
 .PHONY: cert
 cert:
