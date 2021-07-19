@@ -46,7 +46,7 @@ jobs:
           restore-keys: |
             go-linux-amd64-
       - run: go test -v -race -cover -coverprofile=coverage.out ./...
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v2
 
   test-platform-dependent:
     strategy:
