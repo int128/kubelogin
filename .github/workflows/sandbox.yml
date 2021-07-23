@@ -7,7 +7,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
       - run: gh api repos/int128/kubelogin/actions/runs/1045641057/logs > logs.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
