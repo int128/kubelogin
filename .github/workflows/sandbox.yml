@@ -13,3 +13,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: zipinfo logs.zip
       - run: unzip logs.zip
+      - run: find .
