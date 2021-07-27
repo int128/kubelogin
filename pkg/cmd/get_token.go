@@ -17,6 +17,7 @@ type getTokenOptions struct {
 	ClientID              string
 	ClientSecret          string
 	ExtraScopes           []string
+	UsePKCE               bool
 	TokenCacheDir         string
 	tlsOptions            tlsOptions
 	authenticationOptions authenticationOptions
@@ -27,6 +28,7 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider (mandatory)")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
+	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE usage")
 	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for token cache")
 	o.tlsOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
@@ -74,6 +76,7 @@ func (cmd *GetToken) New() *cobra.Command {
 					IssuerURL:    o.IssuerURL,
 					ClientID:     o.ClientID,
 					ClientSecret: o.ClientSecret,
+					UsePKCE:      o.UsePKCE,
 					ExtraScopes:  o.ExtraScopes,
 				},
 				TokenCacheDir:   o.TokenCacheDir,
