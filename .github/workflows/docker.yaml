@@ -23,23 +23,23 @@ on:
       - v*
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: docker/setup-qemu-action@v1
-      - uses: docker/setup-buildx-action@v1
-      - uses: actions/cache@v2
-        with:
-          path: /tmp/buildx
-          key: buildx-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            buildx-${{ runner.os }}-
+      - run: .github/docker-build-config.sh
+        id: docker-build-config
       - uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: int128/buildx-push-action@v1
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
+      - uses: docker/build-push-action@v2
         with:
-          extra-args: --platform=linux/amd64,linux/arm64
+          push: ${{ steps.docker-build-config.outputs.push }}
+          tags: ghcr.io/${{ github.repository }}:${{ steps.docker-build-config.outputs.tag }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildkit-cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildkit-cache,mode=max
+          platforms: linux/amd64,linux/arm64
