@@ -31,6 +31,8 @@ kubectl krew install oidc-login
 choco install kubelogin
 ```
 
+If you install via GitHub releases, you need to put the `kubelogin` binary on your path under the name `kubectl-oidc_login` so that the [kubectl plugin mechanism](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/) can find it when you invoke `kubectl oidc-login`. The other install methods do this for you.
+
 You need to set up the OIDC provider, cluster role binding, Kubernetes API server and kubeconfig.
 The kubeconfig looks like:
 
