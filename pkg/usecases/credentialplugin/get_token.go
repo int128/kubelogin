@@ -48,7 +48,7 @@ type GetToken struct {
 
 func (u *GetToken) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
-	out, err := u.getTokenFromCacheOrProvider(ctx, in)
+	out, err := u.GetTokenFromCacheOrProvider(ctx, in)
 	if err != nil {
 		return xerrors.Errorf("could not get a token from the cache or provider: %w", err)
 	}
@@ -59,7 +59,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	return nil
 }
 
-func (u *GetToken) getTokenFromCacheOrProvider(ctx context.Context, in Input) (*authentication.Output, error) {
+func (u *GetToken) GetTokenFromCacheOrProvider(ctx context.Context, in Input) (*authentication.Output, error) {
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
 	cacheKey := tokencache.Key{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
 	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
