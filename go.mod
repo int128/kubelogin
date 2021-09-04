@@ -11,7 +11,7 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/google/wire v0.5.0
 	github.com/int128/oauth2cli v1.13.0
-	github.com/pkg/browser v0.0.0-20210706143420-7d21f8c997e2
+	github.com/pkg/browser v0.0.0-20210904010418-6d279e18f982
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f
