@@ -31,6 +31,7 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				"--listen-address", "127.0.0.1:10080",
 				"--listen-address", "127.0.0.1:20080",
 				"--skip-open-browser",
+				"--browser-command", "firefox",
 				"--authentication-timeout-sec", "10",
 				"--local-server-cert", "/path/to/local-server-cert",
 				"--local-server-key", "/path/to/local-server-key",
@@ -45,6 +46,7 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				AuthCodeBrowserOption: &authcode.BrowserOption{
 					BindAddress:                []string{"127.0.0.1:10080", "127.0.0.1:20080"},
 					SkipOpenBrowser:            true,
+					BrowserCommand:             "firefox",
 					AuthenticationTimeout:      10 * time.Second,
 					LocalServerCertFile:        "/path/to/local-server-cert",
 					LocalServerKeyFile:         "/path/to/local-server-key",

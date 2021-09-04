@@ -60,6 +60,10 @@ func (c *client) Open(url string) error {
 	return nil
 }
 
+func (c *client) OpenCommand(_ context.Context, url, _ string) error {
+	return c.Open(url)
+}
+
 type zeroClient struct {
 	t *testing.T
 }
@@ -67,4 +71,8 @@ type zeroClient struct {
 func (c *zeroClient) Open(url string) error {
 	c.t.Errorf("unexpected function call Open(%s)", url)
 	return nil
+}
+
+func (c *zeroClient) OpenCommand(_ context.Context, url, _ string) error {
+	return c.Open(url)
 }
