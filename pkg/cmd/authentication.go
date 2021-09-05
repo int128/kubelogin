@@ -17,6 +17,7 @@ type authenticationOptions struct {
 	ListenPort                 []int // deprecated
 	AuthenticationTimeoutSec   int
 	SkipOpenBrowser            bool
+	BrowserCommand             string
 	LocalServerCertFile        string
 	LocalServerKeyFile         string
 	OpenURLAfterAuthentication string
@@ -57,6 +58,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 		panic(err)
 	}
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
+	f.StringVar(&o.BrowserCommand, "browser-command", "", "[authcode] Command to open the browser")
 	f.IntVar(&o.AuthenticationTimeoutSec, "authentication-timeout-sec", defaultAuthenticationTimeoutSec, "[authcode] Timeout of authentication in seconds")
 	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode] Certificate path for the local server")
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
@@ -78,6 +80,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 		s.AuthCodeBrowserOption = &authcode.BrowserOption{
 			BindAddress:                o.determineListenAddress(),
 			SkipOpenBrowser:            o.SkipOpenBrowser,
+			BrowserCommand:             o.BrowserCommand,
 			AuthenticationTimeout:      time.Duration(o.AuthenticationTimeoutSec) * time.Second,
 			LocalServerCertFile:        o.LocalServerCertFile,
 			LocalServerKeyFile:         o.LocalServerKeyFile,

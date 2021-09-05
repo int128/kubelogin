@@ -15,6 +15,7 @@ import (
 
 type BrowserOption struct {
 	SkipOpenBrowser            bool
+	BrowserCommand             string
 	BindAddress                []string
 	AuthenticationTimeout      time.Duration
 	OpenURLAfterAuthentication string
@@ -71,17 +72,7 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 			if !ok {
 				return nil
 			}
-			if o.SkipOpenBrowser {
-				u.Logger.Printf("Please visit the following URL in your browser: %s", url)
-				return nil
-			}
-			u.Logger.V(1).Infof("opening %s in the browser", url)
-			if err := u.Browser.Open(url); err != nil {
-				u.Logger.Printf(`error: could not open the browser: %s
-
-Please visit the following URL in your browser manually: %s`, err, url)
-				return nil
-			}
+			u.openURL(ctx, o, url)
 			return nil
 		case <-ctx.Done():
 			return fmt.Errorf("context cancelled while waiting for the local server: %w", ctx.Err())
@@ -102,4 +93,26 @@ Please visit the following URL in your browser manually: %s`, err, url)
 	}
 	u.Logger.V(1).Infof("finished the authorization code flow via the browser")
 	return out, nil
+}
+
+func (u *Browser) openURL(ctx context.Context, o *BrowserOption, url string) {
+	if o.SkipOpenBrowser {
+		u.Logger.Printf("Please visit the following URL in your browser: %s", url)
+		return
+	}
+
+	u.Logger.V(1).Infof("opening %s in the browser", url)
+	if o.BrowserCommand != "" {
+		if err := u.Browser.OpenCommand(ctx, url, o.BrowserCommand); err != nil {
+			u.Logger.Printf(`error: could not open the browser: %s
+
+Please visit the following URL in your browser manually: %s`, err, url)
+		}
+		return
+	}
+	if err := u.Browser.Open(url); err != nil {
+		u.Logger.Printf(`error: could not open the browser: %s
+
+Please visit the following URL in your browser manually: %s`, err, url)
+	}
 }

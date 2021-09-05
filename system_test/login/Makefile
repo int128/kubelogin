@@ -7,10 +7,6 @@ export PATH
 KUBECONFIG := ../cluster/kubeconfig.yaml
 export KUBECONFIG
 
-# run the login script instead of opening chrome
-BROWSER := $(BIN_DIR)/chromelogin
-export BROWSER
-
 .PHONY: test
 test: build
 	# see the setup instruction
@@ -19,7 +15,8 @@ test: build
 		--oidc-client-id=YOUR_CLIENT_ID \
 		--oidc-client-secret=YOUR_CLIENT_SECRET \
 		--oidc-extra-scope=email \
-		--certificate-authority=$(CERT_DIR)/ca.crt
+		--certificate-authority=$(CERT_DIR)/ca.crt \
+		--browser-command=$(BIN_DIR)/chromelogin
 	# set up the kubeconfig
 	kubectl config set-credentials oidc \
 		--exec-api-version=client.authentication.k8s.io/v1beta1 \
@@ -30,7 +27,8 @@ test: build
 		--exec-arg=--oidc-client-id=YOUR_CLIENT_ID \
 		--exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET \
 		--exec-arg=--oidc-extra-scope=email \
-		--exec-arg=--certificate-authority=$(CERT_DIR)/ca.crt
+		--exec-arg=--certificate-authority=$(CERT_DIR)/ca.crt \
+		--exec-arg=--browser-command=$(BIN_DIR)/chromelogin
 	# make sure we can access the cluster
 	kubectl --user=oidc cluster-info
 	# switch the current context
