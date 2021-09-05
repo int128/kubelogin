@@ -142,6 +142,9 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 		if in.GrantOptionSet.AuthCodeBrowserOption.SkipOpenBrowser {
 			args = append(args, "--skip-open-browser")
 		}
+		if in.GrantOptionSet.AuthCodeBrowserOption.BrowserCommand != "" {
+			args = append(args, "--browser-command="+in.GrantOptionSet.AuthCodeBrowserOption.BrowserCommand)
+		}
 		if in.GrantOptionSet.AuthCodeBrowserOption.LocalServerCertFile != "" {
 			// Resolve the absolute path for the cert files so the user doesn't have to know
 			// to use one when running setup.
