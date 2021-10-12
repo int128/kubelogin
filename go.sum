@@ -228,8 +228,8 @@ github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NH
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/int128/listener v1.1.0 h1:2Jb41DWLpkQ3I9bIdBzO8H/tNwMvyl/OBZWtCV5Pjuw=
 github.com/int128/listener v1.1.0/go.mod h1:68WkmTN8PQtLzc9DucIaagAKeGVyMnyyKIkW4Xn47UA=
-github.com/int128/oauth2cli v1.13.0 h1:3wR48gSHdOPFgHmtnXzs4wEFA6p24prPqLXu6QUOujw=
-github.com/int128/oauth2cli v1.13.0/go.mod h1:EUpEzcUumoVjLPHD7y2KGxwfXYqxDVqwDfqQ+u7qAwM=
+github.com/int128/oauth2cli v1.14.0 h1:r63NoO10ybUXIXUQxih8WOmt5HQpJubdTmhWh22B9VE=
+github.com/int128/oauth2cli v1.14.0/go.mod h1:LIoVAzgAsS2tDDBc8yopkcgY5oZR0+MJAeECkCwtxhA=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
 github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
@@ -287,7 +287,6 @@ github.com/orisano/pixelmatch v0.0.0-20210112091706-4fa4c7ba91d5/go.mod h1:nZgzb
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pelletier/go-toml v1.9.3/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/peterbourgon/diskv v2.0.1+incompatible/go.mod h1:uqqh8zWWbv1HBMNONnaR/tNboyR3/BZd58JJSHlUSCU=
-github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4/go.mod h1:4OwLy04Bl9Ef3GJJCoec+30X3LQs/0/m4HFRt/2LUSA=
 github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 h1:KoWmjvw+nsYOo29YJK9vDA65RGE3NrOnUtO7a+RF9HU=
 github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8/go.mod h1:HKlIX3XHQyzLZPlr7++PzdhaXEj94dEiJgZDTsxEqUI=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
