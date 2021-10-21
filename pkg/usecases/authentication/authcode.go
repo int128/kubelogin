@@ -45,7 +45,6 @@ func (u *AuthCode) Do(ctx context.Context, o *AuthCodeOption, client oidcclient.
 			if !ok {
 				return nil
 			}
-			u.Logger.Printf("Open %s for authentication", url)
 			if u.LocalServerReadyFunc != nil {
 				u.LocalServerReadyFunc(url)
 			}
