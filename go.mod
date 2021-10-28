@@ -1,6 +1,6 @@
 module github.com/pipedrive/kubelogin
 
-go 1.13
+go 1.15
 
 require (
 	github.com/coreos/go-oidc v2.1.0+incompatible
@@ -8,7 +8,7 @@ require (
 	github.com/go-test/deep v1.0.4
 	github.com/golang/mock v1.4.4
 	github.com/google/wire v0.3.0
-	github.com/pipedrive/oauth2cli v1.8.2-pipedrive.0.20211027125806-fab3a0490fc6
+	github.com/pipedrive/oauth2cli v1.8.2-pipedrive.0.20211027140131-4b9ebd5614fa
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/spf13/cobra v0.0.5

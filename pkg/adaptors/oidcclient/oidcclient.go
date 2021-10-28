@@ -104,7 +104,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		return nil, xerrors.Errorf("could not get a token: %w", err)
 	}
 
-	return c.verifyToken(ctx, token.AccessToken, in.Nonce)
+	return c.verifyToken(ctx, token, in.Nonce)
 }
 
 // GetAuthCodeURL returns the URL of authentication request for the authorization code flow.

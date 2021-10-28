@@ -167,6 +167,8 @@ github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/9
 github.com/peterbourgon/diskv v2.0.1+incompatible/go.mod h1:uqqh8zWWbv1HBMNONnaR/tNboyR3/BZd58JJSHlUSCU=
 github.com/pipedrive/oauth2cli v1.8.2-pipedrive.0.20211027125806-fab3a0490fc6 h1:GIuQFKklp88mVnjxhLQ7EtVGS+jNptMS/HIl+WxTY6A=
 github.com/pipedrive/oauth2cli v1.8.2-pipedrive.0.20211027125806-fab3a0490fc6/go.mod h1:wBSn3fih/Jyyv0VQ/9jNTz71XokiX1FtJafi6ASXw58=
+github.com/pipedrive/oauth2cli v1.8.2-pipedrive.0.20211027140131-4b9ebd5614fa h1:IpdBCU+WUqgbpJR9QPIk/tJd9B57x65C+SaWa0MGGHw=
+github.com/pipedrive/oauth2cli v1.8.2-pipedrive.0.20211027140131-4b9ebd5614fa/go.mod h1:wBSn3fih/Jyyv0VQ/9jNTz71XokiX1FtJafi6ASXw58=
 github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 h1:KoWmjvw+nsYOo29YJK9vDA65RGE3NrOnUtO7a+RF9HU=
 github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8/go.mod h1:HKlIX3XHQyzLZPlr7++PzdhaXEj94dEiJgZDTsxEqUI=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
