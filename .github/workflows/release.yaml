@@ -23,24 +23,24 @@ jobs:
     strategy:
       matrix:
         platform:
-          - os: ubuntu-latest
+          - runs-on: ubuntu-latest
             GOOS: linux
             GOARCH: amd64
             CGO_ENABLED: 0 # https://github.com/int128/kubelogin/issues/567
-          - os: ubuntu-latest
+          - runs-on: ubuntu-latest
             GOOS: linux
             GOARCH: arm64
-          - os: ubuntu-latest
+          - runs-on: ubuntu-latest
             GOOS: linux
             GOARCH: arm
-          - os: macos-latest
+          - runs-on: macos-latest
             GOOS: darwin
             GOARCH: amd64
             CGO_ENABLED: 1 # https://github.com/int128/kubelogin/issues/249
-          - os: macos-latest
+          - runs-on: macos-latest
             GOOS: darwin
             GOARCH: arm64
-          - os: windows-latest
+          - runs-on: windows-latest
             GOOS: windows
             GOARCH: amd64
     runs-on: ${{ matrix.platform.runs-on }}
