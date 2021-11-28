@@ -1,0 +1,6 @@
+{
+  "extends": [
+    "config:base",
+    "github>int128/go-actions",
+  ],
+}
