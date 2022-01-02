@@ -125,7 +125,7 @@ You can verify kubelogin works with your provider using [acceptance test](accept
 
 - [Setup guide](docs/setup.md)
 - [Usage and options](docs/usage.md)
-- [Standalone mode](docs/standalone-mode.md) (deprecated)
+- [Standalone mode](docs/standalone-mode.md)
 
 
 ## Related works

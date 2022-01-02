@@ -44,11 +44,6 @@ To show the setup instruction:
 See https://github.com/int128/kubelogin for more.
 `
 
-const deprecationMessage = `NOTE: You can use the credential plugin mode for better user experience.
-Kubectl automatically runs kubelogin and you do not need to run kubelogin explicitly.
-See https://github.com/int128/kubelogin for more.
-`
-
 // Standalone provides the use case of explicit login.
 //
 // If the current auth provider is not oidc, show the error.
@@ -70,7 +65,6 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 		u.Logger.Printf(oidcConfigErrorMessage)
 		return fmt.Errorf("could not find the current authentication provider: %w", err)
 	}
-	u.Logger.Printf(deprecationMessage)
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
 	if authProvider.IDPCertificateAuthority != "" {
