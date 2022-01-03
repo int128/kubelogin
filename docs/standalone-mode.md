@@ -1,9 +1,12 @@
 # Standalone mode
 
-You can run kubelogin as a standalone command.
-In this mode, you need to manually run the command before running kubectl.
+Kubelogin supports the standalone mode as well.
+It writes the token to the kubeconfig (typically `~/.kube/config`) after authentication.
 
-Configure the kubeconfig like:
+
+## Getting started
+
+Configure your kubeconfig like:
 
 ```yaml
 - name: keycloak
@@ -31,7 +34,7 @@ It automatically opens the browser and you can log in to the provider.
 
 After authentication, kubelogin writes the ID token and refresh token to the kubeconfig.
 
-```
+```console
 % kubelogin
 Open http://localhost:8000 for authentication
 You got a valid token until 2019-05-18 10:28:51 +0900 JST
@@ -40,7 +43,7 @@ Updated ~/.kubeconfig
 
 Now you can access the cluster.
 
-```
+```console
 % kubectl get pods
 NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
@@ -64,7 +67,7 @@ users:
 
 If the ID token is valid, kubelogin does nothing.
 
-```
+```console
 % kubelogin
 You already have a valid token until 2019-05-18 10:28:51 +0900 JST
 ```
@@ -102,4 +105,4 @@ Key | Direction | Value
 `id-token`                        | Write | ID token got from the provider.
 `refresh-token`                   | Write | Refresh token got from the provider.
 
-See also [usage.md](docs/usage.md).
+See also [usage.md](usage.md).
