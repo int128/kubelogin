@@ -126,13 +126,8 @@ You can verify kubelogin works with your provider using [acceptance test](accept
 - [Setup guide](docs/setup.md)
 - [Usage and options](docs/usage.md)
 - [Standalone mode](docs/standalone-mode.md)
-
-
-## Related works
-
-### Kubernetes Dashboard
-
-You can access the Kubernetes Dashboard using kubelogin and [kauthproxy](https://github.com/int128/kauthproxy).
+- [System test](system_test)
+- [Acceptance_test for identity providers](acceptance_test)
 
 
 ## Contributions
@@ -140,18 +135,5 @@ You can access the Kubernetes Dashboard using kubelogin and [kauthproxy](https:/
 This is an open source software licensed under Apache License 2.0.
 Feel free to open issues and pull requests for improving code and documents.
 
-Your pull request will be merged into master with squash.
-
-### Development
-
-Go 1.16+ is required.
-
-```sh
-make
-./kubelogin
-```
-
-See also:
-
-- [system test](system_test)
-- [acceptance_test](acceptance_test)
+This software is developed with [GoLand](https://www.jetbrains.com/go/) licensed for open source development.
+Special thanks for the support.
