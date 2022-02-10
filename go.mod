@@ -6,7 +6,7 @@ require (
 	github.com/alexflint/go-filemutex v1.1.0
 	github.com/chromedp/chromedp v0.7.7
 	github.com/coreos/go-oidc/v3 v3.1.0
-	github.com/golang-jwt/jwt/v4 v4.2.0
+	github.com/golang-jwt/jwt/v4 v4.3.0
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.7
 	github.com/google/wire v0.5.0
