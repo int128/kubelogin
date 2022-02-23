@@ -36,6 +36,16 @@ spec:
         matchLabels:
           os: darwin
           arch: amd64
+    - uri: https://github.com/pipedrive/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_darwin_arm64.zip
+      sha256: "{{ sha256 .darwin_arm64_archive }}"
+      bin: kubelogin
+      files:
+        - from: "kubelogin"
+          to: "."
+      selector:
+        matchLabels:
+          os: darwin
+          arch: arm64
     - uri: https://github.com/pipedrive/kubelogin/releases/download/{{ env "VERSION" }}/kubelogin_windows_amd64.zip
       sha256: "{{ sha256 .windows_amd64_archive }}"
       bin: kubelogin.exe
