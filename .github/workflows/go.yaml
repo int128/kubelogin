@@ -30,9 +30,6 @@ jobs:
       - uses: golangci/golangci-lint-action@v3
         with:
           version: v1.44.2
-          skip-go-installation: true
-          skip-pkg-cache: true
-          skip-build-cache: true
 
   test:
     runs-on: ubuntu-latest
