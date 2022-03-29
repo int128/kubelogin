@@ -67,4 +67,4 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - uses: rajatjindal/krew-release-bot@v0.0.40
+      - uses: rajatjindal/krew-release-bot@v0.0.42
