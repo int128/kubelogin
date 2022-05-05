@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/wire"
 	"golang.org/x/xerrors"
 )
@@ -41,10 +41,12 @@ func (d *Decoder) Decode(s string) (*Claims, error) {
 	if len(parts) != 3 {
 		return nil, xerrors.Errorf("token contains an invalid number of segments")
 	}
+	//nolint
 	b, err := jwt.DecodeSegment(parts[1])
 	if err != nil {
 		return nil, xerrors.Errorf("could not decode the token: %w", err)
 	}
+	//nolint
 	var claims jwt.StandardClaims
 	if err := json.NewDecoder(bytes.NewBuffer(b)).Decode(&claims); err != nil {
 		return nil, xerrors.Errorf("could not decode the json of token: %w", err)

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/golang/mock/gomock"
 	"github.com/pipedrive/kubelogin/e2e_test/idp"
 	"github.com/pipedrive/kubelogin/e2e_test/idp/mock_idp"
@@ -279,6 +279,7 @@ func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 		Nonce  string   `json:"nonce"`
 		Groups []string `json:"groups"`
 	}
+	//nolint
 	claims.StandardClaims = jwt.StandardClaims{
 		Issuer:    issuer,
 		Audience:  "kubernetes",

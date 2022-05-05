@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func TestDecoder_Decode(t *testing.T) {
@@ -47,6 +47,7 @@ func newIDToken(t *testing.T, issuer string, expiry time.Time) string {
 		Groups        []string `json:"groups"`
 		EmailVerified bool     `json:"email_verified"`
 	}{
+		//nolint
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    issuer,
 			Audience:  "kubernetes",
