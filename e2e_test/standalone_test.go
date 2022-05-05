@@ -279,6 +279,7 @@ func newIDToken(t *testing.T, issuer, nonce string, expiry time.Time) string {
 		Nonce  string   `json:"nonce"`
 		Groups []string `json:"groups"`
 	}
+	//nolint
 	claims.StandardClaims = jwt.StandardClaims{
 		Issuer:    issuer,
 		Audience:  "kubernetes",
