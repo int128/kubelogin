@@ -22,21 +22,17 @@ jobs:
   system-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v3
+      - uses: int128/go-actions/setup@v1
         with:
           go-version: 1.16
-        id: go
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            go-
+
+      # for certutil
       # https://packages.ubuntu.com/xenial/libnss3-tools
       - run: sudo apt update
       - run: sudo apt install -y libnss3-tools
       - run: mkdir -p ~/.pki/nssdb
+
       - run: echo '127.0.0.1 dex-server' | sudo tee -a /etc/hosts
 
       - run: make -C system_test -j3
