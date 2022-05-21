@@ -24,6 +24,10 @@ setup-chrome: cert
 cert:
 	$(MAKE) -C cert
 
+.PHONY: logs
+logs:
+	$(MAKE) -C cluster logs
+
 .PHONY: terminate
 terminate:
 	$(MAKE) -C cluster terminate
