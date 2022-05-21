@@ -1,0 +1,70 @@
+name: release
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/release.yaml
+      - pkg/**
+      - go.*
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/workflows/release.yaml
+      - pkg/**
+      - go.*
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform:
+          - runs-on: ubuntu-latest
+            GOOS: linux
+            GOARCH: amd64
+            CGO_ENABLED: 0 # https://github.com/int128/kubelogin/issues/567
+          - runs-on: ubuntu-latest
+            GOOS: linux
+            GOARCH: arm64
+          - runs-on: ubuntu-latest
+            GOOS: linux
+            GOARCH: arm
+          - runs-on: macos-latest
+            GOOS: darwin
+            GOARCH: amd64
+            CGO_ENABLED: 1 # https://github.com/int128/kubelogin/issues/249
+          - runs-on: macos-latest
+            GOOS: darwin
+            GOARCH: arm64
+          - runs-on: windows-latest
+            GOOS: windows
+            GOARCH: amd64
+    runs-on: ${{ matrix.platform.runs-on }}
+    env:
+      GOOS: ${{ matrix.platform.GOOS }}
+      GOARCH: ${{ matrix.platform.GOARCH }}
+      CGO_ENABLED: ${{ matrix.platform.CGO_ENABLED }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - uses: int128/go-actions/setup@v1
+        with:
+          go-version: 1.16
+      - run: go build -ldflags "-X main.version=${GITHUB_REF##*/}"
+      - uses: int128/go-actions/release@v1
+        with:
+          binary: kubelogin
+
+  publish:
+    if: startswith(github.ref, 'refs/tags/')
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - uses: rajatjindal/krew-release-bot@v0.0.43

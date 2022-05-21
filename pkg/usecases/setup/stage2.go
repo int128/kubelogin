@@ -73,6 +73,7 @@ type Stage2Input struct {
 	ClientID          string
 	ClientSecret      string
 	ExtraScopes       []string // optional
+	UsePKCE           bool     // optional
 	ListenAddressArgs []string // non-nil if set by the command arg
 	GrantOptionSet    authentication.GrantOptionSet
 	TLSClientConfig   tlsclientconfig.Config
@@ -86,6 +87,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 			ClientID:     in.ClientID,
 			ClientSecret: in.ClientSecret,
 			ExtraScopes:  in.ExtraScopes,
+			UsePKCE:      in.UsePKCE,
 		},
 		GrantOptionSet:  in.GrantOptionSet,
 		TLSClientConfig: in.TLSClientConfig,
@@ -123,6 +125,9 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 	for _, extraScope := range in.ExtraScopes {
 		args = append(args, "--oidc-extra-scope="+extraScope)
 	}
+	if in.UsePKCE {
+		args = append(args, "--oidc-use-pkce")
+	}
 	for _, f := range in.TLSClientConfig.CACertFilename {
 		args = append(args, "--certificate-authority="+f)
 	}
@@ -136,6 +141,9 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 	if in.GrantOptionSet.AuthCodeBrowserOption != nil {
 		if in.GrantOptionSet.AuthCodeBrowserOption.SkipOpenBrowser {
 			args = append(args, "--skip-open-browser")
+		}
+		if in.GrantOptionSet.AuthCodeBrowserOption.BrowserCommand != "" {
+			args = append(args, "--browser-command="+in.GrantOptionSet.AuthCodeBrowserOption.BrowserCommand)
 		}
 		if in.GrantOptionSet.AuthCodeBrowserOption.LocalServerCertFile != "" {
 			// Resolve the absolute path for the cert files so the user doesn't have to know

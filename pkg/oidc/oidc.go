@@ -15,6 +15,7 @@ type Provider struct {
 	ClientID     string
 	ClientSecret string   // optional
 	ExtraScopes  []string // optional
+	UsePKCE      bool     // optional
 }
 
 // TokenSet represents a set of ID token and refresh token.

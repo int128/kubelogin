@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -13,6 +14,7 @@ type setupOptions struct {
 	ClientID              string
 	ClientSecret          string
 	ExtraScopes           []string
+	UsePKCE               bool
 	tlsOptions            tlsOptions
 	authenticationOptions authenticationOptions
 }
@@ -22,6 +24,7 @@ func (o *setupOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
+	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE usage")
 	o.tlsOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
 }
@@ -46,6 +49,7 @@ func (cmd *Setup) New() *cobra.Command {
 				ClientID:        o.ClientID,
 				ClientSecret:    o.ClientSecret,
 				ExtraScopes:     o.ExtraScopes,
+				UsePKCE:         o.UsePKCE,
 				GrantOptionSet:  grantOptionSet,
 				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
 			}

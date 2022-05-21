@@ -12,6 +12,7 @@ import (
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client/logging"
+	"github.com/int128/kubelogin/pkg/pkce"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
 	"golang.org/x/oauth2"
@@ -60,6 +61,9 @@ func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsc
 	supportedPKCEMethods, err := extractSupportedPKCEMethods(provider)
 	if err != nil {
 		return nil, fmt.Errorf("could not determine supported PKCE methods: %w", err)
+	}
+	if len(supportedPKCEMethods) == 0 && p.UsePKCE {
+		supportedPKCEMethods = []string{pkce.MethodS256}
 	}
 	return &client{
 		httpClient: httpClient,

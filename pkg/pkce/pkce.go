@@ -14,7 +14,7 @@ var Plain Params
 
 const (
 	// code challenge methods defined as https://tools.ietf.org/html/rfc7636#section-4.3
-	methodS256 = "S256"
+	MethodS256 = "S256"
 )
 
 // Params represents a set of the PKCE parameters.
@@ -33,7 +33,7 @@ func (p Params) IsZero() bool {
 // It returns Plain if no method is available.
 func New(methods []string) (Params, error) {
 	for _, method := range methods {
-		if method == methodS256 {
+		if method == MethodS256 {
 			return NewS256()
 		}
 	}
@@ -63,7 +63,7 @@ func computeS256(b []byte) Params {
 	_, _ = s.Write([]byte(v))
 	return Params{
 		CodeChallenge:       base64URLEncode(s.Sum(nil)),
-		CodeChallengeMethod: methodS256,
+		CodeChallengeMethod: MethodS256,
 		CodeVerifier:        v,
 	}
 }

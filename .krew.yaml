@@ -1,0 +1,62 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: oidc-login
+spec:
+  homepage: https://github.com/int128/kubelogin
+  shortDescription: Log in to the OpenID Connect provider
+  description: |
+    This is a kubectl plugin for Kubernetes OpenID Connect (OIDC) authentication.
+
+    ## Credential plugin mode
+    kubectl executes oidc-login before calling the Kubernetes APIs.
+    oidc-login automatically opens the browser and you can log in to the provider.
+    After authentication, kubectl gets the token from oidc-login and you can access the cluster.
+    See https://github.com/int128/kubelogin#credential-plugin-mode for more.
+
+    ## Standalone mode
+    Run `kubectl oidc-login`.
+    It automatically opens the browser and you can log in to the provider.
+    After authentication, it writes the token to the kubeconfig and you can access the cluster.
+    See https://github.com/int128/kubelogin#standalone-mode for more.
+
+  caveats: |
+    You need to setup the OIDC provider, Kubernetes API server, role binding and kubeconfig.
+  version: {{ .TagName }}
+  platforms:
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_linux_amd64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_linux_arm64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: linux
+        arch: arm64
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_linux_arm.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: linux
+        arch: arm
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_darwin_amd64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+  - bin: kubelogin
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_darwin_arm64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+  - bin: kubelogin.exe
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_windows_amd64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: windows
+        arch: amd64

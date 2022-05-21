@@ -1,4 +1,4 @@
-# kubelogin [![CircleCI](https://circleci.com/gh/int128/kubelogin.svg?style=shield)](https://circleci.com/gh/int128/kubelogin) [![Go Report Card](https://goreportcard.com/badge/github.com/int128/kubelogin)](https://goreportcard.com/report/github.com/int128/kubelogin)
+# kubelogin [![go](https://github.com/int128/kubelogin/actions/workflows/go.yaml/badge.svg)](https://github.com/int128/kubelogin/actions/workflows/go.yaml) [![Go Report Card](https://goreportcard.com/badge/github.com/int128/kubelogin)](https://goreportcard.com/report/github.com/int128/kubelogin)
 
 This is a kubectl plugin for [Kubernetes OpenID Connect (OIDC) authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens), also known as `kubectl oidc-login`.
 
@@ -30,6 +30,8 @@ kubectl krew install oidc-login
 # Chocolatey (Windows)
 choco install kubelogin
 ```
+
+If you install via GitHub releases, you need to put the `kubelogin` binary on your path under the name `kubectl-oidc_login` so that the [kubectl plugin mechanism](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/) can find it when you invoke `kubectl oidc-login`. The other install methods do this for you.
 
 You need to set up the OIDC provider, cluster role binding, Kubernetes API server and kubeconfig.
 The kubeconfig looks like:
@@ -65,7 +67,7 @@ Kubelogin automatically opens the browser, and you can log in to the provider.
 
 <img src="docs/keycloak-login.png" alt="keycloak-login" width="455" height="329">
 
-After authentication, kubelogin returns the credentials to kubectl and finally kubectl calls the Kubernetes APIs with the credential.
+After authentication, kubelogin returns the credentials to kubectl and kubectl then calls the Kubernetes APIs with these credentials.
 
 ```
 % kubectl get pods
@@ -78,13 +80,13 @@ Kubelogin writes the ID token and refresh token to the token cache file.
 
 If the cached ID token is valid, kubelogin just returns it.
 If the cached ID token has expired, kubelogin will refresh the token using the refresh token.
-If the refresh token has expired, kubelogin will perform reauthentication.
+If the refresh token has expired, kubelogin will perform re-authentication (you will have to login via browser again).
 
 
 ### Troubleshoot
 
 You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
-Kubelogin will perform authentication if the token cache file does not exist.
+Kubelogin will ask you to login via browser again if the token cache file does not exist i.e., it starts with a clean slate
 
 You can dump claims of an ID token by `setup` command.
 
@@ -123,14 +125,9 @@ You can verify kubelogin works with your provider using [acceptance test](accept
 
 - [Setup guide](docs/setup.md)
 - [Usage and options](docs/usage.md)
-- [Standalone mode](docs/standalone-mode.md) (deprecated)
-
-
-## Related works
-
-### Kubernetes Dashboard
-
-You can access the Kubernetes Dashboard using kubelogin and [kauthproxy](https://github.com/int128/kauthproxy).
+- [Standalone mode](docs/standalone-mode.md)
+- [System test](system_test)
+- [Acceptance_test for identity providers](acceptance_test)
 
 
 ## Contributions
@@ -138,18 +135,5 @@ You can access the Kubernetes Dashboard using kubelogin and [kauthproxy](https:/
 This is an open source software licensed under Apache License 2.0.
 Feel free to open issues and pull requests for improving code and documents.
 
-Your pull request will be merged into master with squash.
-
-### Development
-
-Go 1.15+ is required.
-
-```sh
-make
-./kubelogin
-```
-
-See also:
-
-- [system test](system_test)
-- [acceptance_test](acceptance_test)
+This software is developed with [GoLand](https://www.jetbrains.com/go/) licensed for open source development.
+Special thanks for the support.

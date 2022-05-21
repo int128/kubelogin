@@ -3,8 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
@@ -19,6 +17,7 @@ type getTokenOptions struct {
 	ClientID              string
 	ClientSecret          string
 	ExtraScopes           []string
+	UsePKCE               bool
 	TokenCacheDir         string
 	tlsOptions            tlsOptions
 	authenticationOptions authenticationOptions
@@ -29,23 +28,16 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider (mandatory)")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
+	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE usage")
 	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for token cache")
 	o.tlsOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
 }
 
 func (o *getTokenOptions) expandHomedir() error {
-	var err error
-	o.TokenCacheDir, err = expandHomedir(o.TokenCacheDir)
-	if err != nil {
-		return fmt.Errorf("invalid --token-cache-dir: %w", err)
-	}
-	if err = o.authenticationOptions.expandHomedir(); err != nil {
-		return err
-	}
-	if err = o.tlsOptions.expandHomedir(); err != nil {
-		return err
-	}
+	o.TokenCacheDir = expandHomedir(o.TokenCacheDir)
+	o.authenticationOptions.expandHomedir()
+	o.tlsOptions.expandHomedir()
 	return nil
 }
 
@@ -84,6 +76,7 @@ func (cmd *GetToken) New() *cobra.Command {
 					IssuerURL:    o.IssuerURL,
 					ClientID:     o.ClientID,
 					ClientSecret: o.ClientSecret,
+					UsePKCE:      o.UsePKCE,
 					ExtraScopes:  o.ExtraScopes,
 				},
 				TokenCacheDir:   o.TokenCacheDir,
@@ -99,15 +92,4 @@ func (cmd *GetToken) New() *cobra.Command {
 	c.Flags().SortFlags = false
 	o.addFlags(c.Flags())
 	return c
-}
-
-func expandHomedir(s string) (string, error) {
-	if !strings.HasPrefix(s, "~"+string(os.PathSeparator)) {
-		return s, nil
-	}
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("could not expand homedir: %w", err)
-	}
-	return userHomeDir + strings.TrimPrefix(s, "~"), nil
 }

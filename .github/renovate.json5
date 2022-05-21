@@ -1,0 +1,6 @@
+{
+  "extends": [
+    "github>int128/renovate-base",
+    "github>int128/go-actions",
+  ],
+}

@@ -1,7 +1,9 @@
 package browser
 
 import (
+	"context"
 	"os"
+	"os/exec"
 
 	"github.com/google/wire"
 	"github.com/pkg/browser"
@@ -23,6 +25,7 @@ var Set = wire.NewSet(
 
 type Interface interface {
 	Open(url string) error
+	OpenCommand(ctx context.Context, url, command string) error
 }
 
 type Browser struct{}
@@ -30,4 +33,12 @@ type Browser struct{}
 // Open opens the default browser.
 func (*Browser) Open(url string) error {
 	return browser.OpenURL(url)
+}
+
+// OpenCommand opens the browser using the command.
+func (*Browser) OpenCommand(ctx context.Context, url, command string) error {
+	c := exec.CommandContext(ctx, command, url)
+	c.Stdout = os.Stderr // see above
+	c.Stderr = os.Stderr
+	return c.Run()
 }

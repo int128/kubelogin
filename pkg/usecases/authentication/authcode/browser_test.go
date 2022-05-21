@@ -116,4 +116,45 @@ func TestBrowser_Do(t *testing.T) {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
+
+	t.Run("OpenBrowserCommand", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		o := &BrowserOption{
+			BindAddress:           []string{"127.0.0.1:8000"},
+			BrowserCommand:        "firefox",
+			AuthenticationTimeout: 10 * time.Second,
+		}
+		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient.EXPECT().SupportedPKCEMethods()
+		mockClient.EXPECT().
+			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
+				readyChan <- "LOCAL_SERVER_URL"
+			}).
+			Return(&oidc.TokenSet{
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			}, nil)
+		mockBrowser := mock_browser.NewMockInterface(ctrl)
+		mockBrowser.EXPECT().
+			OpenCommand(gomock.Any(), "LOCAL_SERVER_URL", "firefox")
+		u := Browser{
+			Logger:  logger.New(t),
+			Browser: mockBrowser,
+		}
+		got, err := u.Do(ctx, o, mockClient)
+		if err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+		want := &oidc.TokenSet{
+			IDToken:      "YOUR_ID_TOKEN",
+			RefreshToken: "YOUR_REFRESH_TOKEN",
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
 }
