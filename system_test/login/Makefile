@@ -31,10 +31,6 @@ test: build
 		--exec-arg=--browser-command=$(BIN_DIR)/chromelogin
 	# make sure we can access the cluster
 	kubectl --user=oidc cluster-info
-	# switch the current context
-	kubectl config set-context --current --user=oidc
-	# make sure we can access the cluster
-	kubectl cluster-info
 
 .PHONY: build
 build: $(BIN_DIR)/kubectl-oidc_login $(BIN_DIR)/chromelogin

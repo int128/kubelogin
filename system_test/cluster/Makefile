@@ -18,6 +18,10 @@ cluster:
 	kubectl create clusterrole cluster-readonly --verb=get,watch,list --resource='*.*'
 	kubectl create clusterrolebinding cluster-readonly --clusterrole=cluster-readonly --user=admin@example.com
 
+.PHONY: logs
+logs:
+	kubectl -n kube-system logs kube-apiserver-kubelogin-system-test-control-plane
+
 .PHONY: terminate
 terminate:
 	kind delete cluster --name $(CLUSTER_NAME)
