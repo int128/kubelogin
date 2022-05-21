@@ -8,7 +8,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.1.0
 	github.com/golang-jwt/jwt/v4 v4.4.0
 	github.com/golang/mock v1.6.0
-	github.com/google/go-cmp v0.5.7
+	github.com/google/go-cmp v0.5.8
 	github.com/google/wire v0.5.0
 	github.com/int128/oauth2cli v1.14.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
