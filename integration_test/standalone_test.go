@@ -254,8 +254,7 @@ func TestStandalone(t *testing.T) {
 			Issuer: sv.IssuerURL(),
 		})
 		defer os.Remove(kubeConfigFilename)
-		setenv(t, "KUBECONFIG", kubeConfigFilename+string(os.PathListSeparator)+"kubeconfig/testdata/dummy.yaml")
-		defer unsetenv(t, "KUBECONFIG")
+		t.Setenv("KUBECONFIG", kubeConfigFilename+string(os.PathListSeparator)+"kubeconfig/testdata/dummy.yaml")
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:  sv.IssuerURL(),
 			httpDriver: httpdriver.New(ctx, t, httpdriver.Option{}),
@@ -316,19 +315,5 @@ func runStandalone(t *testing.T, ctx context.Context, cfg standaloneConfig) {
 	}, cfg.args...), "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)
-	}
-}
-
-func setenv(t *testing.T, key, value string) {
-	t.Helper()
-	if err := os.Setenv(key, value); err != nil {
-		t.Fatalf("Could not set the env var %s=%s: %s", key, value, err)
-	}
-}
-
-func unsetenv(t *testing.T, key string) {
-	t.Helper()
-	if err := os.Unsetenv(key); err != nil {
-		t.Fatalf("Could not unset the env var %s: %s", key, err)
 	}
 }

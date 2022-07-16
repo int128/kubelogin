@@ -11,8 +11,7 @@ import (
 
 func Test_loadByDefaultRules(t *testing.T) {
 	t.Run("google.yaml>keycloak.yaml", func(t *testing.T) {
-		setenv(t, "KUBECONFIG", "testdata/kubeconfig.google.yaml"+string(os.PathListSeparator)+"testdata/kubeconfig.keycloak.yaml")
-		defer unsetenv(t, "KUBECONFIG")
+		t.Setenv("KUBECONFIG", "testdata/kubeconfig.google.yaml"+string(os.PathListSeparator)+"testdata/kubeconfig.keycloak.yaml")
 
 		config, err := loadByDefaultRules("")
 		if err != nil {
@@ -36,8 +35,7 @@ func Test_loadByDefaultRules(t *testing.T) {
 	})
 
 	t.Run("keycloak.yaml>google.yaml", func(t *testing.T) {
-		setenv(t, "KUBECONFIG", "testdata/kubeconfig.keycloak.yaml"+string(os.PathListSeparator)+"testdata/kubeconfig.google.yaml")
-		defer unsetenv(t, "KUBECONFIG")
+		t.Setenv("KUBECONFIG", "testdata/kubeconfig.keycloak.yaml"+string(os.PathListSeparator)+"testdata/kubeconfig.google.yaml")
 
 		config, err := loadByDefaultRules("")
 		if err != nil {
@@ -59,20 +57,6 @@ func Test_loadByDefaultRules(t *testing.T) {
 			t.Errorf("AuthInfos[keycloak] is missing")
 		}
 	})
-}
-
-func setenv(t *testing.T, key, value string) {
-	t.Helper()
-	if err := os.Setenv(key, value); err != nil {
-		t.Fatalf("Could not set the env var %s=%s: %s", key, value, err)
-	}
-}
-
-func unsetenv(t *testing.T, key string) {
-	t.Helper()
-	if err := os.Unsetenv(key); err != nil {
-		t.Fatalf("Could not unset the env var %s: %s", key, err)
-	}
 }
 
 func Test_findCurrentAuthProvider(t *testing.T) {
