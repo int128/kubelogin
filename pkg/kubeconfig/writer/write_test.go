@@ -3,6 +3,7 @@ package writer
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -14,13 +15,8 @@ func TestKubeconfig_UpdateAuth(t *testing.T) {
 
 	t.Run("MinimumKeys", func(t *testing.T) {
 		f := newKubeconfigFile(t)
-		defer func() {
-			if err := os.Remove(f.Name()); err != nil {
-				t.Errorf("Could not remove the temp file: %s", err)
-			}
-		}()
 		if err := w.UpdateAuthProvider(kubeconfig.AuthProvider{
-			LocationOfOrigin: f.Name(),
+			LocationOfOrigin: f,
 			UserName:         "google",
 			IDPIssuerURL:     "https://accounts.google.com",
 			ClientID:         "GOOGLE_CLIENT_ID",
@@ -30,7 +26,7 @@ func TestKubeconfig_UpdateAuth(t *testing.T) {
 		}); err != nil {
 			t.Fatalf("Could not update auth: %s", err)
 		}
-		b, err := ioutil.ReadFile(f.Name())
+		b, err := ioutil.ReadFile(f)
 		if err != nil {
 			t.Fatalf("Could not read kubeconfig: %s", err)
 		}
@@ -61,13 +57,8 @@ users:
 
 	t.Run("FullKeys", func(t *testing.T) {
 		f := newKubeconfigFile(t)
-		defer func() {
-			if err := os.Remove(f.Name()); err != nil {
-				t.Errorf("Could not remove the temp file: %s", err)
-			}
-		}()
 		if err := w.UpdateAuthProvider(kubeconfig.AuthProvider{
-			LocationOfOrigin:            f.Name(),
+			LocationOfOrigin:            f,
 			UserName:                    "google",
 			IDPIssuerURL:                "https://accounts.google.com",
 			ClientID:                    "GOOGLE_CLIENT_ID",
@@ -80,7 +71,7 @@ users:
 		}); err != nil {
 			t.Fatalf("Could not update auth: %s", err)
 		}
-		b, err := ioutil.ReadFile(f.Name())
+		b, err := ioutil.ReadFile(f)
 		if err != nil {
 			t.Fatalf("Could not read kubeconfig: %s", err)
 		}
@@ -113,8 +104,8 @@ users:
 	})
 }
 
-func newKubeconfigFile(t *testing.T) *os.File {
-	content := `apiVersion: v1
+const kubeconfigContent = `
+apiVersion: v1
 clusters: []
 kind: Config
 preferences: {}
@@ -124,13 +115,12 @@ users:
       auth-provider:
         config:
           idp-issuer-url: https://accounts.google.com
-        name: oidc`
-	f, err := ioutil.TempFile("", "kubeconfig")
-	if err != nil {
-		t.Fatalf("Could not create a file: %s", err)
-	}
-	defer f.Close()
-	if _, err := f.Write([]byte(content)); err != nil {
+        name: oidc
+`
+
+func newKubeconfigFile(t *testing.T) string {
+	f := filepath.Join(t.TempDir(), "kubeconfig")
+	if err := os.WriteFile(f, []byte(kubeconfigContent), 0644); err != nil {
 		t.Fatalf("Could not write kubeconfig: %s", err)
 	}
 	return f

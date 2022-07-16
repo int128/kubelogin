@@ -10,28 +10,14 @@ import (
 	"github.com/int128/kubelogin/integration_test/keypair"
 )
 
-type Shutdowner interface {
-	Shutdown(t *testing.T, ctx context.Context)
-}
-
-type shutdowner struct {
-	s *http.Server
-}
-
-func (s *shutdowner) Shutdown(t *testing.T, ctx context.Context) {
-	if err := s.s.Shutdown(ctx); err != nil {
-		t.Errorf("could not shutdown the server: %s", err)
-	}
-}
-
-func Start(t *testing.T, h http.Handler, k keypair.KeyPair) (string, Shutdowner) {
+func Start(t *testing.T, h http.Handler, k keypair.KeyPair) string {
 	if k == keypair.None {
 		return startNoTLS(t, h)
 	}
 	return startTLS(t, h, k)
 }
 
-func startNoTLS(t *testing.T, h http.Handler) (string, *shutdowner) {
+func startNoTLS(t *testing.T, h http.Handler) string {
 	t.Helper()
 	l, port := newLocalhostListener(t)
 	url := "http://localhost:" + port
@@ -44,10 +30,15 @@ func startNoTLS(t *testing.T, h http.Handler) (string, *shutdowner) {
 			t.Error(err)
 		}
 	}()
-	return url, &shutdowner{s}
+	t.Cleanup(func() {
+		if err := s.Shutdown(context.TODO()); err != nil {
+			t.Errorf("could not shutdown the server: %s", err)
+		}
+	})
+	return url
 }
 
-func startTLS(t *testing.T, h http.Handler, k keypair.KeyPair) (string, *shutdowner) {
+func startTLS(t *testing.T, h http.Handler, k keypair.KeyPair) string {
 	t.Helper()
 	l, port := newLocalhostListener(t)
 	url := "https://localhost:" + port
@@ -60,7 +51,12 @@ func startTLS(t *testing.T, h http.Handler, k keypair.KeyPair) (string, *shutdow
 			t.Error(err)
 		}
 	}()
-	return url, &shutdowner{s}
+	t.Cleanup(func() {
+		if err := s.Shutdown(context.TODO()); err != nil {
+			t.Errorf("could not shutdown the server: %s", err)
+		}
+	})
+	return url
 }
 
 func newLocalhostListener(t *testing.T) (net.Listener, string) {
