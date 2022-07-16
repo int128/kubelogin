@@ -60,7 +60,6 @@ func TestStandalone(t *testing.T) {
 					Issuer:                  sv.IssuerURL(),
 					IDPCertificateAuthority: tc.keyPair.CACertPath,
 				})
-				defer os.Remove(kubeConfigFilename)
 				runStandalone(t, ctx, standaloneConfig{
 					issuerURL:          sv.IssuerURL(),
 					kubeConfigFilename: kubeConfigFilename,
@@ -93,7 +92,6 @@ func TestStandalone(t *testing.T) {
 					Issuer:                  sv.IssuerURL(),
 					IDPCertificateAuthority: tc.keyPair.CACertPath,
 				})
-				defer os.Remove(kubeConfigFilename)
 				runStandalone(t, ctx, standaloneConfig{
 					issuerURL:          sv.IssuerURL(),
 					kubeConfigFilename: kubeConfigFilename,
@@ -120,7 +118,6 @@ func TestStandalone(t *testing.T) {
 					Issuer:                  sv.IssuerURL(),
 					IDPCertificateAuthority: tc.keyPair.CACertPath,
 				})
-				defer os.Remove(kubeConfigFilename)
 
 				t.Run("NoToken", func(t *testing.T) {
 					sv.SetConfig(oidcserver.Config{
@@ -224,7 +221,6 @@ func TestStandalone(t *testing.T) {
 			Issuer:                      sv.IssuerURL(),
 			IDPCertificateAuthorityData: keypair.Server.CACertBase64,
 		})
-		defer os.Remove(kubeConfigFilename)
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:          sv.IssuerURL(),
 			kubeConfigFilename: kubeConfigFilename,
@@ -253,7 +249,6 @@ func TestStandalone(t *testing.T) {
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer: sv.IssuerURL(),
 		})
-		defer os.Remove(kubeConfigFilename)
 		t.Setenv("KUBECONFIG", kubeConfigFilename+string(os.PathListSeparator)+"kubeconfig/testdata/dummy.yaml")
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:  sv.IssuerURL(),
@@ -284,7 +279,6 @@ func TestStandalone(t *testing.T) {
 			Issuer:      sv.IssuerURL(),
 			ExtraScopes: "profile,groups",
 		})
-		defer os.Remove(kubeConfigFilename)
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:          sv.IssuerURL(),
 			kubeConfigFilename: kubeConfigFilename,
