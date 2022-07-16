@@ -17,7 +17,6 @@ import (
 )
 
 type Server interface {
-	http.Shutdowner
 	IssuerURL() string
 	SetConfig(Config)
 	LastTokenResponse() *handler.TokenResponse
@@ -51,13 +50,12 @@ type Config struct {
 // New starts a HTTP server for the OpenID Connect provider.
 func New(t *testing.T, k keypair.KeyPair, c Config) Server {
 	sv := server{Config: c, t: t}
-	sv.issuerURL, sv.Shutdowner = http.Start(t, handler.New(t, &sv), k)
+	sv.issuerURL = http.Start(t, handler.New(t, &sv), k)
 	return &sv
 }
 
 type server struct {
 	Config
-	http.Shutdowner
 	t                         *testing.T
 	issuerURL                 string
 	lastAuthenticationRequest *handler.AuthenticationRequest

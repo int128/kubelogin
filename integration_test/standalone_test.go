@@ -55,7 +55,6 @@ func TestStandalone(t *testing.T) {
 						IDTokenExpiry: now.Add(time.Hour),
 					},
 				})
-				defer sv.Shutdown(t, ctx)
 				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 					Issuer:                  sv.IssuerURL(),
 					IDPCertificateAuthority: tc.keyPair.CACertPath,
@@ -87,7 +86,6 @@ func TestStandalone(t *testing.T) {
 						IDTokenExpiry: now.Add(time.Hour),
 					},
 				})
-				defer sv.Shutdown(t, ctx)
 				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 					Issuer:                  sv.IssuerURL(),
 					IDPCertificateAuthority: tc.keyPair.CACertPath,
@@ -113,7 +111,6 @@ func TestStandalone(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
 				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{})
-				defer sv.Shutdown(t, ctx)
 				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 					Issuer:                  sv.IssuerURL(),
 					IDPCertificateAuthority: tc.keyPair.CACertPath,
@@ -216,7 +213,6 @@ func TestStandalone(t *testing.T) {
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:                      sv.IssuerURL(),
 			IDPCertificateAuthorityData: keypair.Server.CACertBase64,
@@ -245,7 +241,6 @@ func TestStandalone(t *testing.T) {
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer: sv.IssuerURL(),
 		})
@@ -274,7 +269,6 @@ func TestStandalone(t *testing.T) {
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 			Issuer:      sv.IssuerURL(),
 			ExtraScopes: "profile,groups",

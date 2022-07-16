@@ -62,7 +62,6 @@ func TestCredentialPlugin(t *testing.T) {
 						IDTokenExpiry: now.Add(time.Hour),
 					},
 				})
-				defer sv.Shutdown(t, ctx)
 				var stdout bytes.Buffer
 				runGetToken(t, ctx, getTokenConfig{
 					tokenCacheDir: tokenCacheDir,
@@ -90,7 +89,6 @@ func TestCredentialPlugin(t *testing.T) {
 						IDTokenExpiry: now.Add(time.Hour),
 					},
 				})
-				defer sv.Shutdown(t, ctx)
 				var stdout bytes.Buffer
 				runGetToken(t, ctx, getTokenConfig{
 					tokenCacheDir: tokenCacheDir,
@@ -111,7 +109,6 @@ func TestCredentialPlugin(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
 				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{})
-				defer sv.Shutdown(t, ctx)
 
 				t.Run("NoCache", func(t *testing.T) {
 					sv.SetConfig(oidcserver.Config{
@@ -212,7 +209,6 @@ func TestCredentialPlugin(t *testing.T) {
 				CodeChallengeMethodsSupported: []string{"plain", "S256"},
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
@@ -237,7 +233,6 @@ func TestCredentialPlugin(t *testing.T) {
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
@@ -263,7 +258,6 @@ func TestCredentialPlugin(t *testing.T) {
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
@@ -292,7 +286,6 @@ func TestCredentialPlugin(t *testing.T) {
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
@@ -318,7 +311,6 @@ func TestCredentialPlugin(t *testing.T) {
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
@@ -344,7 +336,6 @@ func TestCredentialPlugin(t *testing.T) {
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
@@ -380,7 +371,6 @@ func TestCredentialPlugin(t *testing.T) {
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
-		defer sv.Shutdown(t, ctx)
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
