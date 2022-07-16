@@ -10,6 +10,7 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/google/wire v0.5.0
 	github.com/int128/oauth2cli v1.14.0
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
