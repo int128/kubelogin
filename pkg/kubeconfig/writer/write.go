@@ -9,8 +9,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-//go:generate mockgen -destination mock_writer/mock_writer.go github.com/int128/kubelogin/pkg/kubeconfig/writer Interface
-
 var Set = wire.NewSet(
 	wire.Struct(new(Writer), "*"),
 	wire.Bind(new(Interface), new(*Writer)),

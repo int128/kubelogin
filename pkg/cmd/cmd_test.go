@@ -7,16 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
-	"github.com/int128/kubelogin/pkg/usecases/credentialplugin/mock_credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
-	"github.com/int128/kubelogin/pkg/usecases/standalone/mock_standalone"
 )
 
 func TestCmd_Run(t *testing.T) {
@@ -63,12 +60,11 @@ func TestCmd_Run(t *testing.T) {
 		}
 		for name, c := range tests {
 			t.Run(name, func(t *testing.T) {
-				ctrl := gomock.NewController(t)
-				defer ctrl.Finish()
 				ctx := context.TODO()
-				mockStandalone := mock_standalone.NewMockInterface(ctrl)
+				mockStandalone := standalone.NewMockInterface(t)
 				mockStandalone.EXPECT().
-					Do(ctx, c.in)
+					Do(ctx, c.in).
+					Return(nil)
 				cmd := Cmd{
 					Root: &Root{
 						Standalone: mockStandalone,
@@ -84,11 +80,9 @@ func TestCmd_Run(t *testing.T) {
 		}
 
 		t.Run("TooManyArgs", func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			cmd := Cmd{
 				Root: &Root{
-					Standalone: mock_standalone.NewMockInterface(ctrl),
+					Standalone: standalone.NewMockInterface(t),
 					Logger:     logger.New(t),
 				},
 				Logger: logger.New(t),
@@ -191,12 +185,11 @@ func TestCmd_Run(t *testing.T) {
 		}
 		for name, c := range tests {
 			t.Run(name, func(t *testing.T) {
-				ctrl := gomock.NewController(t)
-				defer ctrl.Finish()
 				ctx := context.TODO()
-				getToken := mock_credentialplugin.NewMockInterface(ctrl)
+				getToken := credentialplugin.NewMockInterface(t)
 				getToken.EXPECT().
-					Do(ctx, c.in)
+					Do(ctx, c.in).
+					Return(nil)
 				cmd := Cmd{
 					Root: &Root{
 						Logger: logger.New(t),
@@ -215,15 +208,13 @@ func TestCmd_Run(t *testing.T) {
 		}
 
 		t.Run("MissingMandatoryOptions", func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			ctx := context.TODO()
 			cmd := Cmd{
 				Root: &Root{
 					Logger: logger.New(t),
 				},
 				GetToken: &GetToken{
-					GetToken: mock_credentialplugin.NewMockInterface(ctrl),
+					GetToken: credentialplugin.NewMockInterface(t),
 					Logger:   logger.New(t),
 				},
 				Logger: logger.New(t),
@@ -235,15 +226,13 @@ func TestCmd_Run(t *testing.T) {
 		})
 
 		t.Run("TooManyArgs", func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			ctx := context.TODO()
 			cmd := Cmd{
 				Root: &Root{
 					Logger: logger.New(t),
 				},
 				GetToken: &GetToken{
-					GetToken: mock_credentialplugin.NewMockInterface(ctrl),
+					GetToken: credentialplugin.NewMockInterface(t),
 					Logger:   logger.New(t),
 				},
 				Logger: logger.New(t),

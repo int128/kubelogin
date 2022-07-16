@@ -15,8 +15,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate mockgen -destination mock_client/mock_client.go github.com/int128/kubelogin/pkg/oidc/client Interface
-
 type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string
 	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)

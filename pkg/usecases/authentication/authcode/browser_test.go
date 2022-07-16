@@ -5,21 +5,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/infrastructure/browser/mock_browser"
+	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
-	"github.com/int128/kubelogin/pkg/oidc/client/mock_client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestBrowser_Do(t *testing.T) {
 	timeout := 5 * time.Second
 
 	t.Run("Success", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		o := &BrowserOption{
@@ -32,11 +29,13 @@ func TestBrowser_Do(t *testing.T) {
 			RedirectURLHostname:        "localhost",
 			AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
 		}
-		mockClient := mock_client.NewMockInterface(ctrl)
-		mockClient.EXPECT().SupportedPKCEMethods()
+		mockClient := client.NewMockInterface(t)
 		mockClient.EXPECT().
-			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, in client.GetTokenByAuthCodeInput, readyChan chan<- string) {
+			SupportedPKCEMethods().
+			Return(nil)
+		mockClient.EXPECT().
+			GetTokenByAuthCode(mock.Anything, mock.Anything, mock.Anything).
+			Run(func(_ context.Context, in client.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				if diff := cmp.Diff(o.BindAddress, in.BindAddress); diff != "" {
 					t.Errorf("BindAddress mismatch (-want +got):\n%s", diff)
 				}
@@ -78,28 +77,29 @@ func TestBrowser_Do(t *testing.T) {
 	})
 
 	t.Run("OpenBrowser", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		o := &BrowserOption{
 			BindAddress:           []string{"127.0.0.1:8000"},
 			AuthenticationTimeout: 10 * time.Second,
 		}
-		mockClient := mock_client.NewMockInterface(ctrl)
-		mockClient.EXPECT().SupportedPKCEMethods()
+		mockClient := client.NewMockInterface(t)
 		mockClient.EXPECT().
-			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
+			SupportedPKCEMethods().
+			Return(nil)
+		mockClient.EXPECT().
+			GetTokenByAuthCode(mock.Anything, mock.Anything, mock.Anything).
+			Run(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockBrowser := mock_browser.NewMockInterface(ctrl)
+		mockBrowser := browser.NewMockInterface(t)
 		mockBrowser.EXPECT().
-			Open("LOCAL_SERVER_URL")
+			Open("LOCAL_SERVER_URL").
+			Return(nil)
 		u := Browser{
 			Logger:  logger.New(t),
 			Browser: mockBrowser,
@@ -118,8 +118,6 @@ func TestBrowser_Do(t *testing.T) {
 	})
 
 	t.Run("OpenBrowserCommand", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		o := &BrowserOption{
@@ -127,20 +125,23 @@ func TestBrowser_Do(t *testing.T) {
 			BrowserCommand:        "firefox",
 			AuthenticationTimeout: 10 * time.Second,
 		}
-		mockClient := mock_client.NewMockInterface(ctrl)
-		mockClient.EXPECT().SupportedPKCEMethods()
+		mockClient := client.NewMockInterface(t)
 		mockClient.EXPECT().
-			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
+			SupportedPKCEMethods().
+			Return(nil)
+		mockClient.EXPECT().
+			GetTokenByAuthCode(mock.Anything, mock.Anything, mock.Anything).
+			Run(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockBrowser := mock_browser.NewMockInterface(ctrl)
+		mockBrowser := browser.NewMockInterface(t)
 		mockBrowser.EXPECT().
-			OpenCommand(gomock.Any(), "LOCAL_SERVER_URL", "firefox")
+			OpenCommand(mock.Anything, "LOCAL_SERVER_URL", "firefox").
+			Return(nil)
 		u := Browser{
 			Logger:  logger.New(t),
 			Browser: mockBrowser,

@@ -22,8 +22,6 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 )
 
-//go:generate mockgen -destination mock_credentialplugin/mock_credentialplugin.go github.com/int128/kubelogin/pkg/usecases/credentialplugin Interface
-
 var Set = wire.NewSet(
 	wire.Struct(new(GetToken), "*"),
 	wire.Bind(new(Interface), new(*GetToken)),
