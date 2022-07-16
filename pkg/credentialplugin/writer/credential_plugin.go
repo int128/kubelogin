@@ -12,8 +12,6 @@ import (
 	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
 )
 
-//go:generate mockgen -destination mock_writer/mock_writer.go github.com/int128/kubelogin/pkg/credentialplugin/writer Interface
-
 var Set = wire.NewSet(
 	wire.Struct(new(Writer), "*"),
 	wire.Bind(new(Interface), new(*Writer)),

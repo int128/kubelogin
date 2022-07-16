@@ -14,8 +14,6 @@ import (
 	"github.com/int128/kubelogin/pkg/tokencache"
 )
 
-//go:generate mockgen -destination mock_repository/mock_repository.go github.com/int128/kubelogin/pkg/tokencache/repository Interface
-
 // Set provides an implementation and interface for Kubeconfig.
 var Set = wire.NewSet(
 	wire.Struct(new(Repository), "*"),

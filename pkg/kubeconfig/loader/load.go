@@ -11,8 +11,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-//go:generate mockgen -destination mock_loader/mock_loader.go github.com/int128/kubelogin/pkg/kubeconfig/loader Interface
-
 var Set = wire.NewSet(
 	wire.Struct(new(Loader), "*"),
 	wire.Bind(new(Interface), new(*Loader)),

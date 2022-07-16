@@ -14,8 +14,6 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 )
 
-//go:generate mockgen -destination mock_authentication/mock_authentication.go github.com/int128/kubelogin/pkg/usecases/authentication Interface
-
 // Set provides the use-case of Authentication.
 var Set = wire.NewSet(
 	wire.Struct(new(Authentication), "*"),
