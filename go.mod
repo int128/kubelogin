@@ -3,7 +3,7 @@ module github.com/int128/kubelogin
 go 1.16
 
 require (
-	github.com/alexflint/go-filemutex v1.1.0
+	github.com/alexflint/go-filemutex v1.2.0
 	github.com/chromedp/chromedp v0.8.2
 	github.com/coreos/go-oidc/v3 v3.2.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
