@@ -12,7 +12,7 @@ require (
 	github.com/int128/oauth2cli v1.14.0
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9
