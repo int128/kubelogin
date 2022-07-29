@@ -40,6 +40,7 @@ jobs:
           - runs-on: macos-latest
             GOOS: darwin
             GOARCH: arm64
+            CGO_ENABLED: 1 # https://github.com/int128/kubelogin/issues/762
           - runs-on: windows-latest
             GOOS: windows
             GOARCH: amd64
