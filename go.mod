@@ -15,7 +15,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/net v0.0.0-20220805013720-a33c5aa5df48
-	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c
+	golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035
 	gopkg.in/yaml.v2 v2.4.0
