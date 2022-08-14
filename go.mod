@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/alexflint/go-filemutex v1.2.0
-	github.com/chromedp/chromedp v0.8.3
+	github.com/chromedp/chromedp v0.8.4
 	github.com/coreos/go-oidc/v3 v3.2.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/google/go-cmp v0.5.8
