@@ -56,9 +56,6 @@ func internalRelease(fm *filemutex.FileMutex, lfn string, log logger.Interface) 
 // LockFileName get the lock file name from the lock name.
 func LockFileName(name string) string {
     dirname, err := os.UserHomeDir()
-    if err != nil {
-   fmt.Errorf("ERROR %v", err)
-    }
     return path.Join(dirname, fmt.Sprintf(".kubelogin.%s.lock", name))
 }
 
