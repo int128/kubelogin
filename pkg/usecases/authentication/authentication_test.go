@@ -6,17 +6,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
-	"github.com/int128/kubelogin/pkg/oidc/client/mock_client"
 	"github.com/int128/kubelogin/pkg/testing/clock"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	testingLogger "github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestAuthentication_Do(t *testing.T) {
@@ -37,8 +36,6 @@ func TestAuthentication_Do(t *testing.T) {
 	})
 
 	t.Run("HasValidIDToken", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
@@ -68,8 +65,6 @@ func TestAuthentication_Do(t *testing.T) {
 	})
 
 	t.Run("HasValidRefreshToken", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
@@ -80,14 +75,14 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken: "VALID_REFRESH_TOKEN",
 			},
 		}
-		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient := client.NewMockInterface(t)
 		mockClient.EXPECT().
 			Refresh(ctx, "VALID_REFRESH_TOKEN").
 			Return(&oidc.TokenSet{
 				IDToken:      "NEW_ID_TOKEN",
 				RefreshToken: "NEW_REFRESH_TOKEN",
 			}, nil)
-		mockClientFactory := mock_client.NewMockFactoryInterface(ctrl)
+		mockClientFactory := client.NewMockFactoryInterface(t)
 		mockClientFactory.EXPECT().
 			New(ctx, dummyProvider, dummyTLSClientConfig).
 			Return(mockClient, nil)
@@ -112,8 +107,6 @@ func TestAuthentication_Do(t *testing.T) {
 	})
 
 	t.Run("HasExpiredRefreshToken/Browser", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
@@ -131,21 +124,23 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken: "EXPIRED_REFRESH_TOKEN",
 			},
 		}
-		mockClient := mock_client.NewMockInterface(ctrl)
-		mockClient.EXPECT().SupportedPKCEMethods()
+		mockClient := client.NewMockInterface(t)
+		mockClient.EXPECT().
+			SupportedPKCEMethods().
+			Return(nil)
 		mockClient.EXPECT().
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
 			Return(nil, errors.New("token has expired"))
 		mockClient.EXPECT().
-			GetTokenByAuthCode(gomock.Any(), gomock.Any(), gomock.Any()).
-			Do(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
+			GetTokenByAuthCode(mock.Anything, mock.Anything, mock.Anything).
+			Run(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
 				readyChan <- "LOCAL_SERVER_URL"
 			}).
 			Return(&oidc.TokenSet{
 				IDToken:      "NEW_ID_TOKEN",
 				RefreshToken: "NEW_REFRESH_TOKEN",
 			}, nil)
-		mockClientFactory := mock_client.NewMockFactoryInterface(ctrl)
+		mockClientFactory := client.NewMockFactoryInterface(t)
 		mockClientFactory.EXPECT().
 			New(ctx, dummyProvider, dummyTLSClientConfig).
 			Return(mockClient, nil)
@@ -173,8 +168,6 @@ func TestAuthentication_Do(t *testing.T) {
 	})
 
 	t.Run("NoToken/ROPC", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		in := Input{
@@ -187,14 +180,14 @@ func TestAuthentication_Do(t *testing.T) {
 				},
 			},
 		}
-		mockClient := mock_client.NewMockInterface(ctrl)
+		mockClient := client.NewMockInterface(t)
 		mockClient.EXPECT().
-			GetTokenByROPC(gomock.Any(), "USER", "PASS").
+			GetTokenByROPC(mock.Anything, "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockClientFactory := mock_client.NewMockFactoryInterface(ctrl)
+		mockClientFactory := client.NewMockFactoryInterface(t)
 		mockClientFactory.EXPECT().
 			New(ctx, dummyProvider, dummyTLSClientConfig).
 			Return(mockClient, nil)

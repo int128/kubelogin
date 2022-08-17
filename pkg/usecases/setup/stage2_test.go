@@ -5,13 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
-	"github.com/int128/kubelogin/pkg/usecases/authentication/mock_authentication"
 )
 
 func TestSetup_DoStage2(t *testing.T) {
@@ -25,8 +23,6 @@ func TestSetup_DoStage2(t *testing.T) {
 	}
 	var grantOptionSet authentication.GrantOptionSet
 
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	ctx := context.Background()
 	in := Stage2Input{
 		IssuerURL:       "https://accounts.google.com",
@@ -36,7 +32,7 @@ func TestSetup_DoStage2(t *testing.T) {
 		GrantOptionSet:  grantOptionSet,
 		TLSClientConfig: dummyTLSClientConfig,
 	}
-	mockAuthentication := mock_authentication.NewMockInterface(ctrl)
+	mockAuthentication := authentication.NewMockInterface(t)
 	mockAuthentication.EXPECT().
 		Do(ctx, authentication.Input{
 			Provider: oidc.Provider{

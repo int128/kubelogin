@@ -14,8 +14,6 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
 
-//go:generate mockgen -destination mock_standalone/mock_standalone.go github.com/int128/kubelogin/pkg/usecases/standalone Interface
-
 // Set provides the use-case.
 var Set = wire.NewSet(
 	wire.Struct(new(Standalone), "*"),

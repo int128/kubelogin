@@ -18,8 +18,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate mockgen -destination mock_client/mock_factory.go github.com/int128/kubelogin/pkg/oidc/client FactoryInterface
-
 var Set = wire.NewSet(
 	wire.Struct(new(Factory), "*"),
 	wire.Bind(new(FactoryInterface), new(*Factory)),

@@ -22,7 +22,8 @@ type Values struct {
 // Create creates a kubeconfig file and returns path to it.
 func Create(t *testing.T, v *Values) string {
 	t.Helper()
-	f, err := os.Create(filepath.Join(t.TempDir(), "kubeconfig"))
+	name := filepath.Join(t.TempDir(), "kubeconfig")
+	f, err := os.Create(name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +35,7 @@ func Create(t *testing.T, v *Values) string {
 	if err := tpl.Execute(f, v); err != nil {
 		t.Fatal(err)
 	}
-	return f.Name()
+	return name
 }
 
 type AuthProviderConfig struct {

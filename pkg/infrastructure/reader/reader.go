@@ -13,8 +13,6 @@ import (
 	"golang.org/x/term"
 )
 
-//go:generate mockgen -destination mock_reader/mock_reader.go github.com/int128/kubelogin/pkg/infrastructure/reader Interface
-
 // Set provides an implementation and interface for Reader.
 var Set = wire.NewSet(
 	wire.Struct(new(Reader), "*"),

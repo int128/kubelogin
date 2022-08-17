@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 )
 
@@ -22,9 +21,6 @@ func (t *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func TestLoggingTransport_RoundTrip(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
 	req := httptest.NewRequest("GET", "http://example.com/hello", nil)
 	resp, err := http.ReadResponse(bufio.NewReader(strings.NewReader(`HTTP/1.1 200 OK
 Host: example.com
