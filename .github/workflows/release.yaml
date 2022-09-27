@@ -33,6 +33,9 @@ jobs:
           - runs-on: ubuntu-latest
             GOOS: linux
             GOARCH: arm
+          - runs-on: ubuntu-latest
+            GOOS: linux
+            GOARCH: ppc64le
           - runs-on: macos-latest
             GOOS: darwin
             GOARCH: amd64
