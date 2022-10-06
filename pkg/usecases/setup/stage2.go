@@ -160,7 +160,9 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 			args = append(args, "--local-server-key="+keypath)
 		}
 	}
-	args = append(args, in.ListenAddressArgs...)
+	for _, l := range in.ListenAddressArgs {
+		args = append(args, "--listen-address="+l)
+	}
 	if in.GrantOptionSet.ROPCOption != nil {
 		if in.GrantOptionSet.ROPCOption.Username != "" {
 			args = append(args, "--username="+in.GrantOptionSet.ROPCOption.Username)
