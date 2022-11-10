@@ -19,7 +19,7 @@ require (
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
 	golang.org/x/term v0.0.0-20221017184919-83659145692c
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/apimachinery v0.24.4
-	k8s.io/client-go v0.24.4
+	k8s.io/apimachinery v0.25.4
+	k8s.io/client-go v0.25.4
 	k8s.io/klog/v2 v2.70.1
 )
