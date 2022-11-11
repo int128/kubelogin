@@ -17,7 +17,7 @@ require (
 	golang.org/x/net v0.0.0-20221017152216-f25eb7ecb193
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
-	golang.org/x/term v0.0.0-20221017184919-83659145692c
+	golang.org/x/term v0.2.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.4
