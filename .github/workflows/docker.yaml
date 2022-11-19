@@ -25,12 +25,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - amd64
+          - arm64
+          - ppc64le
     steps:
       - uses: actions/checkout@v3
       - uses: docker/metadata-action@v4
         id: metadata
         with:
           images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
+            suffix=${{ matrix.platform }}
       - uses: int128/docker-build-cache-config-action@v1
         id: cache
         with:
@@ -49,4 +60,28 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           cache-from: ${{ steps.cache.outputs.cache-from }}
           cache-to: ${{ steps.cache.outputs.cache-to }}
-          platforms: linux/amd64,linux/arm64,linux/ppc64le
+          platforms: linux/${{ matrix.platform }}
+
+  manifest:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: docker/metadata-action@v4
+        id: metadata
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          docker manifest create ${{ steps.metadata.outputs.tags }} \
+            ${{ steps.metadata.outputs.tags }}-amd64 \
+            ${{ steps.metadata.outputs.tags }}-arm64 \
+            ${{ steps.metadata.outputs.tags }}-ppc64le
+      - run: docker manifest push ${{ steps.metadata.outputs.tags }}
