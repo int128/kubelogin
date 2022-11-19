@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -29,7 +29,7 @@ func TestRepository_FindByKey(t *testing.T) {
 			t.Errorf("could not compute the key: %s", err)
 		}
 		p := filepath.Join(dir, filename)
-		if err := ioutil.WriteFile(p, []byte(json), 0600); err != nil {
+		if err := os.WriteFile(p, []byte(json), 0600); err != nil {
 			t.Fatalf("could not write to the temp file: %s", err)
 		}
 
@@ -67,7 +67,7 @@ func TestRepository_Save(t *testing.T) {
 			t.Errorf("could not compute the key: %s", err)
 		}
 		p := filepath.Join(dir, filename)
-		b, err := ioutil.ReadFile(p)
+		b, err := os.ReadFile(p)
 		if err != nil {
 			t.Fatalf("could not read the token cache file: %s", err)
 		}

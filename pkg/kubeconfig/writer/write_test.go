@@ -1,7 +1,6 @@
 package writer
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -26,7 +25,7 @@ func TestKubeconfig_UpdateAuth(t *testing.T) {
 		}); err != nil {
 			t.Fatalf("Could not update auth: %s", err)
 		}
-		b, err := ioutil.ReadFile(f)
+		b, err := os.ReadFile(f)
 		if err != nil {
 			t.Fatalf("Could not read kubeconfig: %s", err)
 		}
@@ -71,7 +70,7 @@ users:
 		}); err != nil {
 			t.Fatalf("Could not update auth: %s", err)
 		}
-		b, err := ioutil.ReadFile(f)
+		b, err := os.ReadFile(f)
 		if err != nil {
 			t.Fatalf("Could not read kubeconfig: %s", err)
 		}
