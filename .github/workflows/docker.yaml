@@ -41,7 +41,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=false
-            suffix=${{ matrix.platform }}
+            suffix=-${{ matrix.platform }}
       - uses: int128/docker-build-cache-config-action@v1
         id: cache
         with:
