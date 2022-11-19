@@ -79,6 +79,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker pull ${{ steps.metadata.outputs.tags }}-amd64
+      - run: docker pull ${{ steps.metadata.outputs.tags }}-arm64
+      - run: docker pull ${{ steps.metadata.outputs.tags }}-ppc64le
       - run: |
           docker manifest create ${{ steps.metadata.outputs.tags }} \
             ${{ steps.metadata.outputs.tags }}-amd64 \
