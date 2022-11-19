@@ -25,8 +25,8 @@ func TestLoader_Load(t *testing.T) {
 		if err != nil {
 			t.Errorf("Load error: %s", err)
 		}
-		if n := len(cfg.RootCAs.Subjects()); n != 1 {
-			t.Errorf("n wants 1 but was %d", n)
+		if cfg.RootCAs == nil {
+			t.Errorf("RootCAs wants non-nil but was nil")
 		}
 	})
 	t.Run("InvalidFile", func(t *testing.T) {
@@ -44,8 +44,8 @@ func TestLoader_Load(t *testing.T) {
 		if err != nil {
 			t.Errorf("Load error: %s", err)
 		}
-		if n := len(cfg.RootCAs.Subjects()); n != 1 {
-			t.Errorf("n wants 1 but was %d", n)
+		if cfg.RootCAs == nil {
+			t.Errorf("RootCAs wants non-nil but was nil")
 		}
 	})
 }
