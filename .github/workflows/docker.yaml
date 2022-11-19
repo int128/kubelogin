@@ -30,9 +30,9 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - amd64
-          - arm64
-          - ppc64le
+          - linux/amd64
+          - linux/arm64
+          - linux/ppc64le
     steps:
       - uses: actions/checkout@v3
       - uses: docker/metadata-action@v4
@@ -60,7 +60,7 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           cache-from: ${{ steps.cache.outputs.cache-from }}
           cache-to: ${{ steps.cache.outputs.cache-to }}
-          platforms: linux/${{ matrix.platform }}
+          platforms: ${{ matrix.platform }}
 
   manifest:
     needs:
@@ -81,7 +81,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           docker manifest create ${{ steps.metadata.outputs.tags }} \
-            ${{ steps.metadata.outputs.tags }}-amd64 \
-            ${{ steps.metadata.outputs.tags }}-arm64 \
-            ${{ steps.metadata.outputs.tags }}-ppc64le
+            ${{ steps.metadata.outputs.tags }}-linux-amd64 \
+            ${{ steps.metadata.outputs.tags }}-linux-arm64 \
+            ${{ steps.metadata.outputs.tags }}-linux-ppc64le
       - run: docker manifest push ${{ steps.metadata.outputs.tags }}
