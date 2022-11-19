@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
@@ -50,7 +50,7 @@ func (l *Loader) Load(config tlsclientconfig.Config) (*tls.Config, error) {
 }
 
 func addFile(p *x509.CertPool, filename string) error {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read: %w", err)
 	}

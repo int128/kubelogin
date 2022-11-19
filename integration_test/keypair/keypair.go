@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -50,7 +49,7 @@ func readAsBase64(name string) string {
 }
 
 func newTLSConfig(name string) *tls.Config {
-	b, err := ioutil.ReadFile(name)
+	b, err := os.ReadFile(name)
 	if err != nil {
 		panic(err)
 	}
