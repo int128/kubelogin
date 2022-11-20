@@ -44,9 +44,7 @@ jobs:
         id: metadata
         with:
           images: ghcr.io/${{ github.repository }}
-          flavor: |
-            latest=false
-            suffix=-${{ matrix.platform }}
+          flavor: suffix=-${{ matrix.platform }}
       - uses: int128/docker-build-cache-config-action@v1
         id: cache
         with:
@@ -77,8 +75,6 @@ jobs:
         id: metadata
         with:
           images: ghcr.io/${{ github.repository }}
-          flavor: |
-            latest=false
       - uses: int128/docker-manifest-create-action@v1
         with:
           tags: ${{ steps.metadata.outputs.tags }}
