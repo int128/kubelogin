@@ -35,6 +35,11 @@ jobs:
           - linux/ppc64le
     steps:
       - uses: actions/checkout@v3
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/metadata-action@v4
         id: metadata
         with:
@@ -46,11 +51,6 @@ jobs:
         id: cache
         with:
           image: ghcr.io/${{ github.repository }}/cache
-      - uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/setup-qemu-action@v2
       - uses: docker/setup-buildx-action@v2
       - uses: docker/build-push-action@v3
@@ -62,26 +62,27 @@ jobs:
           cache-to: ${{ steps.cache.outputs.cache-to }}
           platforms: ${{ matrix.platform }}
 
-  manifest:
+  build-multi-architecture:
     needs:
       - build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/metadata-action@v4
         id: metadata
         with:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=false
-      - uses: docker/login-action@v2
+      - uses: int128/docker-manifest-create-action@v1
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
-          docker manifest create ${{ steps.metadata.outputs.tags }} \
-            ${{ steps.metadata.outputs.tags }}-linux-amd64 \
-            ${{ steps.metadata.outputs.tags }}-linux-arm64 \
-            ${{ steps.metadata.outputs.tags }}-linux-ppc64le
-      - run: docker manifest push ${{ steps.metadata.outputs.tags }}
+          tags: ${{ steps.metadata.outputs.tags }}
+          suffixes: |
+            -linux-amd64
+            -linux-arm64
+            -linux-ppc64le
