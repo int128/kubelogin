@@ -55,9 +55,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - uses: int128/go-actions/setup@v1
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.19.3
+          cache: true
       - run: go build -ldflags "-X main.version=${GITHUB_REF##*/}"
       - uses: int128/go-actions/release@v1
         with:
