@@ -12,6 +12,7 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/pkce"
 	"github.com/int128/oauth2cli"
+	"github.com/int128/oauth2dev"
 	"golang.org/x/oauth2"
 )
 
@@ -20,6 +21,8 @@ type Interface interface {
 	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
 	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
 	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
+	GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error)
+	ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error)
 	SupportedPKCEMethods() []string
 }
@@ -52,12 +55,13 @@ type GetTokenByAuthCodeInput struct {
 }
 
 type client struct {
-	httpClient           *http.Client
-	provider             *gooidc.Provider
-	oauth2Config         oauth2.Config
-	clock                clock.Interface
-	logger               logger.Interface
-	supportedPKCEMethods []string
+	httpClient                  *http.Client
+	provider                    *gooidc.Provider
+	oauth2Config                oauth2.Config
+	clock                       clock.Interface
+	logger                      logger.Interface
+	supportedPKCEMethods        []string
+	deviceAuthorizationEndpoint string
 }
 
 func (c *client) wrapContext(ctx context.Context) context.Context {
@@ -149,6 +153,26 @@ func (c *client) GetTokenByROPC(ctx context.Context, username, password string) 
 		return nil, fmt.Errorf("resource owner password credentials flow error: %w", err)
 	}
 	return c.verifyToken(ctx, token, "")
+}
+
+// GetDeviceAuthorization initializes the device authorization code challenge
+func (c *client) GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error) {
+	ctx = c.wrapContext(ctx)
+	config := c.oauth2Config
+	config.Endpoint = oauth2.Endpoint{
+		AuthURL: c.deviceAuthorizationEndpoint,
+	}
+	return oauth2dev.RetrieveCode(ctx, config)
+}
+
+// ExchangeDeviceCode exchanges the device to an oidc.TokenSet
+func (c *client) ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error) {
+	ctx = c.wrapContext(ctx)
+	tokenResponse, err := oauth2dev.PollToken(ctx, c.oauth2Config, *authResponse)
+	if err != nil {
+		return nil, fmt.Errorf("device-code: exchange failed: %w", err)
+	}
+	return c.verifyToken(ctx, tokenResponse, "")
 }
 
 // Refresh sends a refresh token request and returns a token set.
