@@ -2,8 +2,11 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
@@ -15,11 +18,23 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// DeviceRequest encodes an oauth2 device authorization request
+type DeviceRequest struct {
+	DeviceCode              string `json:"device_code"`
+	UserCode                string `json:"user_code"`
+	VerificationURI         string `json:"verification_uri"`
+	VerificationURIComplete string `json:"verification_uri_complete"`
+	ExpiresIn               int    `json:"expires_in"`
+	Interval                int    `json:"interval"`
+}
+
 type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string
 	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
 	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
 	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
+	GetDeviceAuthorization(ctx context.Context) (*DeviceRequest, error)
+	ExchangeDeviceCode(ctx context.Context, code string) (*oidc.TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error)
 	SupportedPKCEMethods() []string
 }
@@ -52,12 +67,13 @@ type GetTokenByAuthCodeInput struct {
 }
 
 type client struct {
-	httpClient           *http.Client
-	provider             *gooidc.Provider
-	oauth2Config         oauth2.Config
-	clock                clock.Interface
-	logger               logger.Interface
-	supportedPKCEMethods []string
+	httpClient                  *http.Client
+	provider                    *gooidc.Provider
+	oauth2Config                oauth2.Config
+	clock                       clock.Interface
+	logger                      logger.Interface
+	supportedPKCEMethods        []string
+	deviceAuthorizationEndpoint string
 }
 
 func (c *client) wrapContext(ctx context.Context) context.Context {
@@ -147,6 +163,42 @@ func (c *client) GetTokenByROPC(ctx context.Context, username, password string) 
 	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, username, password)
 	if err != nil {
 		return nil, fmt.Errorf("resource owner password credentials flow error: %w", err)
+	}
+	return c.verifyToken(ctx, token, "")
+}
+
+// GetDeviceAuthorization initializes the device authorization code challenge
+func (c *client) GetDeviceAuthorization(ctx context.Context) (*DeviceRequest, error) {
+	ctx = c.wrapContext(ctx)
+
+	vals := make(url.Values)
+	vals.Set("client_id", c.oauth2Config.ClientID)
+	vals.Set("client_secret", c.oauth2Config.ClientSecret)
+	vals.Set("scope", "openid email")
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.deviceAuthorizationEndpoint, strings.NewReader(vals.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := http.DefaultClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+
+	var deviceRequest DeviceRequest
+	if err := json.NewDecoder(r.Body).Decode(&deviceRequest); err != nil {
+		return nil, err
+	}
+	return &deviceRequest, nil
+}
+
+// ExchangeDeviceCode exchanges the device to an oidc.TokenSet
+// this operation might fail if the challenge was not yet responded to
+func (c *client) ExchangeDeviceCode(ctx context.Context, code string) (*oidc.TokenSet, error) {
+	ctx = c.wrapContext(ctx)
+	token, err := c.oauth2Config.Exchange(ctx, "", oauth2.SetAuthURLParam("grant_type", "urn:ietf:params:oauth:grant-type:device_code"), oauth2.SetAuthURLParam("device_code", code))
+	if err != nil {
+		return nil, fmt.Errorf("device-code: exchange failed: %w", err)
 	}
 	return c.verifyToken(ctx, token, "")
 }

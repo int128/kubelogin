@@ -69,6 +69,53 @@ func (_c *MockInterface_ExchangeAuthCode_Call) Return(_a0 *oidc.TokenSet, _a1 er
 	return _c
 }
 
+// ExchangeDeviceCode provides a mock function with given fields: ctx, code
+func (_m *MockInterface) ExchangeDeviceCode(ctx context.Context, code string) (*oidc.TokenSet, error) {
+	ret := _m.Called(ctx, code)
+
+	var r0 *oidc.TokenSet
+	if rf, ok := ret.Get(0).(func(context.Context, string) *oidc.TokenSet); ok {
+		r0 = rf(ctx, code)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*oidc.TokenSet)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, code)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockInterface_ExchangeDeviceCode_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExchangeDeviceCode'
+type MockInterface_ExchangeDeviceCode_Call struct {
+	*mock.Call
+}
+
+// ExchangeDeviceCode is a helper method to define mock.On call
+//   - ctx context.Context
+//   - code string
+func (_e *MockInterface_Expecter) ExchangeDeviceCode(ctx interface{}, code interface{}) *MockInterface_ExchangeDeviceCode_Call {
+	return &MockInterface_ExchangeDeviceCode_Call{Call: _e.mock.On("ExchangeDeviceCode", ctx, code)}
+}
+
+func (_c *MockInterface_ExchangeDeviceCode_Call) Run(run func(ctx context.Context, code string)) *MockInterface_ExchangeDeviceCode_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockInterface_ExchangeDeviceCode_Call) Return(_a0 *oidc.TokenSet, _a1 error) *MockInterface_ExchangeDeviceCode_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
 // GetAuthCodeURL provides a mock function with given fields: in
 func (_m *MockInterface) GetAuthCodeURL(in AuthCodeURLInput) string {
 	ret := _m.Called(in)
@@ -103,6 +150,52 @@ func (_c *MockInterface_GetAuthCodeURL_Call) Run(run func(in AuthCodeURLInput)) 
 
 func (_c *MockInterface_GetAuthCodeURL_Call) Return(_a0 string) *MockInterface_GetAuthCodeURL_Call {
 	_c.Call.Return(_a0)
+	return _c
+}
+
+// GetDeviceAuthorization provides a mock function with given fields: ctx
+func (_m *MockInterface) GetDeviceAuthorization(ctx context.Context) (*DeviceRequest, error) {
+	ret := _m.Called(ctx)
+
+	var r0 *DeviceRequest
+	if rf, ok := ret.Get(0).(func(context.Context) *DeviceRequest); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*DeviceRequest)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockInterface_GetDeviceAuthorization_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetDeviceAuthorization'
+type MockInterface_GetDeviceAuthorization_Call struct {
+	*mock.Call
+}
+
+// GetDeviceAuthorization is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockInterface_Expecter) GetDeviceAuthorization(ctx interface{}) *MockInterface_GetDeviceAuthorization_Call {
+	return &MockInterface_GetDeviceAuthorization_Call{Call: _e.mock.On("GetDeviceAuthorization", ctx)}
+}
+
+func (_c *MockInterface_GetDeviceAuthorization_Call) Run(run func(ctx context.Context)) *MockInterface_GetDeviceAuthorization_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *MockInterface_GetDeviceAuthorization_Call) Return(_a0 *DeviceRequest, _a1 error) *MockInterface_GetDeviceAuthorization_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 

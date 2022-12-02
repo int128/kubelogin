@@ -7,6 +7,7 @@ import (
 
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/device_code"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"github.com/spf13/pflag"
 )
@@ -47,6 +48,7 @@ var allGrantType = strings.Join([]string{
 	"authcode",
 	"authcode-keyboard",
 	"password",
+	"device-code",
 }, "|")
 
 func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
@@ -96,6 +98,11 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 		s.ROPCOption = &ropc.Option{
 			Username: o.Username,
 			Password: o.Password,
+		}
+	case o.GrantType == "device-code":
+		s.DeviceCodeOption = &device_code.Option{
+			SkipOpenBrowser: o.SkipOpenBrowser,
+			BrowserCommand:  o.BrowserCommand,
 		}
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
