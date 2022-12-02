@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
@@ -38,8 +38,8 @@ func (l *Loader) Load(config tlsclientconfig.Config) (*tls.Config, error) {
 			return nil, fmt.Errorf("could not load the certificate: %w", err)
 		}
 	}
-	if len(rootCAs.Subjects()) == 0 {
-		// use the host's root CA set
+	if rootCAs.Equal(x509.NewCertPool()) {
+		// if empty, use the host's root CA set
 		rootCAs = nil
 	}
 	return &tls.Config{
@@ -50,7 +50,7 @@ func (l *Loader) Load(config tlsclientconfig.Config) (*tls.Config, error) {
 }
 
 func addFile(p *x509.CertPool, filename string) error {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read: %w", err)
 	}

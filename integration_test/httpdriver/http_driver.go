@@ -4,7 +4,7 @@ package httpdriver
 import (
 	"context"
 	"crypto/tls"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -48,7 +48,7 @@ func (c *client) Open(url string) error {
 	if resp.StatusCode != 200 {
 		c.t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
 	}
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		c.t.Errorf("could not read body: %s", err)
 		return nil

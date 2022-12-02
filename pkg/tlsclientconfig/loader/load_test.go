@@ -1,7 +1,7 @@
 package loader
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
@@ -25,8 +25,8 @@ func TestLoader_Load(t *testing.T) {
 		if err != nil {
 			t.Errorf("Load error: %s", err)
 		}
-		if n := len(cfg.RootCAs.Subjects()); n != 1 {
-			t.Errorf("n wants 1 but was %d", n)
+		if cfg.RootCAs == nil {
+			t.Errorf("RootCAs wants non-nil but was nil")
 		}
 	})
 	t.Run("InvalidFile", func(t *testing.T) {
@@ -44,15 +44,15 @@ func TestLoader_Load(t *testing.T) {
 		if err != nil {
 			t.Errorf("Load error: %s", err)
 		}
-		if n := len(cfg.RootCAs.Subjects()); n != 1 {
-			t.Errorf("n wants 1 but was %d", n)
+		if cfg.RootCAs == nil {
+			t.Errorf("RootCAs wants non-nil but was nil")
 		}
 	})
 }
 
 func readFile(t *testing.T, filename string) string {
 	t.Helper()
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatalf("ReadFile error: %s", err)
 	}
