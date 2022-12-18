@@ -2,11 +2,8 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
@@ -15,6 +12,7 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/pkce"
 	"github.com/int128/oauth2cli"
+	"github.com/int128/oauth2dev"
 	"golang.org/x/oauth2"
 )
 
@@ -33,8 +31,8 @@ type Interface interface {
 	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
 	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
 	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
-	GetDeviceAuthorization(ctx context.Context) (*DeviceRequest, error)
-	ExchangeDeviceCode(ctx context.Context, code string) (*oidc.TokenSet, error)
+	GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error)
+	ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error)
 	SupportedPKCEMethods() []string
 }
@@ -168,39 +166,25 @@ func (c *client) GetTokenByROPC(ctx context.Context, username, password string) 
 }
 
 // GetDeviceAuthorization initializes the device authorization code challenge
-func (c *client) GetDeviceAuthorization(ctx context.Context) (*DeviceRequest, error) {
+func (c *client) GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error) {
 	ctx = c.wrapContext(ctx)
-
-	vals := make(url.Values)
-	vals.Set("client_id", c.oauth2Config.ClientID)
-	vals.Set("client_secret", c.oauth2Config.ClientSecret)
-	vals.Set("scope", "openid email")
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.deviceAuthorizationEndpoint, strings.NewReader(vals.Encode()))
-	if err != nil {
-		return nil, err
-	}
-
-	r, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return nil, err
-	}
-
-	var deviceRequest DeviceRequest
-	if err := json.NewDecoder(r.Body).Decode(&deviceRequest); err != nil {
-		return nil, err
-	}
-	return &deviceRequest, nil
+	return oauth2dev.RetrieveCode(ctx, c.oauth2Config)
 }
 
 // ExchangeDeviceCode exchanges the device to an oidc.TokenSet
 // this operation might fail if the challenge was not yet responded to
-func (c *client) ExchangeDeviceCode(ctx context.Context, code string) (*oidc.TokenSet, error) {
+func (c *client) ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
-	token, err := c.oauth2Config.Exchange(ctx, "", oauth2.SetAuthURLParam("grant_type", "urn:ietf:params:oauth:grant-type:device_code"), oauth2.SetAuthURLParam("device_code", code))
+	tokenResponse, err := oauth2dev.PollToken(ctx, c.oauth2Config, *authResponse)
 	if err != nil {
 		return nil, fmt.Errorf("device-code: exchange failed: %w", err)
 	}
-	return c.verifyToken(ctx, token, "")
+	return c.verifyToken(ctx, &oauth2.Token{
+		AccessToken:  tokenResponse.AccessToken,
+		TokenType:    tokenResponse.TokenType,
+		RefreshToken: tokenResponse.RefreshToken,
+		Expiry:       tokenResponse.Expiry(),
+	}, "")
 }
 
 // Refresh sends a refresh token request and returns a token set.

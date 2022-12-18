@@ -3,15 +3,14 @@ package device_code
 import (
 	"context"
 	"errors"
-	"net/http"
 	"testing"
 
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
+	"github.com/int128/oauth2dev"
 	"github.com/stretchr/testify/mock"
-	"golang.org/x/oauth2"
 )
 
 func TestDeviceCode(t *testing.T) {
@@ -33,39 +32,17 @@ func TestDeviceCode(t *testing.T) {
 		t.Errorf("returned error is not the test error: %v", err)
 	}
 
-	mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&client.DeviceRequest{
-		Interval:        1,
-		VerificationURI: "https://example.com/verification",
-	}, nil).Once()
-	mockBrowser.EXPECT().Open("https://example.com/verification").Return(nil).Once()
-	_, err = dc.Do(ctx, &Option{}, mockClient)
-	if !errors.Is(err, errExpired) {
-		t.Errorf("returned error is not the expired error: %v", err)
-	}
-
-	mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&client.DeviceRequest{
-		Interval:                1,
-		VerificationURIComplete: "https://example.com/verificationComplete?code=code123",
-	}, nil).Once()
-	mockBrowser.EXPECT().Open("https://example.com/verificationComplete?code=code123").Return(nil).Once()
-	_, err = dc.Do(ctx, &Option{}, mockClient)
-	if !errors.Is(err, errExpired) {
-		t.Errorf("returned error is not the expired error: %v", err)
-	}
-
-	mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&client.DeviceRequest{
+	mockResponse := &oauth2dev.AuthorizationResponse{DeviceCode: "device-code-1", UserCode: "", VerificationURI: "", VerificationURIComplete: "https://example.com/verificationComplete?code=code123", VerificationURL: "", ExpiresIn: 2, Interval: 1}
+	mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&oauth2dev.AuthorizationResponse{
 		Interval:                1,
 		ExpiresIn:               2,
 		VerificationURIComplete: "https://example.com/verificationComplete?code=code123",
 		DeviceCode:              "device-code-1",
 	}, nil).Once()
-	mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, "device-code-1").Return(nil, &oauth2.RetrieveError{
-		Body: []byte(`{"error": "authorization_pending"}`),
-	}).Once()
-	mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, "device-code-1").Return(&oidc.TokenSet{
+	mockBrowser.EXPECT().Open("https://example.com/verificationComplete?code=code123").Return(nil).Once()
+	mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse).Return(&oidc.TokenSet{
 		IDToken: "test-id-token",
 	}, nil).Once()
-	mockBrowser.EXPECT().Open("https://example.com/verificationComplete?code=code123").Return(nil).Once()
 	ts, err := dc.Do(ctx, &Option{}, mockClient)
 	if err != nil {
 		t.Errorf("returned unexpected error: %v", err)
@@ -74,19 +51,55 @@ func TestDeviceCode(t *testing.T) {
 		t.Errorf("wrong returned tokenset: %v", err)
 	}
 
-	mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&client.DeviceRequest{
+	mockResponseWithoutComplete := &oauth2dev.AuthorizationResponse{DeviceCode: "device-code-1", UserCode: "", VerificationURI: "https://example.com/verificationComplete", VerificationURIComplete: "", VerificationURL: "", ExpiresIn: 2, Interval: 1}
+	mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&oauth2dev.AuthorizationResponse{
+		Interval:        1,
+		ExpiresIn:       2,
+		VerificationURI: "https://example.com/verificationComplete",
+		DeviceCode:      "device-code-1",
+	}, nil).Once()
+	mockBrowser.EXPECT().Open("https://example.com/verificationComplete").Return(nil).Once()
+	mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponseWithoutComplete).Return(&oidc.TokenSet{
+		IDToken: "test-id-token",
+	}, nil).Once()
+	ts, err = dc.Do(ctx, &Option{}, mockClient)
+	if err != nil {
+		t.Errorf("returned unexpected error: %v", err)
+	}
+	if ts.IDToken != "test-id-token" {
+		t.Errorf("wrong returned tokenset: %v", err)
+	}
+
+	mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&oauth2dev.AuthorizationResponse{
 		Interval:                1,
 		ExpiresIn:               2,
 		VerificationURIComplete: "https://example.com/verificationComplete?code=code123",
 		DeviceCode:              "device-code-1",
 	}, nil).Once()
 	mockBrowser.EXPECT().Open("https://example.com/verificationComplete?code=code123").Return(nil).Once()
-	mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, "device-code-1").Return(nil, &oauth2.RetrieveError{
-		Response: &http.Response{},
-		Body:     []byte(`{"error": "invalid_client"}`),
-	}).Once()
+	mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse).Return(nil, errTest).Once()
 	_, err = dc.Do(ctx, &Option{}, mockClient)
 	if err == nil {
 		t.Errorf("did not return error: %v", err)
 	}
+}
+
+func TestOPenUrl(t *testing.T) {
+	ctx := context.Background()
+	browserMock := browser.NewMockInterface(t)
+	deviceCode := &DeviceCode{
+		Browser: browserMock,
+		Logger:  logger.New(t),
+	}
+
+	const url = "https://example.com"
+	var testError = errors.New("test error")
+
+	browserMock.EXPECT().Open(url).Return(testError).Once()
+	deviceCode.openURL(ctx, nil, url)
+
+	deviceCode.openURL(ctx, &Option{SkipOpenBrowser: true}, url)
+
+	browserMock.EXPECT().OpenCommand(ctx, url, "test-command").Return(testError).Once()
+	deviceCode.openURL(ctx, &Option{BrowserCommand: "test-command"}, url)
 }
