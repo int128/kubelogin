@@ -63,6 +63,10 @@ func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsc
 	if len(supportedPKCEMethods) == 0 && p.UsePKCE {
 		supportedPKCEMethods = []string{pkce.MethodS256}
 	}
+	deviceAuthorizationEndpoint, err := extractDeviceAuthorizationEndpoint(provider)
+	if err != nil {
+		return nil, fmt.Errorf("could not determine device authorization endpoint: %w", err)
+	}
 	return &client{
 		httpClient: httpClient,
 		provider:   provider,
@@ -72,9 +76,10 @@ func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsc
 			ClientSecret: p.ClientSecret,
 			Scopes:       append(p.ExtraScopes, gooidc.ScopeOpenID),
 		},
-		clock:                f.Clock,
-		logger:               f.Logger,
-		supportedPKCEMethods: supportedPKCEMethods,
+		clock:                       f.Clock,
+		logger:                      f.Logger,
+		supportedPKCEMethods:        supportedPKCEMethods,
+		deviceAuthorizationEndpoint: deviceAuthorizationEndpoint,
 	}, nil
 }
 
@@ -86,4 +91,14 @@ func extractSupportedPKCEMethods(provider *gooidc.Provider) ([]string, error) {
 		return nil, fmt.Errorf("invalid discovery document: %w", err)
 	}
 	return d.CodeChallengeMethodsSupported, nil
+}
+
+func extractDeviceAuthorizationEndpoint(provider *gooidc.Provider) (string, error) {
+	var d struct {
+		DeviceAuthorizationEndpoint string `json:"device_authorization_endpoint"`
+	}
+	if err := provider.Claims(&d); err != nil {
+		return "", fmt.Errorf("invalid discovery document: %w", err)
+	}
+	return d.DeviceAuthorizationEndpoint, nil
 }

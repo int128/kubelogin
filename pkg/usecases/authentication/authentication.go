@@ -11,6 +11,7 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 )
 
@@ -21,6 +22,7 @@ var Set = wire.NewSet(
 	wire.Struct(new(authcode.Browser), "*"),
 	wire.Struct(new(authcode.Keyboard), "*"),
 	wire.Struct(new(ropc.ROPC), "*"),
+	wire.Struct(new(devicecode.DeviceCode), "*"),
 )
 
 type Interface interface {
@@ -39,6 +41,7 @@ type GrantOptionSet struct {
 	AuthCodeBrowserOption  *authcode.BrowserOption
 	AuthCodeKeyboardOption *authcode.KeyboardOption
 	ROPCOption             *ropc.Option
+	DeviceCodeOption       *devicecode.Option
 }
 
 // Output represents an output DTO of the Authentication use-case.
@@ -59,7 +62,6 @@ type Output struct {
 // If the Username is not set, it performs the authorization code flow.
 // Otherwise, it performs the resource owner password credentials flow.
 // If the Password is not set, it asks a password by the prompt.
-//
 type Authentication struct {
 	ClientFactory    client.FactoryInterface
 	Logger           logger.Interface
@@ -67,6 +69,7 @@ type Authentication struct {
 	AuthCodeBrowser  *authcode.Browser
 	AuthCodeKeyboard *authcode.Keyboard
 	ROPC             *ropc.ROPC
+	DeviceCode       *devicecode.DeviceCode
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -122,6 +125,13 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		tokenSet, err := u.ROPC.Do(ctx, in.GrantOptionSet.ROPCOption, oidcClient)
 		if err != nil {
 			return nil, fmt.Errorf("ropc error: %w", err)
+		}
+		return &Output{TokenSet: *tokenSet}, nil
+	}
+	if in.GrantOptionSet.DeviceCodeOption != nil {
+		tokenSet, err := u.DeviceCode.Do(ctx, in.GrantOptionSet.DeviceCodeOption, oidcClient)
+		if err != nil {
+			return nil, fmt.Errorf("device-code error: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}
