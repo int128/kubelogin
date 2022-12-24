@@ -94,6 +94,33 @@ func TestDeviceCode(t *testing.T) {
 		}
 	})
 
+	t.Run("Server returns verification_url", func(t *testing.T) {
+		mockBrowser := browser.NewMockInterface(t)
+		mockClient := client.NewMockInterface(t)
+		dc := &DeviceCode{
+			Browser: mockBrowser,
+			Logger:  logger.New(t),
+		}
+		mockResponse := &oauth2dev.AuthorizationResponse{
+			DeviceCode:      "device-code-1",
+			VerificationURL: "https://example.com/verificationCompleteURL",
+			ExpiresIn:       2,
+			Interval:        1,
+		}
+		mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(mockResponse, nil).Once()
+		mockBrowser.EXPECT().Open("https://example.com/verificationCompleteURL").Return(nil).Once()
+		mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse).Return(&oidc.TokenSet{
+			IDToken: "test-id-token",
+		}, nil).Once()
+		ts, err := dc.Do(ctx, &Option{}, mockClient)
+		if err != nil {
+			t.Errorf("returned unexpected error: %v", err)
+		}
+		if ts.IDToken != "test-id-token" {
+			t.Errorf("wrong returned tokenset: %v", err)
+		}
+	})
+
 	t.Run("Error when exchanging the device code", func(t *testing.T) {
 		mockBrowser := browser.NewMockInterface(t)
 		mockClient := client.NewMockInterface(t)

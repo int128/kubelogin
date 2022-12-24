@@ -26,14 +26,19 @@ func (u *DeviceCode) Do(ctx context.Context, in *Option, oidcClient client.Inter
 
 	authResponse, err := oidcClient.GetDeviceAuthorization(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("authorization error: %w", err)
 	}
 
-	if authResponse.VerificationURIComplete == "" {
+	if authResponse.VerificationURIComplete != "" {
+		u.openURL(ctx, in, authResponse.VerificationURIComplete)
+	} else if authResponse.VerificationURI != "" {
 		u.Logger.Printf("Please enter the following code when asked in your browser: %s", authResponse.UserCode)
 		u.openURL(ctx, in, authResponse.VerificationURI)
+	} else if authResponse.VerificationURL != "" {
+		u.Logger.Printf("Please enter the following code when asked in your browser: %s", authResponse.UserCode)
+		u.openURL(ctx, in, authResponse.VerificationURL)
 	} else {
-		u.openURL(ctx, in, authResponse.VerificationURIComplete)
+		return nil, fmt.Errorf("no verification URI in the authorization response")
 	}
 
 	tokenSet, err := oidcClient.ExchangeDeviceCode(ctx, authResponse)
