@@ -59,13 +59,13 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
-      - run: go build -ldflags "-X main.version=${GITHUB_REF##*/}"
+      - run: go build -ldflags '-X main.version=${{ github.ref_name }}'
       - uses: int128/go-actions/release@v1
         with:
           binary: kubelogin
 
   publish:
-    if: startswith(github.ref, 'refs/tags/')
+    if: github.ref_type == 'tag'
     needs:
       - build
     runs-on: ubuntu-latest
