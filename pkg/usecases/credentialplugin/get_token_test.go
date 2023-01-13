@@ -205,8 +205,8 @@ func TestGetToken_Do(t *testing.T) {
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{
-				AlreadyHasValidIDToken: true,
-				TokenSet:               issuedTokenSet,
+				AlreadyHasValidAccessToken: true,
+				TokenSet:                   issuedTokenSet,
 			}, nil)
 		mockRepository := repository.NewMockInterface(t)
 		mockRepository.EXPECT().

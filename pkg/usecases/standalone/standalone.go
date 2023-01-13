@@ -47,7 +47,6 @@ See https://github.com/int128/kubelogin for more.
 // If the current auth provider is not oidc, show the error.
 // If the kubeconfig has a valid token, do nothing.
 // Otherwise, update the kubeconfig.
-//
 type Standalone struct {
 	Authentication   authentication.Interface
 	KubeconfigLoader loader.Interface
@@ -102,7 +101,7 @@ func (u *Standalone) Do(ctx context.Context, in Input) error {
 		return fmt.Errorf("you got an invalid token: %w", err)
 	}
 	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
-	if authenticationOutput.AlreadyHasValidIDToken {
+	if authenticationOutput.AlreadyHasValidAccessToken {
 		u.Logger.Printf("You already have a valid token until %s", idTokenClaims.Expiry)
 		return nil
 	}

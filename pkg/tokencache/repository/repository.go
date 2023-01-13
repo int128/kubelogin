@@ -28,6 +28,7 @@ type Interface interface {
 type entity struct {
 	IDToken      string `json:"id_token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"`
 }
 
 // Repository provides access to the token cache on the local filesystem.
@@ -53,6 +54,7 @@ func (r *Repository) FindByKey(dir string, key tokencache.Key) (*oidc.TokenSet, 
 	return &oidc.TokenSet{
 		IDToken:      e.IDToken,
 		RefreshToken: e.RefreshToken,
+		AccessToken:  e.AccessToken,
 	}, nil
 }
 
@@ -73,6 +75,7 @@ func (r *Repository) Save(dir string, key tokencache.Key, tokenSet oidc.TokenSet
 	e := entity{
 		IDToken:      tokenSet.IDToken,
 		RefreshToken: tokenSet.RefreshToken,
+		AccessToken:  tokenSet.AccessToken,
 	}
 	if err := json.NewEncoder(f).Encode(&e); err != nil {
 		return fmt.Errorf("json encode error: %w", err)

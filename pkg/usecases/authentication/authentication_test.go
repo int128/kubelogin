@@ -54,7 +54,7 @@ func TestAuthentication_Do(t *testing.T) {
 			t.Errorf("Do returned error: %+v", err)
 		}
 		want := &Output{
-			AlreadyHasValidIDToken: true,
+			AlreadyHasValidAccessToken: true,
 			TokenSet: oidc.TokenSet{
 				IDToken: issuedIDToken,
 			},

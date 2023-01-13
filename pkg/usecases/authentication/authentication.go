@@ -46,8 +46,8 @@ type GrantOptionSet struct {
 
 // Output represents an output DTO of the Authentication use-case.
 type Output struct {
-	AlreadyHasValidIDToken bool
-	TokenSet               oidc.TokenSet
+	AlreadyHasValidAccessToken bool
+	TokenSet                   oidc.TokenSet
 }
 
 // Authentication provides the internal use-case of authentication.
@@ -85,8 +85,8 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		if !claims.IsExpired(u.Clock) {
 			u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
 			return &Output{
-				AlreadyHasValidIDToken: true,
-				TokenSet:               *in.CachedTokenSet,
+				AlreadyHasValidAccessToken: true,
+				TokenSet:                   *in.CachedTokenSet,
 			}, nil
 		}
 		u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)

@@ -208,5 +208,6 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 	return &oidc.TokenSet{
 		IDToken:      idToken,
 		RefreshToken: token.RefreshToken,
+		AccessToken:  token.AccessToken,
 	}, nil
 }

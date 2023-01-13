@@ -119,7 +119,7 @@ func TestStandalone_Do(t *testing.T) {
 				},
 			}).
 			Return(&authentication.Output{
-				AlreadyHasValidIDToken: true,
+				AlreadyHasValidAccessToken: true,
 				TokenSet: oidc.TokenSet{
 					IDToken: issuedIDToken,
 				},

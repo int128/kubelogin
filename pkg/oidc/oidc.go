@@ -22,10 +22,11 @@ type Provider struct {
 type TokenSet struct {
 	IDToken      string
 	RefreshToken string
+	AccessToken  string
 }
 
 func (ts TokenSet) DecodeWithoutVerify() (*jwt.Claims, error) {
-	return jwt.DecodeWithoutVerify(ts.IDToken)
+	return jwt.DecodeWithoutVerify(ts.AccessToken)
 }
 
 func NewState() (string, error) {

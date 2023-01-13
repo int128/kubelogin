@@ -95,24 +95,24 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	if err != nil {
 		return fmt.Errorf("authentication error: %w", err)
 	}
-	idTokenClaims, err := authenticationOutput.TokenSet.DecodeWithoutVerify()
+	accessTokenClaims, err := authenticationOutput.TokenSet.DecodeWithoutVerify()
 	if err != nil {
 		return fmt.Errorf("you got an invalid token: %w", err)
 	}
-	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
+	u.Logger.V(1).Infof("you got a token: %s", accessTokenClaims.Pretty)
 
-	if authenticationOutput.AlreadyHasValidIDToken {
-		u.Logger.V(1).Infof("you already have a valid token until %s", idTokenClaims.Expiry)
+	if authenticationOutput.AlreadyHasValidAccessToken {
+		u.Logger.V(1).Infof("you already have a valid token until %s", accessTokenClaims.Expiry)
 	} else {
-		u.Logger.V(1).Infof("you got a valid token until %s", idTokenClaims.Expiry)
+		u.Logger.V(1).Infof("you got a valid token until %s", accessTokenClaims.Expiry)
 		if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, authenticationOutput.TokenSet); err != nil {
 			return fmt.Errorf("could not write the token cache: %w", err)
 		}
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
 	out := credentialplugin.Output{
-		Token:  authenticationOutput.TokenSet.IDToken,
-		Expiry: idTokenClaims.Expiry,
+		Token:  authenticationOutput.TokenSet.AccessToken,
+		Expiry: accessTokenClaims.Expiry,
 	}
 	if err := u.Writer.Write(out); err != nil {
 		return fmt.Errorf("could not write the token to client-go: %w", err)
