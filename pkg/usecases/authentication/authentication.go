@@ -35,6 +35,7 @@ type Input struct {
 	GrantOptionSet  GrantOptionSet
 	CachedTokenSet  *oidc.TokenSet // optional
 	TLSClientConfig tlsclientconfig.Config
+	ForceRefresh    bool
 }
 
 type GrantOptionSet struct {
@@ -74,22 +75,26 @@ type Authentication struct {
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	if in.CachedTokenSet != nil {
-		u.Logger.V(1).Infof("checking expiration of the existing token")
-		// Skip verification of the token to reduce time of a discovery request.
-		// Here it trusts the signature and claims and checks only expiration,
-		// because the token has been verified before caching.
-		claims, err := in.CachedTokenSet.DecodeWithoutVerify()
-		if err != nil {
-			return nil, fmt.Errorf("invalid token cache (you may need to remove): %w", err)
+		if in.ForceRefresh {
+			u.Logger.V(1).Infof("forcing refresh of the existing token")
+		} else {
+			u.Logger.V(1).Infof("checking expiration of the existing token")
+			// Skip verification of the token to reduce time of a discovery request.
+			// Here it trusts the signature and claims and checks only expiration,
+			// because the token has been verified before caching.
+			claims, err := in.CachedTokenSet.DecodeWithoutVerify()
+			if err != nil {
+				return nil, fmt.Errorf("invalid token cache (you may need to remove): %w", err)
+			}
+			if !claims.IsExpired(u.Clock) {
+				u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
+				return &Output{
+					AlreadyHasValidIDToken: true,
+					TokenSet:               *in.CachedTokenSet,
+				}, nil
+			}
+			u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
 		}
-		if !claims.IsExpired(u.Clock) {
-			u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
-			return &Output{
-				AlreadyHasValidIDToken: true,
-				TokenSet:               *in.CachedTokenSet,
-			}, nil
-		}
-		u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
 	}
 
 	u.Logger.V(1).Infof("initializing an OpenID Connect client")
