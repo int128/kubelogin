@@ -151,8 +151,8 @@ github.com/int128/listener v1.1.0 h1:2Jb41DWLpkQ3I9bIdBzO8H/tNwMvyl/OBZWtCV5Pjuw
 github.com/int128/listener v1.1.0/go.mod h1:68WkmTN8PQtLzc9DucIaagAKeGVyMnyyKIkW4Xn47UA=
 github.com/int128/oauth2cli v1.14.0 h1:r63NoO10ybUXIXUQxih8WOmt5HQpJubdTmhWh22B9VE=
 github.com/int128/oauth2cli v1.14.0/go.mod h1:LIoVAzgAsS2tDDBc8yopkcgY5oZR0+MJAeECkCwtxhA=
-github.com/int128/oauth2dev v0.0.0-20230212180056-eaff03188906 h1:jkl79M6/3Uef50mIfiRYkB+DmUs4DTlQG4sYM8EhkWQ=
-github.com/int128/oauth2dev v0.0.0-20230212180056-eaff03188906/go.mod h1:lLIeCHF2MzH+sQ35/2IgA+Lbti/K2ONjrwO3n3FKSAM=
+github.com/int128/oauth2dev v0.0.0-20230215005657-fe60e7d39e78 h1:1K5M61zS1C2G35y7sY5w/skBkBsQr/0x0p1KA40kRcc=
+github.com/int128/oauth2dev v0.0.0-20230215005657-fe60e7d39e78/go.mod h1:lLIeCHF2MzH+sQ35/2IgA+Lbti/K2ONjrwO3n3FKSAM=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
 github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
