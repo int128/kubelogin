@@ -30,7 +30,7 @@ jobs:
           cache: true
       - uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.52.0
+          version: v1.52.1
 
   tidy:
     runs-on: ubuntu-latest
