@@ -19,7 +19,7 @@ func generateKey(b int) *rsa.PrivateKey {
 }
 
 type Claims struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	// aud claim is either a string or an array of strings.
 	// https://tools.ietf.org/html/rfc7519#section-4.1.3
 	Audience      []string `json:"aud,omitempty"`
