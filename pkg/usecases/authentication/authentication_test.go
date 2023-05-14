@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
@@ -32,7 +33,7 @@ func TestAuthentication_Do(t *testing.T) {
 	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
 		claims.Issuer = "https://accounts.google.com"
 		claims.Subject = "YOUR_SUBJECT"
-		claims.ExpiresAt = expiryTime.Unix()
+		claims.ExpiresAt = jwt.NewNumericDate(expiryTime)
 	})
 
 	t.Run("HasValidIDToken", func(t *testing.T) {

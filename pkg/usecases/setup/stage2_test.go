@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -19,7 +20,7 @@ func TestSetup_DoStage2(t *testing.T) {
 	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
 		claims.Issuer = "https://issuer.example.com"
 		claims.Subject = "YOUR_SUBJECT"
-		claims.ExpiresAt = time.Now().Add(1 * time.Hour).Unix()
+		claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(1 * time.Hour))
 	})
 	dummyTLSClientConfig := tlsclientconfig.Config{
 		CACertFilename: []string{"/path/to/cert"},

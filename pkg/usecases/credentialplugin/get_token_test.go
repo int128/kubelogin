@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
 	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	"github.com/int128/kubelogin/pkg/infrastructure/mutex"
@@ -30,7 +31,7 @@ func TestGetToken_Do(t *testing.T) {
 	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
 		claims.Issuer = "https://accounts.google.com"
 		claims.Subject = "YOUR_SUBJECT"
-		claims.ExpiresAt = issuedIDTokenExpiration.Unix()
+		claims.ExpiresAt = jwt.NewNumericDate(issuedIDTokenExpiration)
 	})
 	issuedTokenSet := oidc.TokenSet{
 		IDToken:      issuedIDToken,
