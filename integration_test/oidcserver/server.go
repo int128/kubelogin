@@ -10,10 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/oidcserver/handler"
 	"github.com/int128/kubelogin/integration_test/oidcserver/http"
-	"github.com/int128/kubelogin/pkg/testing/jwt"
+	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 )
 
 type Server interface {
@@ -94,7 +95,7 @@ func (sv *server) Discovery() *handler.DiscoveryResponse {
 }
 
 func (sv *server) GetCertificates() *handler.CertificatesResponse {
-	idTokenKeyPair := jwt.PrivateKey
+	idTokenKeyPair := testingJWT.PrivateKey
 	return &handler.CertificatesResponse{
 		Keys: []*handler.CertificatesResponseKey{
 			{
@@ -145,11 +146,11 @@ func (sv *server) Exchange(req handler.TokenRequest) (*handler.TokenResponse, er
 		ExpiresIn:    3600,
 		AccessToken:  "YOUR_ACCESS_TOKEN",
 		RefreshToken: sv.Response.RefreshToken,
-		IDToken: jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
+		IDToken: testingJWT.EncodeF(sv.t, func(claims *testingJWT.Claims) {
 			claims.Issuer = sv.issuerURL
 			claims.Subject = "SUBJECT"
-			claims.IssuedAt = sv.Response.IDTokenExpiry.Add(-time.Hour).Unix()
-			claims.ExpiresAt = sv.Response.IDTokenExpiry.Unix()
+			claims.IssuedAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry.Add(-time.Hour))
+			claims.ExpiresAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry)
 			claims.Audience = []string{"kubernetes"}
 			claims.Nonce = sv.lastAuthenticationRequest.Nonce
 		}),
@@ -178,11 +179,11 @@ func (sv *server) AuthenticatePassword(username, password, scope string) (*handl
 		ExpiresIn:    3600,
 		AccessToken:  "YOUR_ACCESS_TOKEN",
 		RefreshToken: sv.Response.RefreshToken,
-		IDToken: jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
+		IDToken: testingJWT.EncodeF(sv.t, func(claims *testingJWT.Claims) {
 			claims.Issuer = sv.issuerURL
 			claims.Subject = "SUBJECT"
-			claims.IssuedAt = sv.Response.IDTokenExpiry.Add(-time.Hour).Unix()
-			claims.ExpiresAt = sv.Response.IDTokenExpiry.Unix()
+			claims.IssuedAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry.Add(-time.Hour))
+			claims.ExpiresAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry)
 			claims.Audience = []string{"kubernetes"}
 		}),
 	}
@@ -202,11 +203,11 @@ func (sv *server) Refresh(refreshToken string) (*handler.TokenResponse, error) {
 		ExpiresIn:    3600,
 		AccessToken:  "YOUR_ACCESS_TOKEN",
 		RefreshToken: sv.Response.RefreshToken,
-		IDToken: jwt.EncodeF(sv.t, func(claims *jwt.Claims) {
+		IDToken: testingJWT.EncodeF(sv.t, func(claims *testingJWT.Claims) {
 			claims.Issuer = sv.issuerURL
 			claims.Subject = "SUBJECT"
-			claims.IssuedAt = sv.Response.IDTokenExpiry.Add(-time.Hour).Unix()
-			claims.ExpiresAt = sv.Response.IDTokenExpiry.Unix()
+			claims.IssuedAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry.Add(-time.Hour))
+			claims.ExpiresAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry)
 			claims.Audience = []string{"kubernetes"}
 		}),
 	}
