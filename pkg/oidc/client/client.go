@@ -195,7 +195,7 @@ func (c *client) Refresh(ctx context.Context, refreshToken string) (*oidc.TokenS
 func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce string) (*oidc.TokenSet, error) {
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		return nil, fmt.Errorf("id_token is missing in the token response: %s", token)
+		return nil, fmt.Errorf("id_token is missing in the token response: %#v", token)
 	}
 	verifier := c.provider.Verifier(&gooidc.Config{ClientID: c.oauth2Config.ClientID, Now: c.clock.Now})
 	verifiedIDToken, err := verifier.Verify(ctx, idToken)
