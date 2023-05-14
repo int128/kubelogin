@@ -53,9 +53,9 @@ type MockFactoryInterface_New_Call struct {
 }
 
 // New is a helper method to define mock.On call
-//  - ctx context.Context
-//  - p oidc.Provider
-//  - tlsClientConfig tlsclientconfig.Config
+//   - ctx context.Context
+//   - p oidc.Provider
+//   - tlsClientConfig tlsclientconfig.Config
 func (_e *MockFactoryInterface_Expecter) New(ctx interface{}, p interface{}, tlsClientConfig interface{}) *MockFactoryInterface_New_Call {
 	return &MockFactoryInterface_New_Call{Call: _e.mock.On("New", ctx, p, tlsClientConfig)}
 }

@@ -52,7 +52,7 @@ type MockInterface_Load_Call struct {
 }
 
 // Load is a helper method to define mock.On call
-//  - config tlsclientconfig.Config
+//   - config tlsclientconfig.Config
 func (_e *MockInterface_Expecter) Load(config interface{}) *MockInterface_Load_Call {
 	return &MockInterface_Load_Call{Call: _e.mock.On("Load", config)}
 }

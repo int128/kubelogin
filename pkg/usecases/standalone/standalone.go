@@ -47,7 +47,6 @@ See https://github.com/int128/kubelogin for more.
 // If the current auth provider is not oidc, show the error.
 // If the kubeconfig has a valid token, do nothing.
 // Otherwise, update the kubeconfig.
-//
 type Standalone struct {
 	Authentication   authentication.Interface
 	KubeconfigLoader loader.Interface

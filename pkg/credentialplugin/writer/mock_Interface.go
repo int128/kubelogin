@@ -40,7 +40,7 @@ type MockInterface_Write_Call struct {
 }
 
 // Write is a helper method to define mock.On call
-//  - out credentialplugin.Output
+//   - out credentialplugin.Output
 func (_e *MockInterface_Expecter) Write(out interface{}) *MockInterface_Write_Call {
 	return &MockInterface_Write_Call{Call: _e.mock.On("Write", out)}
 }

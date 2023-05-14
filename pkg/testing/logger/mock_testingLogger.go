@@ -31,8 +31,8 @@ type mockTestingLogger_Logf_Call struct {
 }
 
 // Logf is a helper method to define mock.On call
-//  - format string
-//  - v ...interface{}
+//   - format string
+//   - v ...interface{}
 func (_e *mockTestingLogger_Expecter) Logf(format interface{}, v ...interface{}) *mockTestingLogger_Logf_Call {
 	return &mockTestingLogger_Logf_Call{Call: _e.mock.On("Logf",
 		append([]interface{}{format}, v...)...)}

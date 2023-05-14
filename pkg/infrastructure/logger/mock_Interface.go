@@ -31,7 +31,7 @@ type MockInterface_AddFlags_Call struct {
 }
 
 // AddFlags is a helper method to define mock.On call
-//  - f *pflag.FlagSet
+//   - f *pflag.FlagSet
 func (_e *MockInterface_Expecter) AddFlags(f interface{}) *MockInterface_AddFlags_Call {
 	return &MockInterface_AddFlags_Call{Call: _e.mock.On("AddFlags", f)}
 }
@@ -68,7 +68,7 @@ type MockInterface_IsEnabled_Call struct {
 }
 
 // IsEnabled is a helper method to define mock.On call
-//  - level int
+//   - level int
 func (_e *MockInterface_Expecter) IsEnabled(level interface{}) *MockInterface_IsEnabled_Call {
 	return &MockInterface_IsEnabled_Call{Call: _e.mock.On("IsEnabled", level)}
 }
@@ -99,8 +99,8 @@ type MockInterface_Printf_Call struct {
 }
 
 // Printf is a helper method to define mock.On call
-//  - format string
-//  - args ...interface{}
+//   - format string
+//   - args ...interface{}
 func (_e *MockInterface_Expecter) Printf(format interface{}, args ...interface{}) *MockInterface_Printf_Call {
 	return &MockInterface_Printf_Call{Call: _e.mock.On("Printf",
 		append([]interface{}{format}, args...)...)}
@@ -146,7 +146,7 @@ type MockInterface_V_Call struct {
 }
 
 // V is a helper method to define mock.On call
-//  - level int
+//   - level int
 func (_e *MockInterface_Expecter) V(level interface{}) *MockInterface_V_Call {
 	return &MockInterface_V_Call{Call: _e.mock.On("V", level)}
 }

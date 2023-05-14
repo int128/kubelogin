@@ -40,7 +40,7 @@ type MockInterface_UpdateAuthProvider_Call struct {
 }
 
 // UpdateAuthProvider is a helper method to define mock.On call
-//  - p kubeconfig.AuthProvider
+//   - p kubeconfig.AuthProvider
 func (_e *MockInterface_Expecter) UpdateAuthProvider(p interface{}) *MockInterface_UpdateAuthProvider_Call {
 	return &MockInterface_UpdateAuthProvider_Call{Call: _e.mock.On("UpdateAuthProvider", p)}
 }
