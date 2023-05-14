@@ -22,7 +22,6 @@ import (
 // 2. Run the Cmd.
 // 3. Open a request for the local server.
 // 4. Verify the kubeconfig.
-//
 func TestStandalone(t *testing.T) {
 	timeout := 3 * time.Second
 	now := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)

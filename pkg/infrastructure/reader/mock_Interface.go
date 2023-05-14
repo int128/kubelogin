@@ -44,7 +44,7 @@ type MockInterface_ReadPassword_Call struct {
 }
 
 // ReadPassword is a helper method to define mock.On call
-//  - prompt string
+//   - prompt string
 func (_e *MockInterface_Expecter) ReadPassword(prompt interface{}) *MockInterface_ReadPassword_Call {
 	return &MockInterface_ReadPassword_Call{Call: _e.mock.On("ReadPassword", prompt)}
 }
@@ -88,7 +88,7 @@ type MockInterface_ReadString_Call struct {
 }
 
 // ReadString is a helper method to define mock.On call
-//  - prompt string
+//   - prompt string
 func (_e *MockInterface_Expecter) ReadString(prompt interface{}) *MockInterface_ReadString_Call {
 	return &MockInterface_ReadString_Call{Call: _e.mock.On("ReadString", prompt)}
 }

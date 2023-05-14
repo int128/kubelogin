@@ -41,7 +41,7 @@ type MockInterface_Open_Call struct {
 }
 
 // Open is a helper method to define mock.On call
-//  - url string
+//   - url string
 func (_e *MockInterface_Expecter) Open(url interface{}) *MockInterface_Open_Call {
 	return &MockInterface_Open_Call{Call: _e.mock.On("Open", url)}
 }
@@ -78,9 +78,9 @@ type MockInterface_OpenCommand_Call struct {
 }
 
 // OpenCommand is a helper method to define mock.On call
-//  - ctx context.Context
-//  - url string
-//  - command string
+//   - ctx context.Context
+//   - url string
+//   - command string
 func (_e *MockInterface_Expecter) OpenCommand(ctx interface{}, url interface{}, command interface{}) *MockInterface_OpenCommand_Call {
 	return &MockInterface_OpenCommand_Call{Call: _e.mock.On("OpenCommand", ctx, url, command)}
 }

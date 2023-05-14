@@ -51,8 +51,8 @@ type MockInterface_FindByKey_Call struct {
 }
 
 // FindByKey is a helper method to define mock.On call
-//  - dir string
-//  - key tokencache.Key
+//   - dir string
+//   - key tokencache.Key
 func (_e *MockInterface_Expecter) FindByKey(dir interface{}, key interface{}) *MockInterface_FindByKey_Call {
 	return &MockInterface_FindByKey_Call{Call: _e.mock.On("FindByKey", dir, key)}
 }
@@ -89,9 +89,9 @@ type MockInterface_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//  - dir string
-//  - key tokencache.Key
-//  - tokenSet oidc.TokenSet
+//   - dir string
+//   - key tokencache.Key
+//   - tokenSet oidc.TokenSet
 func (_e *MockInterface_Expecter) Save(dir interface{}, key interface{}, tokenSet interface{}) *MockInterface_Save_Call {
 	return &MockInterface_Save_Call{Call: _e.mock.On("Save", dir, key, tokenSet)}
 }

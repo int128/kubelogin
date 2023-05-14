@@ -31,8 +31,8 @@ type MockVerbose_Infof_Call struct {
 }
 
 // Infof is a helper method to define mock.On call
-//  - format string
-//  - args ...interface{}
+//   - format string
+//   - args ...interface{}
 func (_e *MockVerbose_Expecter) Infof(format interface{}, args ...interface{}) *MockVerbose_Infof_Call {
 	return &MockVerbose_Infof_Call{Call: _e.mock.On("Infof",
 		append([]interface{}{format}, args...)...)}
