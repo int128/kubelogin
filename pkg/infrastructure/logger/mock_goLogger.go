@@ -31,8 +31,8 @@ type mockGoLogger_Printf_Call struct {
 }
 
 // Printf is a helper method to define mock.On call
-//  - format string
-//  - v ...interface{}
+//   - format string
+//   - v ...interface{}
 func (_e *mockGoLogger_Expecter) Printf(format interface{}, v ...interface{}) *mockGoLogger_Printf_Call {
 	return &mockGoLogger_Printf_Call{Call: _e.mock.On("Printf",
 		append([]interface{}{format}, v...)...)}

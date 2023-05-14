@@ -68,8 +68,8 @@ type MockInterface_DoStage2_Call struct {
 }
 
 // DoStage2 is a helper method to define mock.On call
-//  - ctx context.Context
-//  - in Stage2Input
+//   - ctx context.Context
+//   - in Stage2Input
 func (_e *MockInterface_Expecter) DoStage2(ctx interface{}, in interface{}) *MockInterface_DoStage2_Call {
 	return &MockInterface_DoStage2_Call{Call: _e.mock.On("DoStage2", ctx, in)}
 }

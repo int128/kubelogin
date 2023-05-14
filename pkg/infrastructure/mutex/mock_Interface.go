@@ -50,8 +50,8 @@ type MockInterface_Acquire_Call struct {
 }
 
 // Acquire is a helper method to define mock.On call
-//  - ctx context.Context
-//  - name string
+//   - ctx context.Context
+//   - name string
 func (_e *MockInterface_Expecter) Acquire(ctx interface{}, name interface{}) *MockInterface_Acquire_Call {
 	return &MockInterface_Acquire_Call{Call: _e.mock.On("Acquire", ctx, name)}
 }
@@ -88,7 +88,7 @@ type MockInterface_Release_Call struct {
 }
 
 // Release is a helper method to define mock.On call
-//  - lock *Lock
+//   - lock *Lock
 func (_e *MockInterface_Expecter) Release(lock interface{}) *MockInterface_Release_Call {
 	return &MockInterface_Release_Call{Call: _e.mock.On("Release", lock)}
 }
