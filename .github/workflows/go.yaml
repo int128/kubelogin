@@ -19,39 +19,18 @@ on:
       - go.*
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.20.4
-          cache: true
-      - uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.52.2
-
-  generate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.20.4
-          cache: true
-      - run: go mod tidy
-      - run: go fmt ./...
-      - uses: int128/update-generated-files-action@v2
+  check:
+    uses: int128/go-workflows/.github/workflows/check.yaml@v0.1.0
+    with:
+        go-version: 1.20.4
+        golangci-lint-version: v1.52.2
 
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: 1.20.4
-          cache: true
       - run: go test -v -race ./...
