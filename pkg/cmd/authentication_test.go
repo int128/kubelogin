@@ -89,7 +89,20 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				"--grant-type", "authcode-keyboard",
 			},
 			want: authentication.GrantOptionSet{
-				AuthCodeKeyboardOption: &authcode.KeyboardOption{},
+				AuthCodeKeyboardOption: &authcode.KeyboardOption{
+					RedirectURL: oobRedirectURI,
+				},
+			},
+		},
+		"GrantType=authcode-keyboard with full options": {
+			args: []string{
+				"--grant-type", "authcode-keyboard",
+				"--oidc-redirect-url-authcode-keyboard", "http://localhost",
+			},
+			want: authentication.GrantOptionSet{
+				AuthCodeKeyboardOption: &authcode.KeyboardOption{
+					RedirectURL: "http://localhost",
+				},
 			},
 		},
 		"GrantType=password": {
