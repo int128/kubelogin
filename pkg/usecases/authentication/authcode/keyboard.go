@@ -16,6 +16,7 @@ const oobRedirectURI = "urn:ietf:wg:oauth:2.0:oob"
 
 type KeyboardOption struct {
 	AuthRequestExtraParams map[string]string
+	CodeRedirectURL        string
 }
 
 // Keyboard provides the authorization code flow with keyboard interactive.
@@ -38,11 +39,16 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 	if err != nil {
 		return nil, fmt.Errorf("could not generate PKCE parameters: %w", err)
 	}
+	redirectUri := oobRedirectURI
+	if o.CodeRedirectURL != "" {
+		redirectUri = o.CodeRedirectURL
+	}
+
 	authCodeURL := oidcClient.GetAuthCodeURL(client.AuthCodeURLInput{
 		State:                  state,
 		Nonce:                  nonce,
 		PKCEParams:             p,
-		RedirectURI:            oobRedirectURI,
+		RedirectURI:            redirectUri,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	})
 	u.Logger.Printf("Please visit the following URL in your browser: %s", authCodeURL)
@@ -56,7 +62,7 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 		Code:        code,
 		PKCEParams:  p,
 		Nonce:       nonce,
-		RedirectURI: oobRedirectURI,
+		RedirectURI: redirectUri,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("could not exchange the authorization code: %w", err)

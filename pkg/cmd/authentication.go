@@ -24,6 +24,7 @@ type authenticationOptions struct {
 	OpenURLAfterAuthentication string
 	RedirectURLHostname        string
 	AuthRequestExtraParams     map[string]string
+	CodeRedirectURL            string
 	Username                   string
 	Password                   string
 }
@@ -67,6 +68,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
 	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "[authcode] Hostname of the redirect URL")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
+	f.StringVar(&o.CodeRedirectURL, "code-redirect-url", "", "[authcode-keybaord] URL to send the code to")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
 }
@@ -93,6 +95,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 	case o.GrantType == "authcode-keyboard":
 		s.AuthCodeKeyboardOption = &authcode.KeyboardOption{
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
+			CodeRedirectURL:        o.CodeRedirectURL,
 		}
 	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):
 		s.ROPCOption = &ropc.Option{
