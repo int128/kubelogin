@@ -13,12 +13,13 @@ Flags:
       --oidc-extra-scope strings                        Scopes to request to the provider
       --oidc-use-pkce                                   Force PKCE usage
       --token-cache-dir string                          Path to a directory for token cache (default "~/.kube/cache/oidc-login")
+      --force-refresh                                   If set, refresh the ID token regardless of its expiration time
       --certificate-authority stringArray               Path to a cert file for the certificate authority
       --certificate-authority-data stringArray          Base64 encoded cert for the certificate authority
       --insecure-skip-tls-verify                        If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --tls-renegotiation-once                          If set, allow a remote server to request renegotiation once per connection
       --tls-renegotiation-freely                        If set, allow a remote server to repeatedly request renegotiation
-      --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password) (default "auto")
+      --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password|device-code) (default "auto")
       --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --skip-open-browser                               [authcode] Do not open the browser automatically
       --browser-command string                          [authcode] Command to open the browser
@@ -27,6 +28,7 @@ Flags:
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
       --oidc-redirect-url-hostname string               [authcode] Hostname of the redirect URL (default "localhost")
+      --oidc-redirect-url-authcode-keyboard string      [authcode-keyboard] Redirect URL (default "urn:ietf:wg:oauth:2.0:oob")
       --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
       --password string                                 [password] Password for resource owner password credentials grant
@@ -172,7 +174,12 @@ Open https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&client_id=
 Enter code: YOUR_CODE
 ```
 
-Note that this flow uses the redirect URI `urn:ietf:wg:oauth:2.0:oob` and some OIDC providers do not support it.
+The default of redirect URI is `urn:ietf:wg:oauth:2.0:oob`.
+You can overwrite it.
+
+```yaml
+      - oidc-redirect-url-authcode-keyboard=http://localhost
+```
 
 You can add extra parameters to the authentication request.
 
