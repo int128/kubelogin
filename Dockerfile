@@ -7,6 +7,6 @@ COPY main.go .
 COPY pkg pkg
 RUN go build
 
-FROM gcr.io/distroless/base-debian10
+FROM gcr.io/distroless/base-debian12
 COPY --from=builder /builder/kubelogin /
 ENTRYPOINT ["/kubelogin"]
