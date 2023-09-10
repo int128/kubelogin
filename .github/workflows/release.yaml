@@ -54,7 +54,7 @@ jobs:
       CGO_ENABLED: ${{ matrix.platform.CGO_ENABLED }}
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
           go-version: 1.21.1
@@ -70,5 +70,5 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: rajatjindal/krew-release-bot@v0.0.46
