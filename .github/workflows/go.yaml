@@ -22,15 +22,15 @@ jobs:
   check:
     uses: int128/go-workflows/.github/workflows/check.yaml@v0.1.0
     with:
-        go-version: 1.21.0
+        go-version: 1.21.1
         golangci-lint-version: v1.54.2
 
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.21.0
+          go-version: 1.21.1
       - run: go test -v -race ./...
