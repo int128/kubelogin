@@ -19,7 +19,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	gopkg.in/square/go-jose.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/apimachinery v0.0.0-20190612205821-1799e75a0719
-	k8s.io/client-go v0.0.0-20190620085101-78d2af792bab
-	k8s.io/klog v0.4.0
+	k8s.io/apimachinery v0.17.16
+	k8s.io/client-go v0.17.16
+	k8s.io/klog v1.0.0
 )
