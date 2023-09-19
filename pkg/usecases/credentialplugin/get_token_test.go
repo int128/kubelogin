@@ -68,10 +68,10 @@ func TestGetToken_Do(t *testing.T) {
 			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
 		mockRepository := repository.NewMockInterface(t)
 		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokenCacheKey).
+			FindByKey("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey).
 			Return(nil, errors.New("file not found"))
 		mockRepository.EXPECT().
-			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet).
+			Save("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey, issuedTokenSet).
 			Return(nil)
 		mockWriter := writer.NewMockInterface(t)
 		mockWriter.EXPECT().
@@ -116,10 +116,10 @@ func TestGetToken_Do(t *testing.T) {
 			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
 		mockRepository := repository.NewMockInterface(t)
 		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokenCacheKey).
+			FindByKey("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey).
 			Return(nil, errors.New("file not found"))
 		mockRepository.EXPECT().
-			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet).
+			Save("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey, issuedTokenSet).
 			Return(nil)
 		mockWriter := writer.NewMockInterface(t)
 		mockWriter.EXPECT().
@@ -170,10 +170,10 @@ func TestGetToken_Do(t *testing.T) {
 			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
 		mockRepository := repository.NewMockInterface(t)
 		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokenCacheKey).
+			FindByKey("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey).
 			Return(nil, errors.New("file not found"))
 		mockRepository.EXPECT().
-			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet).
+			Save("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey, issuedTokenSet).
 			Return(nil)
 		mockWriter := writer.NewMockInterface(t)
 		mockWriter.EXPECT().
@@ -211,7 +211,7 @@ func TestGetToken_Do(t *testing.T) {
 			}, nil)
 		mockRepository := repository.NewMockInterface(t)
 		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokencache.Key{
+			FindByKey("/path/to/token-cache", tokencache.StorageAuto, tokencache.Key{
 				IssuerURL:    "https://accounts.google.com",
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",
@@ -249,7 +249,7 @@ func TestGetToken_Do(t *testing.T) {
 			Return(nil, errors.New("authentication error"))
 		mockRepository := repository.NewMockInterface(t)
 		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokencache.Key{
+			FindByKey("/path/to/token-cache", tokencache.StorageAuto, tokencache.Key{
 				IssuerURL:    "https://accounts.google.com",
 				ClientID:     "YOUR_CLIENT_ID",
 				ClientSecret: "YOUR_CLIENT_SECRET",

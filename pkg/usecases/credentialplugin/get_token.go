@@ -33,11 +33,12 @@ type Interface interface {
 
 // Input represents an input DTO of the GetToken use-case.
 type Input struct {
-	Provider        oidc.Provider
-	TokenCacheDir   string
-	GrantOptionSet  authentication.GrantOptionSet
-	TLSClientConfig tlsclientconfig.Config
-	ForceRefresh    bool
+	Provider          oidc.Provider
+	TokenCacheDir     string
+	TokenCacheStorage tokencache.Storage
+	GrantOptionSet    authentication.GrantOptionSet
+	TLSClientConfig   tlsclientconfig.Config
+	ForceRefresh      bool
 }
 
 type GetToken struct {
@@ -81,7 +82,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	if in.GrantOptionSet.ROPCOption != nil {
 		tokenCacheKey.Username = in.GrantOptionSet.ROPCOption.Username
 	}
-	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
+	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, in.TokenCacheStorage, tokenCacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
 	}
@@ -107,7 +108,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		u.Logger.V(1).Infof("you already have a valid token until %s", idTokenClaims.Expiry)
 	} else {
 		u.Logger.V(1).Infof("you got a valid token until %s", idTokenClaims.Expiry)
-		if err := u.TokenCacheRepository.Save(in.TokenCacheDir, tokenCacheKey, authenticationOutput.TokenSet); err != nil {
+		if err := u.TokenCacheRepository.Save(in.TokenCacheDir, in.TokenCacheStorage, tokenCacheKey, authenticationOutput.TokenSet); err != nil {
 			return fmt.Errorf("could not write the token cache: %w", err)
 		}
 	}
