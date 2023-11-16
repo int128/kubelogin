@@ -20,8 +20,8 @@ require (
 	golang.org/x/sync v0.5.0
 	golang.org/x/term v0.14.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/apimachinery v0.28.3
-	k8s.io/client-go v0.28.3
+	k8s.io/apimachinery v0.28.4
+	k8s.io/client-go v0.28.4
 	k8s.io/klog/v2 v2.110.1
 )
 
