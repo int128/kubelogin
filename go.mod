@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/alexflint/go-filemutex v1.2.0
 	github.com/chromedp/chromedp v0.9.3
-	github.com/coreos/go-oidc/v3 v3.7.0
+	github.com/coreos/go-oidc/v3 v3.8.0
 	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/wire v0.5.0
