@@ -1,6 +1,6 @@
 TARGET := kubelogin
 TARGET_PLUGIN := kubectl-kubelogin
-CIRCLE_TAG ?= v1.16.0-pipedrive
+CIRCLE_TAG ?= v1.16.1-pipedrive
 LDFLAGS := -X main.version=$(CIRCLE_TAG)
 
 all: $(TARGET)

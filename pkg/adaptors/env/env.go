@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/pkg/browser"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 	"golang.org/x/xerrors"
 )
 
@@ -57,7 +57,7 @@ func (*Env) ReadPassword(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", xerrors.Errorf("could not write the prompt: %w", err)
 	}
-	b, err := terminal.ReadPassword(int(syscall.Stdin))
+	b, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return "", xerrors.Errorf("could not read from stdin: %w", err)
 	}
