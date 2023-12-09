@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/alexflint/go-filemutex v1.2.0
 	github.com/chromedp/chromedp v0.9.3
-	github.com/coreos/go-oidc/v3 v3.8.0
+	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/wire v0.5.0
@@ -29,7 +29,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20231011050154-1d073bb38998 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
