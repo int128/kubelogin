@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"runtime"
-	"os"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
