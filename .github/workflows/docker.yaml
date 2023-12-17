@@ -68,3 +68,9 @@ jobs:
             ghcr.io/${{ github.repository }}@${{ needs.build-linux-amd64.outputs.digest }}
             ghcr.io/${{ github.repository }}@${{ needs.build-linux-arm64.outputs.digest }}
             ghcr.io/${{ github.repository }}@${{ needs.build-linux-ppc64le.outputs.digest }}
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --rm '${{ needs.build.outputs.image-uri }}' --help
