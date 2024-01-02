@@ -83,3 +83,5 @@ jobs:
         run: |
           printenv > /tmp/runner_env
           sleep 600
+        env:
+          ID_TOKEN: ${{steps.tokenid.outputs.idToken}}
