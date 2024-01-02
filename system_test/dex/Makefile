@@ -21,6 +21,10 @@ dex: dex.yaml
 	docker start dex-server
 	docker logs dex-server
 
+.PHONY: logs
+logs:
+	docker logs dex-server
+
 .PHONY: terminate
 terminate:
 	docker stop dex-server

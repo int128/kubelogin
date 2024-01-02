@@ -27,6 +27,7 @@ cert:
 
 .PHONY: logs
 logs:
+	$(MAKE) -C dex logs
 	$(MAKE) -C cluster logs
 
 .PHONY: terminate

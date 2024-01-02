@@ -22,6 +22,10 @@ staticPasswords:
 # required for staticPasswords
 enablePasswordDB: true
 
+logger:
+  level: "debug"
+  format: "text"
+
 connectors:
 - type: oidc
   id: github-actions

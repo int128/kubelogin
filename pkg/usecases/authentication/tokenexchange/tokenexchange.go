@@ -239,7 +239,7 @@ func (u *TokenExchange) Do(ctx context.Context, params *Option, oidcProvider oid
 	data.Add("subject_token_type", params.subjectTokenType)
 
 	// TODO fix this
-	data.Add("connector_id", "mock")
+	data.Add("connector_id", "github-actions")
 
 	if !params.basicAuth {
 		data.Add("client_id", oidcProvider.ClientID)
