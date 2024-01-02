@@ -9,13 +9,13 @@ export KUBECONFIG
 
 .PHONY: test
 test: build
-	# see the setup instruction
-	kubectl oidc-login setup \
-		--oidc-issuer-url=https://dex-server:10443/dex \
-		--oidc-client-id=YOUR_CLIENT_ID \
-		--oidc-client-secret=YOUR_CLIENT_SECRET \
-		--oidc-extra-scope=email \
-		--certificate-authority=$(CERT_DIR)/ca.crt
+	## see the setup instruction
+	#kubectl oidc-login setup \
+	#	--oidc-issuer-url=https://dex-server:10443/dex \
+	#	--oidc-client-id=YOUR_CLIENT_ID \
+	#	--oidc-client-secret=YOUR_CLIENT_SECRET \
+	#	--oidc-extra-scope=email \
+	#	--certificate-authority=$(CERT_DIR)/ca.crt
 	# set up the kubeconfig
 	kubectl config set-credentials oidc \
 		--exec-api-version=client.authentication.k8s.io/v1beta1 \
