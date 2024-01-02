@@ -68,3 +68,15 @@ jobs:
 
       - run: make -C system_test logs
         if: always()
+
+      - name: Tailscale
+        if: ${{ failure() && !cancelled() }}
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:runner
+
+      - name: Tailscale Sleep
+        if: ${{ failure() && !cancelled() }}
+        run: sleep 600
