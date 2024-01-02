@@ -3,6 +3,7 @@ CERT_DIR := cert
 .PHONY: login
 login: setup
 	$(MAKE) -C login
+	$(MAKE) -C login_token_exchange
 
 .PHONY: setup
 setup: dex cluster setup-chrome

@@ -132,6 +132,9 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 			if err := e.Encode(tokenResponse); err != nil {
 				return fmt.Errorf("could not render json: %w", err)
 			}
+		case "urn:ietf:params:oauth:grant-type:token-exchange":
+			// TODO
+			return fmt.Errorf("TODO implement token-exchange")
 		default:
 			// 5.2. Error Response
 			// https://tools.ietf.org/html/rfc6749#section-5.2

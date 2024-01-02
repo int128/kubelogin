@@ -20,6 +20,9 @@ on:
 
 jobs:
   system-test:
+    permissions:
+      id-token: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

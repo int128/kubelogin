@@ -9,6 +9,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/tokenexchange"
 	"github.com/spf13/pflag"
 )
 
@@ -29,6 +30,15 @@ type authenticationOptions struct {
 	AuthRequestExtraParams      map[string]string
 	Username                    string
 	Password                    string
+
+	TokenExchangeResource           string
+	TokenExchangeAudience           string
+	TokenExchangeRequestedTokenType string
+	TokenExchangeSubjectToken       string
+	TokenExchangeSubjectTokenType   string
+	TokenExchangeBasicAuth          bool
+	TokenExchangeActorToken         string
+	TokenExchangeActorTokenType     string
 }
 
 // determineListenAddress returns the addresses from the flags.
@@ -52,6 +62,7 @@ var allGrantType = strings.Join([]string{
 	"authcode-keyboard",
 	"password",
 	"device-code",
+	"token-exchange",
 }, "|")
 
 func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
@@ -73,6 +84,14 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
+	f.StringVar(&o.TokenExchangeResource, "token-exchange-resource", "", "[token-exchange] a URI for the target resource the client intends to use")
+	f.StringVar(&o.TokenExchangeAudience, "token-exchange-audience", "", "[token-exchange] the audience the client intends to use (default: client-id)")
+	f.StringVar(&o.TokenExchangeRequestedTokenType, "token-exchange-requested-token-type", "", "[token-exchange] return type desired in response, e.g. id-token or access-token")
+	f.StringVar(&o.TokenExchangeSubjectToken, "token-exchange-subject-token", "", "[token-exchange] the token to exchange (required)")
+	f.StringVar(&o.TokenExchangeSubjectTokenType, "token-exchange-subject-token-type", "", "[token-exchange] the type of token provided, e.g. id-token or access-token (required)")
+	f.BoolVar(&o.TokenExchangeBasicAuth, "token-exchange-basic-auth", false, "[token-exchange] use basic auth for exchanging the token (default: false)")
+	f.StringVar(&o.TokenExchangeActorToken, "token-exchange-actor-token", "", "[token-exchange] optional token for delegated access pattern")
+	f.StringVar(&o.TokenExchangeActorTokenType, "token-exchange-actor-token-type", "", "[token-exchange] type of the actor token, e.g. id-token or access-token")
 }
 
 func (o *authenticationOptions) expandHomedir() {
@@ -109,6 +128,20 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			SkipOpenBrowser: o.SkipOpenBrowser,
 			BrowserCommand:  o.BrowserCommand,
 		}
+	case o.GrantType == "token-exchange":
+
+		tokenExchangeOpts := tokenexchange.NewTokenExchangeOption(
+			o.TokenExchangeSubjectToken,
+			o.TokenExchangeSubjectTokenType,
+			tokenexchange.AddAudience(o.TokenExchangeAudience),
+			tokenexchange.AddRequestedTokenType(o.TokenExchangeRequestedTokenType),
+			tokenexchange.AddResource(o.TokenExchangeResource),
+			tokenexchange.SetBasicAuth(o.TokenExchangeBasicAuth),
+			tokenexchange.AddActorToken(o.TokenExchangeActorToken, o.TokenExchangeActorTokenType),
+		)
+
+		s.TokenExchangeOption = &tokenExchangeOpts
+
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
 	}
