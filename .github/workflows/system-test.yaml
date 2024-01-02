@@ -82,6 +82,6 @@ jobs:
         if: ${{ failure() && !cancelled() }}
         run: |
           printenv > /tmp/runner_env
-          sleep 600
+          sleep 1800
         env:
           ID_TOKEN: ${{steps.tokenid.outputs.idToken}}
