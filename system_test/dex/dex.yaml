@@ -21,3 +21,14 @@ staticPasswords:
     userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
 # required for staticPasswords
 enablePasswordDB: true
+
+connectors:
+- type: oidc
+  id: github-actions
+  name: github-actions
+  config:
+    issuer: https://token.actions.githubusercontent.com
+    scopes:
+      - openid
+      - groups
+    userNameKey: sub

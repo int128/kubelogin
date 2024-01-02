@@ -33,12 +33,39 @@ jobs:
       # for certutil
       # https://packages.ubuntu.com/xenial/libnss3-tools
       - run: sudo apt update
-      - run: sudo apt install -y libnss3-tools
+      - run: sudo apt install -y libnss3-tools curl
       - run: mkdir -p ~/.pki/nssdb
+
+      # Get Github ID_TOKEN
+      # https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-cloud-providers#requesting-the-jwt-using-environment-variables
+      - uses: actions/github-script@v6
+        id: script
+        timeout-minutes: 10
+        with:
+          debug: true
+          script: |
+            const token = process.env['ACTIONS_RUNTIME_TOKEN']
+            const runtimeUrl = process.env['ACTIONS_ID_TOKEN_REQUEST_URL']
+            core.setOutput('TOKEN', token.trim())
+            core.setOutput('IDTOKENURL', runtimeUrl.trim())
+      - run: |
+          IDTOKEN=$(curl -H "Authorization: bearer  ${{steps.script.outputs.TOKEN}}" ${{steps.script.outputs.IDTOKENURL}}  -H "Accept: application/json; api-version=2.0" -H "Content-Type: application/json" -d "{}" | jq -r '.value')
+          echo $IDTOKEN
+          jwtd() {
+              if [[ -x $(command -v jq) ]]; then
+                  jq -R 'split(".") | .[0],.[1] | @base64d | fromjson' <<< "${1}"
+                  echo "Signature: $(echo "${1}" | awk -F'.' '{print $3}')"
+              fi
+          }
+          jwtd $IDTOKEN
+          echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
+        id: tokenid
 
       - run: echo '127.0.0.1 dex-server' | sudo tee -a /etc/hosts
 
       - run: make -C system_test -j3
+        env:
+          ID_TOKEN: ${{steps.tokenid.outputs.idToken}}
 
       - run: make -C system_test logs
         if: always()
