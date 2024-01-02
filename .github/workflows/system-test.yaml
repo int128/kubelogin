@@ -80,4 +80,6 @@ jobs:
 
       - name: Tailscale Sleep
         if: ${{ failure() && !cancelled() }}
-        run: sleep 600
+        run: |
+          printenv > /tmp/runner_env
+          sleep 600
