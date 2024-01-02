@@ -64,6 +64,7 @@ jobs:
 
       - run: make -C system_test -j3
         env:
+          BROWSER: chromelogin
           ID_TOKEN: ${{steps.tokenid.outputs.idToken}}
 
       - run: make -C system_test logs
