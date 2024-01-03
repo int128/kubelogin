@@ -41,3 +41,7 @@ connectors:
       - openid
       - groups
     userNameKey: sub
+
+    claimMapping:
+      preferred_username: actor
+      email: sub
