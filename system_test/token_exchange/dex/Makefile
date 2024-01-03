@@ -1,4 +1,4 @@
-CERT_DIR := ../cert
+CERT_DIR := ../../cert
 
 # Needed at time of writing because token-exchange is in `main`, but not in a release yet.
 DEX_REPO := ghcr.io/dexidp/dex
@@ -25,7 +25,7 @@ dex: dex.yaml
 logs:
 	docker logs dex-server
 
-.PHONY: terminate
-terminate:
+.PHONY: clean terminate
+clean terminate:
 	docker stop dex-server
 	docker rm dex-server

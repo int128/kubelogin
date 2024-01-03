@@ -1,10 +1,10 @@
-CERT_DIR := ../cert
+CERT_DIR := ../../cert
 
 BIN_DIR := $(PWD)/bin
 PATH := $(PATH):$(BIN_DIR)
 export PATH
 
-KUBECONFIG := ../cluster/kubeconfig.yaml
+KUBECONFIG := ../../cluster/kubeconfig.yaml
 export KUBECONFIG
 
 .PHONY: test
@@ -37,7 +37,7 @@ test: build
 build: $(BIN_DIR)/kubectl-oidc_login
 
 $(BIN_DIR)/kubectl-oidc_login:
-	go build -o $@ ../../
+	go build -o $@ ../../../
 
 .PHONY: clean
 clean:

@@ -22,6 +22,11 @@ staticPasswords:
 # required for staticPasswords
 enablePasswordDB: true
 
+# OAuth2 configuration
+oauth2:
+  skipApprovalScreen: true
+  passwordConnector: local
+
 logger:
   level: "debug"
   format: "text"
