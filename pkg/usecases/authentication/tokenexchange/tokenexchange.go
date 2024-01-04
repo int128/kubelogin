@@ -262,7 +262,7 @@ func (u *TokenExchange) Do(ctx context.Context, params *Option, oidcProvider oid
 	}
 	data.Add("subject_token_type", params.subjectTokenType)
 
-	for k, v := range params.AuthRequestExtraParams {
+	for k, v := range params.authRequestExtraParams {
 		data.Add(k, v)
 	}
 
