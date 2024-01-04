@@ -7,16 +7,21 @@ export PATH
 KUBECONFIG := ../../cluster/kubeconfig.yaml
 export KUBECONFIG
 
+token.json: build
+	$(BIN_DIR)/kubectl-oidc_login \
+		get-token \
+		--grant-type=token-exchange \
+		--token-exchange-subject-token=ID_TOKEN \
+		--token-exchange-subject-token-type=id-token \
+		--oidc-issuer-url=https://dex-server:10443/dex \
+		--oidc-client-id=YOUR_CLIENT_ID \
+		--oidc-client-secret=YOUR_CLIENT_SECRET \
+		--oidc-extra-scope="email,groups,openid,profile,federated:id" \
+		--certificate-authority=$(CERT_DIR)/ca.crt \
+			| jq -r '.status.token' | jq -r -R 'split(".") | .[1] | @base64d | fromjson' > $@
+
 .PHONY: test
-test: build
-	## see the setup instruction
-	#kubectl oidc-login setup \
-	#	--oidc-issuer-url=https://dex-server:10443/dex \
-	#	--oidc-client-id=YOUR_CLIENT_ID \
-	#	--oidc-client-secret=YOUR_CLIENT_SECRET \
-	#	--oidc-extra-scope=email \
-	#	--certificate-authority=$(CERT_DIR)/ca.crt
-	# set up the kubeconfig
+test: build token.json
 	kubectl config set-credentials oidc \
 		--exec-api-version=client.authentication.k8s.io/v1beta1 \
 		--exec-command=kubectl \
@@ -28,22 +33,15 @@ test: build
 		--exec-arg=--oidc-issuer-url=https://dex-server:10443/dex \
 		--exec-arg=--oidc-client-id=YOUR_CLIENT_ID \
 		--exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET \
-		--exec-arg=--oidc-extra-scope="email,groups,openid,profile,federated:id" \
+		--exec-arg=--oidc-extra-scope='email' \
+		--exec-arg=--oidc-extra-scope='groups' \
+		--exec-arg=--oidc-extra-scope='openid' \
+		--exec-arg=--oidc-extra-scope='profile' \
+		--exec-arg=--oidc-extra-scope='federated:id' \
 		--exec-arg=--certificate-authority=$(CERT_DIR)/ca.crt
 
-	EMAIL=$( $(BIN_DIR)/kubectl-oidc_login \
-		get-token \
-		--grant-type=token-exchange \
-		--token-exchange-subject-token=ID_TOKEN \
-		--token-exchange-subject-token-type=id-token \
-		--oidc-issuer-url=https://dex-server:10443/dex \
-		--oidc-client-id=YOUR_CLIENT_ID \
-		--oidc-client-secret=YOUR_CLIENT_SECRET \
-		--oidc-extra-scope="email,groups,openid,profile,federated:id" \
-		--certificate-authority=$(CERT_DIR)/ca.crt \
-			| jq -r '.status.token' | jq -r -R 'split(".") | .[1] | @base64d | fromjson | .email'); \
 	kubectl create clusterrolebinding cluster-readonly-gh --clusterrole=cluster-readonly \
-		--user="$$EMAIL"
+		--user="$$(jq -r .email token.json)"
 
 	# make sure we can access the cluster
 	kubectl --user=oidc cluster-info
@@ -57,3 +55,4 @@ $(BIN_DIR)/kubectl-oidc_login:
 .PHONY: clean
 clean:
 	-rm -r $(BIN_DIR)
+	-rm -f token.json
