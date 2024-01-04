@@ -42,7 +42,7 @@ connectors:
       - groups
       - email
     userNameKey: sub
-
+    insecureSkipEmailVerified: true
     claimMapping:
       preferred_username: actor
       email: sub
