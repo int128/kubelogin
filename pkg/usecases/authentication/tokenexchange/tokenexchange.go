@@ -22,7 +22,6 @@ const TokenExchangeGrantType = "urn:ietf:params:oauth:grant-type:token-exchange"
 type Option struct {
 	resources          []string
 	audiences          []string
-	scopes             []string // space delimited
 	requestedTokenType string
 	subjectToken       string
 	subjectTokenType   string
@@ -42,7 +41,6 @@ func NewTokenExchangeOption(subjectToken, subjectTokenType string, options ...To
 	t := Option{
 		resources: []string{},
 		audiences: []string{},
-		scopes:    []string{},
 
 		errors:   []error{},
 		warnings: []error{},
@@ -224,7 +222,8 @@ func (u *TokenExchange) Do(ctx context.Context, params *Option, oidcProvider oid
 	for _, resource := range params.resources {
 		data.Add("resource", resource)
 	}
-	data.Add("scopes", strings.Join(params.scopes, " "))
+
+	data.Add("scopes", strings.Join(oidcProvider.ExtraScopes, " "))
 
 	if params.requestedTokenType != "" {
 		data.Add("requested_token_type", params.requestedTokenType)
