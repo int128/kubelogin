@@ -110,7 +110,7 @@ jobs:
         if: always()
 
       - name: Tailscale
-        if: ${{ failure() && !cancelled() }}
+        # if: ${{ failure() && !cancelled() }}
         uses: tailscale/github-action@v2
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
@@ -119,7 +119,7 @@ jobs:
           args: "--ssh"
 
       - name: Tailscale Sleep
-        if: ${{ failure() && !cancelled() }}
+        # if: ${{ failure() && !cancelled() }}
         run: |
           printenv > /tmp/runner_env
           sleep 1800
