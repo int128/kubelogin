@@ -187,7 +187,7 @@ func AddExtraParams(params map[string]string) TokenExchangeOption {
 			t.authRequestExtraParams = map[string]string{}
 		}
 
-		for k, v := range t.authRequestExtraParams {
+		for k, v := range params {
 			t.authRequestExtraParams[k] = v
 		}
 
@@ -262,8 +262,10 @@ func (u *TokenExchange) Do(ctx context.Context, params *Option, oidcProvider oid
 	}
 	data.Add("subject_token_type", params.subjectTokenType)
 
-	for k, v := range params.authRequestExtraParams {
-		data.Add(k, v)
+	if params.authRequestExtraParams != nil {
+		for k, v := range params.authRequestExtraParams {
+			data.Add(k, v)
+		}
 	}
 
 	if !params.basicAuth {
