@@ -20,14 +20,15 @@ import (
 const TokenExchangeGrantType = "urn:ietf:params:oauth:grant-type:token-exchange"
 
 type Option struct {
-	resources          []string
-	audiences          []string
-	requestedTokenType string
-	subjectToken       string
-	subjectTokenType   string
-	basicAuth          bool
-	actorToken         string // optional
-	actorTokenType     string // required iff ActorToken set
+	resources              []string
+	audiences              []string
+	requestedTokenType     string
+	subjectToken           string
+	subjectTokenType       string
+	basicAuth              bool
+	actorToken             string            // optional
+	actorTokenType         string            // required iff ActorToken set
+	authRequestExtraParams map[string]string // Optional to provided info like dex connector_id
 
 	// accumulate validation errors
 	errors   []error
@@ -36,7 +37,7 @@ type Option struct {
 
 type TokenExchangeOption func(t Option) Option
 
-func NewTokenExchangeOption(subjectToken, subjectTokenType string, options ...TokenExchangeOption) Option {
+func NewTokenExchangeOption(subjectToken, subjectTokenType string, options ...TokenExchangeOption) (*Option, error) {
 
 	t := Option{
 		resources: []string{},
@@ -48,7 +49,6 @@ func NewTokenExchangeOption(subjectToken, subjectTokenType string, options ...To
 
 	if subjectToken == "" {
 		t.errors = append(t.errors, fmt.Errorf("subject_token is required"))
-		return t
 	}
 
 	canonical, err := identifiers.CanonicalTokenType(subjectTokenType)
@@ -65,7 +65,18 @@ func NewTokenExchangeOption(subjectToken, subjectTokenType string, options ...To
 		t = o(t)
 	}
 
-	return t
+	if len(t.errors) > 0 {
+		// TODO: return contacted list of current errors to user with information
+		// about current issues to fix
+		err_msg := fmt.Sprintf("Token exchange errors: %d", len(t.errors))
+		for _, e := range t.errors {
+			err_msg += "\n" + e.Error()
+
+		}
+		return nil, fmt.Errorf(err_msg)
+	}
+
+	return &t, nil
 }
 
 // Support multiple "resource" parameters. Example in
@@ -84,7 +95,6 @@ func AddResource(resource string) TokenExchangeOption {
 		if err != nil {
 			t.errors = append(t.errors, err)
 			failed = true
-			return t
 		}
 
 		// adhere to the rfc requirements
@@ -170,6 +180,21 @@ func AddActorToken(actorToken, actorTokenType string) TokenExchangeOption {
 	}
 }
 
+func AddExtraParams(params map[string]string) TokenExchangeOption {
+	return func(t Option) Option {
+		// no-op
+		if t.authRequestExtraParams == nil {
+			t.authRequestExtraParams = map[string]string{}
+		}
+
+		for k, v := range t.authRequestExtraParams {
+			t.authRequestExtraParams[k] = v
+		}
+
+		return t
+	}
+}
+
 type tokenExchangeResponse struct {
 	AccessToken     string `json:"access_token"`
 	IssuedTokenType string `json:"issued_token_type"`
@@ -237,8 +262,9 @@ func (u *TokenExchange) Do(ctx context.Context, params *Option, oidcProvider oid
 	}
 	data.Add("subject_token_type", params.subjectTokenType)
 
-	// TODO fix this
-	data.Add("connector_id", "github-actions")
+	for k, v := range params.AuthRequestExtraParams {
+		data.Add(k, v)
+	}
 
 	if !params.basicAuth {
 		data.Add("client_id", oidcProvider.ClientID)

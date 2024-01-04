@@ -81,7 +81,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
 	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "[authcode] Hostname of the redirect URL")
 	f.StringVar(&o.RedirectURLAuthCodeKeyboard, "oidc-redirect-url-authcode-keyboard", oobRedirectURI, "[authcode-keyboard] Redirect URL")
-	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
+	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard, token-exchange] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
 	f.StringVar(&o.TokenExchangeResource, "token-exchange-resource", "", "[token-exchange] a URI for the target resource the client intends to use")
@@ -130,7 +130,8 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 		}
 	case o.GrantType == "token-exchange":
 
-		tokenExchangeOpts := tokenexchange.NewTokenExchangeOption(
+		var tokenExchangeOpts *tokenexchange.Option
+		tokenExchangeOpts, err = tokenexchange.NewTokenExchangeOption(
 			o.TokenExchangeSubjectToken,
 			o.TokenExchangeSubjectTokenType,
 			tokenexchange.AddAudience(o.TokenExchangeAudience),
@@ -138,9 +139,10 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			tokenexchange.AddResource(o.TokenExchangeResource),
 			tokenexchange.SetBasicAuth(o.TokenExchangeBasicAuth),
 			tokenexchange.AddActorToken(o.TokenExchangeActorToken, o.TokenExchangeActorTokenType),
+			tokenexchange.AddExtraParams(o.AuthRequestExtraParams),
 		)
 
-		s.TokenExchangeOption = &tokenExchangeOpts
+		s.TokenExchangeOption = tokenExchangeOpts
 
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
