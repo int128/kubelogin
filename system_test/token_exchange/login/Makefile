@@ -28,11 +28,10 @@ test: build
 		--exec-arg=--oidc-issuer-url=https://dex-server:10443/dex \
 		--exec-arg=--oidc-client-id=YOUR_CLIENT_ID \
 		--exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET \
-		--exec-arg=--oidc-extra-scope=email \
+		--exec-arg=--oidc-extra-scope="email,groups,openid,profile,federated:id" \
 		--exec-arg=--certificate-authority=$(CERT_DIR)/ca.crt
 
-	EMAIL=$(kubectl \
-		oidc-login \
+	EMAIL=$( $(BIN_DIR)/kubectl-oidc_login \
 		get-token \
 		--grant-type=token-exchange \
 		--token-exchange-subject-token=ID_TOKEN \
@@ -40,9 +39,9 @@ test: build
 		--oidc-issuer-url=https://dex-server:10443/dex \
 		--oidc-client-id=YOUR_CLIENT_ID \
 		--oidc-client-secret=YOUR_CLIENT_SECRET \
-		--oidc-extra-scope=email \
+		--oidc-extra-scope="email,groups,openid,profile,federated:id" \
 		--certificate-authority=$(CERT_DIR)/ca.crt \
-			| jq -r '.status.token' | jq -R 'split(".") | .[1] | @base64d | fromjson | .email'); \
+			| jq -r '.status.token' | jq -r -R 'split(".") | .[1] | @base64d | fromjson | .email'); \
 	kubectl create clusterrolebinding cluster-readonly-gh --clusterrole=cluster-readonly \
 		--user="$$EMAIL"
 

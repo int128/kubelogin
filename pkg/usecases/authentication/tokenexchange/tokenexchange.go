@@ -223,7 +223,7 @@ func (u *TokenExchange) Do(ctx context.Context, params *Option, oidcProvider oid
 		data.Add("resource", resource)
 	}
 
-	data.Add("scopes", strings.Join(oidcProvider.ExtraScopes, " "))
+	data.Add("scope", strings.Join(oidcProvider.ExtraScopes, " "))
 
 	if params.requestedTokenType != "" {
 		data.Add("requested_token_type", params.requestedTokenType)
