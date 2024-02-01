@@ -6,7 +6,7 @@ toolchain go1.21.5
 
 require (
 	github.com/alexflint/go-filemutex v1.3.0
-	github.com/chromedp/chromedp v0.9.3
+	github.com/chromedp/chromedp v0.9.4
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/go-cmp v0.6.0
@@ -28,14 +28,14 @@ require (
 )
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20231011050154-1d073bb38998 // indirect
+	github.com/chromedp/cdproto v0.0.0-20240127002248-bd7a66284627 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
-	github.com/gobwas/ws v1.3.0 // indirect
+	github.com/gobwas/ws v1.3.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
