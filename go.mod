@@ -10,7 +10,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/go-cmp v0.6.0
-	github.com/google/wire v0.5.0
+	github.com/google/wire v0.6.0
 	github.com/int128/oauth2cli v1.14.0
 	github.com/int128/oauth2dev v1.0.1
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
