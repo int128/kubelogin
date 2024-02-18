@@ -20,17 +20,17 @@ on:
 
 jobs:
   check:
-    uses: int128/go-workflows/.github/workflows/check.yaml@v0.1.0
+    uses: int128/go-workflows/.github/workflows/check.yaml@v0.2.1
     with:
-        go-version: 1.21.3
-        golangci-lint-version: v1.54.2
+        go-version: 1.21.5
+        golangci-lint-version: v1.55.2
 
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.21.3
+          go-version: 1.21.5
       - run: go test -v -race ./...

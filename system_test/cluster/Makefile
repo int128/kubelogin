@@ -22,6 +22,6 @@ cluster:
 logs:
 	kubectl -n kube-system logs kube-apiserver-kubelogin-system-test-control-plane
 
-.PHONY: terminate
-terminate:
+.PHONY: terminate clean
+terminate clean:
 	kind delete cluster --name $(CLUSTER_NAME)
