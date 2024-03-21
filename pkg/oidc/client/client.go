@@ -54,6 +54,18 @@ type GetTokenByAuthCodeInput struct {
 	LocalServerKeyFile     string
 }
 
+// // https://datatracker.ietf.org/doc/html/rfc8693#name-token-exchange-request-and-
+// type TokenExchangeInput struct {
+// 	ResourceURI        string
+// 	Audience           string
+// 	Scope              string
+// 	SubjectToken       string
+// 	SubjectTokenType   string
+// 	ActorToken         string
+// 	ActorTokenType     string
+// 	RequestedTokenType string
+// }
+
 type client struct {
 	httpClient                  *http.Client
 	provider                    *gooidc.Provider

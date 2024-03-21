@@ -13,6 +13,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/tokenexchange"
 )
 
 // Set provides the use-case of Authentication.
@@ -23,6 +24,7 @@ var Set = wire.NewSet(
 	wire.Struct(new(authcode.Keyboard), "*"),
 	wire.Struct(new(ropc.ROPC), "*"),
 	wire.Struct(new(devicecode.DeviceCode), "*"),
+	wire.Struct(new(tokenexchange.TokenExchange), "*"),
 )
 
 type Interface interface {
@@ -43,6 +45,7 @@ type GrantOptionSet struct {
 	AuthCodeKeyboardOption *authcode.KeyboardOption
 	ROPCOption             *ropc.Option
 	DeviceCodeOption       *devicecode.Option
+	TokenExchangeOption    *tokenexchange.Option
 }
 
 // Output represents an output DTO of the Authentication use-case.
@@ -71,6 +74,7 @@ type Authentication struct {
 	AuthCodeKeyboard *authcode.Keyboard
 	ROPC             *ropc.ROPC
 	DeviceCode       *devicecode.DeviceCode
+	TokenExchange    *tokenexchange.TokenExchange
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -137,6 +141,13 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		tokenSet, err := u.DeviceCode.Do(ctx, in.GrantOptionSet.DeviceCodeOption, oidcClient)
 		if err != nil {
 			return nil, fmt.Errorf("device-code error: %w", err)
+		}
+		return &Output{TokenSet: *tokenSet}, nil
+	}
+	if in.GrantOptionSet.TokenExchangeOption != nil {
+		tokenSet, err := u.TokenExchange.Do(ctx, in.GrantOptionSet.TokenExchangeOption, in.Provider)
+		if err != nil {
+			return nil, fmt.Errorf("token-exchange error: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}
