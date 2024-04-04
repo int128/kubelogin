@@ -52,6 +52,11 @@ func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsc
 	}
 
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
+
+	if p.IssuerURLOverride != "" {
+		ctx = gooidc.InsecureIssuerURLContext(ctx, p.IssuerURLOverride)
+	}
+
 	provider, err := gooidc.NewProvider(ctx, p.IssuerURL)
 	if err != nil {
 		return nil, fmt.Errorf("oidc discovery error: %w", err)
