@@ -1,8 +1,8 @@
 module github.com/int128/kubelogin
 
-go 1.21
+go 1.22.0
 
-toolchain go1.21.5
+toolchain go1.22.2
 
 require (
 	github.com/alexflint/go-filemutex v1.3.0
@@ -22,8 +22,8 @@ require (
 	golang.org/x/sync v0.7.0
 	golang.org/x/term v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/apimachinery v0.29.4
-	k8s.io/client-go v0.29.4
+	k8s.io/apimachinery v0.30.0
+	k8s.io/client-go v0.30.0
 	k8s.io/klog/v2 v2.120.1
 )
 
