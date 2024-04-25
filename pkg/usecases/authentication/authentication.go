@@ -36,6 +36,7 @@ type Input struct {
 	CachedTokenSet  *oidc.TokenSet // optional
 	TLSClientConfig tlsclientconfig.Config
 	ForceRefresh    bool
+	UseAccessToken  bool
 }
 
 type GrantOptionSet struct {
@@ -98,7 +99,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	}
 
 	u.Logger.V(1).Infof("initializing an OpenID Connect client")
-	oidcClient, err := u.ClientFactory.New(ctx, in.Provider, in.TLSClientConfig)
+	oidcClient, err := u.ClientFactory.New(ctx, in.Provider, in.TLSClientConfig, in.UseAccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("oidc error: %w", err)
 	}

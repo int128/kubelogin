@@ -18,6 +18,7 @@ type getTokenOptions struct {
 	ClientSecret          string
 	ExtraScopes           []string
 	UsePKCE               bool
+	UseAccessToken        bool
 	TokenCacheDir         string
 	tlsOptions            tlsOptions
 	authenticationOptions authenticationOptions
@@ -30,6 +31,7 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
 	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE usage")
+	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
 	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for token cache")
 	f.BoolVar(&o.ForceRefresh, "force-refresh", false, "If set, refresh the ID token regardless of its expiration time")
 	o.tlsOptions.addFlags(f)
@@ -85,6 +87,7 @@ func (cmd *GetToken) New() *cobra.Command {
 				GrantOptionSet:  grantOptionSet,
 				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
 				ForceRefresh:    o.ForceRefresh,
+				UseAccessToken:  o.UseAccessToken,
 			}
 			if err := cmd.GetToken.Do(c.Context(), in); err != nil {
 				return fmt.Errorf("get-token: %w", err)

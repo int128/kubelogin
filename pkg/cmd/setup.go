@@ -15,6 +15,7 @@ type setupOptions struct {
 	ClientSecret          string
 	ExtraScopes           []string
 	UsePKCE               bool
+	UseAccessToken        bool
 	tlsOptions            tlsOptions
 	authenticationOptions authenticationOptions
 }
@@ -25,6 +26,7 @@ func (o *setupOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
 	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE usage")
+	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
 	o.tlsOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
 }
@@ -50,6 +52,7 @@ func (cmd *Setup) New() *cobra.Command {
 				ClientSecret:    o.ClientSecret,
 				ExtraScopes:     o.ExtraScopes,
 				UsePKCE:         o.UsePKCE,
+				UseAccessToken:  o.UseAccessToken,
 				GrantOptionSet:  grantOptionSet,
 				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
 			}
