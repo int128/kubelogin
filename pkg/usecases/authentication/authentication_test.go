@@ -85,7 +85,7 @@ func TestAuthentication_Do(t *testing.T) {
 			}, nil)
 		mockClientFactory := client.NewMockFactoryInterface(t)
 		mockClientFactory.EXPECT().
-			New(ctx, dummyProvider, dummyTLSClientConfig).
+			New(ctx, dummyProvider, dummyTLSClientConfig, false).
 			Return(mockClient, nil)
 		u := Authentication{
 			ClientFactory: mockClientFactory,
@@ -143,7 +143,7 @@ func TestAuthentication_Do(t *testing.T) {
 			}, nil)
 		mockClientFactory := client.NewMockFactoryInterface(t)
 		mockClientFactory.EXPECT().
-			New(ctx, dummyProvider, dummyTLSClientConfig).
+			New(ctx, dummyProvider, dummyTLSClientConfig, false).
 			Return(mockClient, nil)
 		u := Authentication{
 			ClientFactory: mockClientFactory,
@@ -190,7 +190,7 @@ func TestAuthentication_Do(t *testing.T) {
 			}, nil)
 		mockClientFactory := client.NewMockFactoryInterface(t)
 		mockClientFactory.EXPECT().
-			New(ctx, dummyProvider, dummyTLSClientConfig).
+			New(ctx, dummyProvider, dummyTLSClientConfig, false).
 			Return(mockClient, nil)
 		u := Authentication{
 			ClientFactory: mockClientFactory,

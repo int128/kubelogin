@@ -24,13 +24,13 @@ func (_m *MockFactoryInterface) EXPECT() *MockFactoryInterface_Expecter {
 	return &MockFactoryInterface_Expecter{mock: &_m.Mock}
 }
 
-// New provides a mock function with given fields: ctx, p, tlsClientConfig
-func (_m *MockFactoryInterface) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error) {
+// New provides a mock function with given fields: ctx, p, tlsClientConfig, useAccessToken
+func (_m *MockFactoryInterface) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config, useAccessToken bool) (Interface, error) {
 	ret := _m.Called(ctx, p, tlsClientConfig)
 
 	var r0 Interface
-	if rf, ok := ret.Get(0).(func(context.Context, oidc.Provider, tlsclientconfig.Config) Interface); ok {
-		r0 = rf(ctx, p, tlsClientConfig)
+	if rf, ok := ret.Get(0).(func(context.Context, oidc.Provider, tlsclientconfig.Config, bool) Interface); ok {
+		r0 = rf(ctx, p, tlsClientConfig, useAccessToken)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(Interface)
@@ -38,8 +38,8 @@ func (_m *MockFactoryInterface) New(ctx context.Context, p oidc.Provider, tlsCli
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, oidc.Provider, tlsclientconfig.Config) error); ok {
-		r1 = rf(ctx, p, tlsClientConfig)
+	if rf, ok := ret.Get(1).(func(context.Context, oidc.Provider, tlsclientconfig.Config, bool) error); ok {
+		r1 = rf(ctx, p, tlsClientConfig, useAccessToken)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -56,7 +56,8 @@ type MockFactoryInterface_New_Call struct {
 //   - ctx context.Context
 //   - p oidc.Provider
 //   - tlsClientConfig tlsclientconfig.Config
-func (_e *MockFactoryInterface_Expecter) New(ctx interface{}, p interface{}, tlsClientConfig interface{}) *MockFactoryInterface_New_Call {
+//   - useAccessToken bool
+func (_e *MockFactoryInterface_Expecter) New(ctx interface{}, p interface{}, tlsClientConfig interface{}, useAccessToken bool) *MockFactoryInterface_New_Call {
 	return &MockFactoryInterface_New_Call{Call: _e.mock.On("New", ctx, p, tlsClientConfig)}
 }
 
