@@ -23,7 +23,7 @@ jobs:
     uses: int128/go-workflows/.github/workflows/check.yaml@v0.3.0
     with:
         go-version: 1.22.3
-        golangci-lint-version: v1.58.2
+        golangci-lint-version: v1.59.0
 
   test:
     runs-on: ubuntu-latest
