@@ -1,15 +1,12 @@
 CERT_DIR := cert
 
-.PHONY: login
-login: setup
-	$(MAKE) -C login
+.PHONY: authorization_code
+authorization_code: cluster setup-chrome
+	$(MAKE) -C $@
 
-.PHONY: setup
-setup: dex cluster setup-chrome
-
-.PHONY: dex
-dex: cert
-	$(MAKE) -C dex
+.PHONY: token_exchange
+token_exchange: cluster
+	$(MAKE) -C $@
 
 .PHONY: cluster
 cluster: cert
@@ -28,14 +25,9 @@ cert:
 logs:
 	$(MAKE) -C cluster logs
 
-.PHONY: terminate
-terminate:
-	$(MAKE) -C cluster terminate
-	$(MAKE) -C dex terminate
-
-.PHONY: clean
-clean:
+.PHONY: clean terminate
+clean terminate:
 	$(MAKE) -C cert clean
 	$(MAKE) -C cluster clean
-	$(MAKE) -C dex clean
-	$(MAKE) -C login clean
+	$(MAKE) -C authorization_code clean
+	$(MAKE) -C token_exchange clean

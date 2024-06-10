@@ -31,7 +31,10 @@ func runBrowser(ctx context.Context, url string) error {
 	execOpts = append(execOpts, chromedp.NoSandbox)
 	ctx, cancel := chromedp.NewExecAllocator(ctx, execOpts...)
 	defer cancel()
-	ctx, cancel = chromedp.NewContext(ctx, chromedp.WithLogf(log.Printf))
+	ctx, cancel = chromedp.NewContext(ctx,
+		chromedp.WithLogf(log.Printf),
+		chromedp.WithDebugf(log.Printf),
+		chromedp.WithErrorf(log.Printf))
 	defer cancel()
 	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -55,7 +58,7 @@ func logInToDex(ctx context.Context, url string) error {
 		if strings.HasPrefix(location, `http://`) || strings.HasPrefix(location, `https://`) {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Second)
 	}
 
 	err := chromedp.Run(ctx,
