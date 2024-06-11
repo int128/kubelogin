@@ -14,6 +14,7 @@ import (
 // getTokenOptions represents the options for get-token command.
 type getTokenOptions struct {
 	IssuerURL             string
+	IssuerURLOverride     string
 	ClientID              string
 	ClientSecret          string
 	ExtraScopes           []string
@@ -26,6 +27,7 @@ type getTokenOptions struct {
 
 func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.IssuerURL, "oidc-issuer-url", "", "Issuer URL of the provider (mandatory)")
+	f.StringVar(&o.IssuerURLOverride, "oidc-issuer-url-override", "", "Override Issuer URL")
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider (mandatory)")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
@@ -75,11 +77,12 @@ func (cmd *GetToken) New() *cobra.Command {
 			}
 			in := credentialplugin.Input{
 				Provider: oidc.Provider{
-					IssuerURL:    o.IssuerURL,
-					ClientID:     o.ClientID,
-					ClientSecret: o.ClientSecret,
-					UsePKCE:      o.UsePKCE,
-					ExtraScopes:  o.ExtraScopes,
+					IssuerURL:         o.IssuerURL,
+					IssuerURLOverride: o.IssuerURLOverride,
+					ClientID:          o.ClientID,
+					ClientSecret:      o.ClientSecret,
+					UsePKCE:           o.UsePKCE,
+					ExtraScopes:       o.ExtraScopes,
 				},
 				TokenCacheDir:   o.TokenCacheDir,
 				GrantOptionSet:  grantOptionSet,

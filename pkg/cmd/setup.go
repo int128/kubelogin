@@ -11,6 +11,7 @@ import (
 // setupOptions represents the options for setup command.
 type setupOptions struct {
 	IssuerURL             string
+	IssuerURLOverride     string
 	ClientID              string
 	ClientSecret          string
 	ExtraScopes           []string
@@ -21,6 +22,7 @@ type setupOptions struct {
 
 func (o *setupOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.IssuerURL, "oidc-issuer-url", "", "Issuer URL of the provider")
+	f.StringVar(&o.IssuerURLOverride, "oidc-issuer-url-override", "", "Overrided Issuer URL of the provider")
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
@@ -45,13 +47,14 @@ func (cmd *Setup) New() *cobra.Command {
 				return fmt.Errorf("setup: %w", err)
 			}
 			in := setup.Stage2Input{
-				IssuerURL:       o.IssuerURL,
-				ClientID:        o.ClientID,
-				ClientSecret:    o.ClientSecret,
-				ExtraScopes:     o.ExtraScopes,
-				UsePKCE:         o.UsePKCE,
-				GrantOptionSet:  grantOptionSet,
-				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
+				IssuerURL:         o.IssuerURL,
+				IssuerURLOverride: o.IssuerURLOverride,
+				ClientID:          o.ClientID,
+				ClientSecret:      o.ClientSecret,
+				ExtraScopes:       o.ExtraScopes,
+				UsePKCE:           o.UsePKCE,
+				GrantOptionSet:    grantOptionSet,
+				TLSClientConfig:   o.tlsOptions.tlsClientConfig(),
 			}
 			if c.Flags().Lookup("listen-address").Changed {
 				in.ListenAddressArgs = o.authenticationOptions.ListenAddress
