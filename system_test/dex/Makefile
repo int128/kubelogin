@@ -5,7 +5,7 @@ dex: dex.yaml
 	# wait for kind network
 	while true; do if docker network inspect kind; then break; fi; sleep 1; done
 	# create a container
-	docker create --name dex-server -p 10443:10443 --network kind quay.io/dexidp/dex:v2.21.0 serve /dex.yaml
+	docker create -q --name dex-server -p 10443:10443 --network kind ghcr.io/dexidp/dex:v2.39.0 dex serve /dex.yaml
 	# deploy the config
 	docker cp $(CERT_DIR)/server.crt dex-server:/
 	docker cp $(CERT_DIR)/server.key dex-server:/
