@@ -65,11 +65,13 @@ type stage2Vars struct {
 	ClientID          string
 	Args              []string
 	Subject           string
+	IssuerURLOverride string
 }
 
 // Stage2Input represents an input DTO of the stage2.
 type Stage2Input struct {
 	IssuerURL         string
+	IssuerURLOverride string
 	ClientID          string
 	ClientSecret      string
 	ExtraScopes       []string // optional
@@ -83,11 +85,12 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	u.Logger.Printf("authentication in progress...")
 	out, err := u.Authentication.Do(ctx, authentication.Input{
 		Provider: oidc.Provider{
-			IssuerURL:    in.IssuerURL,
-			ClientID:     in.ClientID,
-			ClientSecret: in.ClientSecret,
-			ExtraScopes:  in.ExtraScopes,
-			UsePKCE:      in.UsePKCE,
+			IssuerURL:         in.IssuerURL,
+			IssuerURLOverride: in.IssuerURLOverride,
+			ClientID:          in.ClientID,
+			ClientSecret:      in.ClientSecret,
+			ExtraScopes:       in.ExtraScopes,
+			UsePKCE:           in.UsePKCE,
 		},
 		GrantOptionSet:  in.GrantOptionSet,
 		TLSClientConfig: in.TLSClientConfig,
@@ -103,6 +106,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	v := stage2Vars{
 		IDTokenPrettyJSON: idTokenClaims.Pretty,
 		IssuerURL:         in.IssuerURL,
+		IssuerURLOverride: in.IssuerURLOverride,
 		ClientID:          in.ClientID,
 		Args:              makeCredentialPluginArgs(in),
 		Subject:           idTokenClaims.Subject,
@@ -118,6 +122,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 func makeCredentialPluginArgs(in Stage2Input) []string {
 	var args []string
 	args = append(args, "--oidc-issuer-url="+in.IssuerURL)
+	args = append(args, "--oidc-issuer-url-override="+in.IssuerURL)
 	args = append(args, "--oidc-client-id="+in.ClientID)
 	if in.ClientSecret != "" {
 		args = append(args, "--oidc-client-secret="+in.ClientSecret)
