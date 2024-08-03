@@ -1,13 +1,14 @@
 package mutex
 
 import (
+	"context"
 	"fmt"
-	"github.com/int128/kubelogin/pkg/infrastructure/logger"
-	"golang.org/x/net/context"
 	"math/rand"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 )
 
 func TestMutex(t *testing.T) {
