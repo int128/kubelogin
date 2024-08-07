@@ -123,6 +123,7 @@ func TestCmd_Run(t *testing.T) {
 							RedirectURLHostname:   "localhost",
 						},
 					},
+					UseAccessToken: false,
 				},
 			},
 			"FullOptions": {
@@ -150,6 +151,30 @@ func TestCmd_Run(t *testing.T) {
 							RedirectURLHostname:   "localhost",
 						},
 					},
+					UseAccessToken: false,
+				},
+			},
+			"AccessToken": {
+				args: []string{executable,
+					"get-token",
+					"--oidc-issuer-url", "https://issuer.example.com",
+					"--oidc-client-id", "YOUR_CLIENT_ID",
+					"--oidc-use-access-token=true",
+				},
+				in: credentialplugin.Input{
+					TokenCacheDir: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
+					Provider: oidc.Provider{
+						IssuerURL: "https://issuer.example.com",
+						ClientID:  "YOUR_CLIENT_ID",
+					},
+					GrantOptionSet: authentication.GrantOptionSet{
+						AuthCodeBrowserOption: &authcode.BrowserOption{
+							BindAddress:           defaultListenAddress,
+							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+							RedirectURLHostname:   "localhost",
+						},
+					},
+					UseAccessToken: true,
 				},
 			},
 			"HomedirExpansion": {
@@ -180,6 +205,7 @@ func TestCmd_Run(t *testing.T) {
 					TLSClientConfig: tlsclientconfig.Config{
 						CACertFilename: []string{filepath.Join(userHomeDir, ".kube/ca.crt")},
 					},
+					UseAccessToken: false,
 				},
 			},
 		}

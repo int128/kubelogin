@@ -74,6 +74,7 @@ type Stage2Input struct {
 	ClientSecret      string
 	ExtraScopes       []string // optional
 	UsePKCE           bool     // optional
+	UseAccessToken    bool     // optional
 	ListenAddressArgs []string // non-nil if set by the command arg
 	GrantOptionSet    authentication.GrantOptionSet
 	TLSClientConfig   tlsclientconfig.Config
@@ -91,6 +92,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 		},
 		GrantOptionSet:  in.GrantOptionSet,
 		TLSClientConfig: in.TLSClientConfig,
+		UseAccessToken:  in.UseAccessToken,
 	})
 	if err != nil {
 		return fmt.Errorf("authentication error: %w", err)
@@ -127,6 +129,9 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 	}
 	if in.UsePKCE {
 		args = append(args, "--oidc-use-pkce")
+	}
+	if in.UseAccessToken {
+		args = append(args, "--oidc-use-access-token")
 	}
 	for _, f := range in.TLSClientConfig.CACertFilename {
 		args = append(args, "--certificate-authority="+f)

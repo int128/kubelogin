@@ -62,6 +62,7 @@ type client struct {
 	logger                      logger.Interface
 	supportedPKCEMethods        []string
 	deviceAuthorizationEndpoint string
+	useAccessToken              bool
 }
 
 func (c *client) wrapContext(ctx context.Context) context.Context {
@@ -204,6 +205,32 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 	}
 	if nonce != "" && nonce != verifiedIDToken.Nonce {
 		return nil, fmt.Errorf("nonce did not match (wants %s but got %s)", nonce, verifiedIDToken.Nonce)
+	}
+
+	if c.useAccessToken {
+		accessToken, ok := token.Extra("access_token").(string)
+		if !ok {
+			return nil, fmt.Errorf("access_token is missing in the token response: %#v", accessToken)
+		}
+
+		// We intentionally do not perform a ClientID check here because there
+		// are some use cases in access_tokens where we *expect* the audience
+		// to differ. For example, one can explicitly set
+		// `audience=CLUSTER_CLIENT_ID` as an extra auth parameter.
+		verifier = c.provider.Verifier(&gooidc.Config{ClientID: "", Now: c.clock.Now, SkipClientIDCheck: true})
+
+		_, err := verifier.Verify(ctx, accessToken)
+		if err != nil {
+			return nil, fmt.Errorf("could not verify the access token: %w", err)
+		}
+
+		// There is no `nonce` to check on the `access_token`. We rely on the
+		// above `nonce` check on the `id_token`.
+
+		return &oidc.TokenSet{
+			IDToken:      accessToken,
+			RefreshToken: token.RefreshToken,
+		}, nil
 	}
 	return &oidc.TokenSet{
 		IDToken:      idToken,
