@@ -24,7 +24,7 @@ var Set = wire.NewSet(
 )
 
 type FactoryInterface interface {
-	New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error)
+	New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config, useAccessToken bool) (Interface, error)
 }
 
 type Factory struct {
@@ -34,7 +34,7 @@ type Factory struct {
 }
 
 // New returns an instance of infrastructure.Interface with the given configuration.
-func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error) {
+func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config, useAccessToken bool) (Interface, error) {
 	rawTLSClientConfig, err := f.Loader.Load(tlsClientConfig)
 	if err != nil {
 		return nil, fmt.Errorf("could not load the TLS client config: %w", err)
@@ -80,6 +80,7 @@ func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsc
 		logger:                      f.Logger,
 		supportedPKCEMethods:        supportedPKCEMethods,
 		deviceAuthorizationEndpoint: deviceAuthorizationEndpoint,
+		useAccessToken:              useAccessToken,
 	}, nil
 }
 
