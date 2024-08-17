@@ -1,0 +1,8 @@
+outpkg: "{{.PackageName}}_mock"
+dir: "mocks/{{.PackagePath}}_mock"
+
+packages:
+  github.com/int128/kubelogin:
+    config:
+      all: true
+      recursive: true

@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/kubeconfig/loader_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/kubeconfig/writer_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/authentication_mock"
 	"github.com/int128/kubelogin/pkg/kubeconfig"
-	"github.com/int128/kubelogin/pkg/kubeconfig/loader"
-	"github.com/int128/kubelogin/pkg/kubeconfig/writer"
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -43,11 +44,11 @@ func TestStandalone_Do(t *testing.T) {
 			IDPCertificateAuthority:     "/path/to/cert2",
 			IDPCertificateAuthorityData: "BASE64ENCODED2",
 		}
-		mockLoader := loader.NewMockInterface(t)
+		mockLoader := loader_mock.NewMockInterface(t)
 		mockLoader.EXPECT().
 			GetCurrentAuthProvider("/path/to/kubeconfig", kubeconfig.ContextName("theContext"), kubeconfig.UserName("theUser")).
 			Return(currentAuthProvider, nil)
-		mockWriter := writer.NewMockInterface(t)
+		mockWriter := writer_mock.NewMockInterface(t)
 		mockWriter.EXPECT().
 			UpdateAuthProvider(kubeconfig.AuthProvider{
 				LocationOfOrigin:            "/path/to/kubeconfig",
@@ -61,7 +62,7 @@ func TestStandalone_Do(t *testing.T) {
 				RefreshToken:                "YOUR_REFRESH_TOKEN",
 			}).
 			Return(nil)
-		mockAuthentication := authentication.NewMockInterface(t)
+		mockAuthentication := authentication_mock.NewMockInterface(t)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
 				Provider: oidc.Provider{
@@ -103,11 +104,11 @@ func TestStandalone_Do(t *testing.T) {
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 			IDToken:          issuedIDToken,
 		}
-		mockLoader := loader.NewMockInterface(t)
+		mockLoader := loader_mock.NewMockInterface(t)
 		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
-		mockAuthentication := authentication.NewMockInterface(t)
+		mockAuthentication := authentication_mock.NewMockInterface(t)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
 				Provider: oidc.Provider{
@@ -138,11 +139,11 @@ func TestStandalone_Do(t *testing.T) {
 	t.Run("NoOIDCConfig", func(t *testing.T) {
 		ctx := context.TODO()
 		in := Input{}
-		mockLoader := loader.NewMockInterface(t)
+		mockLoader := loader_mock.NewMockInterface(t)
 		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(nil, errors.New("no oidc config"))
-		mockAuthentication := authentication.NewMockInterface(t)
+		mockAuthentication := authentication_mock.NewMockInterface(t)
 		u := Standalone{
 			Authentication:   mockAuthentication,
 			KubeconfigLoader: mockLoader,
@@ -163,11 +164,11 @@ func TestStandalone_Do(t *testing.T) {
 			ClientID:         "YOUR_CLIENT_ID",
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
-		mockLoader := loader.NewMockInterface(t)
+		mockLoader := loader_mock.NewMockInterface(t)
 		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
-		mockAuthentication := authentication.NewMockInterface(t)
+		mockAuthentication := authentication_mock.NewMockInterface(t)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
 				Provider: oidc.Provider{
@@ -197,11 +198,11 @@ func TestStandalone_Do(t *testing.T) {
 			ClientID:         "YOUR_CLIENT_ID",
 			ClientSecret:     "YOUR_CLIENT_SECRET",
 		}
-		mockLoader := loader.NewMockInterface(t)
+		mockLoader := loader_mock.NewMockInterface(t)
 		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
-		mockWriter := writer.NewMockInterface(t)
+		mockWriter := writer_mock.NewMockInterface(t)
 		mockWriter.EXPECT().
 			UpdateAuthProvider(kubeconfig.AuthProvider{
 				LocationOfOrigin: "/path/to/kubeconfig",
@@ -213,7 +214,7 @@ func TestStandalone_Do(t *testing.T) {
 				RefreshToken:     "YOUR_REFRESH_TOKEN",
 			}).
 			Return(errors.New("I/O error"))
-		mockAuthentication := authentication.NewMockInterface(t)
+		mockAuthentication := authentication_mock.NewMockInterface(t)
 		mockAuthentication.EXPECT().
 			Do(ctx, authentication.Input{
 				Provider: oidc.Provider{

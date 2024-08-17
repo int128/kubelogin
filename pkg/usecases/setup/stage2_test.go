@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/authentication_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -36,7 +37,7 @@ func TestSetup_DoStage2(t *testing.T) {
 		GrantOptionSet:  grantOptionSet,
 		TLSClientConfig: dummyTLSClientConfig,
 	}
-	mockAuthentication := authentication.NewMockInterface(t)
+	mockAuthentication := authentication_mock.NewMockInterface(t)
 	mockAuthentication.EXPECT().
 		Do(ctx, authentication.Input{
 			Provider: oidc.Provider{

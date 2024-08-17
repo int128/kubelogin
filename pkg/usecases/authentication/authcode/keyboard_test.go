@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/infrastructure/reader"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/infrastructure/reader_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -22,7 +23,7 @@ func TestKeyboard_Do(t *testing.T) {
 		o := &KeyboardOption{
 			AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 		}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			SupportedPKCEMethods().
 			Return(nil)
@@ -45,7 +46,7 @@ func TestKeyboard_Do(t *testing.T) {
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockReader := reader.NewMockInterface(t)
+		mockReader := reader_mock.NewMockInterface(t)
 		mockReader.EXPECT().
 			ReadString(keyboardPrompt).
 			Return("YOUR_AUTH_CODE", nil)

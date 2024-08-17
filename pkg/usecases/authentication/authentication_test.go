@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/go-cmp/cmp"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/testing/clock"
@@ -76,14 +77,14 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken: "VALID_REFRESH_TOKEN",
 			},
 		}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			Refresh(ctx, "VALID_REFRESH_TOKEN").
 			Return(&oidc.TokenSet{
 				IDToken:      "NEW_ID_TOKEN",
 				RefreshToken: "NEW_REFRESH_TOKEN",
 			}, nil)
-		mockClientFactory := client.NewMockFactoryInterface(t)
+		mockClientFactory := client_mock.NewMockFactoryInterface(t)
 		mockClientFactory.EXPECT().
 			New(ctx, dummyProvider, dummyTLSClientConfig, false).
 			Return(mockClient, nil)
@@ -125,7 +126,7 @@ func TestAuthentication_Do(t *testing.T) {
 				RefreshToken: "EXPIRED_REFRESH_TOKEN",
 			},
 		}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			SupportedPKCEMethods().
 			Return(nil)
@@ -141,7 +142,7 @@ func TestAuthentication_Do(t *testing.T) {
 				IDToken:      "NEW_ID_TOKEN",
 				RefreshToken: "NEW_REFRESH_TOKEN",
 			}, nil)
-		mockClientFactory := client.NewMockFactoryInterface(t)
+		mockClientFactory := client_mock.NewMockFactoryInterface(t)
 		mockClientFactory.EXPECT().
 			New(ctx, dummyProvider, dummyTLSClientConfig, false).
 			Return(mockClient, nil)
@@ -181,14 +182,14 @@ func TestAuthentication_Do(t *testing.T) {
 				},
 			},
 		}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			GetTokenByROPC(mock.Anything, "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockClientFactory := client.NewMockFactoryInterface(t)
+		mockClientFactory := client_mock.NewMockFactoryInterface(t)
 		mockClientFactory.EXPECT().
 			New(ctx, dummyProvider, dummyTLSClientConfig, false).
 			Return(mockClient, nil)

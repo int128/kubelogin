@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/int128/kubelogin/pkg/infrastructure/browser"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/infrastructure/browser_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
-	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/oauth2dev"
 	"github.com/stretchr/testify/mock"
@@ -17,9 +17,9 @@ func TestDeviceCode(t *testing.T) {
 	ctx := context.TODO()
 
 	t.Run("Authorization error", func(t *testing.T) {
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		dc := &DeviceCode{
-			Browser: browser.NewMockInterface(t),
+			Browser: browser_mock.NewMockInterface(t),
 			Logger:  logger.New(t),
 		}
 		errTest := errors.New("test error")
@@ -31,8 +31,8 @@ func TestDeviceCode(t *testing.T) {
 	})
 
 	t.Run("Server returns verification_uri_complete", func(t *testing.T) {
-		mockBrowser := browser.NewMockInterface(t)
-		mockClient := client.NewMockInterface(t)
+		mockBrowser := browser_mock.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		dc := &DeviceCode{
 			Browser: mockBrowser,
 			Logger:  logger.New(t),
@@ -63,8 +63,8 @@ func TestDeviceCode(t *testing.T) {
 	})
 
 	t.Run("Server returns verification_uri", func(t *testing.T) {
-		mockBrowser := browser.NewMockInterface(t)
-		mockClient := client.NewMockInterface(t)
+		mockBrowser := browser_mock.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		dc := &DeviceCode{
 			Browser: mockBrowser,
 			Logger:  logger.New(t),
@@ -95,8 +95,8 @@ func TestDeviceCode(t *testing.T) {
 	})
 
 	t.Run("Server returns verification_url", func(t *testing.T) {
-		mockBrowser := browser.NewMockInterface(t)
-		mockClient := client.NewMockInterface(t)
+		mockBrowser := browser_mock.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		dc := &DeviceCode{
 			Browser: mockBrowser,
 			Logger:  logger.New(t),
@@ -122,8 +122,8 @@ func TestDeviceCode(t *testing.T) {
 	})
 
 	t.Run("Error when exchanging the device code", func(t *testing.T) {
-		mockBrowser := browser.NewMockInterface(t)
-		mockClient := client.NewMockInterface(t)
+		mockBrowser := browser_mock.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		dc := &DeviceCode{
 			Browser: mockBrowser,
 			Logger:  logger.New(t),
@@ -155,7 +155,7 @@ func TestDeviceCode_openURL(t *testing.T) {
 	var testError = errors.New("test error")
 
 	t.Run("Continue if error opening the browser", func(t *testing.T) {
-		browserMock := browser.NewMockInterface(t)
+		browserMock := browser_mock.NewMockInterface(t)
 		deviceCode := &DeviceCode{
 			Browser: browserMock,
 			Logger:  logger.New(t),
@@ -165,7 +165,7 @@ func TestDeviceCode_openURL(t *testing.T) {
 	})
 
 	t.Run("SkipOpenBrowser is set", func(t *testing.T) {
-		browserMock := browser.NewMockInterface(t)
+		browserMock := browser_mock.NewMockInterface(t)
 		deviceCode := &DeviceCode{
 			Browser: browserMock,
 			Logger:  logger.New(t),
@@ -174,7 +174,7 @@ func TestDeviceCode_openURL(t *testing.T) {
 	})
 
 	t.Run("BrowserCommand is set", func(t *testing.T) {
-		browserMock := browser.NewMockInterface(t)
+		browserMock := browser_mock.NewMockInterface(t)
 		deviceCode := &DeviceCode{
 			Browser: browserMock,
 			Logger:  logger.New(t),

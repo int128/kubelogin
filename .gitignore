@@ -1,5 +1,7 @@
 /.idea
 
+/tools/bin
+
 /acceptance_test/output/
 
 /coverage.out
