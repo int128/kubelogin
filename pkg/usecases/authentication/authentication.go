@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
@@ -48,8 +47,7 @@ type GrantOptionSet struct {
 
 // Output represents an output DTO of the Authentication use-case.
 type Output struct {
-	AlreadyHasValidIDToken bool
-	TokenSet               oidc.TokenSet
+	TokenSet oidc.TokenSet
 }
 
 // Authentication provides the internal use-case of authentication.
@@ -67,7 +65,6 @@ type Output struct {
 type Authentication struct {
 	ClientFactory    client.FactoryInterface
 	Logger           logger.Interface
-	Clock            clock.Interface
 	AuthCodeBrowser  *authcode.Browser
 	AuthCodeKeyboard *authcode.Keyboard
 	ROPC             *ropc.ROPC
@@ -75,29 +72,6 @@ type Authentication struct {
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
-	if in.CachedTokenSet != nil {
-		if in.ForceRefresh {
-			u.Logger.V(1).Infof("forcing refresh of the existing token")
-		} else {
-			u.Logger.V(1).Infof("checking expiration of the existing token")
-			// Skip verification of the token to reduce time of a discovery request.
-			// Here it trusts the signature and claims and checks only expiration,
-			// because the token has been verified before caching.
-			claims, err := in.CachedTokenSet.DecodeWithoutVerify()
-			if err != nil {
-				return nil, fmt.Errorf("invalid token cache (you may need to remove): %w", err)
-			}
-			if !claims.IsExpired(u.Clock) {
-				u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
-				return &Output{
-					AlreadyHasValidIDToken: true,
-					TokenSet:               *in.CachedTokenSet,
-				}, nil
-			}
-			u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
-		}
-	}
-
 	u.Logger.V(1).Infof("initializing an OpenID Connect client")
 	oidcClient, err := u.ClientFactory.New(ctx, in.Provider, in.TLSClientConfig, in.UseAccessToken)
 	if err != nil {

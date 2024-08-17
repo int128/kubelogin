@@ -8,11 +8,9 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/credentialplugin/writer_mock"
-	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/infrastructure/mutex_mock"
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/tokencache/repository_mock"
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/authentication_mock"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
-	"github.com/int128/kubelogin/pkg/infrastructure/mutex"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 
 	"github.com/int128/kubelogin/pkg/oidc"
@@ -83,7 +81,6 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
-			Mutex:                mutex_mock.NewMockInterface(t),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -127,18 +124,10 @@ func TestGetToken_Do(t *testing.T) {
 		mockWriter.EXPECT().
 			Write(issuedOutput).
 			Return(nil)
-		mockMutex := mutex_mock.NewMockInterface(t)
-		mockMutex.EXPECT().
-			Acquire(ctx, "get-token-8080").
-			Return(&mutex.Lock{Data: "testData"}, nil)
-		mockMutex.EXPECT().
-			Release(&mutex.Lock{Data: "testData"}).
-			Return(nil)
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
-			Mutex:                mockMutex,
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -185,7 +174,6 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
-			Mutex:                mutex_mock.NewMockInterface(t),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -208,8 +196,7 @@ func TestGetToken_Do(t *testing.T) {
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{
-				AlreadyHasValidIDToken: true,
-				TokenSet:               issuedTokenSet,
+				TokenSet: issuedTokenSet,
 			}, nil)
 		mockRepository := repository_mock.NewMockInterface(t)
 		mockRepository.EXPECT().
@@ -227,7 +214,6 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
-			Mutex:                mutex_mock.NewMockInterface(t),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err != nil {
@@ -261,7 +247,6 @@ func TestGetToken_Do(t *testing.T) {
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               writer_mock.NewMockInterface(t),
-			Mutex:                mutex_mock.NewMockInterface(t),
 			Logger:               logger.New(t),
 		}
 		if err := u.Do(ctx, in); err == nil {

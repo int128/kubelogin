@@ -7,12 +7,13 @@
 package di
 
 import (
+	"os"
+
 	"github.com/int128/kubelogin/pkg/cmd"
 	writer2 "github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
-	"github.com/int128/kubelogin/pkg/infrastructure/mutex"
 	"github.com/int128/kubelogin/pkg/infrastructure/reader"
 	"github.com/int128/kubelogin/pkg/infrastructure/stdio"
 	loader2 "github.com/int128/kubelogin/pkg/kubeconfig/loader"
@@ -27,7 +28,6 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
-	"os"
 )
 
 // Injectors from di.go:
@@ -78,7 +78,6 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	authenticationAuthentication := &authentication.Authentication{
 		ClientFactory:    factory,
 		Logger:           loggerInterface,
-		Clock:            clockInterface,
 		AuthCodeBrowser:  authcodeBrowser,
 		AuthCodeKeyboard: keyboard,
 		ROPC:             ropcROPC,
@@ -91,6 +90,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		KubeconfigLoader: loader3,
 		KubeconfigWriter: writerWriter,
 		Logger:           loggerInterface,
+		Clock:            clockInterface,
 	}
 	root := &cmd.Root{
 		Standalone: standaloneStandalone,
@@ -100,15 +100,12 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	writer3 := &writer2.Writer{
 		Stdout: stdout,
 	}
-	mutexMutex := &mutex.Mutex{
-		Logger: loggerInterface,
-	}
 	getToken := &credentialplugin.GetToken{
 		Authentication:       authenticationAuthentication,
 		TokenCacheRepository: repositoryRepository,
 		Writer:               writer3,
-		Mutex:                mutexMutex,
 		Logger:               loggerInterface,
+		Clock:                clockInterface,
 	}
 	cmdGetToken := &cmd.GetToken{
 		GetToken: getToken,

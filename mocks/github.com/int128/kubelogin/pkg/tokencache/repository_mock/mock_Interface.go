@@ -3,6 +3,8 @@
 package repository_mock
 
 import (
+	io "io"
+
 	oidc "github.com/int128/kubelogin/pkg/oidc"
 	mock "github.com/stretchr/testify/mock"
 
@@ -77,6 +79,65 @@ func (_c *MockInterface_FindByKey_Call) Return(_a0 *oidc.TokenSet, _a1 error) *M
 }
 
 func (_c *MockInterface_FindByKey_Call) RunAndReturn(run func(string, tokencache.Key) (*oidc.TokenSet, error)) *MockInterface_FindByKey_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Lock provides a mock function with given fields: dir, key
+func (_m *MockInterface) Lock(dir string, key tokencache.Key) (io.Closer, error) {
+	ret := _m.Called(dir, key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Lock")
+	}
+
+	var r0 io.Closer
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, tokencache.Key) (io.Closer, error)); ok {
+		return rf(dir, key)
+	}
+	if rf, ok := ret.Get(0).(func(string, tokencache.Key) io.Closer); ok {
+		r0 = rf(dir, key)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(io.Closer)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, tokencache.Key) error); ok {
+		r1 = rf(dir, key)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockInterface_Lock_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Lock'
+type MockInterface_Lock_Call struct {
+	*mock.Call
+}
+
+// Lock is a helper method to define mock.On call
+//   - dir string
+//   - key tokencache.Key
+func (_e *MockInterface_Expecter) Lock(dir interface{}, key interface{}) *MockInterface_Lock_Call {
+	return &MockInterface_Lock_Call{Call: _e.mock.On("Lock", dir, key)}
+}
+
+func (_c *MockInterface_Lock_Call) Run(run func(dir string, key tokencache.Key)) *MockInterface_Lock_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(tokencache.Key))
+	})
+	return _c
+}
+
+func (_c *MockInterface_Lock_Call) Return(_a0 io.Closer, _a1 error) *MockInterface_Lock_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockInterface_Lock_Call) RunAndReturn(run func(string, tokencache.Key) (io.Closer, error)) *MockInterface_Lock_Call {
 	_c.Call.Return(run)
 	return _c
 }
