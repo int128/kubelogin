@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/infrastructure/browser"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/infrastructure/browser_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -29,7 +30,7 @@ func TestBrowser_Do(t *testing.T) {
 			RedirectURLHostname:        "localhost",
 			AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
 		}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			SupportedPKCEMethods().
 			Return(nil)
@@ -83,7 +84,7 @@ func TestBrowser_Do(t *testing.T) {
 			BindAddress:           []string{"127.0.0.1:8000"},
 			AuthenticationTimeout: 10 * time.Second,
 		}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			SupportedPKCEMethods().
 			Return(nil)
@@ -96,7 +97,7 @@ func TestBrowser_Do(t *testing.T) {
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockBrowser := browser.NewMockInterface(t)
+		mockBrowser := browser_mock.NewMockInterface(t)
 		mockBrowser.EXPECT().
 			Open("LOCAL_SERVER_URL").
 			Return(nil)
@@ -125,7 +126,7 @@ func TestBrowser_Do(t *testing.T) {
 			BrowserCommand:        "firefox",
 			AuthenticationTimeout: 10 * time.Second,
 		}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			SupportedPKCEMethods().
 			Return(nil)
@@ -138,7 +139,7 @@ func TestBrowser_Do(t *testing.T) {
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockBrowser := browser.NewMockInterface(t)
+		mockBrowser := browser_mock.NewMockInterface(t)
 		mockBrowser.EXPECT().
 			OpenCommand(mock.Anything, "LOCAL_SERVER_URL", "firefox").
 			Return(nil)

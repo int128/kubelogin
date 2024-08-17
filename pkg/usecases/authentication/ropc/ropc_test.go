@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/int128/kubelogin/pkg/infrastructure/reader"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/infrastructure/reader_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
-	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/stretchr/testify/mock"
 )
@@ -21,14 +21,14 @@ func TestROPC_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		o := &Option{}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			GetTokenByROPC(mock.Anything, "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockReader := reader.NewMockInterface(t)
+		mockReader := reader_mock.NewMockInterface(t)
 		mockReader.EXPECT().ReadString(usernamePrompt).Return("USER", nil)
 		mockReader.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
 		u := ROPC{
@@ -55,7 +55,7 @@ func TestROPC_Do(t *testing.T) {
 			Username: "USER",
 			Password: "PASS",
 		}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			GetTokenByROPC(mock.Anything, "USER", "PASS").
 			Return(&oidc.TokenSet{
@@ -84,14 +84,14 @@ func TestROPC_Do(t *testing.T) {
 		o := &Option{
 			Username: "USER",
 		}
-		mockClient := client.NewMockInterface(t)
+		mockClient := client_mock.NewMockInterface(t)
 		mockClient.EXPECT().
 			GetTokenByROPC(mock.Anything, "USER", "PASS").
 			Return(&oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
 			}, nil)
-		mockEnv := reader.NewMockInterface(t)
+		mockEnv := reader_mock.NewMockInterface(t)
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("PASS", nil)
 		u := ROPC{
 			Reader: mockEnv,
@@ -116,13 +116,13 @@ func TestROPC_Do(t *testing.T) {
 		o := &Option{
 			Username: "USER",
 		}
-		mockEnv := reader.NewMockInterface(t)
+		mockEnv := reader_mock.NewMockInterface(t)
 		mockEnv.EXPECT().ReadPassword(passwordPrompt).Return("", errors.New("error"))
 		u := ROPC{
 			Reader: mockEnv,
 			Logger: logger.New(t),
 		}
-		out, err := u.Do(ctx, o, client.NewMockInterface(t))
+		out, err := u.Do(ctx, o, client_mock.NewMockInterface(t))
 		if err == nil {
 			t.Errorf("err wants non-nil but nil")
 		}

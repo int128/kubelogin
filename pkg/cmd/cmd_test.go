@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/credentialplugin_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/standalone_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
@@ -61,7 +63,7 @@ func TestCmd_Run(t *testing.T) {
 		for name, c := range tests {
 			t.Run(name, func(t *testing.T) {
 				ctx := context.TODO()
-				mockStandalone := standalone.NewMockInterface(t)
+				mockStandalone := standalone_mock.NewMockInterface(t)
 				mockStandalone.EXPECT().
 					Do(ctx, c.in).
 					Return(nil)
@@ -82,7 +84,7 @@ func TestCmd_Run(t *testing.T) {
 		t.Run("TooManyArgs", func(t *testing.T) {
 			cmd := Cmd{
 				Root: &Root{
-					Standalone: standalone.NewMockInterface(t),
+					Standalone: standalone_mock.NewMockInterface(t),
 					Logger:     logger.New(t),
 				},
 				Logger: logger.New(t),
@@ -212,7 +214,7 @@ func TestCmd_Run(t *testing.T) {
 		for name, c := range tests {
 			t.Run(name, func(t *testing.T) {
 				ctx := context.TODO()
-				getToken := credentialplugin.NewMockInterface(t)
+				getToken := credentialplugin_mock.NewMockInterface(t)
 				getToken.EXPECT().
 					Do(ctx, c.in).
 					Return(nil)
@@ -240,7 +242,7 @@ func TestCmd_Run(t *testing.T) {
 					Logger: logger.New(t),
 				},
 				GetToken: &GetToken{
-					GetToken: credentialplugin.NewMockInterface(t),
+					GetToken: credentialplugin_mock.NewMockInterface(t),
 					Logger:   logger.New(t),
 				},
 				Logger: logger.New(t),
@@ -258,7 +260,7 @@ func TestCmd_Run(t *testing.T) {
 					Logger: logger.New(t),
 				},
 				GetToken: &GetToken{
-					GetToken: credentialplugin.NewMockInterface(t),
+					GetToken: credentialplugin_mock.NewMockInterface(t),
 					Logger:   logger.New(t),
 				},
 				Logger: logger.New(t),
