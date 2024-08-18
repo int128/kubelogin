@@ -6,3 +6,6 @@ packages:
     config:
       all: true
       recursive: true
+  io:
+    interfaces:
+      Closer:

@@ -10,7 +10,9 @@ import (
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/credentialplugin/writer_mock"
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/tokencache/repository_mock"
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/authentication_mock"
+	"github.com/int128/kubelogin/mocks/io_mock"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
+	"github.com/int128/kubelogin/pkg/testing/clock"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 
 	"github.com/int128/kubelogin/pkg/oidc"
@@ -27,11 +29,11 @@ func TestGetToken_Do(t *testing.T) {
 		ClientID:     "YOUR_CLIENT_ID",
 		ClientSecret: "YOUR_CLIENT_SECRET",
 	}
-	issuedIDTokenExpiration := time.Now().Add(1 * time.Hour).Round(time.Second)
+	expiryTime := time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC).Local()
 	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
 		claims.Issuer = "https://accounts.google.com"
 		claims.Subject = "YOUR_SUBJECT"
-		claims.ExpiresAt = jwt.NewNumericDate(issuedIDTokenExpiration)
+		claims.ExpiresAt = jwt.NewNumericDate(expiryTime)
 	})
 	issuedTokenSet := oidc.TokenSet{
 		IDToken:      issuedIDToken,
@@ -39,7 +41,7 @@ func TestGetToken_Do(t *testing.T) {
 	}
 	issuedOutput := credentialplugin.Output{
 		Token:  issuedIDToken,
-		Expiry: issuedIDTokenExpiration,
+		Expiry: expiryTime,
 	}
 	grantOptionSet := authentication.GrantOptionSet{
 		AuthCodeBrowserOption: &authcode.BrowserOption{
@@ -66,10 +68,17 @@ func TestGetToken_Do(t *testing.T) {
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
+		mockCloser := io_mock.NewMockCloser(t)
+		mockCloser.EXPECT().
+			Close().
+			Return(nil)
 		mockRepository := repository_mock.NewMockInterface(t)
 		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokenCacheKey).
 			Return(nil, errors.New("file not found"))
+		mockRepository.EXPECT().
+			Lock("/path/to/token-cache", tokenCacheKey).
+			Return(mockCloser, nil)
 		mockRepository.EXPECT().
 			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet).
 			Return(nil)
@@ -82,53 +91,7 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
 			Logger:               logger.New(t),
-		}
-		if err := u.Do(ctx, in); err != nil {
-			t.Errorf("Do returned error: %+v", err)
-		}
-	})
-
-	t.Run("NeedBindPortMutex", func(t *testing.T) {
-		grantOptionSet := authentication.GrantOptionSet{
-			AuthCodeBrowserOption: &authcode.BrowserOption{
-				BindAddress: []string{"127.0.0.1:8080"},
-			},
-		}
-		tokenCacheKey := tokencache.Key{
-			IssuerURL:    "https://accounts.google.com",
-			ClientID:     "YOUR_CLIENT_ID",
-			ClientSecret: "YOUR_CLIENT_SECRET",
-		}
-
-		ctx := context.TODO()
-		in := Input{
-			Provider:       dummyProvider,
-			TokenCacheDir:  "/path/to/token-cache",
-			GrantOptionSet: grantOptionSet,
-		}
-		mockAuthentication := authentication_mock.NewMockInterface(t)
-		mockAuthentication.EXPECT().
-			Do(ctx, authentication.Input{
-				Provider:       dummyProvider,
-				GrantOptionSet: grantOptionSet,
-			}).
-			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
-		mockRepository := repository_mock.NewMockInterface(t)
-		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokenCacheKey).
-			Return(nil, errors.New("file not found"))
-		mockRepository.EXPECT().
-			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet).
-			Return(nil)
-		mockWriter := writer_mock.NewMockInterface(t)
-		mockWriter.EXPECT().
-			Write(issuedOutput).
-			Return(nil)
-		u := GetToken{
-			Authentication:       mockAuthentication,
-			TokenCacheRepository: mockRepository,
-			Writer:               mockWriter,
-			Logger:               logger.New(t),
+			Clock:                clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -159,10 +122,17 @@ func TestGetToken_Do(t *testing.T) {
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
+		mockCloser := io_mock.NewMockCloser(t)
+		mockCloser.EXPECT().
+			Close().
+			Return(nil)
 		mockRepository := repository_mock.NewMockInterface(t)
 		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokenCacheKey).
 			Return(nil, errors.New("file not found"))
+		mockRepository.EXPECT().
+			Lock("/path/to/token-cache", tokenCacheKey).
+			Return(mockCloser, nil)
 		mockRepository.EXPECT().
 			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet).
 			Return(nil)
@@ -175,6 +145,7 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
 			Logger:               logger.New(t),
+			Clock:                clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -188,16 +159,6 @@ func TestGetToken_Do(t *testing.T) {
 			TokenCacheDir:  "/path/to/token-cache",
 			GrantOptionSet: grantOptionSet,
 		}
-		mockAuthentication := authentication_mock.NewMockInterface(t)
-		mockAuthentication.EXPECT().
-			Do(ctx, authentication.Input{
-				Provider:       dummyProvider,
-				CachedTokenSet: &issuedTokenSet,
-				GrantOptionSet: grantOptionSet,
-			}).
-			Return(&authentication.Output{
-				TokenSet: issuedTokenSet,
-			}, nil)
 		mockRepository := repository_mock.NewMockInterface(t)
 		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
@@ -211,10 +172,11 @@ func TestGetToken_Do(t *testing.T) {
 			Write(issuedOutput).
 			Return(nil)
 		u := GetToken{
-			Authentication:       mockAuthentication,
+			Authentication:       authentication_mock.NewMockInterface(t),
 			TokenCacheRepository: mockRepository,
 			Writer:               mockWriter,
 			Logger:               logger.New(t),
+			Clock:                clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -222,6 +184,11 @@ func TestGetToken_Do(t *testing.T) {
 	})
 
 	t.Run("AuthenticationError", func(t *testing.T) {
+		tokenCacheKey := tokencache.Key{
+			IssuerURL:    "https://accounts.google.com",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
+		}
 		ctx := context.TODO()
 		in := Input{
 			Provider:       dummyProvider,
@@ -235,6 +202,10 @@ func TestGetToken_Do(t *testing.T) {
 				GrantOptionSet: grantOptionSet,
 			}).
 			Return(nil, errors.New("authentication error"))
+		mockCloser := io_mock.NewMockCloser(t)
+		mockCloser.EXPECT().
+			Close().
+			Return(nil)
 		mockRepository := repository_mock.NewMockInterface(t)
 		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
@@ -243,11 +214,15 @@ func TestGetToken_Do(t *testing.T) {
 				ClientSecret: "YOUR_CLIENT_SECRET",
 			}).
 			Return(nil, errors.New("file not found"))
+		mockRepository.EXPECT().
+			Lock("/path/to/token-cache", tokenCacheKey).
+			Return(mockCloser, nil)
 		u := GetToken{
 			Authentication:       mockAuthentication,
 			TokenCacheRepository: mockRepository,
 			Writer:               writer_mock.NewMockInterface(t),
 			Logger:               logger.New(t),
+			Clock:                clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")

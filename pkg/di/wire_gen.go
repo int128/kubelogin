@@ -7,8 +7,6 @@
 package di
 
 import (
-	"os"
-
 	"github.com/int128/kubelogin/pkg/cmd"
 	writer2 "github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
@@ -28,6 +26,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
+	"os"
 )
 
 // Injectors from di.go:
