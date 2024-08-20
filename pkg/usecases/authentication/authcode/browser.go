@@ -63,12 +63,15 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 		LocalServerKeyFile:     o.LocalServerKeyFile,
 	}
 
+	success := false
 	ctx, cancel := context.WithTimeout(ctx, o.AuthenticationTimeout)
 	defer cancel()
 	defer func() {
-		o.AuthenticationTimeout = o.AuthenticationTimeout * 2
-		if o.AuthenticationTimeout > 4*time.Hour {
-			o.AuthenticationTimeout = 4 * time.Hour
+		if !success {
+			o.AuthenticationTimeout = o.AuthenticationTimeout * 2
+			if o.AuthenticationTimeout > 4*time.Hour {
+				o.AuthenticationTimeout = 4 * time.Hour
+			}
 		}
 	}()
 	readyChan := make(chan string, 1)
@@ -99,6 +102,7 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 	if err := eg.Wait(); err != nil {
 		return nil, fmt.Errorf("authentication error: %w", err)
 	}
+	success = true
 	o.AuthenticationTimeout = o.ConfiguredTimeout
 	u.Logger.V(1).Infof("finished the authorization code flow via the browser")
 	return out, nil
