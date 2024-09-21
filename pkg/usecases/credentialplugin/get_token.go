@@ -63,6 +63,19 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	if in.GrantOptionSet.ROPCOption != nil {
 		tokenCacheKey.Username = in.GrantOptionSet.ROPCOption.Username
 	}
+
+	u.Logger.V(1).Infof("acquiring the lock of token cache")
+	lock, err := u.TokenCacheRepository.Lock(in.TokenCacheDir, tokenCacheKey)
+	if err != nil {
+		return fmt.Errorf("could not lock the token cache: %w", err)
+	}
+	defer func() {
+		u.Logger.V(1).Infof("releasing the lock of token cache")
+		if err := lock.Close(); err != nil {
+			u.Logger.Printf("could not unlock the token cache: %s", err)
+		}
+	}()
+
 	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, tokenCacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
@@ -93,18 +106,6 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 			u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
 		}
 	}
-
-	u.Logger.V(1).Infof("acquiring the lock of token cache")
-	lock, err := u.TokenCacheRepository.Lock(in.TokenCacheDir, tokenCacheKey)
-	if err != nil {
-		return fmt.Errorf("could not lock the token cache: %w", err)
-	}
-	defer func() {
-		u.Logger.V(1).Infof("releasing the lock of token cache")
-		if err := lock.Close(); err != nil {
-			u.Logger.Printf("could not unlock the token cache: %s", err)
-		}
-	}()
 
 	authenticationInput := authentication.Input{
 		Provider:        in.Provider,
