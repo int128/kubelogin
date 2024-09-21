@@ -6,9 +6,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/gofrs/flock"
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tokencache"
@@ -23,6 +25,7 @@ var Set = wire.NewSet(
 type Interface interface {
 	FindByKey(dir string, key tokencache.Key) (*oidc.TokenSet, error)
 	Save(dir string, key tokencache.Key, tokenSet oidc.TokenSet) error
+	Lock(dir string, key tokencache.Key) (io.Closer, error)
 }
 
 type entity struct {
@@ -78,6 +81,22 @@ func (r *Repository) Save(dir string, key tokencache.Key, tokenSet oidc.TokenSet
 		return fmt.Errorf("json encode error: %w", err)
 	}
 	return nil
+}
+
+func (r *Repository) Lock(dir string, key tokencache.Key) (io.Closer, error) {
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return nil, fmt.Errorf("could not create directory %s: %w", dir, err)
+	}
+	filename, err := computeFilename(key)
+	if err != nil {
+		return nil, fmt.Errorf("could not compute the key: %w", err)
+	}
+	p := filepath.Join(dir, filename)
+	f := flock.New(p)
+	if err := f.Lock(); err != nil {
+		return nil, fmt.Errorf("could not lock the cache file %s: %w", p, err)
+	}
+	return f, nil
 }
 
 func computeFilename(key tokencache.Key) (string, error) {

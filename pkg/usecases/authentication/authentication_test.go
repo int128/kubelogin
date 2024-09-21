@@ -11,7 +11,6 @@ import (
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
-	"github.com/int128/kubelogin/pkg/testing/clock"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	testingLogger "github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
@@ -35,35 +34,6 @@ func TestAuthentication_Do(t *testing.T) {
 		claims.Issuer = "https://accounts.google.com"
 		claims.Subject = "YOUR_SUBJECT"
 		claims.ExpiresAt = jwt.NewNumericDate(expiryTime)
-	})
-
-	t.Run("HasValidIDToken", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		in := Input{
-			Provider:        dummyProvider,
-			TLSClientConfig: dummyTLSClientConfig,
-			CachedTokenSet: &oidc.TokenSet{
-				IDToken: issuedIDToken,
-			},
-		}
-		u := Authentication{
-			Logger: testingLogger.New(t),
-			Clock:  clock.Fake(expiryTime.Add(-time.Hour)),
-		}
-		got, err := u.Do(ctx, in)
-		if err != nil {
-			t.Errorf("Do returned error: %+v", err)
-		}
-		want := &Output{
-			AlreadyHasValidIDToken: true,
-			TokenSet: oidc.TokenSet{
-				IDToken: issuedIDToken,
-			},
-		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("mismatch (-want +got):\n%s", diff)
-		}
 	})
 
 	t.Run("HasValidRefreshToken", func(t *testing.T) {
@@ -91,7 +61,6 @@ func TestAuthentication_Do(t *testing.T) {
 		u := Authentication{
 			ClientFactory: mockClientFactory,
 			Logger:        testingLogger.New(t),
-			Clock:         clock.Fake(expiryTime.Add(+time.Hour)),
 		}
 		got, err := u.Do(ctx, in)
 		if err != nil {
@@ -149,7 +118,6 @@ func TestAuthentication_Do(t *testing.T) {
 		u := Authentication{
 			ClientFactory: mockClientFactory,
 			Logger:        testingLogger.New(t),
-			Clock:         clock.Fake(expiryTime.Add(+time.Hour)),
 			AuthCodeBrowser: &authcode.Browser{
 				Logger: testingLogger.New(t),
 			},

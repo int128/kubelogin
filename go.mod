@@ -3,9 +3,9 @@ module github.com/int128/kubelogin
 go 1.22.2
 
 require (
-	github.com/alexflint/go-filemutex v1.3.0
 	github.com/chromedp/chromedp v0.10.0
 	github.com/coreos/go-oidc/v3 v3.11.0
+	github.com/gofrs/flock v0.12.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/go-cmp v0.6.0
 	github.com/google/wire v0.6.0

@@ -11,7 +11,6 @@ import (
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
-	"github.com/int128/kubelogin/pkg/infrastructure/mutex"
 	"github.com/int128/kubelogin/pkg/infrastructure/reader"
 	"github.com/int128/kubelogin/pkg/infrastructure/stdio"
 	kubeconfigLoader "github.com/int128/kubelogin/pkg/kubeconfig/loader"
@@ -57,7 +56,6 @@ func NewCmdForHeadless(clock.Interface, stdio.Stdin, stdio.Stdout, logger.Interf
 		client.Set,
 		loader.Set,
 		writer.Set,
-		mutex.Set,
 	)
 	return nil
 }

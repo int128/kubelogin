@@ -12,6 +12,7 @@ import (
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/authentication_mock"
 	"github.com/int128/kubelogin/pkg/kubeconfig"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/testing/clock"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
@@ -19,11 +20,11 @@ import (
 )
 
 func TestStandalone_Do(t *testing.T) {
-	issuedIDTokenExpiration := time.Now().Add(1 * time.Hour).Round(time.Second)
+	expiryTime := time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC)
 	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
 		claims.Issuer = "https://accounts.google.com"
 		claims.Subject = "YOUR_SUBJECT"
-		claims.ExpiresAt = jwt.NewNumericDate(issuedIDTokenExpiration)
+		claims.ExpiresAt = jwt.NewNumericDate(expiryTime)
 	})
 
 	t.Run("FullOptions", func(t *testing.T) {
@@ -87,6 +88,7 @@ func TestStandalone_Do(t *testing.T) {
 			KubeconfigLoader: mockLoader,
 			KubeconfigWriter: mockWriter,
 			Logger:           logger.New(t),
+			Clock:            clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -108,28 +110,11 @@ func TestStandalone_Do(t *testing.T) {
 		mockLoader.EXPECT().
 			GetCurrentAuthProvider("", kubeconfig.ContextName(""), kubeconfig.UserName("")).
 			Return(currentAuthProvider, nil)
-		mockAuthentication := authentication_mock.NewMockInterface(t)
-		mockAuthentication.EXPECT().
-			Do(ctx, authentication.Input{
-				Provider: oidc.Provider{
-					IssuerURL:    "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
-				CachedTokenSet: &oidc.TokenSet{
-					IDToken: issuedIDToken,
-				},
-			}).
-			Return(&authentication.Output{
-				AlreadyHasValidIDToken: true,
-				TokenSet: oidc.TokenSet{
-					IDToken: issuedIDToken,
-				},
-			}, nil)
 		u := Standalone{
-			Authentication:   mockAuthentication,
+			Authentication:   authentication_mock.NewMockInterface(t),
 			KubeconfigLoader: mockLoader,
 			Logger:           logger.New(t),
+			Clock:            clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -148,6 +133,7 @@ func TestStandalone_Do(t *testing.T) {
 			Authentication:   mockAuthentication,
 			KubeconfigLoader: mockLoader,
 			Logger:           logger.New(t),
+			Clock:            clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -182,6 +168,7 @@ func TestStandalone_Do(t *testing.T) {
 			Authentication:   mockAuthentication,
 			KubeconfigLoader: mockLoader,
 			Logger:           logger.New(t),
+			Clock:            clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
@@ -234,6 +221,7 @@ func TestStandalone_Do(t *testing.T) {
 			KubeconfigLoader: mockLoader,
 			KubeconfigWriter: mockWriter,
 			Logger:           logger.New(t),
+			Clock:            clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")
