@@ -22,7 +22,7 @@ on:
 
 jobs:
   check:
-    uses: int128/go-workflows/.github/workflows/check.yaml@v0.3.0
+    uses: int128/go-workflows/.github/workflows/check.yaml@v0.4.0
     with:
         go-version: 1.23.1
         golangci-lint-version: v1.61.0
