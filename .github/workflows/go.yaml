@@ -7,6 +7,8 @@ on:
     paths:
       - .github/workflows/go.yaml
       - pkg/**
+      - integration_test/**
+      - mocks/**
       - tools/**
       - go.*
     tags:
@@ -17,6 +19,8 @@ on:
     paths:
       - .github/workflows/go.yaml
       - pkg/**
+      - integration_test/**
+      - mocks/**
       - tools/**
       - go.*
 
@@ -37,7 +41,25 @@ jobs:
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-      - run: go test -v -race ./...
+      - run: go test -v -race ./pkg/...
+
+  integration-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - run: go test -v -race ./integration_test/...
 
   generate:
     runs-on: ubuntu-latest

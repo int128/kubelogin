@@ -83,20 +83,22 @@ func (r *Repository) Save(dir string, key tokencache.Key, tokenSet oidc.TokenSet
 	return nil
 }
 
-func (r *Repository) Lock(dir string, key tokencache.Key) (io.Closer, error) {
-	if err := os.MkdirAll(dir, 0700); err != nil {
-		return nil, fmt.Errorf("could not create directory %s: %w", dir, err)
+func (r *Repository) Lock(tokenCacheDir string, key tokencache.Key) (io.Closer, error) {
+	if err := os.MkdirAll(tokenCacheDir, 0700); err != nil {
+		return nil, fmt.Errorf("could not create directory %s: %w", tokenCacheDir, err)
 	}
-	filename, err := computeFilename(key)
+	keyDigest, err := computeFilename(key)
 	if err != nil {
 		return nil, fmt.Errorf("could not compute the key: %w", err)
 	}
-	p := filepath.Join(dir, filename)
-	f := flock.New(p)
-	if err := f.Lock(); err != nil {
-		return nil, fmt.Errorf("could not lock the cache file %s: %w", p, err)
+	// Do not lock the token cache file.
+	// https://github.com/int128/kubelogin/issues/1144
+	lockFilepath := filepath.Join(tokenCacheDir, keyDigest+".lock")
+	lockFile := flock.New(lockFilepath)
+	if err := lockFile.Lock(); err != nil {
+		return nil, fmt.Errorf("could not lock the cache file %s: %w", lockFilepath, err)
 	}
-	return f, nil
+	return lockFile, nil
 }
 
 func computeFilename(key tokencache.Key) (string, error) {
