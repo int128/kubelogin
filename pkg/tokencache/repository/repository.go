@@ -91,6 +91,8 @@ func (r *Repository) Lock(tokenCacheDir string, key tokencache.Key) (io.Closer, 
 	if err != nil {
 		return nil, fmt.Errorf("could not compute the key: %w", err)
 	}
+	// Do not lock the token cache file.
+	// https://github.com/int128/kubelogin/issues/1144
 	lockFilepath := filepath.Join(tokenCacheDir, keyDigest+".lock")
 	lockFile := flock.New(lockFilepath)
 	if err := lockFile.Lock(); err != nil {
