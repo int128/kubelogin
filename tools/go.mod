@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/google/wire v0.6.0
-	github.com/vektra/mockery/v2 v2.46.2
+	github.com/vektra/mockery/v2 v2.46.3
 )
 
 require (
