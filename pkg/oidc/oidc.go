@@ -11,11 +11,12 @@ import (
 
 // Provider represents an OIDC provider.
 type Provider struct {
-	IssuerURL    string
-	ClientID     string
-	ClientSecret string   // optional
-	ExtraScopes  []string // optional
-	UsePKCE      bool     // optional
+	IssuerURL      string
+	ClientID       string
+	ClientSecret   string   // optional
+	ExtraScopes    []string // optional
+	UsePKCE        bool     // optional
+	UseAccessToken bool     // optional
 }
 
 // TokenSet represents a set of ID token and refresh token.
