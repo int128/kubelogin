@@ -77,17 +77,17 @@ func (cmd *GetToken) New() *cobra.Command {
 			}
 			in := credentialplugin.Input{
 				Provider: oidc.Provider{
-					IssuerURL:    o.IssuerURL,
-					ClientID:     o.ClientID,
-					ClientSecret: o.ClientSecret,
-					UsePKCE:      o.UsePKCE,
-					ExtraScopes:  o.ExtraScopes,
+					IssuerURL:      o.IssuerURL,
+					ClientID:       o.ClientID,
+					ClientSecret:   o.ClientSecret,
+					UsePKCE:        o.UsePKCE,
+					UseAccessToken: o.UseAccessToken,
+					ExtraScopes:    o.ExtraScopes,
 				},
 				TokenCacheDir:   o.TokenCacheDir,
 				GrantOptionSet:  grantOptionSet,
 				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
 				ForceRefresh:    o.ForceRefresh,
-				UseAccessToken:  o.UseAccessToken,
 			}
 			if err := cmd.GetToken.Do(c.Context(), in); err != nil {
 				return fmt.Errorf("get-token: %w", err)

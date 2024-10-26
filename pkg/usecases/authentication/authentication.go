@@ -73,7 +73,7 @@ type Authentication struct {
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	u.Logger.V(1).Infof("initializing an OpenID Connect client")
-	oidcClient, err := u.ClientFactory.New(ctx, in.Provider, in.TLSClientConfig, in.UseAccessToken)
+	oidcClient, err := u.ClientFactory.New(ctx, in.Provider, in.TLSClientConfig)
 	if err != nil {
 		return nil, fmt.Errorf("oidc error: %w", err)
 	}

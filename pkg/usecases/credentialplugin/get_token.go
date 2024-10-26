@@ -36,7 +36,6 @@ type Input struct {
 	GrantOptionSet  authentication.GrantOptionSet
 	TLSClientConfig tlsclientconfig.Config
 	ForceRefresh    bool
-	UseAccessToken  bool
 }
 
 type GetToken struct {
@@ -113,7 +112,6 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		CachedTokenSet:  cachedTokenSet,
 		TLSClientConfig: in.TLSClientConfig,
 		ForceRefresh:    in.ForceRefresh,
-		UseAccessToken:  in.UseAccessToken,
 	}
 	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
 	if err != nil {
