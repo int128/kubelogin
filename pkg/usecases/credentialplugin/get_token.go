@@ -6,7 +6,6 @@ package credentialplugin
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
@@ -51,13 +50,8 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
 	tokenCacheKey := tokencache.Key{
-		IssuerURL:      in.Provider.IssuerURL,
-		ClientID:       in.Provider.ClientID,
-		ClientSecret:   in.Provider.ClientSecret,
-		ExtraScopes:    in.Provider.ExtraScopes,
-		CACertFilename: strings.Join(in.TLSClientConfig.CACertFilename, ","),
-		CACertData:     strings.Join(in.TLSClientConfig.CACertData, ","),
-		SkipTLSVerify:  in.TLSClientConfig.SkipTLSVerify,
+		Provider:        in.Provider,
+		TLSClientConfig: in.TLSClientConfig,
 	}
 	if in.GrantOptionSet.ROPCOption != nil {
 		tokenCacheKey.Username = in.GrantOptionSet.ROPCOption.Username
