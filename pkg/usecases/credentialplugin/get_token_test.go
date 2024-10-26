@@ -51,9 +51,11 @@ func TestGetToken_Do(t *testing.T) {
 
 	t.Run("NoTokenCache", func(t *testing.T) {
 		tokenCacheKey := tokencache.Key{
-			IssuerURL:    "https://accounts.google.com",
-			ClientID:     "YOUR_CLIENT_ID",
-			ClientSecret: "YOUR_CLIENT_SECRET",
+			Provider: oidc.Provider{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
 		}
 		ctx := context.TODO()
 		in := Input{
@@ -103,10 +105,12 @@ func TestGetToken_Do(t *testing.T) {
 			ROPCOption: &ropc.Option{Username: "YOUR_USERNAME"},
 		}
 		tokenCacheKey := tokencache.Key{
-			IssuerURL:    "https://accounts.google.com",
-			ClientID:     "YOUR_CLIENT_ID",
-			ClientSecret: "YOUR_CLIENT_SECRET",
-			Username:     "YOUR_USERNAME",
+			Provider: oidc.Provider{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+			Username: "YOUR_USERNAME",
 		}
 
 		ctx := context.TODO()
@@ -154,9 +158,11 @@ func TestGetToken_Do(t *testing.T) {
 
 	t.Run("HasValidIDToken", func(t *testing.T) {
 		tokenCacheKey := tokencache.Key{
-			IssuerURL:    "https://accounts.google.com",
-			ClientID:     "YOUR_CLIENT_ID",
-			ClientSecret: "YOUR_CLIENT_SECRET",
+			Provider: oidc.Provider{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
 		}
 
 		ctx := context.TODO()
@@ -175,9 +181,11 @@ func TestGetToken_Do(t *testing.T) {
 			Return(mockCloser, nil)
 		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
-				IssuerURL:    "https://accounts.google.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
+				Provider: oidc.Provider{
+					IssuerURL:    "https://accounts.google.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
+				},
 			}).
 			Return(&issuedTokenSet, nil)
 		mockWriter := writer_mock.NewMockInterface(t)
@@ -198,9 +206,11 @@ func TestGetToken_Do(t *testing.T) {
 
 	t.Run("AuthenticationError", func(t *testing.T) {
 		tokenCacheKey := tokencache.Key{
-			IssuerURL:    "https://accounts.google.com",
-			ClientID:     "YOUR_CLIENT_ID",
-			ClientSecret: "YOUR_CLIENT_SECRET",
+			Provider: oidc.Provider{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
 		}
 		ctx := context.TODO()
 		in := Input{
@@ -225,9 +235,11 @@ func TestGetToken_Do(t *testing.T) {
 			Return(mockCloser, nil)
 		mockRepository.EXPECT().
 			FindByKey("/path/to/token-cache", tokencache.Key{
-				IssuerURL:    "https://accounts.google.com",
-				ClientID:     "YOUR_CLIENT_ID",
-				ClientSecret: "YOUR_CLIENT_SECRET",
+				Provider: oidc.Provider{
+					IssuerURL:    "https://accounts.google.com",
+					ClientID:     "YOUR_CLIENT_ID",
+					ClientSecret: "YOUR_CLIENT_SECRET",
+				},
 			}).
 			Return(nil, errors.New("file not found"))
 		u := GetToken{
