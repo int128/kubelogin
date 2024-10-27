@@ -7,7 +7,8 @@ package di
 import (
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/cmd"
-	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
+	credentialpluginreader "github.com/int128/kubelogin/pkg/credentialplugin/reader"
+	credentialpluginwriter "github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
@@ -55,7 +56,8 @@ func NewCmdForHeadless(clock.Interface, stdio.Stdin, stdio.Stdout, logger.Interf
 		repository.Set,
 		client.Set,
 		loader.Set,
-		writer.Set,
+		credentialpluginreader.Set,
+		credentialpluginwriter.Set,
 	)
 	return nil
 }
