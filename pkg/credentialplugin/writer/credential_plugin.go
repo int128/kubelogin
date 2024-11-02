@@ -40,7 +40,7 @@ func (w *Writer) Write(out credentialplugin.Output) error {
 
 func generateExecCredential(out credentialplugin.Output) (any, error) {
 	switch out.ClientAuthenticationAPIVersion {
-	// Default to v1beta1 if KUBERNETES_EXEC_INFO is not available
+	// If the API version is not available, fall back to v1beta1.
 	case clientauthenticationv1beta1.SchemeGroupVersion.String(), "":
 		return &clientauthenticationv1beta1.ExecCredential{
 			TypeMeta: metav1.TypeMeta{

@@ -22,6 +22,8 @@ type Interface interface {
 
 type Reader struct{}
 
+// Read parses the environment variable KUBERNETES_EXEC_INFO.
+// If the environment variable is not given by kubectl, Read returns a zero value.
 func (r Reader) Read() (credentialplugin.Input, error) {
 	execInfo := os.Getenv("KUBERNETES_EXEC_INFO")
 	if execInfo == "" {
