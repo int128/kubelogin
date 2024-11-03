@@ -28,20 +28,29 @@ func main() {
 
 func runBrowser(ctx context.Context, url string) error {
 	execOpts := chromedp.DefaultExecAllocatorOptions[:]
-	execOpts = append(execOpts, chromedp.NoSandbox)
-	ctx, cancel := chromedp.NewExecAllocator(ctx, execOpts...)
-	defer cancel()
-	ctx, cancel = chromedp.NewContext(ctx, chromedp.WithLogf(log.Printf))
-	defer cancel()
-	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-	if err := logInToDex(ctx, url); err != nil {
+	execOpts = append(execOpts,
+		chromedp.NoSandbox,
+		chromedp.WSURLReadTimeout(30*time.Second),
+	)
+	ctx, cancelExec := chromedp.NewExecAllocator(ctx, execOpts...)
+	defer cancelExec()
+	ctx, cancelCtx := chromedp.NewContext(ctx, chromedp.WithLogf(log.Printf))
+	defer cancelCtx()
+	log.Printf("Opening a new browser and navigating to %s", url)
+	if err := openBrowser(ctx, url); err != nil {
+		return fmt.Errorf("could not open a new browser: %w", err)
+	}
+
+	ctx, cancelTimeout := context.WithTimeout(ctx, 30*time.Second)
+	defer cancelTimeout()
+	log.Printf("Logging in to Dex")
+	if err := logInToDex(ctx); err != nil {
 		return fmt.Errorf("could not run the browser: %w", err)
 	}
 	return nil
 }
 
-func logInToDex(ctx context.Context, url string) error {
+func openBrowser(ctx context.Context, url string) error {
 	for {
 		var location string
 		err := chromedp.Run(ctx,
@@ -51,14 +60,16 @@ func logInToDex(ctx context.Context, url string) error {
 		if err != nil {
 			return err
 		}
-		log.Printf("location: %s", location)
+		log.Printf("Location: %s", location)
 		if strings.HasPrefix(location, `http://`) || strings.HasPrefix(location, `https://`) {
-			break
+			return nil
 		}
 		time.Sleep(1 * time.Second)
 	}
+}
 
-	err := chromedp.Run(ctx,
+func logInToDex(ctx context.Context) error {
+	return chromedp.Run(ctx,
 		// https://dex-server:10443/dex/auth/local
 		chromedp.WaitVisible(`#login`),
 		logPageMetadata(),
@@ -73,10 +84,6 @@ func logInToDex(ctx context.Context, url string) error {
 		chromedp.WaitReady(`body`),
 		logPageMetadata(),
 	)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func logPageMetadata() chromedp.Action {
@@ -86,7 +93,7 @@ func logPageMetadata() chromedp.Action {
 		chromedp.Location(&location),
 		chromedp.Title(&title),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			log.Printf("location: %s [%s]", location, title)
+			log.Printf("Location: %s, Title: %s", location, title)
 			return nil
 		}),
 	}
