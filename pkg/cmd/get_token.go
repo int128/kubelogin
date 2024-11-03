@@ -6,6 +6,7 @@ import (
 
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -23,6 +24,8 @@ type getTokenOptions struct {
 	tlsOptions            tlsOptions
 	authenticationOptions authenticationOptions
 	ForceRefresh          bool
+	ForceKeyring          bool
+	NoKeyring             bool
 }
 
 func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
@@ -34,6 +37,8 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
 	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for token cache")
 	f.BoolVar(&o.ForceRefresh, "force-refresh", false, "If set, refresh the ID token regardless of its expiration time")
+	f.BoolVar(&o.ForceKeyring, "force-keyring", false, "If set, cached tokens will be stored in the OS keyring")
+	f.BoolVar(&o.NoKeyring, "no-keyring", false, "If set, cached tokens will be stored on disk")
 	o.tlsOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
 }
@@ -75,6 +80,13 @@ func (cmd *GetToken) New() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("get-token: %w", err)
 			}
+			tokenStorage := tokencache.StorageAuto
+			switch {
+			case o.ForceKeyring:
+				tokenStorage = tokencache.StorageKeyring
+			case o.NoKeyring:
+				tokenStorage = tokencache.StorageDisk
+			}
 			in := credentialplugin.Input{
 				Provider: oidc.Provider{
 					IssuerURL:      o.IssuerURL,
@@ -84,10 +96,11 @@ func (cmd *GetToken) New() *cobra.Command {
 					UseAccessToken: o.UseAccessToken,
 					ExtraScopes:    o.ExtraScopes,
 				},
-				TokenCacheDir:   o.TokenCacheDir,
-				GrantOptionSet:  grantOptionSet,
-				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
-				ForceRefresh:    o.ForceRefresh,
+				TokenCacheDir:     o.TokenCacheDir,
+				TokenCacheStorage: tokenStorage,
+				GrantOptionSet:    grantOptionSet,
+				TLSClientConfig:   o.tlsOptions.tlsClientConfig(),
+				ForceRefresh:      o.ForceRefresh,
 			}
 			if err := cmd.GetToken.Do(c.Context(), in); err != nil {
 				return fmt.Errorf("get-token: %w", err)

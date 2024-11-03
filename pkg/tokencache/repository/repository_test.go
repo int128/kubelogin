@@ -28,7 +28,7 @@ func TestRepository_FindByKey(t *testing.T) {
 			},
 		}
 		json := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}`
-		filename, err := computeFilename(key)
+		filename, err := computeChecksum(key)
 		if err != nil {
 			t.Errorf("could not compute the key: %s", err)
 		}
@@ -37,7 +37,7 @@ func TestRepository_FindByKey(t *testing.T) {
 			t.Fatalf("could not write to the temp file: %s", err)
 		}
 
-		got, err := r.FindByKey(dir, key)
+		got, err := r.FindByKey(dir, tokencache.StorageDisk, key)
 		if err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
@@ -65,11 +65,11 @@ func TestRepository_Save(t *testing.T) {
 			},
 		}
 		tokenSet := oidc.TokenSet{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
-		if err := r.Save(dir, key, tokenSet); err != nil {
+		if err := r.Save(dir, tokencache.StorageDisk, key, tokenSet); err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
 
-		filename, err := computeFilename(key)
+		filename, err := computeChecksum(key)
 		if err != nil {
 			t.Errorf("could not compute the key: %s", err)
 		}
@@ -78,8 +78,7 @@ func TestRepository_Save(t *testing.T) {
 		if err != nil {
 			t.Fatalf("could not read the token cache file: %s", err)
 		}
-		want := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}
-`
+		want := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}`
 		got := string(b)
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)

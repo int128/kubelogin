@@ -25,8 +25,10 @@ require (
 )
 
 require (
+	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	github.com/chromedp/cdproto v0.0.0-20241022234722-4d5d5faf59fb // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
+	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
@@ -34,6 +36,7 @@ require (
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
@@ -47,6 +50,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
+	github.com/zalando/go-keyring v0.2.6 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect

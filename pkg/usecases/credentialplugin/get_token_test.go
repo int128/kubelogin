@@ -81,13 +81,13 @@ func TestGetToken_Do(t *testing.T) {
 			Return(nil)
 		mockRepository := repository_mock.NewMockInterface(t)
 		mockRepository.EXPECT().
-			Lock("/path/to/token-cache", tokenCacheKey).
+			Lock("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey).
 			Return(mockCloser, nil)
 		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokenCacheKey).
+			FindByKey("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey).
 			Return(nil, errors.New("file not found"))
 		mockRepository.EXPECT().
-			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet).
+			Save("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey, issuedTokenSet).
 			Return(nil)
 		mockReader := reader_mock.NewMockInterface(t)
 		mockReader.EXPECT().
@@ -142,13 +142,13 @@ func TestGetToken_Do(t *testing.T) {
 			Return(nil)
 		mockRepository := repository_mock.NewMockInterface(t)
 		mockRepository.EXPECT().
-			Lock("/path/to/token-cache", tokenCacheKey).
+			Lock("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey).
 			Return(mockCloser, nil)
 		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokenCacheKey).
+			FindByKey("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey).
 			Return(nil, errors.New("file not found"))
 		mockRepository.EXPECT().
-			Save("/path/to/token-cache", tokenCacheKey, issuedTokenSet).
+			Save("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey, issuedTokenSet).
 			Return(nil)
 		mockReader := reader_mock.NewMockInterface(t)
 		mockReader.EXPECT().
@@ -192,10 +192,10 @@ func TestGetToken_Do(t *testing.T) {
 			Return(nil)
 		mockRepository := repository_mock.NewMockInterface(t)
 		mockRepository.EXPECT().
-			Lock("/path/to/token-cache", tokenCacheKey).
+			Lock("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey).
 			Return(mockCloser, nil)
 		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokencache.Key{
+			FindByKey("/path/to/token-cache", tokencache.StorageAuto, tokencache.Key{
 				Provider: oidc.Provider{
 					IssuerURL:    "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
@@ -251,10 +251,10 @@ func TestGetToken_Do(t *testing.T) {
 			Return(nil)
 		mockRepository := repository_mock.NewMockInterface(t)
 		mockRepository.EXPECT().
-			Lock("/path/to/token-cache", tokenCacheKey).
+			Lock("/path/to/token-cache", tokencache.StorageAuto, tokenCacheKey).
 			Return(mockCloser, nil)
 		mockRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokencache.Key{
+			FindByKey("/path/to/token-cache", tokencache.StorageAuto, tokencache.Key{
 				Provider: oidc.Provider{
 					IssuerURL:    "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
