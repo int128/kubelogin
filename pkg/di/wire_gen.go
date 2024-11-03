@@ -8,6 +8,7 @@ package di
 
 import (
 	"github.com/int128/kubelogin/pkg/cmd"
+	reader2 "github.com/int128/kubelogin/pkg/credentialplugin/reader"
 	writer2 "github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
@@ -96,15 +97,17 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		Logger:     loggerInterface,
 	}
 	repositoryRepository := &repository.Repository{}
+	reader3 := &reader2.Reader{}
 	writer3 := &writer2.Writer{
 		Stdout: stdout,
 	}
 	getToken := &credentialplugin.GetToken{
-		Authentication:       authenticationAuthentication,
-		TokenCacheRepository: repositoryRepository,
-		Writer:               writer3,
-		Logger:               loggerInterface,
-		Clock:                clockInterface,
+		Authentication:         authenticationAuthentication,
+		TokenCacheRepository:   repositoryRepository,
+		CredentialPluginReader: reader3,
+		CredentialPluginWriter: writer3,
+		Logger:                 loggerInterface,
+		Clock:                  clockInterface,
 	}
 	cmdGetToken := &cmd.GetToken{
 		GetToken: getToken,

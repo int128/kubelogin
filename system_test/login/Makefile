@@ -19,7 +19,8 @@ test: build
 		--browser-command=$(BIN_DIR)/chromelogin
 	# set up the kubeconfig
 	kubectl config set-credentials oidc \
-		--exec-api-version=client.authentication.k8s.io/v1beta1 \
+		--exec-api-version=client.authentication.k8s.io/v1 \
+		--exec-interactive-mode=Never \
 		--exec-command=kubectl \
 		--exec-arg=oidc-login \
 		--exec-arg=get-token \

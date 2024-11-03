@@ -9,7 +9,8 @@ import (
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
-	"github.com/int128/kubelogin/pkg/credentialplugin/writer"
+	credentialpluginreader "github.com/int128/kubelogin/pkg/credentialplugin/reader"
+	credentialpluginwriter "github.com/int128/kubelogin/pkg/credentialplugin/writer"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
@@ -38,15 +39,22 @@ type Input struct {
 }
 
 type GetToken struct {
-	Authentication       authentication.Interface
-	TokenCacheRepository repository.Interface
-	Writer               writer.Interface
-	Logger               logger.Interface
-	Clock                clock.Interface
+	Authentication         authentication.Interface
+	TokenCacheRepository   repository.Interface
+	CredentialPluginReader credentialpluginreader.Interface
+	CredentialPluginWriter credentialpluginwriter.Interface
+	Logger                 logger.Interface
+	Clock                  clock.Interface
 }
 
 func (u *GetToken) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
+
+	credentialPluginInput, err := u.CredentialPluginReader.Read()
+	if err != nil {
+		return fmt.Errorf("could not read the input of credential plugin: %w", err)
+	}
+	u.Logger.V(1).Infof("credential plugin is called with apiVersion: %s", credentialPluginInput.ClientAuthenticationAPIVersion)
 
 	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
 	tokenCacheKey := tokencache.Key{
@@ -88,10 +96,11 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 			if !claims.IsExpired(u.Clock) {
 				u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
 				out := credentialplugin.Output{
-					Token:  cachedTokenSet.IDToken,
-					Expiry: claims.Expiry,
+					Token:                          cachedTokenSet.IDToken,
+					Expiry:                         claims.Expiry,
+					ClientAuthenticationAPIVersion: credentialPluginInput.ClientAuthenticationAPIVersion,
 				}
-				if err := u.Writer.Write(out); err != nil {
+				if err := u.CredentialPluginWriter.Write(out); err != nil {
 					return fmt.Errorf("could not write the token to client-go: %w", err)
 				}
 				return nil
@@ -122,10 +131,11 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
 	out := credentialplugin.Output{
-		Token:  authenticationOutput.TokenSet.IDToken,
-		Expiry: idTokenClaims.Expiry,
+		Token:                          authenticationOutput.TokenSet.IDToken,
+		Expiry:                         idTokenClaims.Expiry,
+		ClientAuthenticationAPIVersion: credentialPluginInput.ClientAuthenticationAPIVersion,
 	}
-	if err := u.Writer.Write(out); err != nil {
+	if err := u.CredentialPluginWriter.Write(out); err != nil {
 		return fmt.Errorf("could not write the token to client-go: %w", err)
 	}
 	return nil
