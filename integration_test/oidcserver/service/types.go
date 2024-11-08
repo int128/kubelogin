@@ -7,7 +7,7 @@ import (
 	"github.com/int128/kubelogin/integration_test/oidcserver/testconfig"
 )
 
-// Service represents the test server of OpenID Connect Provider.
+// Service represents the test service of OpenID Connect Provider.
 // It provides the feature of Provider and additional methods for testing.
 type Service interface {
 	Provider
