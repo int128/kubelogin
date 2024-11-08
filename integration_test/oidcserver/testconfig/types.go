@@ -1,4 +1,4 @@
-package config
+package testconfig
 
 import "time"
 
@@ -21,8 +21,8 @@ type Response struct {
 	CodeChallengeMethodsSupported []string // optional
 }
 
-// Config represents a configuration of the OpenID Connect provider.
-type Config struct {
+// TestConfig represents a configuration of the OpenID Connect provider.
+type TestConfig struct {
 	Want     Want
 	Response Response
 }

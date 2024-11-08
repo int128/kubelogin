@@ -3,7 +3,7 @@
 package handler_mock
 
 import (
-	handler "github.com/int128/kubelogin/integration_test/oidcserver/handler"
+	handler "github.com/int128/kubelogin/integration_test/oidcserver/service"
 	mock "github.com/stretchr/testify/mock"
 )
 

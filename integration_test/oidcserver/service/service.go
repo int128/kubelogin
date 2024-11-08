@@ -10,55 +10,41 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/int128/kubelogin/integration_test/oidcserver/config"
-	"github.com/int128/kubelogin/integration_test/oidcserver/handler"
+	"github.com/int128/kubelogin/integration_test/oidcserver/testconfig"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 )
 
-type Service interface {
-	IssuerURL() string
-	SetConfig(config.Config)
-	LastTokenResponse() *handler.TokenResponse
-
-	Discovery() *handler.DiscoveryResponse
-	GetCertificates() *handler.CertificatesResponse
-	AuthenticateCode(req handler.AuthenticationRequest) (code string, err error)
-	Exchange(req handler.TokenRequest) (*handler.TokenResponse, error)
-	AuthenticatePassword(username, password, scope string) (*handler.TokenResponse, error)
-	Refresh(refreshToken string) (*handler.TokenResponse, error)
-}
-
-func New(t *testing.T, issuerURL string, config config.Config) Service {
+func New(t *testing.T, issuerURL string, config testconfig.TestConfig) Service {
 	return &server{
-		Config:    config,
+		config:    config,
 		t:         t,
 		issuerURL: issuerURL,
 	}
 }
 
 type server struct {
-	config.Config
+	config                    testconfig.TestConfig
 	t                         *testing.T
 	issuerURL                 string
-	lastAuthenticationRequest *handler.AuthenticationRequest
-	lastTokenResponse         *handler.TokenResponse
+	lastAuthenticationRequest *AuthenticationRequest
+	lastTokenResponse         *TokenResponse
 }
 
 func (sv *server) IssuerURL() string {
 	return sv.issuerURL
 }
 
-func (sv *server) SetConfig(cfg config.Config) {
-	sv.Config = cfg
+func (sv *server) SetConfig(cfg testconfig.TestConfig) {
+	sv.config = cfg
 }
 
-func (sv *server) LastTokenResponse() *handler.TokenResponse {
+func (sv *server) LastTokenResponse() *TokenResponse {
 	return sv.lastTokenResponse
 }
 
-func (sv *server) Discovery() *handler.DiscoveryResponse {
+func (sv *server) Discovery() *DiscoveryResponse {
 	// based on https://accounts.google.com/.well-known/openid-configuration
-	return &handler.DiscoveryResponse{
+	return &DiscoveryResponse{
 		Issuer:                            sv.issuerURL,
 		AuthorizationEndpoint:             sv.issuerURL + "/auth",
 		TokenEndpoint:                     sv.issuerURL + "/token",
@@ -70,15 +56,15 @@ func (sv *server) Discovery() *handler.DiscoveryResponse {
 		IDTokenSigningAlgValuesSupported:  []string{"RS256"},
 		ScopesSupported:                   []string{"openid", "email", "profile"},
 		TokenEndpointAuthMethodsSupported: []string{"client_secret_post", "client_secret_basic"},
-		CodeChallengeMethodsSupported:     sv.Config.Response.CodeChallengeMethodsSupported,
+		CodeChallengeMethodsSupported:     sv.config.Response.CodeChallengeMethodsSupported,
 		ClaimsSupported:                   []string{"aud", "email", "exp", "iat", "iss", "name", "sub"},
 	}
 }
 
-func (sv *server) GetCertificates() *handler.CertificatesResponse {
+func (sv *server) GetCertificates() *CertificatesResponse {
 	idTokenKeyPair := testingJWT.PrivateKey
-	return &handler.CertificatesResponse{
-		Keys: []*handler.CertificatesResponseKey{
+	return &CertificatesResponse{
+		Keys: []*CertificatesResponseKey{
 			{
 				Kty: "RSA",
 				Alg: "RS256",
@@ -91,17 +77,17 @@ func (sv *server) GetCertificates() *handler.CertificatesResponse {
 	}
 }
 
-func (sv *server) AuthenticateCode(req handler.AuthenticationRequest) (code string, err error) {
-	if req.Scope != sv.Want.Scope {
-		sv.t.Errorf("scope wants `%s` but was `%s`", sv.Want.Scope, req.Scope)
+func (sv *server) AuthenticateCode(req AuthenticationRequest) (code string, err error) {
+	if req.Scope != sv.config.Want.Scope {
+		sv.t.Errorf("scope wants `%s` but was `%s`", sv.config.Want.Scope, req.Scope)
 	}
-	if !strings.HasPrefix(req.RedirectURI, sv.Want.RedirectURIPrefix) {
-		sv.t.Errorf("redirectURI wants prefix `%s` but was `%s`", sv.Want.RedirectURIPrefix, req.RedirectURI)
+	if !strings.HasPrefix(req.RedirectURI, sv.config.Want.RedirectURIPrefix) {
+		sv.t.Errorf("redirectURI wants prefix `%s` but was `%s`", sv.config.Want.RedirectURIPrefix, req.RedirectURI)
 	}
-	if req.CodeChallengeMethod != sv.Want.CodeChallengeMethod {
-		sv.t.Errorf("code_challenge_method wants `%s` but was `%s`", sv.Want.CodeChallengeMethod, req.CodeChallengeMethod)
+	if req.CodeChallengeMethod != sv.config.Want.CodeChallengeMethod {
+		sv.t.Errorf("code_challenge_method wants `%s` but was `%s`", sv.config.Want.CodeChallengeMethod, req.CodeChallengeMethod)
 	}
-	for k, v := range sv.Want.ExtraParams {
+	for k, v := range sv.config.Want.ExtraParams {
 		got := req.RawQuery.Get(k)
 		if got != v {
 			sv.t.Errorf("parameter %s wants `%s` but was `%s`", k, v, got)
@@ -111,7 +97,7 @@ func (sv *server) AuthenticateCode(req handler.AuthenticationRequest) (code stri
 	return "YOUR_AUTH_CODE", nil
 }
 
-func (sv *server) Exchange(req handler.TokenRequest) (*handler.TokenResponse, error) {
+func (sv *server) Exchange(req TokenRequest) (*TokenResponse, error) {
 	if req.Code != "YOUR_AUTH_CODE" {
 		return nil, fmt.Errorf("code wants %s but was %s", "YOUR_AUTH_CODE", req.Code)
 	}
@@ -122,16 +108,16 @@ func (sv *server) Exchange(req handler.TokenRequest) (*handler.TokenResponse, er
 			sv.t.Errorf("pkce S256 challenge did not match (want %s but was %s)", sv.lastAuthenticationRequest.CodeChallenge, challenge)
 		}
 	}
-	resp := &handler.TokenResponse{
+	resp := &TokenResponse{
 		TokenType:    "Bearer",
 		ExpiresIn:    3600,
 		AccessToken:  "YOUR_ACCESS_TOKEN",
-		RefreshToken: sv.Response.RefreshToken,
+		RefreshToken: sv.config.Response.RefreshToken,
 		IDToken: testingJWT.EncodeF(sv.t, func(claims *testingJWT.Claims) {
 			claims.Issuer = sv.issuerURL
 			claims.Subject = "SUBJECT"
-			claims.IssuedAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry.Add(-time.Hour))
-			claims.ExpiresAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry)
+			claims.IssuedAt = jwt.NewNumericDate(sv.config.Response.IDTokenExpiry.Add(-time.Hour))
+			claims.ExpiresAt = jwt.NewNumericDate(sv.config.Response.IDTokenExpiry)
 			claims.Audience = []string{"kubernetes"}
 			claims.Nonce = sv.lastAuthenticationRequest.Nonce
 		}),
@@ -145,26 +131,26 @@ func computeS256Challenge(verifier string) string {
 	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(c[:])
 }
 
-func (sv *server) AuthenticatePassword(username, password, scope string) (*handler.TokenResponse, error) {
-	if scope != sv.Want.Scope {
-		sv.t.Errorf("scope wants `%s` but was `%s`", sv.Want.Scope, scope)
+func (sv *server) AuthenticatePassword(username, password, scope string) (*TokenResponse, error) {
+	if scope != sv.config.Want.Scope {
+		sv.t.Errorf("scope wants `%s` but was `%s`", sv.config.Want.Scope, scope)
 	}
-	if username != sv.Want.Username {
-		sv.t.Errorf("username wants `%s` but was `%s`", sv.Want.Username, username)
+	if username != sv.config.Want.Username {
+		sv.t.Errorf("username wants `%s` but was `%s`", sv.config.Want.Username, username)
 	}
-	if password != sv.Want.Password {
-		sv.t.Errorf("password wants `%s` but was `%s`", sv.Want.Password, password)
+	if password != sv.config.Want.Password {
+		sv.t.Errorf("password wants `%s` but was `%s`", sv.config.Want.Password, password)
 	}
-	resp := &handler.TokenResponse{
+	resp := &TokenResponse{
 		TokenType:    "Bearer",
 		ExpiresIn:    3600,
 		AccessToken:  "YOUR_ACCESS_TOKEN",
-		RefreshToken: sv.Response.RefreshToken,
+		RefreshToken: sv.config.Response.RefreshToken,
 		IDToken: testingJWT.EncodeF(sv.t, func(claims *testingJWT.Claims) {
 			claims.Issuer = sv.issuerURL
 			claims.Subject = "SUBJECT"
-			claims.IssuedAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry.Add(-time.Hour))
-			claims.ExpiresAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry)
+			claims.IssuedAt = jwt.NewNumericDate(sv.config.Response.IDTokenExpiry.Add(-time.Hour))
+			claims.ExpiresAt = jwt.NewNumericDate(sv.config.Response.IDTokenExpiry)
 			claims.Audience = []string{"kubernetes"}
 		}),
 	}
@@ -172,23 +158,23 @@ func (sv *server) AuthenticatePassword(username, password, scope string) (*handl
 	return resp, nil
 }
 
-func (sv *server) Refresh(refreshToken string) (*handler.TokenResponse, error) {
-	if refreshToken != sv.Want.RefreshToken {
-		sv.t.Errorf("refreshToken wants %s but was %s", sv.Want.RefreshToken, refreshToken)
+func (sv *server) Refresh(refreshToken string) (*TokenResponse, error) {
+	if refreshToken != sv.config.Want.RefreshToken {
+		sv.t.Errorf("refreshToken wants %s but was %s", sv.config.Want.RefreshToken, refreshToken)
 	}
-	if sv.Response.RefreshError != "" {
-		return nil, &handler.ErrorResponse{Code: "invalid_request", Description: sv.Response.RefreshError}
+	if sv.config.Response.RefreshError != "" {
+		return nil, &ErrorResponse{Code: "invalid_request", Description: sv.config.Response.RefreshError}
 	}
-	resp := &handler.TokenResponse{
+	resp := &TokenResponse{
 		TokenType:    "Bearer",
 		ExpiresIn:    3600,
 		AccessToken:  "YOUR_ACCESS_TOKEN",
-		RefreshToken: sv.Response.RefreshToken,
+		RefreshToken: sv.config.Response.RefreshToken,
 		IDToken: testingJWT.EncodeF(sv.t, func(claims *testingJWT.Claims) {
 			claims.Issuer = sv.issuerURL
 			claims.Subject = "SUBJECT"
-			claims.IssuedAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry.Add(-time.Hour))
-			claims.ExpiresAt = jwt.NewNumericDate(sv.Response.IDTokenExpiry)
+			claims.IssuedAt = jwt.NewNumericDate(sv.config.Response.IDTokenExpiry.Add(-time.Hour))
+			claims.ExpiresAt = jwt.NewNumericDate(sv.config.Response.IDTokenExpiry)
 			claims.Audience = []string{"kubernetes"}
 		}),
 	}

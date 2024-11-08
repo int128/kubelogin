@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+
+	"github.com/int128/kubelogin/integration_test/oidcserver/service"
 )
 
-func New(t *testing.T, provider Provider) *Handler {
+func New(t *testing.T, provider service.Provider) *Handler {
 	return &Handler{t, provider}
 }
 
@@ -18,7 +20,7 @@ func New(t *testing.T, provider Provider) *Handler {
 // Note that this skips some security checks and is only for testing.
 type Handler struct {
 	t        *testing.T
-	provider Provider
+	provider service.Provider
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +30,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.t.Logf("%d %s %s", wr.statusCode, r.Method, r.RequestURI)
 		return
 	}
-	if errResp := new(ErrorResponse); errors.As(err, &errResp) {
+	if errResp := new(service.ErrorResponse); errors.As(err, &errResp) {
 		h.t.Logf("400 %s %s: %s", r.Method, r.RequestURI, err)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(400)
@@ -73,7 +75,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 	case m == "GET" && p == "/auth":
 		q := r.URL.Query()
 		redirectURI, state := q.Get("redirect_uri"), q.Get("state")
-		code, err := h.provider.AuthenticateCode(AuthenticationRequest{
+		code, err := h.provider.AuthenticateCode(service.AuthenticationRequest{
 			RedirectURI:         redirectURI,
 			State:               state,
 			Scope:               q.Get("scope"),
@@ -94,7 +96,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		grantType := r.Form.Get("grant_type")
 		switch grantType {
 		case "authorization_code":
-			tokenResponse, err := h.provider.Exchange(TokenRequest{
+			tokenResponse, err := h.provider.Exchange(service.TokenRequest{
 				Code:         r.Form.Get("code"),
 				CodeVerifier: r.Form.Get("code_verifier"),
 			})
@@ -135,7 +137,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		default:
 			// 5.2. Error Response
 			// https://tools.ietf.org/html/rfc6749#section-5.2
-			return &ErrorResponse{
+			return &service.ErrorResponse{
 				Code:        "invalid_grant",
 				Description: fmt.Sprintf("unknown grant_type %s", grantType),
 			}

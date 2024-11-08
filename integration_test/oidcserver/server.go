@@ -11,13 +11,13 @@ import (
 	"testing"
 
 	"github.com/int128/kubelogin/integration_test/keypair"
-	"github.com/int128/kubelogin/integration_test/oidcserver/config"
 	"github.com/int128/kubelogin/integration_test/oidcserver/handler"
 	"github.com/int128/kubelogin/integration_test/oidcserver/service"
+	"github.com/int128/kubelogin/integration_test/oidcserver/testconfig"
 )
 
 // New starts a server for the OpenID Connect provider.
-func New(t *testing.T, k keypair.KeyPair, c config.Config) service.Service {
+func New(t *testing.T, k keypair.KeyPair, c testconfig.TestConfig) service.Service {
 	mux := http.NewServeMux()
 	serverURL := startServer(t, mux, k)
 
