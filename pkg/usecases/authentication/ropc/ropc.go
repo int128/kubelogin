@@ -12,7 +12,7 @@ import (
 
 const usernamePrompt = "Username: "
 const passwordPrompt = "Password: "
-const OTPPrompt = "OTP: "
+const OTPPrompt = "OTP (if set): "
 
 type Option struct {
 	Username string
