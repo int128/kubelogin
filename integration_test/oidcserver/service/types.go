@@ -1,11 +1,24 @@
-package handler
+package service
 
 import (
 	"fmt"
 	"net/url"
+
+	"github.com/int128/kubelogin/integration_test/oidcserver/testconfig"
 )
 
-// Provider provides discovery and authentication methods.
+// Service represents the test service of OpenID Connect Provider.
+// It provides the feature of Provider and additional methods for testing.
+type Service interface {
+	Provider
+
+	IssuerURL() string
+	SetConfig(config testconfig.TestConfig)
+	LastTokenResponse() *TokenResponse
+}
+
+// Provider represents an OpenID Connect Provider.
+//
 // If an implemented method returns an ErrorResponse,
 // the handler will respond 400 and corresponding json of the ErrorResponse.
 // Otherwise, the handler will respond 500 and fail the current test.
