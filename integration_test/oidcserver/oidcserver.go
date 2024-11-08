@@ -33,6 +33,8 @@ func startServer(t *testing.T, h http.Handler, k keypair.KeyPair) string {
 		return sv.URL
 	}
 
+	// Unfortunately, httptest package did not work with keypair.KeyPair.
+	// We use httptest package only for allocating a new port.
 	portAllocator := httptest.NewUnstartedServer(h)
 	t.Cleanup(portAllocator.Close)
 	serverURL := fmt.Sprintf("https://localhost:%d", portAllocator.Listener.Addr().(*net.TCPAddr).Port)
