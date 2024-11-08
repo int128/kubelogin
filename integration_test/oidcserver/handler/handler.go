@@ -1,4 +1,4 @@
-// Package handler provides a HTTP handler for the OpenID Connect Provider.
+// Package handler provides HTTP handlers for the OpenID Connect Provider.
 package handler
 
 import (
@@ -11,21 +11,25 @@ import (
 	"github.com/int128/kubelogin/integration_test/oidcserver/service"
 )
 
-func New(t *testing.T, provider service.Provider) *Handler {
-	return &Handler{t, provider}
+func Register(t *testing.T, mux *http.ServeMux, provider service.Provider) {
+	h := &Handlers{t, provider}
+	mux.HandleFunc("GET /.well-known/openid-configuration", h.Discovery)
+	mux.HandleFunc("GET /certs", h.GetCertificates)
+	mux.HandleFunc("GET /auth", h.AuthenticateCode)
+	mux.HandleFunc("POST /token", h.Exchange)
 }
 
-// Handler provides a HTTP handler for the OpenID Connect Provider.
+// Handlers provides HTTP handlers for the OpenID Connect Provider.
 // You need to implement the Provider interface.
 // Note that this skips some security checks and is only for testing.
-type Handler struct {
+type Handlers struct {
 	t        *testing.T
 	provider service.Provider
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) handleError(w http.ResponseWriter, r *http.Request, f func() error) {
 	wr := &responseWriterRecorder{w, 200}
-	err := h.serveHTTP(wr, r)
+	err := f()
 	if err == nil {
 		h.t.Logf("%d %s %s", wr.statusCode, r.Method, r.RequestURI)
 		return
@@ -54,25 +58,32 @@ func (w *responseWriterRecorder) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 }
 
-func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
-	m := r.Method
-	p := r.URL.Path
-	switch {
-	case m == "GET" && p == "/.well-known/openid-configuration":
+func (h *Handlers) Discovery(w http.ResponseWriter, r *http.Request) {
+	h.handleError(w, r, func() error {
 		discoveryResponse := h.provider.Discovery()
 		w.Header().Add("Content-Type", "application/json")
 		e := json.NewEncoder(w)
 		if err := e.Encode(discoveryResponse); err != nil {
 			return fmt.Errorf("could not render json: %w", err)
 		}
-	case m == "GET" && p == "/certs":
+		return nil
+	})
+}
+
+func (h *Handlers) GetCertificates(w http.ResponseWriter, r *http.Request) {
+	h.handleError(w, r, func() error {
 		certificatesResponse := h.provider.GetCertificates()
 		w.Header().Add("Content-Type", "application/json")
 		e := json.NewEncoder(w)
 		if err := e.Encode(certificatesResponse); err != nil {
 			return fmt.Errorf("could not render json: %w", err)
 		}
-	case m == "GET" && p == "/auth":
+		return nil
+	})
+}
+
+func (h *Handlers) AuthenticateCode(w http.ResponseWriter, r *http.Request) {
+	h.handleError(w, r, func() error {
 		q := r.URL.Query()
 		redirectURI, state := q.Get("redirect_uri"), q.Get("state")
 		code, err := h.provider.AuthenticateCode(service.AuthenticationRequest{
@@ -89,7 +100,12 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 		}
 		to := fmt.Sprintf("%s?state=%s&code=%s", redirectURI, state, code)
 		http.Redirect(w, r, to, 302)
-	case m == "POST" && p == "/token":
+		return nil
+	})
+}
+
+func (h *Handlers) Exchange(w http.ResponseWriter, r *http.Request) {
+	h.handleError(w, r, func() error {
 		if err := r.ParseForm(); err != nil {
 			return fmt.Errorf("could not parse the form: %w", err)
 		}
@@ -142,8 +158,6 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request) error {
 				Description: fmt.Sprintf("unknown grant_type %s", grantType),
 			}
 		}
-	default:
-		http.NotFound(w, r)
-	}
-	return nil
+		return nil
+	})
 }

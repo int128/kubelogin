@@ -22,7 +22,7 @@ func New(t *testing.T, k keypair.KeyPair, c testconfig.TestConfig) service.Servi
 	serverURL := startServer(t, mux, k)
 
 	svc := service.New(t, serverURL, c)
-	mux.Handle("/", handler.New(t, svc))
+	handler.Register(t, mux, svc)
 	return svc
 }
 
