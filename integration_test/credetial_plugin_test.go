@@ -13,6 +13,7 @@ import (
 	"github.com/int128/kubelogin/integration_test/httpdriver"
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
+	"github.com/int128/kubelogin/integration_test/oidcserver/config"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/testing/clock"
@@ -52,12 +53,12 @@ func TestCredentialPlugin(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{
-					Want: oidcserver.Want{
+				sv := oidcserver.New(t, tc.keyPair, config.Config{
+					Want: config.Want{
 						Scope:             "openid",
 						RedirectURIPrefix: "http://localhost:",
 					},
-					Response: oidcserver.Response{
+					Response: config.Response{
 						IDTokenExpiry: now.Add(time.Hour),
 					},
 				})
@@ -77,14 +78,14 @@ func TestCredentialPlugin(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{
-					Want: oidcserver.Want{
+				sv := oidcserver.New(t, tc.keyPair, config.Config{
+					Want: config.Want{
 						Scope:             "openid",
 						RedirectURIPrefix: "http://localhost:",
 						Username:          "USER1",
 						Password:          "PASS1",
 					},
-					Response: oidcserver.Response{
+					Response: config.Response{
 						IDTokenExpiry: now.Add(time.Hour),
 					},
 				})
@@ -107,15 +108,15 @@ func TestCredentialPlugin(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{})
+				sv := oidcserver.New(t, tc.keyPair, config.Config{})
 
 				t.Run("NoCache", func(t *testing.T) {
-					sv.SetConfig(oidcserver.Config{
-						Want: oidcserver.Want{
+					sv.SetConfig(config.Config{
+						Want: config.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
 						},
-						Response: oidcserver.Response{
+						Response: config.Response{
 							IDTokenExpiry: now.Add(time.Hour),
 							RefreshToken:  "REFRESH_TOKEN_1",
 						},
@@ -132,7 +133,7 @@ func TestCredentialPlugin(t *testing.T) {
 					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 				})
 				t.Run("Valid", func(t *testing.T) {
-					sv.SetConfig(oidcserver.Config{})
+					sv.SetConfig(config.Config{})
 					var stdout bytes.Buffer
 					runGetToken(t, ctx, getTokenConfig{
 						tokenCacheDir: tokenCacheDir,
@@ -145,13 +146,13 @@ func TestCredentialPlugin(t *testing.T) {
 					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 				})
 				t.Run("Refresh", func(t *testing.T) {
-					sv.SetConfig(oidcserver.Config{
-						Want: oidcserver.Want{
+					sv.SetConfig(config.Config{
+						Want: config.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
 							RefreshToken:      "REFRESH_TOKEN_1",
 						},
-						Response: oidcserver.Response{
+						Response: config.Response{
 							IDTokenExpiry: now.Add(3 * time.Hour),
 							RefreshToken:  "REFRESH_TOKEN_2",
 						},
@@ -168,13 +169,13 @@ func TestCredentialPlugin(t *testing.T) {
 					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(3*time.Hour))
 				})
 				t.Run("RefreshAgain", func(t *testing.T) {
-					sv.SetConfig(oidcserver.Config{
-						Want: oidcserver.Want{
+					sv.SetConfig(config.Config{
+						Want: config.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
 							RefreshToken:      "REFRESH_TOKEN_2",
 						},
-						Response: oidcserver.Response{
+						Response: config.Response{
 							IDTokenExpiry: now.Add(5 * time.Hour),
 						},
 					})
@@ -197,13 +198,13 @@ func TestCredentialPlugin(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.None, config.Config{
+			Want: config.Want{
 				Scope:               "openid",
 				RedirectURIPrefix:   "http://localhost:",
 				CodeChallengeMethod: "S256",
 			},
-			Response: oidcserver.Response{
+			Response: config.Response{
 				IDTokenExpiry:                 now.Add(time.Hour),
 				CodeChallengeMethodsSupported: []string{"plain", "S256"},
 			},
@@ -223,12 +224,12 @@ func TestCredentialPlugin(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.Server, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.Server, config.Config{
+			Want: config.Want{
 				Scope:             "openid",
 				RedirectURIPrefix: "http://localhost:",
 			},
-			Response: oidcserver.Response{
+			Response: config.Response{
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
@@ -248,12 +249,12 @@ func TestCredentialPlugin(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.None, config.Config{
+			Want: config.Want{
 				Scope:             "email profile openid",
 				RedirectURIPrefix: "http://localhost:",
 			},
-			Response: oidcserver.Response{
+			Response: config.Response{
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
@@ -276,12 +277,12 @@ func TestCredentialPlugin(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.None, config.Config{
+			Want: config.Want{
 				Scope:             "openid",
 				RedirectURIPrefix: "http://localhost:",
 			},
-			Response: oidcserver.Response{
+			Response: config.Response{
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
@@ -301,12 +302,12 @@ func TestCredentialPlugin(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.None, config.Config{
+			Want: config.Want{
 				Scope:             "openid",
 				RedirectURIPrefix: "http://127.0.0.1:",
 			},
-			Response: oidcserver.Response{
+			Response: config.Response{
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
@@ -326,12 +327,12 @@ func TestCredentialPlugin(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.None, config.Config{
+			Want: config.Want{
 				Scope:             "openid",
 				RedirectURIPrefix: "https://localhost:",
 			},
-			Response: oidcserver.Response{
+			Response: config.Response{
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
@@ -357,8 +358,8 @@ func TestCredentialPlugin(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.None, config.Config{
+			Want: config.Want{
 				Scope:             "openid",
 				RedirectURIPrefix: "http://localhost:",
 				ExtraParams: map[string]string{
@@ -366,7 +367,7 @@ func TestCredentialPlugin(t *testing.T) {
 					"reauth": "false",
 				},
 			},
-			Response: oidcserver.Response{
+			Response: config.Response{
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
