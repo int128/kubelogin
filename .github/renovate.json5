@@ -7,5 +7,6 @@
     "github>int128/go-renovate-config:github-actions#v1.6.1",
     "github>int128/go-renovate-config:kubernetes#v1.6.1",
     "github>int128/go-renovate-config:kustomization-github-releases#v1.6.1",
+    "helpers:pinGitHubActionDigests",
   ],
 }
