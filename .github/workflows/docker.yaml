@@ -64,4 +64,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - run: docker run --rm '${{ needs.build.outputs.image-uri }}' --help
+      - run: docker run --rm "$IMAGE_URI" --help
+        env:
+          IMAGE_URI: ${{ needs.build.outputs.image-uri }}
