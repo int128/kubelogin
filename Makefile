@@ -7,7 +7,7 @@ test:
 
 .PHONY: integration-test
 integration-test:
-	go go test -v -race ./integration_test/...
+	go test -v -race ./integration_test/...
 
 .PHONY: generate
 generate:
