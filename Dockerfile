@@ -1,11 +1,19 @@
-FROM golang:1.23 as builder
+FROM --platform=$BUILDPLATFORM golang:1.23 AS builder
 
 WORKDIR /builder
-COPY go.* .
+
+# Copy the Go Modules manifests
+COPY go.mod go.mod
+COPY go.sum go.sum
 RUN go mod download
+
+# Copy the go source
 COPY main.go .
 COPY pkg pkg
-RUN go build
+
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build
 
 FROM gcr.io/distroless/base-debian12
 COPY --from=builder /builder/kubelogin /
