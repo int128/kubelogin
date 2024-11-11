@@ -3,7 +3,7 @@ module github.com/int128/kubelogin
 go 1.23.3
 
 require (
-	github.com/chromedp/chromedp v0.11.1
+	github.com/chromedp/chromedp v0.11.2
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/gofrs/flock v0.12.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
