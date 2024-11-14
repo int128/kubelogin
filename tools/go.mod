@@ -5,7 +5,7 @@ go 1.23.3
 require (
 	github.com/golangci/golangci-lint v1.62.0
 	github.com/google/wire v0.6.0
-	github.com/vektra/mockery/v2 v2.46.3
+	github.com/vektra/mockery/v2 v2.47.0
 )
 
 require (
