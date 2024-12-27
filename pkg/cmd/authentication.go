@@ -17,7 +17,6 @@ const oobRedirectURI = "urn:ietf:wg:oauth:2.0:oob"
 type authenticationOptions struct {
 	GrantType                   string
 	ListenAddress               []string
-	ListenPort                  []int // deprecated
 	AuthenticationTimeoutSec    int
 	SkipOpenBrowser             bool
 	BrowserCommand              string
@@ -31,21 +30,6 @@ type authenticationOptions struct {
 	Password                    string
 }
 
-// determineListenAddress returns the addresses from the flags.
-// Note that --listen-address is always given due to the default value.
-// If --listen-port is not set, it returns --listen-address.
-// If --listen-port is set, it returns the strings of --listen-port.
-func (o *authenticationOptions) determineListenAddress() []string {
-	if len(o.ListenPort) == 0 {
-		return o.ListenAddress
-	}
-	var a []string
-	for _, p := range o.ListenPort {
-		a = append(a, fmt.Sprintf("127.0.0.1:%d", p))
-	}
-	return a
-}
-
 var allGrantType = strings.Join([]string{
 	"auto",
 	"authcode",
@@ -57,11 +41,6 @@ var allGrantType = strings.Join([]string{
 func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.GrantType, "grant-type", "auto", fmt.Sprintf("Authorization grant type to use. One of (%s)", allGrantType))
 	f.StringSliceVar(&o.ListenAddress, "listen-address", defaultListenAddress, "[authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order")
-	//TODO: remove the deprecated flag
-	f.IntSliceVar(&o.ListenPort, "listen-port", nil, "[authcode] deprecated: port to bind to the local server")
-	if err := f.MarkDeprecated("listen-port", "use --listen-address instead"); err != nil {
-		panic(err)
-	}
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
 	f.StringVar(&o.BrowserCommand, "browser-command", "", "[authcode] Command to open the browser")
 	f.IntVar(&o.AuthenticationTimeoutSec, "authentication-timeout-sec", defaultAuthenticationTimeoutSec, "[authcode] Timeout of authentication in seconds")
@@ -84,7 +63,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 	switch {
 	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == ""):
 		s.AuthCodeBrowserOption = &authcode.BrowserOption{
-			BindAddress:                o.determineListenAddress(),
+			BindAddress:                o.ListenAddress,
 			SkipOpenBrowser:            o.SkipOpenBrowser,
 			BrowserCommand:             o.BrowserCommand,
 			AuthenticationTimeout:      time.Duration(o.AuthenticationTimeoutSec) * time.Second,
