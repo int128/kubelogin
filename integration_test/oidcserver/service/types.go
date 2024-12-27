@@ -1,11 +1,24 @@
-package handler
+package service
 
 import (
 	"fmt"
 	"net/url"
+
+	"github.com/int128/kubelogin/integration_test/oidcserver/testconfig"
 )
 
-// Provider provides discovery and authentication methods.
+// Service represents the test service of OpenID Connect Provider.
+// It provides the feature of Provider and additional methods for testing.
+type Service interface {
+	Provider
+
+	IssuerURL() string
+	SetConfig(config testconfig.TestConfig)
+	LastTokenResponse() *TokenResponse
+}
+
+// Provider represents an OpenID Connect Provider.
+//
 // If an implemented method returns an ErrorResponse,
 // the handler will respond 400 and corresponding json of the ErrorResponse.
 // Otherwise, the handler will respond 500 and fail the current test.
@@ -18,6 +31,8 @@ type Provider interface {
 	Refresh(refreshToken string) (*TokenResponse, error)
 }
 
+// DiscoveryResponse represents the type of:
+// https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationResponse
 type DiscoveryResponse struct {
 	Issuer                            string   `json:"issuer"`
 	AuthorizationEndpoint             string   `json:"authorization_endpoint"`
@@ -34,10 +49,14 @@ type DiscoveryResponse struct {
 	CodeChallengeMethodsSupported     []string `json:"code_challenge_methods_supported"`
 }
 
+// CertificatesResponse represents the type of:
+// https://datatracker.ietf.org/doc/html/rfc7517#section-5
 type CertificatesResponse struct {
 	Keys []*CertificatesResponseKey `json:"keys"`
 }
 
+// CertificatesResponseKey represents the type of:
+// https://datatracker.ietf.org/doc/html/rfc7517#section-4
 type CertificatesResponseKey struct {
 	Kty string `json:"kty"`
 	Alg string `json:"alg"`
@@ -47,7 +66,7 @@ type CertificatesResponseKey struct {
 	E   string `json:"e"`
 }
 
-// AuthenticationRequest represents a type of:
+// AuthenticationRequest represents the type of:
 // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 type AuthenticationRequest struct {
 	RedirectURI         string
@@ -59,13 +78,15 @@ type AuthenticationRequest struct {
 	RawQuery            url.Values
 }
 
-// TokenRequest represents a type of:
+// TokenRequest represents the type of:
 // https://openid.net/specs/openid-connect-core-1_0.html#TokenRequest
 type TokenRequest struct {
 	Code         string
 	CodeVerifier string
 }
 
+// TokenResponse represents the type of:
+// https://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
@@ -74,7 +95,7 @@ type TokenResponse struct {
 	IDToken      string `json:"id_token"`
 }
 
-// ErrorResponse represents an error response described in the following section:
+// ErrorResponse represents the error response described in the following section:
 // 5.2 Error Response
 // https://tools.ietf.org/html/rfc6749#section-5.2
 type ErrorResponse struct {

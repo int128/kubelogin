@@ -10,6 +10,7 @@ import (
 	"github.com/int128/kubelogin/integration_test/keypair"
 	"github.com/int128/kubelogin/integration_test/kubeconfig"
 	"github.com/int128/kubelogin/integration_test/oidcserver"
+	"github.com/int128/kubelogin/integration_test/oidcserver/testconfig"
 	"github.com/int128/kubelogin/pkg/di"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/testing/clock"
@@ -45,12 +46,12 @@ func TestStandalone(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{
-					Want: oidcserver.Want{
+				sv := oidcserver.New(t, tc.keyPair, testconfig.TestConfig{
+					Want: testconfig.Want{
 						Scope:             "openid",
 						RedirectURIPrefix: "http://localhost:",
 					},
-					Response: oidcserver.Response{
+					Response: testconfig.Response{
 						IDTokenExpiry: now.Add(time.Hour),
 					},
 				})
@@ -74,14 +75,14 @@ func TestStandalone(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{
-					Want: oidcserver.Want{
+				sv := oidcserver.New(t, tc.keyPair, testconfig.TestConfig{
+					Want: testconfig.Want{
 						Scope:             "openid",
 						RedirectURIPrefix: "http://localhost:",
 						Username:          "USER1",
 						Password:          "PASS1",
 					},
-					Response: oidcserver.Response{
+					Response: testconfig.Response{
 						IDTokenExpiry: now.Add(time.Hour),
 					},
 				})
@@ -109,19 +110,19 @@ func TestStandalone(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, oidcserver.Config{})
+				sv := oidcserver.New(t, tc.keyPair, testconfig.TestConfig{})
 				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 					Issuer:                  sv.IssuerURL(),
 					IDPCertificateAuthority: tc.keyPair.CACertPath,
 				})
 
 				t.Run("NoToken", func(t *testing.T) {
-					sv.SetConfig(oidcserver.Config{
-						Want: oidcserver.Want{
+					sv.SetConfig(testconfig.TestConfig{
+						Want: testconfig.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
 						},
-						Response: oidcserver.Response{
+						Response: testconfig.Response{
 							IDTokenExpiry: now.Add(time.Hour),
 							RefreshToken:  "REFRESH_TOKEN_1",
 						},
@@ -138,7 +139,7 @@ func TestStandalone(t *testing.T) {
 					})
 				})
 				t.Run("Valid", func(t *testing.T) {
-					sv.SetConfig(oidcserver.Config{})
+					sv.SetConfig(testconfig.TestConfig{})
 					runStandalone(t, ctx, standaloneConfig{
 						issuerURL:          sv.IssuerURL(),
 						kubeConfigFilename: kubeConfigFilename,
@@ -151,13 +152,13 @@ func TestStandalone(t *testing.T) {
 					})
 				})
 				t.Run("Refresh", func(t *testing.T) {
-					sv.SetConfig(oidcserver.Config{
-						Want: oidcserver.Want{
+					sv.SetConfig(testconfig.TestConfig{
+						Want: testconfig.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
 							RefreshToken:      "REFRESH_TOKEN_1",
 						},
-						Response: oidcserver.Response{
+						Response: testconfig.Response{
 							IDTokenExpiry: now.Add(3 * time.Hour),
 							RefreshToken:  "REFRESH_TOKEN_2",
 						},
@@ -174,13 +175,13 @@ func TestStandalone(t *testing.T) {
 					})
 				})
 				t.Run("RefreshAgain", func(t *testing.T) {
-					sv.SetConfig(oidcserver.Config{
-						Want: oidcserver.Want{
+					sv.SetConfig(testconfig.TestConfig{
+						Want: testconfig.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
 							RefreshToken:      "REFRESH_TOKEN_2",
 						},
-						Response: oidcserver.Response{
+						Response: testconfig.Response{
 							IDTokenExpiry: now.Add(5 * time.Hour),
 						},
 					})
@@ -203,12 +204,12 @@ func TestStandalone(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.Server, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.Server, testconfig.TestConfig{
+			Want: testconfig.Want{
 				Scope:             "openid",
 				RedirectURIPrefix: "http://localhost:",
 			},
-			Response: oidcserver.Response{
+			Response: testconfig.Response{
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
@@ -231,12 +232,12 @@ func TestStandalone(t *testing.T) {
 	t.Run("env_KUBECONFIG", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
+			Want: testconfig.Want{
 				Scope:             "openid",
 				RedirectURIPrefix: "http://localhost:",
 			},
-			Response: oidcserver.Response{
+			Response: testconfig.Response{
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
@@ -259,12 +260,12 @@ func TestStandalone(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, oidcserver.Config{
-			Want: oidcserver.Want{
+		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
+			Want: testconfig.Want{
 				Scope:             "profile groups openid",
 				RedirectURIPrefix: "http://localhost:",
 			},
-			Response: oidcserver.Response{
+			Response: testconfig.Response{
 				IDTokenExpiry: now.Add(time.Hour),
 			},
 		})
