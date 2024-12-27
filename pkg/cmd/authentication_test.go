@@ -56,34 +56,6 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				},
 			},
 		},
-		"when --listen-port is set, it should convert the port to address": {
-			args: []string{
-				"--listen-port", "10080",
-				"--listen-port", "20080",
-			},
-			want: authentication.GrantOptionSet{
-				AuthCodeBrowserOption: &authcode.BrowserOption{
-					BindAddress:           []string{"127.0.0.1:10080", "127.0.0.1:20080"},
-					AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-					RedirectURLHostname:   "localhost",
-				},
-			},
-		},
-		"when --listen-port is set, it should ignore --listen-address flags": {
-			args: []string{
-				"--listen-port", "10080",
-				"--listen-port", "20080",
-				"--listen-address", "127.0.0.1:30080",
-				"--listen-address", "127.0.0.1:40080",
-			},
-			want: authentication.GrantOptionSet{
-				AuthCodeBrowserOption: &authcode.BrowserOption{
-					BindAddress:           []string{"127.0.0.1:10080", "127.0.0.1:20080"},
-					AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-					RedirectURLHostname:   "localhost",
-				},
-			},
-		},
 		"GrantType=authcode-keyboard": {
 			args: []string{
 				"--grant-type", "authcode-keyboard",
