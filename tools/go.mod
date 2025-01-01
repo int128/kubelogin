@@ -3,7 +3,7 @@ module github.com/int128/kubelogin/tools
 go 1.23.4
 
 require (
-	github.com/golangci/golangci-lint v1.63.0
+	github.com/golangci/golangci-lint v1.63.1
 	github.com/google/wire v0.6.0
 	github.com/vektra/mockery/v2 v2.50.2
 )
@@ -72,7 +72,6 @@ require (
 	github.com/golangci/go-printf-func-name v0.1.0 // indirect
 	github.com/golangci/gofmt v0.0.0-20241223200906-057b0627d9b9 // indirect
 	github.com/golangci/misspell v0.6.0 // indirect
-	github.com/golangci/modinfo v0.3.4 // indirect
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/golangci/revgrep v0.5.3 // indirect
 	github.com/golangci/unconvert v0.0.0-20240309020433-c5143eacb3ed // indirect
