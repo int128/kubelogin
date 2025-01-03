@@ -55,8 +55,8 @@ func (r *Repository) FindByKey(dir string, storage tokencache.Storage, key token
 	switch storage {
 	case tokencache.StorageAuto:
 		t, err := readFromKeyring(checksum)
-		if errors.Is(keyring.ErrUnsupportedPlatform, err) ||
-			errors.Is(keyring.ErrNotFound, err) {
+		if errors.Is(err, keyring.ErrUnsupportedPlatform) ||
+			errors.Is(err, keyring.ErrNotFound) {
 			return readFromFile(dir, checksum)
 		}
 		if err != nil {
@@ -118,7 +118,7 @@ func (r *Repository) Save(dir string, storage tokencache.Storage, key tokencache
 	switch storage {
 	case tokencache.StorageAuto:
 		if err := writeToKeyring(checksum, tokenSet); err != nil {
-			if errors.Is(keyring.ErrUnsupportedPlatform, err) {
+			if errors.Is(err, keyring.ErrUnsupportedPlatform) {
 				return writeToFile(dir, checksum, tokenSet)
 			}
 			return err
