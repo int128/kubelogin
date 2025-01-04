@@ -405,6 +405,7 @@ func runGetToken(t *testing.T, ctx context.Context, cfg getTokenConfig) {
 		"--oidc-issuer-url", cfg.issuerURL,
 		"--oidc-client-id", "kubernetes",
 		"--listen-address", "127.0.0.1:0",
+		"--no-keyring",
 	}, cfg.args...), "latest")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)
