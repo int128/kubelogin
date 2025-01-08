@@ -8,7 +8,7 @@ KUBECONFIG := ../cluster/kubeconfig.yaml
 export KUBECONFIG
 
 .PHONY: test
-test: build setup-keyring
+test: build
 	# see the setup instruction
 	kubectl oidc-login setup \
 		--oidc-issuer-url=https://dex-server:10443/dex \
@@ -41,10 +41,6 @@ $(BIN_DIR)/kubectl-oidc_login:
 
 $(BIN_DIR)/chromelogin: $(wildcard chromelogin/*.go)
 	go build -o $@ ./chromelogin
-
-.PHONY: setup-keyring
-setup-keyring:
-	echo password | gnome-keyring-daemon --unlock
 
 .PHONY: clean
 clean:

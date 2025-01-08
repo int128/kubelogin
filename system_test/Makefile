@@ -1,11 +1,12 @@
 CERT_DIR := cert
 
-.PHONY: test
-test: setup
-	dbus-run-session -- $(MAKE) -C login test
+.PHONY: test-with-dbus-session
+test-with-dbus-session:
+	dbus-run-session -- $(MAKE) test
 
-.PHONY: setup
-setup: dex cluster setup-chrome
+.PHONY: test
+test: dex cluster setup-chrome setup-keyring
+	$(MAKE) -C login
 
 .PHONY: dex
 dex: cert
@@ -15,10 +16,17 @@ dex: cert
 cluster: cert
 	$(MAKE) -C cluster
 
+# Add the server certificate of dex to the trust store for Chrome.
 .PHONY: setup-chrome
 setup-chrome: cert
-	# Add the dex server certificate to the trust store
+	mkdir -p $(HOME)/.pki/nssdb
 	certutil -A -d sql:$(HOME)/.pki/nssdb -n dex -i $(CERT_DIR)/ca.crt -t "TC,,"
+
+# Start gnome-keyring-daemon.
+# https://github.com/zalando/go-keyring/issues/45
+.PHONY: setup-keyring
+setup-keyring:
+	echo password | gnome-keyring-daemon --unlock
 
 .PHONY: cert
 cert:
