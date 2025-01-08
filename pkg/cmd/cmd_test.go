@@ -12,6 +12,7 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
+	"github.com/int128/kubelogin/pkg/tokencache"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
@@ -113,10 +114,12 @@ func TestCmd_Run(t *testing.T) {
 					"--oidc-client-id", "YOUR_CLIENT_ID",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 					Provider: oidc.Provider{
 						IssuerURL: "https://issuer.example.com",
 						ClientID:  "YOUR_CLIENT_ID",
+					},
+					TokenCacheConfig: tokencache.Config{
+						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
@@ -138,12 +141,14 @@ func TestCmd_Run(t *testing.T) {
 					"-v1",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 					Provider: oidc.Provider{
 						IssuerURL:    "https://issuer.example.com",
 						ClientID:     "YOUR_CLIENT_ID",
 						ClientSecret: "YOUR_CLIENT_SECRET",
 						ExtraScopes:  []string{"email", "profile"},
+					},
+					TokenCacheConfig: tokencache.Config{
+						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
@@ -162,11 +167,13 @@ func TestCmd_Run(t *testing.T) {
 					"--oidc-use-access-token=true",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 					Provider: oidc.Provider{
 						IssuerURL:      "https://issuer.example.com",
 						ClientID:       "YOUR_CLIENT_ID",
 						UseAccessToken: true,
+					},
+					TokenCacheConfig: tokencache.Config{
+						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{
@@ -188,10 +195,12 @@ func TestCmd_Run(t *testing.T) {
 					"--token-cache-dir", "~/.kube/oidc-cache",
 				},
 				in: credentialplugin.Input{
-					TokenCacheDir: filepath.Join(userHomeDir, ".kube/oidc-cache"),
 					Provider: oidc.Provider{
 						IssuerURL: "https://issuer.example.com",
 						ClientID:  "YOUR_CLIENT_ID",
+					},
+					TokenCacheConfig: tokencache.Config{
+						Directory: filepath.Join(userHomeDir, ".kube/oidc-cache"),
 					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{

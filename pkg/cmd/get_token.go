@@ -96,11 +96,13 @@ func (cmd *GetToken) New() *cobra.Command {
 					UseAccessToken: o.UseAccessToken,
 					ExtraScopes:    o.ExtraScopes,
 				},
-				ForceRefresh:      o.ForceRefresh,
-				TokenCacheDir:     o.TokenCacheDir,
-				TokenCacheStorage: tokenStorage,
-				GrantOptionSet:    grantOptionSet,
-				TLSClientConfig:   o.tlsOptions.tlsClientConfig(),
+				ForceRefresh: o.ForceRefresh,
+				TokenCacheConfig: tokencache.Config{
+					Directory: o.TokenCacheDir,
+					Storage:   tokenStorage,
+				},
+				GrantOptionSet:  grantOptionSet,
+				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
 			}
 			if err := cmd.GetToken.Do(c.Context(), in); err != nil {
 				return fmt.Errorf("get-token: %w", err)
