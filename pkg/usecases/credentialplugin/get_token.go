@@ -32,11 +32,11 @@ type Interface interface {
 // Input represents an input DTO of the GetToken use-case.
 type Input struct {
 	Provider          oidc.Provider
+	ForceRefresh      bool
 	TokenCacheDir     string
 	TokenCacheStorage tokencache.Storage
 	GrantOptionSet    authentication.GrantOptionSet
 	TLSClientConfig   tlsclientconfig.Config
-	ForceRefresh      bool
 }
 
 type GetToken struct {
@@ -115,7 +115,6 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		GrantOptionSet:  in.GrantOptionSet,
 		CachedTokenSet:  cachedTokenSet,
 		TLSClientConfig: in.TLSClientConfig,
-		ForceRefresh:    in.ForceRefresh,
 	}
 	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
 	if err != nil {
