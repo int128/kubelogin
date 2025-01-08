@@ -34,7 +34,6 @@ type Input struct {
 	GrantOptionSet  GrantOptionSet
 	CachedTokenSet  *oidc.TokenSet // optional
 	TLSClientConfig tlsclientconfig.Config
-	ForceRefresh    bool
 	UseAccessToken  bool
 }
 
