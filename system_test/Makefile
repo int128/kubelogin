@@ -1,8 +1,8 @@
 CERT_DIR := cert
 
-.PHONY: login
-login: setup
-	$(MAKE) -C login
+.PHONY: test
+test: setup
+	dbus-run-session -- $(MAKE) -C login test
 
 .PHONY: setup
 setup: dex cluster setup-chrome
@@ -17,7 +17,7 @@ cluster: cert
 
 .PHONY: setup-chrome
 setup-chrome: cert
-	# add the dex server certificate to the trust store
+	# Add the dex server certificate to the trust store
 	certutil -A -d sql:$(HOME)/.pki/nssdb -n dex -i $(CERT_DIR)/ca.crt -t "TC,,"
 
 .PHONY: cert

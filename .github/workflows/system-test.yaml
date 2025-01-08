@@ -28,12 +28,15 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
-      # for certutil
-      # https://packages.ubuntu.com/xenial/libnss3-tools
       - run: sudo apt update
-      - run: sudo apt install -y libnss3-tools
-      - run: mkdir -p ~/.pki/nssdb
+      # For certutil
+      # https://packages.ubuntu.com/xenial/libnss3-tools
+      - run: sudo apt install --no-install-recommends -y libnss3-tools
+      # For keyring
+      # https://github.com/zalando/go-keyring/issues/45
+      - run: sudo apt install --no-install-recommends -y dbus-x11 gnome-keyring
 
+      - run: mkdir -p ~/.pki/nssdb
       - run: echo '127.0.0.1 dex-server' | sudo tee -a /etc/hosts
 
       - run: make -C system_test -j3
