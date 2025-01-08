@@ -29,7 +29,8 @@ test: build
 		--exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET \
 		--exec-arg=--oidc-extra-scope=email \
 		--exec-arg=--certificate-authority=$(CERT_DIR)/ca.crt \
-		--exec-arg=--browser-command=$(BIN_DIR)/chromelogin
+		--exec-arg=--browser-command=$(BIN_DIR)/chromelogin \
+		--exec-arg=--no-keyring
 	# make sure we can access the cluster
 	kubectl --user=oidc cluster-info
 
