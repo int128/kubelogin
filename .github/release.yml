@@ -1,0 +1,16 @@
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+changelog:
+  categories:
+    - title: Features
+      labels:
+        - '*'
+      exclude:
+        labels:
+          - renovate
+          - refactoring
+    - title: Refactoring
+      labels:
+        - refactoring
+    - title: Dependencies
+      labels:
+        - renovate
