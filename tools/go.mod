@@ -3,9 +3,9 @@ module github.com/int128/kubelogin/tools
 go 1.23.4
 
 require (
-	github.com/golangci/golangci-lint v1.63.3
+	github.com/golangci/golangci-lint v1.63.4
 	github.com/google/wire v0.6.0
-	github.com/vektra/mockery/v2 v2.50.3
+	github.com/vektra/mockery/v2 v2.50.4
 )
 
 require (
