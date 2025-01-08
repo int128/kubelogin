@@ -44,7 +44,7 @@ $(BIN_DIR)/chromelogin: $(wildcard chromelogin/*.go)
 
 .PHONY: setup-keyring
 setup-keyring:
-	gnome-keyring-daemon --unlock < /dev/null
+	echo password | gnome-keyring-daemon --unlock
 
 .PHONY: clean
 clean:
