@@ -5,11 +5,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/pflag"
+
+	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
-	"github.com/spf13/pflag"
 )
 
 const oobRedirectURI = "urn:ietf:wg:oauth:2.0:oob"
@@ -28,6 +30,7 @@ type authenticationOptions struct {
 	AuthRequestExtraParams      map[string]string
 	Username                    string
 	Password                    string
+	Audiences                   []string
 }
 
 var allGrantType = strings.Join([]string{
@@ -36,6 +39,7 @@ var allGrantType = strings.Join([]string{
 	"authcode-keyboard",
 	"password",
 	"device-code",
+	"client-credentials",
 }, "|")
 
 func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
@@ -52,6 +56,8 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
+	f.StringSliceVar(&o.Audiences, "audiences", nil, "[client credentials] Audiences for oauth2 access token")
+
 }
 
 func (o *authenticationOptions) expandHomedir() {
@@ -88,6 +94,8 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			SkipOpenBrowser: o.SkipOpenBrowser,
 			BrowserCommand:  o.BrowserCommand,
 		}
+	case o.GrantType == "client-credentials":
+		s.ClientCredentialsOption = &client.GetTokenByClientCredentialsInput{Audiences: o.Audiences}
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
 	}
