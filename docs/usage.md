@@ -30,6 +30,7 @@ Flags:
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
       --oidc-redirect-url-hostname string               [authcode] Hostname of the redirect URL (default "localhost")
+      --audiences                                       [client credentials] Audiences for oauth2 access token
       --oidc-redirect-url-authcode-keyboard string      [authcode-keyboard] Redirect URL (default "urn:ietf:wg:oauth:2.0:oob")
       --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
@@ -141,6 +142,7 @@ Kubelogin support the following flows:
 - [Authorization code flow with a keyboard](#authorization-code-flow-with-a-keyboard)
 - [Device authorization grant](#device-authorization-grant)
 - [Resource owner password credentials grant](#resource-owner-password-credentials-grant)
+- [Client Credentials flow](#client-credentials-flow)
 
 ### Authorization code flow
 
@@ -282,6 +284,16 @@ If the username is not set, kubelogin will show the prompt for the username and 
 Username: foo
 Password:
 ```
+
+### Client Credentials Flow
+
+Kubelogin performs the [OAuth 2.0 client credentials flow](https://datatracker.ietf.org/doc/html/rfc6749#section-1.3.4) when `--grant-type=client-credentials` is set.
+
+```yaml
+- --grant-type=client-credentials
+```
+
+Per specification, this flow only returns authorization tokens.
 
 ## Run in Docker
 

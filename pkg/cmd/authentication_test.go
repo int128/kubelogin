@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
@@ -90,6 +91,14 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 					Username: "USER",
 					Password: "PASS",
 				},
+			},
+		},
+		"GrantType=client-credentials": {
+			args: []string{
+				"--grant-type", "client-credentials",
+			},
+			want: authentication.GrantOptionSet{
+				ClientCredentialsOption: &client.GetTokenByClientCredentialsInput{},
 			},
 		},
 		"GrantType=auto": {
