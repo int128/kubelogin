@@ -12,6 +12,15 @@ type Key struct {
 	Username        string
 }
 
+// Config represents a configuration for the token cache.
+type Config struct {
+	// Directory is a path to the directory to store a token cache.
+	// Note that a lock file is created into this directory even if the keyring is used.
+	Directory string
+
+	Storage Storage
+}
+
 // Storage is an enum of different storage strategies.
 type Storage byte
 

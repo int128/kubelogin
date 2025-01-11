@@ -16,6 +16,10 @@ func TestRepository_FindByKey(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		dir := t.TempDir()
+		config := tokencache.Config{
+			Directory: dir,
+			Storage:   tokencache.StorageDisk,
+		}
 		key := tokencache.Key{
 			Provider: oidc.Provider{
 				IssuerURL:    "YOUR_ISSUER",
@@ -27,6 +31,7 @@ func TestRepository_FindByKey(t *testing.T) {
 				CACertFilename: []string{"/path/to/cert"},
 			},
 		}
+
 		json := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}`
 		filename, err := computeChecksum(key)
 		if err != nil {
@@ -37,7 +42,7 @@ func TestRepository_FindByKey(t *testing.T) {
 			t.Fatalf("could not write to the temp file: %s", err)
 		}
 
-		got, err := r.FindByKey(dir, tokencache.StorageDisk, key)
+		got, err := r.FindByKey(config, key)
 		if err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
@@ -53,6 +58,10 @@ func TestRepository_Save(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		dir := t.TempDir()
+		config := tokencache.Config{
+			Directory: dir,
+			Storage:   tokencache.StorageDisk,
+		}
 		key := tokencache.Key{
 			Provider: oidc.Provider{
 				IssuerURL:    "YOUR_ISSUER",
@@ -65,7 +74,7 @@ func TestRepository_Save(t *testing.T) {
 			},
 		}
 		tokenSet := oidc.TokenSet{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
-		if err := r.Save(dir, tokencache.StorageDisk, key, tokenSet); err != nil {
+		if err := r.Save(config, key, tokenSet); err != nil {
 			t.Errorf("err wants nil but %+v", err)
 		}
 

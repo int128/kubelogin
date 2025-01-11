@@ -31,12 +31,11 @@ type Interface interface {
 
 // Input represents an input DTO of the GetToken use-case.
 type Input struct {
-	Provider          oidc.Provider
-	ForceRefresh      bool
-	TokenCacheDir     string
-	TokenCacheStorage tokencache.Storage
-	GrantOptionSet    authentication.GrantOptionSet
-	TLSClientConfig   tlsclientconfig.Config
+	Provider         oidc.Provider
+	ForceRefresh     bool
+	TokenCacheConfig tokencache.Config
+	GrantOptionSet   authentication.GrantOptionSet
+	TLSClientConfig  tlsclientconfig.Config
 }
 
 type GetToken struct {
@@ -57,7 +56,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}
 	u.Logger.V(1).Infof("credential plugin is called with apiVersion: %s", credentialPluginInput.ClientAuthenticationAPIVersion)
 
-	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
+	u.Logger.V(1).Infof("finding a token cache")
 	tokenCacheKey := tokencache.Key{
 		Provider:        in.Provider,
 		TLSClientConfig: in.TLSClientConfig,
@@ -67,7 +66,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}
 
 	u.Logger.V(1).Infof("acquiring the lock of token cache")
-	lock, err := u.TokenCacheRepository.Lock(in.TokenCacheDir, in.TokenCacheStorage, tokenCacheKey)
+	lock, err := u.TokenCacheRepository.Lock(in.TokenCacheConfig, tokenCacheKey)
 	if err != nil {
 		return fmt.Errorf("could not lock the token cache: %w", err)
 	}
@@ -78,7 +77,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		}
 	}()
 
-	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, in.TokenCacheStorage, tokenCacheKey)
+	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheConfig, tokenCacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
 	}
@@ -126,7 +125,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}
 	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
 	u.Logger.V(1).Infof("you got a valid token until %s", idTokenClaims.Expiry)
-	if err := u.TokenCacheRepository.Save(in.TokenCacheDir, in.TokenCacheStorage, tokenCacheKey, authenticationOutput.TokenSet); err != nil {
+	if err := u.TokenCacheRepository.Save(in.TokenCacheConfig, tokenCacheKey, authenticationOutput.TokenSet); err != nil {
 		return fmt.Errorf("could not write the token cache: %w", err)
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
