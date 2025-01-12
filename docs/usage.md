@@ -18,7 +18,7 @@ Flags:
       --token-cache-storage string                      Storage for the token cache. One of (auto|keyring|disk) (default "auto")
       --certificate-authority stringArray               Path to a cert file for the certificate authority
       --certificate-authority-data stringArray          Base64 encoded cert for the certificate authority
-      --insecure-skip-tls-verify                        If set, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+      --insecure-skip-tls-verify                        [SECURITY RISK] If set, the server's certificate will not be checked for validity
       --tls-renegotiation-once                          If set, allow a remote server to request renegotiation once per connection
       --tls-renegotiation-freely                        If set, allow a remote server to repeatedly request renegotiation
       --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password|device-code) (default "auto")
