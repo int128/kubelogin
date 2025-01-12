@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/int128/kubelogin/pkg/tokencache"
 	"github.com/spf13/pflag"
@@ -16,32 +18,35 @@ func getDefaultTokenCacheDir() string {
 	return filepath.Join("~", ".kube", "cache", "oidc-login")
 }
 
+var allTokenCacheStorage = strings.Join([]string{"auto", "keyring", "disk"}, "|")
+
 type tokenCacheOptions struct {
-	TokenCacheDir string
-	ForceKeyring  bool
-	NoKeyring     bool
+	TokenCacheDir     string
+	TokenCacheStorage string
 }
 
 func (o *tokenCacheOptions) addFlags(f *pflag.FlagSet) {
-	f.StringVar(&o.TokenCacheDir, "token-cache-dir", getDefaultTokenCacheDir(), "Path to a directory for token cache")
-	f.BoolVar(&o.ForceKeyring, "force-keyring", false, "If set, cached tokens will be stored in the OS keyring")
-	f.BoolVar(&o.NoKeyring, "no-keyring", false, "If set, cached tokens will be stored on disk")
+	f.StringVar(&o.TokenCacheDir, "token-cache-dir", getDefaultTokenCacheDir(), "Path to a directory of the token cache")
+	f.StringVar(&o.TokenCacheStorage, "token-cache-storage", "auto", fmt.Sprintf("Storage for the token cache. One of (%s)", allTokenCacheStorage))
 }
 
 func (o *tokenCacheOptions) expandHomedir() {
 	o.TokenCacheDir = expandHomedir(o.TokenCacheDir)
 }
 
-func (o *tokenCacheOptions) tokenCacheConfig() tokencache.Config {
-	tokenStorage := tokencache.StorageAuto
-	switch {
-	case o.ForceKeyring:
-		tokenStorage = tokencache.StorageKeyring
-	case o.NoKeyring:
-		tokenStorage = tokencache.StorageDisk
-	}
-	return tokencache.Config{
+func (o *tokenCacheOptions) tokenCacheConfig() (tokencache.Config, error) {
+	config := tokencache.Config{
 		Directory: o.TokenCacheDir,
-		Storage:   tokenStorage,
 	}
+	switch o.TokenCacheStorage {
+	case "auto":
+		config.Storage = tokencache.StorageAuto
+	case "keyring":
+		config.Storage = tokencache.StorageKeyring
+	case "disk":
+		config.Storage = tokencache.StorageDisk
+	default:
+		return tokencache.Config{}, fmt.Errorf("token-cache-storage must be one of (%s)", allTokenCacheStorage)
+	}
+	return config, nil
 }

@@ -74,11 +74,14 @@ NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
 
-Kubelogin writes the ID token and refresh token to the token cache file.
+Kubelogin stores the ID token and refresh token to the token cache storage.
+If the OS keyring is available, it stores the token cache to the keyring.
+Otherwise, it stores the token cache to the file system.
 
-If the cached ID token is valid, kubelogin just returns it.
-If the cached ID token has expired, kubelogin will refresh the token using the refresh token.
-If the refresh token has expired, kubelogin will perform re-authentication (you will have to login via browser again).
+Kubelogin refreshes the expired token cache.
+If the ID token is valid, it just returns it.
+If the ID token has expired, it will refresh the token using the refresh token.
+If the refresh token has expired, it will perform re-authentication.
 
 ### Troubleshoot
 
