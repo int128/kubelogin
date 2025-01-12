@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"runtime"
 
 	"github.com/google/wire"
@@ -24,17 +22,7 @@ type Interface interface {
 	Run(ctx context.Context, args []string, version string) int
 }
 
-func getDefaultTokenCacheDir(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
-}
-
 var defaultListenAddress = []string{"127.0.0.1:8000", "127.0.0.1:18000"}
-var defaultTokenCacheDir = filepath.Join(
-	getDefaultTokenCacheDir("KUBECACHEDIR", filepath.Join("~", ".kube", "cache")),
-	"oidc-login")
 
 const defaultAuthenticationTimeoutSec = 180
 
