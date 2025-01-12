@@ -72,6 +72,10 @@ func (cmd *GetToken) New() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("get-token: %w", err)
 			}
+			tokenCacheConfig, err := o.tokenCacheOptions.tokenCacheConfig()
+			if err != nil {
+				return fmt.Errorf("get-token: %w", err)
+			}
 			in := credentialplugin.Input{
 				Provider: oidc.Provider{
 					IssuerURL:      o.IssuerURL,
@@ -82,7 +86,7 @@ func (cmd *GetToken) New() *cobra.Command {
 					ExtraScopes:    o.ExtraScopes,
 				},
 				ForceRefresh:     o.ForceRefresh,
-				TokenCacheConfig: o.tokenCacheOptions.tokenCacheConfig(),
+				TokenCacheConfig: tokenCacheConfig,
 				GrantOptionSet:   grantOptionSet,
 				TLSClientConfig:  o.tlsOptions.tlsClientConfig(),
 			}
