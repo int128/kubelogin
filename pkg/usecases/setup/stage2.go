@@ -84,15 +84,15 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 	u.Logger.Printf("authentication in progress...")
 	out, err := u.Authentication.Do(ctx, authentication.Input{
 		Provider: oidc.Provider{
-			IssuerURL:    in.IssuerURL,
-			ClientID:     in.ClientID,
-			ClientSecret: in.ClientSecret,
-			ExtraScopes:  in.ExtraScopes,
-			UsePKCE:      in.UsePKCE,
+			IssuerURL:      in.IssuerURL,
+			ClientID:       in.ClientID,
+			ClientSecret:   in.ClientSecret,
+			ExtraScopes:    in.ExtraScopes,
+			UsePKCE:        in.UsePKCE,
+			UseAccessToken: in.UseAccessToken,
 		},
 		GrantOptionSet:  in.GrantOptionSet,
 		TLSClientConfig: in.TLSClientConfig,
-		UseAccessToken:  in.UseAccessToken,
 	})
 	if err != nil {
 		return fmt.Errorf("authentication error: %w", err)
