@@ -20,7 +20,7 @@ type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string
 	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
 	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
-	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
+	GetTokenByROPC(ctx context.Context, username, password string, otp string) (*oidc.TokenSet, error)
 	GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error)
 	ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error)
@@ -147,9 +147,9 @@ func (c *client) SupportedPKCEMethods() []string {
 }
 
 // GetTokenByROPC performs the resource owner password credentials flow.
-func (c *client) GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error) {
+func (c *client) GetTokenByROPC(ctx context.Context, username, password string, otp string) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
-	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, username, password)
+	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, username, password, otp)
 	if err != nil {
 		return nil, fmt.Errorf("resource owner password credentials flow error: %w", err)
 	}
