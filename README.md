@@ -13,7 +13,6 @@ Take a look at the diagram:
 
 ![Diagram of the credential plugin](docs/credential-plugin-diagram.svg)
 
-
 ## Getting Started
 
 ### Setup
@@ -38,21 +37,20 @@ The kubeconfig looks like:
 
 ```yaml
 users:
-- name: oidc
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubectl
-      args:
-      - oidc-login
-      - get-token
-      - --oidc-issuer-url=ISSUER_URL
-      - --oidc-client-id=YOUR_CLIENT_ID
-      - --oidc-client-secret=YOUR_CLIENT_SECRET
+  - name: oidc
+    user:
+      exec:
+        apiVersion: client.authentication.k8s.io/v1beta1
+        command: kubectl
+        args:
+          - oidc-login
+          - get-token
+          - --oidc-issuer-url=ISSUER_URL
+          - --oidc-client-id=YOUR_CLIENT_ID
+          - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
 See [setup guide](docs/setup.md) for more.
-
 
 ### Run
 
@@ -82,7 +80,6 @@ If the cached ID token is valid, kubelogin just returns it.
 If the cached ID token has expired, kubelogin will refresh the token using the refresh token.
 If the refresh token has expired, kubelogin will perform re-authentication (you will have to login via browser again).
 
-
 ### Troubleshoot
 
 You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
@@ -107,19 +104,18 @@ You can increase the log level by `-v1` option.
 
 ```yaml
 users:
-- name: oidc
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: kubectl
-      args:
-      - oidc-login
-      - get-token
-      - -v1
+  - name: oidc
+    user:
+      exec:
+        apiVersion: client.authentication.k8s.io/v1beta1
+        command: kubectl
+        args:
+          - oidc-login
+          - get-token
+          - -v1
 ```
 
 You can verify kubelogin works with your provider using [acceptance test](acceptance_test).
-
 
 ## Docs
 
@@ -128,7 +124,6 @@ You can verify kubelogin works with your provider using [acceptance test](accept
 - [Standalone mode](docs/standalone-mode.md)
 - [System test](system_test)
 - [Acceptance_test for identity providers](acceptance_test)
-
 
 ## Contributions
 

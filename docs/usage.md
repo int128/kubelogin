@@ -51,7 +51,6 @@ Global Flags:
       --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
 ```
 
-
 ## Options
 
 ### Authentication timeout
@@ -61,7 +60,7 @@ This prevents a process from remaining forever.
 You can change the timeout by the following flag:
 
 ```yaml
-      - --authentication-timeout-sec=60
+- --authentication-timeout-sec=60
 ```
 
 For now this timeout works only for the authorization code flow.
@@ -71,8 +70,8 @@ For now this timeout works only for the authorization code flow.
 You can set the extra scopes to request to the provider by `--oidc-extra-scope`.
 
 ```yaml
-      - --oidc-extra-scope=email
-      - --oidc-extra-scope=profile
+- --oidc-extra-scope=email
+- --oidc-extra-scope=profile
 ```
 
 ### CA certificate
@@ -80,8 +79,8 @@ You can set the extra scopes to request to the provider by `--oidc-extra-scope`.
 You can use your self-signed certificate for the provider.
 
 ```yaml
-      - --certificate-authority=/home/user/.kube/keycloak-ca.pem
-      - --certificate-authority-data=LS0t...
+- --certificate-authority=/home/user/.kube/keycloak-ca.pem
+- --certificate-authority-data=LS0t...
 ```
 
 ### HTTP proxy
@@ -97,7 +96,6 @@ If a value in the following options begins with a tilde character `~`, it is exp
 - `--local-server-cert`
 - `--local-server-key`
 - `--token-cache-dir`
-
 
 ## Authentication flows
 
@@ -120,40 +118,40 @@ You need to register the following redirect URIs to the provider:
 You can change the listening address.
 
 ```yaml
-      - --listen-address=127.0.0.1:12345
-      - --listen-address=127.0.0.1:23456
+- --listen-address=127.0.0.1:12345
+- --listen-address=127.0.0.1:23456
 ```
 
 You can specify a certificate for the local webserver if HTTPS is required by your identity provider.
 
 ```yaml
-      - --local-server-cert=localhost.crt
-      - --local-server-key=localhost.key
+- --local-server-cert=localhost.crt
+- --local-server-key=localhost.key
 ```
 
 You can change the hostname of redirect URI from the default value `localhost`.
 
 ```yaml
-      - --oidc-redirect-url-hostname=127.0.0.1
+- --oidc-redirect-url-hostname=127.0.0.1
 ```
 
 You can add extra parameters to the authentication request.
 
 ```yaml
-      - --oidc-auth-request-extra-params=ttl=86400
+- --oidc-auth-request-extra-params=ttl=86400
 ```
 
 When authentication completed, kubelogin shows a message to close the browser.
 You can change the URL to show after authentication.
 
 ```yaml
-      - --open-url-after-authentication=https://example.com/success.html
+- --open-url-after-authentication=https://example.com/success.html
 ```
 
 You can skip opening the browser if you encounter some environment problem.
 
 ```yaml
-      - --skip-open-browser
+- --skip-open-browser
 ```
 
 For Linux users, you change the default browser by `BROWSER` environment variable.
@@ -163,7 +161,7 @@ For Linux users, you change the default browser by `BROWSER` environment variabl
 If you cannot access the browser, instead use the authorization code flow with a keyboard.
 
 ```yaml
-      - --grant-type=authcode-keyboard
+- --grant-type=authcode-keyboard
 ```
 
 Kubelogin will show the URL and prompt.
@@ -179,13 +177,13 @@ The default of redirect URI is `urn:ietf:wg:oauth:2.0:oob`.
 You can overwrite it.
 
 ```yaml
-      - oidc-redirect-url-authcode-keyboard=http://localhost
+- oidc-redirect-url-authcode-keyboard=http://localhost
 ```
 
 You can add extra parameters to the authentication request.
 
 ```yaml
-      - --oidc-auth-request-extra-params=ttl=86400
+- --oidc-auth-request-extra-params=ttl=86400
 ```
 
 ### Resource owner password credentials grant flow
@@ -199,14 +197,14 @@ Keycloak supports this flow but you need to explicitly enable the "Direct Access
 You can set the username and password.
 
 ```yaml
-      - --username=USERNAME
-      - --password=PASSWORD
+- --username=USERNAME
+- --password=PASSWORD
 ```
 
 If the password is not set, kubelogin will show the prompt for the password.
 
 ```yaml
-      - --username=USERNAME
+- --username=USERNAME
 ```
 
 ```
@@ -217,7 +215,7 @@ Password:
 If the username is not set, kubelogin will show the prompt for the username and password.
 
 ```yaml
-      - --grant-type=password
+- --grant-type=password
 ```
 
 ```
@@ -233,25 +231,25 @@ The kubeconfig looks like:
 
 ```yaml
 users:
-- name: oidc
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: docker
-      args:
-      - run
-      - --rm
-      - -v
-      - /tmp/.token-cache:/.token-cache
-      - -p
-      - 8000:8000
-      - ghcr.io/int128/kubelogin
-      - get-token
-      - --token-cache-dir=/.token-cache
-      - --listen-address=0.0.0.0:8000
-      - --oidc-issuer-url=ISSUER_URL
-      - --oidc-client-id=YOUR_CLIENT_ID
-      - --oidc-client-secret=YOUR_CLIENT_SECRET
+  - name: oidc
+    user:
+      exec:
+        apiVersion: client.authentication.k8s.io/v1beta1
+        command: docker
+        args:
+          - run
+          - --rm
+          - -v
+          - /tmp/.token-cache:/.token-cache
+          - -p
+          - 8000:8000
+          - ghcr.io/int128/kubelogin
+          - get-token
+          - --token-cache-dir=/.token-cache
+          - --listen-address=0.0.0.0:8000
+          - --oidc-issuer-url=ISSUER_URL
+          - --oidc-client-id=YOUR_CLIENT_ID
+          - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
 Known limitations:
