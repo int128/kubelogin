@@ -38,11 +38,10 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	o.authenticationOptions.addFlags(f)
 }
 
-func (o *getTokenOptions) expandHomedir() error {
+func (o *getTokenOptions) expandHomedir() {
 	o.tokenCacheOptions.expandHomedir()
 	o.authenticationOptions.expandHomedir()
 	o.tlsOptions.expandHomedir()
-	return nil
 }
 
 type GetToken struct {
@@ -68,9 +67,7 @@ func (cmd *GetToken) New() *cobra.Command {
 			return nil
 		},
 		RunE: func(c *cobra.Command, _ []string) error {
-			if err := o.expandHomedir(); err != nil {
-				return err
-			}
+			o.expandHomedir()
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
 				return fmt.Errorf("get-token: %w", err)
