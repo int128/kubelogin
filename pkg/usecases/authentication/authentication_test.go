@@ -11,6 +11,7 @@ import (
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
+	"github.com/int128/kubelogin/pkg/pkce"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 	testingLogger "github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
@@ -96,9 +97,7 @@ func TestAuthentication_Do(t *testing.T) {
 			},
 		}
 		mockClient := client_mock.NewMockInterface(t)
-		mockClient.EXPECT().
-			SupportedPKCEMethods().
-			Return(nil)
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod)
 		mockClient.EXPECT().
 			Refresh(ctx, "EXPIRED_REFRESH_TOKEN").
 			Return(nil, errors.New("token has expired"))

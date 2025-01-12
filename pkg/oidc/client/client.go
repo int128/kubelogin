@@ -20,11 +20,11 @@ type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string
 	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
 	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
+	NegotiatedPKCEMethod() pkce.Method
 	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
 	GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error)
 	ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error)
-	SupportedPKCEMethods() []string
 }
 
 type AuthCodeURLInput struct {
@@ -60,7 +60,7 @@ type client struct {
 	oauth2Config                oauth2.Config
 	clock                       clock.Interface
 	logger                      logger.Interface
-	supportedPKCEMethods        []string
+	negotiatedPKCEMethod        pkce.Method
 	deviceAuthorizationEndpoint string
 	useAccessToken              bool
 }
@@ -116,34 +116,33 @@ func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput)
 	return c.verifyToken(ctx, token, in.Nonce)
 }
 
-func authorizationRequestOptions(n string, p pkce.Params, e map[string]string) []oauth2.AuthCodeOption {
-	o := []oauth2.AuthCodeOption{
+func authorizationRequestOptions(nonce string, pkceParams pkce.Params, extraParams map[string]string) []oauth2.AuthCodeOption {
+	opts := []oauth2.AuthCodeOption{
 		oauth2.AccessTypeOffline,
-		gooidc.Nonce(n),
+		gooidc.Nonce(nonce),
 	}
-	if !p.IsZero() {
-		o = append(o,
-			oauth2.SetAuthURLParam("code_challenge", p.CodeChallenge),
-			oauth2.SetAuthURLParam("code_challenge_method", p.CodeChallengeMethod),
-		)
+	if pkceParams.CodeChallenge != "" {
+		opts = append(opts, oauth2.SetAuthURLParam("code_challenge", pkceParams.CodeChallenge))
 	}
-	for key, value := range e {
-		o = append(o, oauth2.SetAuthURLParam(key, value))
+	if pkceParams.CodeChallengeMethod != "" {
+		opts = append(opts, oauth2.SetAuthURLParam("code_challenge_method", pkceParams.CodeChallengeMethod))
 	}
-	return o
+	for key, value := range extraParams {
+		opts = append(opts, oauth2.SetAuthURLParam(key, value))
+	}
+	return opts
 }
 
-func tokenRequestOptions(p pkce.Params) (o []oauth2.AuthCodeOption) {
-	if !p.IsZero() {
-		o = append(o, oauth2.SetAuthURLParam("code_verifier", p.CodeVerifier))
+func tokenRequestOptions(pkceParams pkce.Params) []oauth2.AuthCodeOption {
+	var opts []oauth2.AuthCodeOption
+	if pkceParams.CodeVerifier != "" {
+		opts = append(opts, oauth2.SetAuthURLParam("code_verifier", pkceParams.CodeVerifier))
 	}
-	return
+	return opts
 }
 
-// SupportedPKCEMethods returns the PKCE methods supported by the provider.
-// This may return nil if PKCE is not supported.
-func (c *client) SupportedPKCEMethods() []string {
-	return c.supportedPKCEMethods
+func (c *client) NegotiatedPKCEMethod() pkce.Method {
+	return c.negotiatedPKCEMethod
 }
 
 // GetTokenByROPC performs the resource owner password credentials flow.

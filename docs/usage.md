@@ -11,7 +11,7 @@ Flags:
       --oidc-client-id string                           Client ID of the provider (mandatory)
       --oidc-client-secret string                       Client secret of the provider
       --oidc-extra-scope strings                        Scopes to request to the provider
-      --oidc-use-pkce                                   Force PKCE usage
+      --oidc-use-pkce                                   Force PKCE even if the provider does not support it
       --oidc-use-access-token                           Instead of using the id_token, use the access_token to authenticate to Kubernetes
       --force-refresh                                   If set, refresh the ID token regardless of its expiration time
       --token-cache-dir string                          Path to a directory of the token cache (default "~/.kube/cache/oidc-login")

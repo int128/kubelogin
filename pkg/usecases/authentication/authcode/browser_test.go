@@ -10,6 +10,7 @@ import (
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
+	"github.com/int128/kubelogin/pkg/pkce"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/stretchr/testify/mock"
 )
@@ -31,9 +32,7 @@ func TestBrowser_Do(t *testing.T) {
 			AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
 		}
 		mockClient := client_mock.NewMockInterface(t)
-		mockClient.EXPECT().
-			SupportedPKCEMethods().
-			Return(nil)
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod)
 		mockClient.EXPECT().
 			GetTokenByAuthCode(mock.Anything, mock.Anything, mock.Anything).
 			Run(func(_ context.Context, in client.GetTokenByAuthCodeInput, readyChan chan<- string) {
@@ -85,9 +84,7 @@ func TestBrowser_Do(t *testing.T) {
 			AuthenticationTimeout: 10 * time.Second,
 		}
 		mockClient := client_mock.NewMockInterface(t)
-		mockClient.EXPECT().
-			SupportedPKCEMethods().
-			Return(nil)
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod)
 		mockClient.EXPECT().
 			GetTokenByAuthCode(mock.Anything, mock.Anything, mock.Anything).
 			Run(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
@@ -127,9 +124,7 @@ func TestBrowser_Do(t *testing.T) {
 			AuthenticationTimeout: 10 * time.Second,
 		}
 		mockClient := client_mock.NewMockInterface(t)
-		mockClient.EXPECT().
-			SupportedPKCEMethods().
-			Return(nil)
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod)
 		mockClient.EXPECT().
 			GetTokenByAuthCode(mock.Anything, mock.Anything, mock.Anything).
 			Run(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {

@@ -2,40 +2,33 @@ package pkce
 
 import (
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestNew(t *testing.T) {
 	t.Run("S256", func(t *testing.T) {
-		p, err := New([]string{"plain", "S256"})
+		params, err := New(MethodS256)
 		if err != nil {
 			t.Fatalf("New error: %s", err)
 		}
-		if p.CodeChallengeMethod != "S256" {
-			t.Errorf("CodeChallengeMethod wants S256 but was %s", p.CodeChallengeMethod)
+		if params.CodeChallengeMethod != "S256" {
+			t.Errorf("CodeChallengeMethod wants S256 but was %s", params.CodeChallengeMethod)
 		}
-		if p.CodeChallenge == "" {
+		if params.CodeChallenge == "" {
 			t.Errorf("CodeChallenge wants non-empty but was empty")
 		}
-		if p.CodeVerifier == "" {
+		if params.CodeVerifier == "" {
 			t.Errorf("CodeVerifier wants non-empty but was empty")
 		}
 	})
-	t.Run("plain", func(t *testing.T) {
-		p, err := New([]string{"plain"})
+	t.Run("NoMethod", func(t *testing.T) {
+		params, err := New(NoMethod)
 		if err != nil {
 			t.Fatalf("New error: %s", err)
 		}
-		if !p.IsZero() {
-			t.Errorf("IsZero wants true but was false")
-		}
-	})
-	t.Run("nil", func(t *testing.T) {
-		p, err := New(nil)
-		if err != nil {
-			t.Fatalf("New error: %s", err)
-		}
-		if !p.IsZero() {
-			t.Errorf("IsZero wants true but was false")
+		if diff := cmp.Diff(Params{}, params); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
 }
