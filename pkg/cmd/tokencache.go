@@ -8,16 +8,13 @@ import (
 	"github.com/spf13/pflag"
 )
 
-func getDefaultTokenCacheDir(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
+func getDefaultTokenCacheDir() string {
+	// https://github.com/int128/kubelogin/pull/975
+	if kubeCacheDir, ok := os.LookupEnv("KUBECACHEDIR"); ok {
+		return filepath.Join(kubeCacheDir, "oidc-login")
 	}
-	return fallback
+	return filepath.Join("~", ".kube", "cache", "oidc-login")
 }
-
-var defaultTokenCacheDir = filepath.Join(
-	getDefaultTokenCacheDir("KUBECACHEDIR", filepath.Join("~", ".kube", "cache")),
-	"oidc-login")
 
 type tokenCacheOptions struct {
 	TokenCacheDir string
@@ -26,7 +23,7 @@ type tokenCacheOptions struct {
 }
 
 func (o *tokenCacheOptions) addFlags(f *pflag.FlagSet) {
-	f.StringVar(&o.TokenCacheDir, "token-cache-dir", defaultTokenCacheDir, "Path to a directory for token cache")
+	f.StringVar(&o.TokenCacheDir, "token-cache-dir", getDefaultTokenCacheDir(), "Path to a directory for token cache")
 	f.BoolVar(&o.ForceKeyring, "force-keyring", false, "If set, cached tokens will be stored in the OS keyring")
 	f.BoolVar(&o.NoKeyring, "no-keyring", false, "If set, cached tokens will be stored on disk")
 }
