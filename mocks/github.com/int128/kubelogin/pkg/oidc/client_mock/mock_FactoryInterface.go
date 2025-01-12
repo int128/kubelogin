@@ -27,9 +27,9 @@ func (_m *MockFactoryInterface) EXPECT() *MockFactoryInterface_Expecter {
 	return &MockFactoryInterface_Expecter{mock: &_m.Mock}
 }
 
-// New provides a mock function with given fields: ctx, p, tlsClientConfig
-func (_m *MockFactoryInterface) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (client.Interface, error) {
-	ret := _m.Called(ctx, p, tlsClientConfig)
+// New provides a mock function with given fields: ctx, prov, tlsClientConfig
+func (_m *MockFactoryInterface) New(ctx context.Context, prov oidc.Provider, tlsClientConfig tlsclientconfig.Config) (client.Interface, error) {
+	ret := _m.Called(ctx, prov, tlsClientConfig)
 
 	if len(ret) == 0 {
 		panic("no return value specified for New")
@@ -38,10 +38,10 @@ func (_m *MockFactoryInterface) New(ctx context.Context, p oidc.Provider, tlsCli
 	var r0 client.Interface
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, oidc.Provider, tlsclientconfig.Config) (client.Interface, error)); ok {
-		return rf(ctx, p, tlsClientConfig)
+		return rf(ctx, prov, tlsClientConfig)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, oidc.Provider, tlsclientconfig.Config) client.Interface); ok {
-		r0 = rf(ctx, p, tlsClientConfig)
+		r0 = rf(ctx, prov, tlsClientConfig)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(client.Interface)
@@ -49,7 +49,7 @@ func (_m *MockFactoryInterface) New(ctx context.Context, p oidc.Provider, tlsCli
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, oidc.Provider, tlsclientconfig.Config) error); ok {
-		r1 = rf(ctx, p, tlsClientConfig)
+		r1 = rf(ctx, prov, tlsClientConfig)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -64,13 +64,13 @@ type MockFactoryInterface_New_Call struct {
 
 // New is a helper method to define mock.On call
 //   - ctx context.Context
-//   - p oidc.Provider
+//   - prov oidc.Provider
 //   - tlsClientConfig tlsclientconfig.Config
-func (_e *MockFactoryInterface_Expecter) New(ctx interface{}, p interface{}, tlsClientConfig interface{}) *MockFactoryInterface_New_Call {
-	return &MockFactoryInterface_New_Call{Call: _e.mock.On("New", ctx, p, tlsClientConfig)}
+func (_e *MockFactoryInterface_Expecter) New(ctx interface{}, prov interface{}, tlsClientConfig interface{}) *MockFactoryInterface_New_Call {
+	return &MockFactoryInterface_New_Call{Call: _e.mock.On("New", ctx, prov, tlsClientConfig)}
 }
 
-func (_c *MockFactoryInterface_New_Call) Run(run func(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config)) *MockFactoryInterface_New_Call {
+func (_c *MockFactoryInterface_New_Call) Run(run func(ctx context.Context, prov oidc.Provider, tlsClientConfig tlsclientconfig.Config)) *MockFactoryInterface_New_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(oidc.Provider), args[2].(tlsclientconfig.Config))
 	})

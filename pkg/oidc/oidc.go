@@ -15,7 +15,7 @@ type Provider struct {
 	ClientID       string
 	ClientSecret   string   // optional
 	ExtraScopes    []string // optional
-	UsePKCE        bool     // optional
+	ForcePKCE      bool     // optional
 	UseAccessToken bool     // optional
 }
 

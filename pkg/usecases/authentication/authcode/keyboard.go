@@ -34,15 +34,14 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 	if err != nil {
 		return nil, fmt.Errorf("could not generate a nonce: %w", err)
 	}
-	p, err := pkce.New(oidcClient.SupportedPKCEMethods())
+	pkceParams, err := pkce.New(oidcClient.NegotiatedPKCEMethod())
 	if err != nil {
-		return nil, fmt.Errorf("could not generate PKCE parameters: %w", err)
+		return nil, fmt.Errorf("could not generate the PKCE parameters: %w", err)
 	}
-
 	authCodeURL := oidcClient.GetAuthCodeURL(client.AuthCodeURLInput{
 		State:                  state,
 		Nonce:                  nonce,
-		PKCEParams:             p,
+		PKCEParams:             pkceParams,
 		RedirectURI:            o.RedirectURL,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	})
@@ -55,7 +54,7 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 	u.Logger.V(1).Infof("exchanging the code and token")
 	tokenSet, err := oidcClient.ExchangeAuthCode(ctx, client.ExchangeAuthCodeInput{
 		Code:        code,
-		PKCEParams:  p,
+		PKCEParams:  pkceParams,
 		Nonce:       nonce,
 		RedirectURI: o.RedirectURL,
 	})

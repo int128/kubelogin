@@ -10,11 +10,13 @@ import (
 	"fmt"
 )
 
-var Plain Params
+type Method string
 
 const (
-	// code challenge methods defined as https://tools.ietf.org/html/rfc7636#section-4.3
-	MethodS256 = "S256"
+	NoMethod Method = ""
+
+	// Code challenge methods defined as https://tools.ietf.org/html/rfc7636#section-4.3
+	MethodS256 Method = "S256"
 )
 
 // Params represents a set of the PKCE parameters.
@@ -24,27 +26,21 @@ type Params struct {
 	CodeVerifier        string
 }
 
-func (p Params) IsZero() bool {
-	return p == Params{}
-}
-
 // New returns a parameters supported by the provider.
 // You need to pass the code challenge methods defined in RFC7636.
-// It returns Plain if no method is available.
-func New(methods []string) (Params, error) {
-	for _, method := range methods {
-		if method == MethodS256 {
-			return NewS256()
-		}
+// It returns a zero value if no method is available.
+func New(method Method) (Params, error) {
+	if method == MethodS256 {
+		return NewS256()
 	}
-	return Plain, nil
+	return Params{}, nil
 }
 
 // NewS256 generates a parameters for S256.
 func NewS256() (Params, error) {
 	b, err := random32()
 	if err != nil {
-		return Plain, fmt.Errorf("could not generate a random: %w", err)
+		return Params{}, fmt.Errorf("could not generate a random: %w", err)
 	}
 	return computeS256(b), nil
 }
@@ -63,7 +59,7 @@ func computeS256(b []byte) Params {
 	_, _ = s.Write([]byte(v))
 	return Params{
 		CodeChallenge:       base64URLEncode(s.Sum(nil)),
-		CodeChallengeMethod: MethodS256,
+		CodeChallengeMethod: string(MethodS256),
 		CodeVerifier:        v,
 	}
 }

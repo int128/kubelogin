@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/google/wire"
@@ -24,7 +25,7 @@ var Set = wire.NewSet(
 )
 
 type FactoryInterface interface {
-	New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error)
+	New(ctx context.Context, prov oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error)
 }
 
 type Factory struct {
@@ -34,7 +35,7 @@ type Factory struct {
 }
 
 // New returns an instance of infrastructure.Interface with the given configuration.
-func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error) {
+func (f *Factory) New(ctx context.Context, prov oidc.Provider, tlsClientConfig tlsclientconfig.Config) (Interface, error) {
 	rawTLSClientConfig, err := f.Loader.Load(tlsClientConfig)
 	if err != nil {
 		return nil, fmt.Errorf("could not load the TLS client config: %w", err)
@@ -52,16 +53,13 @@ func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsc
 	}
 
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
-	provider, err := gooidc.NewProvider(ctx, p.IssuerURL)
+	provider, err := gooidc.NewProvider(ctx, prov.IssuerURL)
 	if err != nil {
 		return nil, fmt.Errorf("oidc discovery error: %w", err)
 	}
 	supportedPKCEMethods, err := extractSupportedPKCEMethods(provider)
 	if err != nil {
 		return nil, fmt.Errorf("could not determine supported PKCE methods: %w", err)
-	}
-	if len(supportedPKCEMethods) == 0 && p.UsePKCE {
-		supportedPKCEMethods = []string{pkce.MethodS256}
 	}
 	deviceAuthorizationEndpoint, err := extractDeviceAuthorizationEndpoint(provider)
 	if err != nil {
@@ -72,34 +70,44 @@ func (f *Factory) New(ctx context.Context, p oidc.Provider, tlsClientConfig tlsc
 		provider:   provider,
 		oauth2Config: oauth2.Config{
 			Endpoint:     provider.Endpoint(),
-			ClientID:     p.ClientID,
-			ClientSecret: p.ClientSecret,
-			Scopes:       append(p.ExtraScopes, gooidc.ScopeOpenID),
+			ClientID:     prov.ClientID,
+			ClientSecret: prov.ClientSecret,
+			Scopes:       append(prov.ExtraScopes, gooidc.ScopeOpenID),
 		},
 		clock:                       f.Clock,
 		logger:                      f.Logger,
-		supportedPKCEMethods:        supportedPKCEMethods,
+		negotiatedPKCEMethod:        determinePKCEMethod(supportedPKCEMethods, prov.ForcePKCE),
 		deviceAuthorizationEndpoint: deviceAuthorizationEndpoint,
-		useAccessToken:              p.UseAccessToken,
+		useAccessToken:              prov.UseAccessToken,
 	}, nil
 }
 
+func determinePKCEMethod(supportedPKCEMethods []string, forcePKCE bool) pkce.Method {
+	if forcePKCE {
+		return pkce.MethodS256
+	}
+	if slices.Contains(supportedPKCEMethods, "S256") {
+		return pkce.MethodS256
+	}
+	return pkce.NoMethod
+}
+
 func extractSupportedPKCEMethods(provider *gooidc.Provider) ([]string, error) {
-	var d struct {
+	var claims struct {
 		CodeChallengeMethodsSupported []string `json:"code_challenge_methods_supported"`
 	}
-	if err := provider.Claims(&d); err != nil {
+	if err := provider.Claims(&claims); err != nil {
 		return nil, fmt.Errorf("invalid discovery document: %w", err)
 	}
-	return d.CodeChallengeMethodsSupported, nil
+	return claims.CodeChallengeMethodsSupported, nil
 }
 
 func extractDeviceAuthorizationEndpoint(provider *gooidc.Provider) (string, error) {
-	var d struct {
+	var claims struct {
 		DeviceAuthorizationEndpoint string `json:"device_authorization_endpoint"`
 	}
-	if err := provider.Claims(&d); err != nil {
+	if err := provider.Claims(&claims); err != nil {
 		return "", fmt.Errorf("invalid discovery document: %w", err)
 	}
-	return d.DeviceAuthorizationEndpoint, nil
+	return claims.DeviceAuthorizationEndpoint, nil
 }

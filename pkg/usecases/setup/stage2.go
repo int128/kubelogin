@@ -88,7 +88,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 			ClientID:       in.ClientID,
 			ClientSecret:   in.ClientSecret,
 			ExtraScopes:    in.ExtraScopes,
-			UsePKCE:        in.UsePKCE,
+			ForcePKCE:      in.UsePKCE,
 			UseAccessToken: in.UseAccessToken,
 		},
 		GrantOptionSet:  in.GrantOptionSet,
