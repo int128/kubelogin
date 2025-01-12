@@ -49,7 +49,7 @@ jobs:
       - uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc # v6.11.0
         id: build
         with:
-          push: ${{ !github.event.repository.fork }}
+          push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           cache-from: ${{ steps.cache.outputs.cache-from }}
@@ -60,6 +60,7 @@ jobs:
             linux/ppc64le
 
   test:
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
