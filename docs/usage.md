@@ -87,7 +87,7 @@ you can enforce the code challenge method by `--oidc-pkce-method`.
 - --oidc-pkce-method=S256
 ```
 
-For the most providers, kubelogin automatically uses the PKCE by default.
+For the most providers, you don't need to set this option explicitly.
 
 ### CA certificate
 
