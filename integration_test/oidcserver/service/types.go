@@ -13,7 +13,7 @@ type Service interface {
 	Provider
 
 	IssuerURL() string
-	SetConfig(config testconfig.TestConfig)
+	SetConfig(config testconfig.Config)
 	LastTokenResponse() *TokenResponse
 }
 

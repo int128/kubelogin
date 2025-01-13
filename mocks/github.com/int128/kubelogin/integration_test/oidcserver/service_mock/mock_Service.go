@@ -440,7 +440,7 @@ func (_c *MockService_Refresh_Call) RunAndReturn(run func(string) (*service.Toke
 }
 
 // SetConfig provides a mock function with given fields: config
-func (_m *MockService) SetConfig(config testconfig.TestConfig) {
+func (_m *MockService) SetConfig(config testconfig.Config) {
 	_m.Called(config)
 }
 
@@ -450,14 +450,14 @@ type MockService_SetConfig_Call struct {
 }
 
 // SetConfig is a helper method to define mock.On call
-//   - config testconfig.TestConfig
+//   - config testconfig.Config
 func (_e *MockService_Expecter) SetConfig(config interface{}) *MockService_SetConfig_Call {
 	return &MockService_SetConfig_Call{Call: _e.mock.On("SetConfig", config)}
 }
 
-func (_c *MockService_SetConfig_Call) Run(run func(config testconfig.TestConfig)) *MockService_SetConfig_Call {
+func (_c *MockService_SetConfig_Call) Run(run func(config testconfig.Config)) *MockService_SetConfig_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(testconfig.TestConfig))
+		run(args[0].(testconfig.Config))
 	})
 	return _c
 }
@@ -467,7 +467,7 @@ func (_c *MockService_SetConfig_Call) Return() *MockService_SetConfig_Call {
 	return _c
 }
 
-func (_c *MockService_SetConfig_Call) RunAndReturn(run func(testconfig.TestConfig)) *MockService_SetConfig_Call {
+func (_c *MockService_SetConfig_Call) RunAndReturn(run func(testconfig.Config)) *MockService_SetConfig_Call {
 	_c.Run(run)
 	return _c
 }

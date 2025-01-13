@@ -6,7 +6,7 @@ import "time"
 type Want struct {
 	Scope               string
 	RedirectURIPrefix   string
-	CodeChallengeMethod string            // optional
+	CodeChallengeMethod string
 	ExtraParams         map[string]string // optional
 	Username            string            // optional
 	Password            string            // optional
@@ -17,12 +17,12 @@ type Want struct {
 type Response struct {
 	IDTokenExpiry                 time.Time
 	RefreshToken                  string
-	RefreshError                  string   // if set, Refresh() will return the error
-	CodeChallengeMethodsSupported []string // optional
+	RefreshError                  string // if set, Refresh() will return the error
+	CodeChallengeMethodsSupported []string
 }
 
-// TestConfig represents a configuration of the OpenID Connect provider.
-type TestConfig struct {
+// Config represents a configuration of the OpenID Connect provider.
+type Config struct {
 	Want     Want
 	Response Response
 }

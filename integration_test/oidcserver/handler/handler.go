@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/int128/kubelogin/integration_test/oidcserver/service"
@@ -28,10 +29,8 @@ type Handlers struct {
 }
 
 func (h *Handlers) handleError(w http.ResponseWriter, r *http.Request, f func() error) {
-	wr := &responseWriterRecorder{w, 200}
 	err := f()
 	if err == nil {
-		h.t.Logf("%d %s %s", wr.statusCode, r.Method, r.RequestURI)
 		return
 	}
 	if errResp := new(service.ErrorResponse); errors.As(err, &errResp) {
@@ -46,16 +45,6 @@ func (h *Handlers) handleError(w http.ResponseWriter, r *http.Request, f func() 
 	}
 	h.t.Logf("500 %s %s: %s", r.Method, r.RequestURI, err)
 	http.Error(w, err.Error(), 500)
-}
-
-type responseWriterRecorder struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (w *responseWriterRecorder) WriteHeader(statusCode int) {
-	w.ResponseWriter.WriteHeader(statusCode)
-	w.statusCode = statusCode
 }
 
 func (h *Handlers) Discovery(w http.ResponseWriter, r *http.Request) {
@@ -98,8 +87,12 @@ func (h *Handlers) AuthenticateCode(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return fmt.Errorf("authentication error: %w", err)
 		}
-		to := fmt.Sprintf("%s?state=%s&code=%s", redirectURI, state, code)
-		http.Redirect(w, r, to, 302)
+		redirectTo, err := url.Parse(redirectURI)
+		if err != nil {
+			return fmt.Errorf("invalid redirect_uri: %w", err)
+		}
+		redirectTo.RawQuery = url.Values{"state": {state}, "code": {code}}.Encode()
+		http.Redirect(w, r, redirectTo.String(), http.StatusFound)
 		return nil
 	})
 }

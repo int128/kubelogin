@@ -10,14 +10,14 @@ import (
 	"testing"
 )
 
-type Option struct {
+type Config struct {
 	TLSConfig    *tls.Config
 	BodyContains string
 }
 
 // New returns a client to simulate browser access.
-func New(ctx context.Context, t *testing.T, o Option) *client {
-	return &client{ctx, t, o}
+func New(ctx context.Context, t *testing.T, config Config) *client {
+	return &client{ctx, t, config}
 }
 
 // Zero returns a client which call is not expected.
@@ -26,13 +26,13 @@ func Zero(t *testing.T) *zeroClient {
 }
 
 type client struct {
-	ctx context.Context
-	t   *testing.T
-	o   Option
+	ctx    context.Context
+	t      *testing.T
+	config Config
 }
 
 func (c *client) Open(url string) error {
-	client := http.Client{Transport: &http.Transport{TLSClientConfig: c.o.TLSConfig}}
+	client := http.Client{Transport: &http.Transport{TLSClientConfig: c.config.TLSConfig}}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		c.t.Errorf("could not create a request: %s", err)
@@ -54,8 +54,8 @@ func (c *client) Open(url string) error {
 		return nil
 	}
 	body := string(b)
-	if !strings.Contains(body, c.o.BodyContains) {
-		c.t.Errorf("body should contain %s but was %s", c.o.BodyContains, body)
+	if !strings.Contains(body, c.config.BodyContains) {
+		c.t.Errorf("body should contain %s but was %s", c.config.BodyContains, body)
 	}
 	return nil
 }
