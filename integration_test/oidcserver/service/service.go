@@ -15,7 +15,7 @@ import (
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 )
 
-func New(t *testing.T, issuerURL string, config testconfig.TestConfig) Service {
+func New(t *testing.T, issuerURL string, config testconfig.Config) Service {
 	return &service{
 		config:    config,
 		t:         t,
@@ -24,7 +24,7 @@ func New(t *testing.T, issuerURL string, config testconfig.TestConfig) Service {
 }
 
 type service struct {
-	config                    testconfig.TestConfig
+	config                    testconfig.Config
 	t                         *testing.T
 	issuerURL                 string
 	lastAuthenticationRequest *AuthenticationRequest
@@ -35,7 +35,7 @@ func (svc *service) IssuerURL() string {
 	return svc.issuerURL
 }
 
-func (svc *service) SetConfig(cfg testconfig.TestConfig) {
+func (svc *service) SetConfig(cfg testconfig.Config) {
 	svc.config = cfg
 }
 

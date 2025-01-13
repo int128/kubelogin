@@ -17,7 +17,7 @@ import (
 )
 
 // New starts a server for the OpenID Connect provider.
-func New(t *testing.T, k keypair.KeyPair, c testconfig.TestConfig) service.Service {
+func New(t *testing.T, k keypair.KeyPair, c testconfig.Config) service.Service {
 	mux := http.NewServeMux()
 	serverURL := startServer(t, mux, k)
 
