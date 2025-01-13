@@ -17,7 +17,9 @@ type pkceOptions struct {
 
 func (o *pkceOptions) addFlags(f *pflag.FlagSet) {
 	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE S256 method")
-	f.MarkDeprecated("oidc-use-pkce", "use --oidc-pkce-method instead. Note that PKCE is automatically enabled by default.")
+	if err := f.MarkDeprecated("oidc-use-pkce", "use --oidc-pkce-method instead. Note that PKCE is automatically enabled by default."); err != nil {
+		panic(err)
+	}
 	f.StringVar(&o.PKCEMethod, "oidc-pkce-method", "auto", fmt.Sprintf("PKCE method. By default, PKCE is automatically enabled if the provider supports it. One of (%s)", allPKCEMethods))
 }
 
