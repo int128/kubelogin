@@ -96,9 +96,16 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 		"GrantType=client-credentials": {
 			args: []string{
 				"--grant-type", "client-credentials",
+				"--oidc-auth-request-extra-params", "audience=https://example.com/service1",
+				"--oidc-auth-request-extra-params", "jti=myUUID",
 			},
 			want: authentication.GrantOptionSet{
-				ClientCredentialsOption: &client.GetTokenByClientCredentialsInput{},
+				ClientCredentialsOption: &client.GetTokenByClientCredentialsInput{
+					EndpointParams: map[string][]string{
+						"audience": []string{"https://example.com/service1"},
+						"jti":      []string{"myUUID"},
+					},
+				},
 			},
 		},
 		"GrantType=auto": {

@@ -18,8 +18,6 @@ import (
 	"github.com/int128/kubelogin/pkg/pkce"
 )
 
-const OidcAudienceParam = "aud"
-
 type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string
 	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
@@ -60,7 +58,7 @@ type GetTokenByAuthCodeInput struct {
 }
 
 type GetTokenByClientCredentialsInput struct {
-	Audiences []string
+	EndpointParams map[string][]string
 }
 
 type client struct {
@@ -165,19 +163,12 @@ func (c *client) GetTokenByClientCredentials(ctx context.Context, in GetTokenByC
 	ctx = c.wrapContext(ctx)
 	c.logger.V(1).Infof("%s, %s, %v", c.oauth2Config.ClientID, c.oauth2Config.Endpoint.AuthURL, c.oauth2Config.Scopes)
 
-	var endpointParams map[string][]string
-	if len(in.Audiences) > 0 {
-		endpointParams = map[string][]string{
-			OidcAudienceParam: in.Audiences,
-		}
-	}
-
 	config := clientcredentials.Config{
 		ClientID:       c.oauth2Config.ClientID,
 		ClientSecret:   c.oauth2Config.ClientSecret,
 		TokenURL:       c.oauth2Config.Endpoint.TokenURL,
 		Scopes:         c.oauth2Config.Scopes,
-		EndpointParams: endpointParams,
+		EndpointParams: in.EndpointParams,
 		AuthStyle:      oauth2.AuthStyleInHeader,
 	}
 	source := config.TokenSource(ctx)
@@ -185,10 +176,7 @@ func (c *client) GetTokenByClientCredentials(ctx context.Context, in GetTokenByC
 	if err != nil {
 		return nil, fmt.Errorf("could not acquire token: %w", err)
 	}
-	return &oidc.TokenSet{
-		IDToken:      token.AccessToken,
-		RefreshToken: token.RefreshToken,
-	}, nil
+	return c.verifyToken(ctx, token, "")
 }
 
 // GetDeviceAuthorization initializes the device authorization code challenge
