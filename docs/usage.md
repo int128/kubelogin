@@ -30,9 +30,8 @@ Flags:
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
       --oidc-redirect-url-hostname string               [authcode] Hostname of the redirect URL (default "localhost")
-      --audiences                                       [client credentials] Audiences for oauth2 access token
       --oidc-redirect-url-authcode-keyboard string      [authcode-keyboard] Redirect URL (default "urn:ietf:wg:oauth:2.0:oob")
-      --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard] Extra query parameters to send with an authentication request (default [])
+      --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
       --password string                                 [password] Password for resource owner password credentials grant
   -h, --help                                            help for get-token

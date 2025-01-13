@@ -30,7 +30,6 @@ type authenticationOptions struct {
 	AuthRequestExtraParams      map[string]string
 	Username                    string
 	Password                    string
-	Audiences                   []string
 }
 
 var allGrantType = strings.Join([]string{
@@ -56,7 +55,6 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
-	f.StringSliceVar(&o.Audiences, "audiences", nil, "[client credentials] Audiences for oauth2 access token")
 
 }
 
@@ -95,7 +93,11 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			BrowserCommand:  o.BrowserCommand,
 		}
 	case o.GrantType == "client-credentials":
-		s.ClientCredentialsOption = &client.GetTokenByClientCredentialsInput{Audiences: o.Audiences}
+		endpointparams := make(map[string][]string, len(o.AuthRequestExtraParams))
+		for k, v := range o.AuthRequestExtraParams {
+			endpointparams[k] = []string{v}
+		}
+		s.ClientCredentialsOption = &client.GetTokenByClientCredentialsInput{EndpointParams: endpointparams}
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
 	}
