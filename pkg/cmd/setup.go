@@ -14,9 +14,9 @@ type setupOptions struct {
 	ClientID              string
 	ClientSecret          string
 	ExtraScopes           []string
-	UsePKCE               bool
 	UseAccessToken        bool
 	tlsOptions            tlsOptions
+	pkceOptions           pkceOptions
 	authenticationOptions authenticationOptions
 }
 
@@ -25,9 +25,9 @@ func (o *setupOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
-	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE usage")
 	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
 	o.tlsOptions.addFlags(f)
+	o.pkceOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
 }
 
@@ -46,18 +46,25 @@ func (cmd *Setup) New() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("setup: %w", err)
 			}
+			pkceMethod, err := o.pkceOptions.pkceMethod()
+			if err != nil {
+				return fmt.Errorf("setup: %w", err)
+			}
 			in := setup.Stage2Input{
 				IssuerURL:       o.IssuerURL,
 				ClientID:        o.ClientID,
 				ClientSecret:    o.ClientSecret,
 				ExtraScopes:     o.ExtraScopes,
-				UsePKCE:         o.UsePKCE,
 				UseAccessToken:  o.UseAccessToken,
+				PKCEMethod:      pkceMethod,
 				GrantOptionSet:  grantOptionSet,
 				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
 			}
 			if c.Flags().Lookup("listen-address").Changed {
 				in.ListenAddressArgs = o.authenticationOptions.ListenAddress
+			}
+			if c.Flags().Lookup("oidc-pkce-method").Changed {
+				in.PKCEMethodArg = o.pkceOptions.PKCEMethod
 			}
 			if in.IssuerURL == "" || in.ClientID == "" {
 				cmd.Setup.DoStage1()

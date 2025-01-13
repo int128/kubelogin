@@ -17,10 +17,10 @@ type getTokenOptions struct {
 	ClientID              string
 	ClientSecret          string
 	ExtraScopes           []string
-	UsePKCE               bool
 	UseAccessToken        bool
 	tokenCacheOptions     tokenCacheOptions
 	tlsOptions            tlsOptions
+	pkceOptions           pkceOptions
 	authenticationOptions authenticationOptions
 	ForceRefresh          bool
 }
@@ -30,11 +30,11 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider (mandatory)")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
-	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE even if the provider does not support it")
 	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
 	f.BoolVar(&o.ForceRefresh, "force-refresh", false, "If set, refresh the ID token regardless of its expiration time")
 	o.tokenCacheOptions.addFlags(f)
 	o.tlsOptions.addFlags(f)
+	o.pkceOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
 }
 
@@ -76,12 +76,16 @@ func (cmd *GetToken) New() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("get-token: %w", err)
 			}
+			pkceMethod, err := o.pkceOptions.pkceMethod()
+			if err != nil {
+				return fmt.Errorf("get-token: %w", err)
+			}
 			in := credentialplugin.Input{
 				Provider: oidc.Provider{
 					IssuerURL:      o.IssuerURL,
 					ClientID:       o.ClientID,
 					ClientSecret:   o.ClientSecret,
-					ForcePKCE:      o.UsePKCE,
+					PKCEMethod:     pkceMethod,
 					UseAccessToken: o.UseAccessToken,
 					ExtraScopes:    o.ExtraScopes,
 				},

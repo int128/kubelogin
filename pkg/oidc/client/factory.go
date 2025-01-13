@@ -76,20 +76,24 @@ func (f *Factory) New(ctx context.Context, prov oidc.Provider, tlsClientConfig t
 		},
 		clock:                       f.Clock,
 		logger:                      f.Logger,
-		negotiatedPKCEMethod:        determinePKCEMethod(supportedPKCEMethods, prov.ForcePKCE),
+		negotiatedPKCEMethod:        determinePKCEMethod(supportedPKCEMethods, prov.PKCEMethod),
 		deviceAuthorizationEndpoint: deviceAuthorizationEndpoint,
 		useAccessToken:              prov.UseAccessToken,
 	}, nil
 }
 
-func determinePKCEMethod(supportedPKCEMethods []string, forcePKCE bool) pkce.Method {
-	if forcePKCE {
+func determinePKCEMethod(supportedMethods []string, preferredMethod oidc.PKCEMethod) pkce.Method {
+	switch preferredMethod {
+	case oidc.PKCEMethodNo:
+		return pkce.NoMethod
+	case oidc.PKCEMethodS256:
 		return pkce.MethodS256
+	default:
+		if slices.Contains(supportedMethods, "S256") {
+			return pkce.MethodS256
+		}
+		return pkce.NoMethod
 	}
-	if slices.Contains(supportedPKCEMethods, "S256") {
-		return pkce.MethodS256
-	}
-	return pkce.NoMethod
 }
 
 func extractSupportedPKCEMethods(provider *gooidc.Provider) ([]string, error) {

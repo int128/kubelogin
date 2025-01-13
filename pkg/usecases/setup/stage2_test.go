@@ -70,7 +70,7 @@ func Test_makeCredentialPluginArgs(t *testing.T) {
 		ClientID:          "test_kid",
 		ClientSecret:      "test_ksecret",
 		ExtraScopes:       []string{"groups"},
-		UsePKCE:           true,
+		PKCEMethodArg:     "S256",
 		ListenAddressArgs: []string{"127.0.0.1:8080", "127.0.0.1:8888"},
 		GrantOptionSet: authentication.GrantOptionSet{
 			AuthCodeBrowserOption: &authcode.BrowserOption{
@@ -94,7 +94,7 @@ func Test_makeCredentialPluginArgs(t *testing.T) {
 		"--oidc-client-id=test_kid",
 		"--oidc-client-secret=test_ksecret",
 		"--oidc-extra-scope=groups",
-		"--oidc-use-pkce",
+		"--oidc-pkce-method=S256",
 		"--certificate-authority=/path/to/ca.crt",
 		"--certificate-authority-data=base64encoded1",
 		"--insecure-skip-tls-verify",

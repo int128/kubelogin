@@ -27,7 +27,6 @@ Replace the following variables in the later sections.
 | -------------------- | -------------------------------- |
 | `ISSUER_URL`         | `https://accounts.google.com`    |
 | `YOUR_CLIENT_ID`     | `xxx.apps.googleusercontent.com` |
-| `YOUR_CLIENT_SECRET` | random string                    |
 
 ### Keycloak
 
@@ -59,7 +58,6 @@ Replace the following variables in the later sections.
 | -------------------- | ----------------------------------------------------- |
 | `ISSUER_URL`         | `https://keycloak.example.com/auth/realms/YOUR_REALM` |
 | `YOUR_CLIENT_ID`     | `YOUR_CLIENT_ID`                                      |
-| `YOUR_CLIENT_SECRET` | random string                                         |
 
 ### Dex with GitHub
 
@@ -155,8 +153,7 @@ Run the following command:
 ```sh
 kubectl oidc-login setup \
   --oidc-issuer-url=ISSUER_URL \
-  --oidc-client-id=YOUR_CLIENT_ID \
-  --oidc-client-secret=YOUR_CLIENT_SECRET
+  --oidc-client-id=YOUR_CLIENT_ID
 ```
 
 It launches the browser and navigates to `http://localhost:8000`.
@@ -219,8 +216,7 @@ kubectl config set-credentials oidc \
   --exec-arg=oidc-login \
   --exec-arg=get-token \
   --exec-arg=--oidc-issuer-url=ISSUER_URL \
-  --exec-arg=--oidc-client-id=YOUR_CLIENT_ID \
-  --exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET
+  --exec-arg=--oidc-client-id=YOUR_CLIENT_ID
 ```
 
 ## 6. Verify cluster access
