@@ -187,7 +187,9 @@ func TestAuthentication_Do(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		ccIn := client.GetTokenByClientCredentialsInput{
-			Audiences: []string{"gopher://myaud"},
+			EndpointParams: map[string][]string{
+				"audience": []string{"gopher://myaud"},
+			},
 		}
 		in := Input{Provider: dummyProvider,
 			TLSClientConfig: dummyTLSClientConfig,
