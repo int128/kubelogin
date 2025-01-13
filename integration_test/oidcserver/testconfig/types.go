@@ -21,8 +21,8 @@ type Response struct {
 	CodeChallengeMethodsSupported []string
 }
 
-// TestConfig represents a configuration of the OpenID Connect provider.
-type TestConfig struct {
+// Config represents a configuration of the OpenID Connect provider.
+type Config struct {
 	Want     Want
 	Response Response
 }

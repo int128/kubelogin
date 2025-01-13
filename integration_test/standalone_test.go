@@ -36,7 +36,7 @@ func TestStandalone(t *testing.T) {
 			keyPair: keypair.Server,
 		},
 	} {
-		httpDriverOption := httpdriver.Option{
+		httpDriverOption := httpdriver.Config{
 			TLSConfig:    tc.keyPair.TLSConfig,
 			BodyContains: "Authenticated",
 		}
@@ -46,7 +46,7 @@ func TestStandalone(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, testconfig.TestConfig{
+				sv := oidcserver.New(t, tc.keyPair, testconfig.Config{
 					Want: testconfig.Want{
 						Scope:             "openid",
 						RedirectURIPrefix: "http://localhost:",
@@ -75,7 +75,7 @@ func TestStandalone(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, testconfig.TestConfig{
+				sv := oidcserver.New(t, tc.keyPair, testconfig.Config{
 					Want: testconfig.Want{
 						Scope:             "openid",
 						RedirectURIPrefix: "http://localhost:",
@@ -110,14 +110,14 @@ func TestStandalone(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, testconfig.TestConfig{})
+				sv := oidcserver.New(t, tc.keyPair, testconfig.Config{})
 				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
 					Issuer:                  sv.IssuerURL(),
 					IDPCertificateAuthority: tc.keyPair.CACertPath,
 				})
 
 				t.Run("NoToken", func(t *testing.T) {
-					sv.SetConfig(testconfig.TestConfig{
+					sv.SetConfig(testconfig.Config{
 						Want: testconfig.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
@@ -139,7 +139,7 @@ func TestStandalone(t *testing.T) {
 					})
 				})
 				t.Run("Valid", func(t *testing.T) {
-					sv.SetConfig(testconfig.TestConfig{})
+					sv.SetConfig(testconfig.Config{})
 					runStandalone(t, ctx, standaloneConfig{
 						issuerURL:          sv.IssuerURL(),
 						kubeConfigFilename: kubeConfigFilename,
@@ -152,7 +152,7 @@ func TestStandalone(t *testing.T) {
 					})
 				})
 				t.Run("Refresh", func(t *testing.T) {
-					sv.SetConfig(testconfig.TestConfig{
+					sv.SetConfig(testconfig.Config{
 						Want: testconfig.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
@@ -175,7 +175,7 @@ func TestStandalone(t *testing.T) {
 					})
 				})
 				t.Run("RefreshAgain", func(t *testing.T) {
-					sv.SetConfig(testconfig.TestConfig{
+					sv.SetConfig(testconfig.Config{
 						Want: testconfig.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
@@ -204,7 +204,7 @@ func TestStandalone(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.Server, testconfig.TestConfig{
+		sv := oidcserver.New(t, keypair.Server, testconfig.Config{
 			Want: testconfig.Want{
 				Scope:             "openid",
 				RedirectURIPrefix: "http://localhost:",
@@ -220,7 +220,7 @@ func TestStandalone(t *testing.T) {
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:          sv.IssuerURL(),
 			kubeConfigFilename: kubeConfigFilename,
-			httpDriver:         httpdriver.New(ctx, t, httpdriver.Option{TLSConfig: keypair.Server.TLSConfig}),
+			httpDriver:         httpdriver.New(ctx, t, httpdriver.Config{TLSConfig: keypair.Server.TLSConfig}),
 			now:                now,
 		})
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
@@ -232,7 +232,7 @@ func TestStandalone(t *testing.T) {
 	t.Run("env_KUBECONFIG", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
+		sv := oidcserver.New(t, keypair.None, testconfig.Config{
 			Want: testconfig.Want{
 				Scope:             "openid",
 				RedirectURIPrefix: "http://localhost:",
@@ -247,7 +247,7 @@ func TestStandalone(t *testing.T) {
 		t.Setenv("KUBECONFIG", kubeConfigFilename+string(os.PathListSeparator)+"kubeconfig/testdata/dummy.yaml")
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:  sv.IssuerURL(),
-			httpDriver: httpdriver.New(ctx, t, httpdriver.Option{}),
+			httpDriver: httpdriver.New(ctx, t, httpdriver.Config{}),
 			now:        now,
 		})
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
@@ -260,7 +260,7 @@ func TestStandalone(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
+		sv := oidcserver.New(t, keypair.None, testconfig.Config{
 			Want: testconfig.Want{
 				Scope:             "profile groups openid",
 				RedirectURIPrefix: "http://localhost:",
@@ -276,7 +276,7 @@ func TestStandalone(t *testing.T) {
 		runStandalone(t, ctx, standaloneConfig{
 			issuerURL:          sv.IssuerURL(),
 			kubeConfigFilename: kubeConfigFilename,
-			httpDriver:         httpdriver.New(ctx, t, httpdriver.Option{}),
+			httpDriver:         httpdriver.New(ctx, t, httpdriver.Config{}),
 			now:                now,
 		})
 		kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{

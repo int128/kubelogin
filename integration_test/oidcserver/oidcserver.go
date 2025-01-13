@@ -17,20 +17,20 @@ import (
 )
 
 // New starts a server for the OpenID Connect provider.
-func New(t *testing.T, k keypair.KeyPair, c testconfig.TestConfig) service.Service {
+func New(t *testing.T, kp keypair.KeyPair, config testconfig.Config) service.Service {
 	mux := http.NewServeMux()
-	serverURL := startServer(t, mux, k)
+	serverURL := startServer(t, mux, kp)
 
-	svc := service.New(t, serverURL, c)
+	svc := service.New(t, serverURL, config)
 	handler.Register(t, mux, svc)
 	return svc
 }
 
-func startServer(t *testing.T, h http.Handler, k keypair.KeyPair) string {
-	if k == keypair.None {
-		sv := httptest.NewServer(h)
-		t.Cleanup(sv.Close)
-		return sv.URL
+func startServer(t *testing.T, h http.Handler, kp keypair.KeyPair) string {
+	if kp == keypair.None {
+		srv := httptest.NewServer(h)
+		t.Cleanup(srv.Close)
+		return srv.URL
 	}
 
 	// Unfortunately, httptest package did not work with keypair.KeyPair.
@@ -38,15 +38,15 @@ func startServer(t *testing.T, h http.Handler, k keypair.KeyPair) string {
 	portAllocator := httptest.NewUnstartedServer(h)
 	t.Cleanup(portAllocator.Close)
 	serverURL := fmt.Sprintf("https://localhost:%d", portAllocator.Listener.Addr().(*net.TCPAddr).Port)
-	sv := &http.Server{Handler: h}
+	srv := &http.Server{Handler: h}
 	go func() {
-		err := sv.ServeTLS(portAllocator.Listener, k.CertPath, k.KeyPath)
+		err := srv.ServeTLS(portAllocator.Listener, kp.CertPath, kp.KeyPath)
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Error(err)
 		}
 	}()
 	t.Cleanup(func() {
-		if err := sv.Shutdown(context.TODO()); err != nil {
+		if err := srv.Shutdown(context.TODO()); err != nil {
 			t.Errorf("could not shutdown the server: %s", err)
 		}
 	})
