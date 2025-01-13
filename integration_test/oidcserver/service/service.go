@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/integration_test/oidcserver/testconfig"
 	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
 )
@@ -84,8 +85,8 @@ func (svc *service) AuthenticateCode(req AuthenticationRequest) (code string, er
 	if !strings.HasPrefix(req.RedirectURI, svc.config.Want.RedirectURIPrefix) {
 		svc.t.Errorf("redirectURI wants prefix `%s` but was `%s`", svc.config.Want.RedirectURIPrefix, req.RedirectURI)
 	}
-	if req.CodeChallengeMethod != svc.config.Want.CodeChallengeMethod {
-		svc.t.Errorf("code_challenge_method wants `%s` but was `%s`", svc.config.Want.CodeChallengeMethod, req.CodeChallengeMethod)
+	if diff := cmp.Diff(svc.config.Want.CodeChallengeMethod, req.CodeChallengeMethod); diff != "" {
+		svc.t.Errorf("code_challenge_method mismatch (-want +got):\n%s", diff)
 	}
 	for k, v := range svc.config.Want.ExtraParams {
 		got := req.RawQuery.Get(k)

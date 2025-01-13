@@ -55,11 +55,13 @@ func TestCredentialPlugin(t *testing.T) {
 				defer cancel()
 				sv := oidcserver.New(t, tc.keyPair, testconfig.TestConfig{
 					Want: testconfig.Want{
-						Scope:             "openid",
-						RedirectURIPrefix: "http://localhost:",
+						Scope:               "openid",
+						RedirectURIPrefix:   "http://localhost:",
+						CodeChallengeMethod: "S256",
 					},
 					Response: testconfig.Response{
-						IDTokenExpiry: now.Add(time.Hour),
+						IDTokenExpiry:                 now.Add(time.Hour),
+						CodeChallengeMethodsSupported: []string{"plain", "S256"},
 					},
 				})
 				var stdout bytes.Buffer
@@ -86,7 +88,8 @@ func TestCredentialPlugin(t *testing.T) {
 						Password:          "PASS1",
 					},
 					Response: testconfig.Response{
-						IDTokenExpiry: now.Add(time.Hour),
+						IDTokenExpiry:                 now.Add(time.Hour),
+						CodeChallengeMethodsSupported: []string{"plain", "S256"},
 					},
 				})
 				var stdout bytes.Buffer
@@ -113,12 +116,14 @@ func TestCredentialPlugin(t *testing.T) {
 				t.Run("NoCache", func(t *testing.T) {
 					sv.SetConfig(testconfig.TestConfig{
 						Want: testconfig.Want{
-							Scope:             "openid",
-							RedirectURIPrefix: "http://localhost:",
+							Scope:               "openid",
+							RedirectURIPrefix:   "http://localhost:",
+							CodeChallengeMethod: "S256",
 						},
 						Response: testconfig.Response{
-							IDTokenExpiry: now.Add(time.Hour),
-							RefreshToken:  "REFRESH_TOKEN_1",
+							IDTokenExpiry:                 now.Add(time.Hour),
+							RefreshToken:                  "REFRESH_TOKEN_1",
+							CodeChallengeMethodsSupported: []string{"plain", "S256"},
 						},
 					})
 					var stdout bytes.Buffer
@@ -153,8 +158,9 @@ func TestCredentialPlugin(t *testing.T) {
 							RefreshToken:      "REFRESH_TOKEN_1",
 						},
 						Response: testconfig.Response{
-							IDTokenExpiry: now.Add(3 * time.Hour),
-							RefreshToken:  "REFRESH_TOKEN_2",
+							IDTokenExpiry:                 now.Add(3 * time.Hour),
+							RefreshToken:                  "REFRESH_TOKEN_2",
+							CodeChallengeMethodsSupported: []string{"plain", "S256"},
 						},
 					})
 					var stdout bytes.Buffer
@@ -176,7 +182,8 @@ func TestCredentialPlugin(t *testing.T) {
 							RefreshToken:      "REFRESH_TOKEN_2",
 						},
 						Response: testconfig.Response{
-							IDTokenExpiry: now.Add(5 * time.Hour),
+							IDTokenExpiry:                 now.Add(5 * time.Hour),
+							CodeChallengeMethodsSupported: []string{"plain", "S256"},
 						},
 					})
 					var stdout bytes.Buffer
@@ -195,29 +202,58 @@ func TestCredentialPlugin(t *testing.T) {
 	}
 
 	t.Run("PKCE", func(t *testing.T) {
-		t.Parallel()
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
-			Want: testconfig.Want{
-				Scope:               "openid",
-				RedirectURIPrefix:   "http://localhost:",
-				CodeChallengeMethod: "S256",
-			},
-			Response: testconfig.Response{
-				IDTokenExpiry:                 now.Add(time.Hour),
-				CodeChallengeMethodsSupported: []string{"plain", "S256"},
-			},
+		t.Run("Not supported by provider", func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+			defer cancel()
+			sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
+				Want: testconfig.Want{
+					Scope:               "openid",
+					RedirectURIPrefix:   "http://localhost:",
+					CodeChallengeMethod: "",
+				},
+				Response: testconfig.Response{
+					IDTokenExpiry:                 now.Add(time.Hour),
+					CodeChallengeMethodsSupported: nil,
+				},
+			})
+			var stdout bytes.Buffer
+			runGetToken(t, ctx, getTokenConfig{
+				tokenCacheDir: tokenCacheDir,
+				issuerURL:     sv.IssuerURL(),
+				httpDriver:    httpdriver.New(ctx, t, httpdriver.Option{BodyContains: "Authenticated"}),
+				now:           now,
+				stdout:        &stdout,
+			})
+			assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 		})
-		var stdout bytes.Buffer
-		runGetToken(t, ctx, getTokenConfig{
-			tokenCacheDir: tokenCacheDir,
-			issuerURL:     sv.IssuerURL(),
-			httpDriver:    httpdriver.New(ctx, t, httpdriver.Option{BodyContains: "Authenticated"}),
-			now:           now,
-			stdout:        &stdout,
+
+		t.Run("Enforce", func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+			defer cancel()
+			sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
+				Want: testconfig.Want{
+					Scope:               "openid",
+					RedirectURIPrefix:   "http://localhost:",
+					CodeChallengeMethod: "S256",
+				},
+				Response: testconfig.Response{
+					IDTokenExpiry:                 now.Add(time.Hour),
+					CodeChallengeMethodsSupported: nil,
+				},
+			})
+			var stdout bytes.Buffer
+			runGetToken(t, ctx, getTokenConfig{
+				tokenCacheDir: tokenCacheDir,
+				issuerURL:     sv.IssuerURL(),
+				httpDriver:    httpdriver.New(ctx, t, httpdriver.Option{BodyContains: "Authenticated"}),
+				now:           now,
+				stdout:        &stdout,
+				args:          []string{"--oidc-use-pkce"},
+			})
+			assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 		})
-		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
 	t.Run("TLSData", func(t *testing.T) {
@@ -226,11 +262,13 @@ func TestCredentialPlugin(t *testing.T) {
 		defer cancel()
 		sv := oidcserver.New(t, keypair.Server, testconfig.TestConfig{
 			Want: testconfig.Want{
-				Scope:             "openid",
-				RedirectURIPrefix: "http://localhost:",
+				Scope:               "openid",
+				RedirectURIPrefix:   "http://localhost:",
+				CodeChallengeMethod: "S256",
 			},
 			Response: testconfig.Response{
-				IDTokenExpiry: now.Add(time.Hour),
+				IDTokenExpiry:                 now.Add(time.Hour),
+				CodeChallengeMethodsSupported: []string{"plain", "S256"},
 			},
 		})
 		var stdout bytes.Buffer
@@ -251,11 +289,13 @@ func TestCredentialPlugin(t *testing.T) {
 		defer cancel()
 		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
 			Want: testconfig.Want{
-				Scope:             "email profile openid",
-				RedirectURIPrefix: "http://localhost:",
+				Scope:               "email profile openid",
+				RedirectURIPrefix:   "http://localhost:",
+				CodeChallengeMethod: "S256",
 			},
 			Response: testconfig.Response{
-				IDTokenExpiry: now.Add(time.Hour),
+				IDTokenExpiry:                 now.Add(time.Hour),
+				CodeChallengeMethodsSupported: []string{"plain", "S256"},
 			},
 		})
 		var stdout bytes.Buffer
@@ -279,11 +319,13 @@ func TestCredentialPlugin(t *testing.T) {
 		defer cancel()
 		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
 			Want: testconfig.Want{
-				Scope:             "openid",
-				RedirectURIPrefix: "http://localhost:",
+				Scope:               "openid",
+				RedirectURIPrefix:   "http://localhost:",
+				CodeChallengeMethod: "S256",
 			},
 			Response: testconfig.Response{
-				IDTokenExpiry: now.Add(time.Hour),
+				IDTokenExpiry:                 now.Add(time.Hour),
+				CodeChallengeMethodsSupported: []string{"plain", "S256"},
 			},
 		})
 		var stdout bytes.Buffer
@@ -304,11 +346,13 @@ func TestCredentialPlugin(t *testing.T) {
 		defer cancel()
 		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
 			Want: testconfig.Want{
-				Scope:             "openid",
-				RedirectURIPrefix: "http://127.0.0.1:",
+				Scope:               "openid",
+				RedirectURIPrefix:   "http://127.0.0.1:",
+				CodeChallengeMethod: "S256",
 			},
 			Response: testconfig.Response{
-				IDTokenExpiry: now.Add(time.Hour),
+				IDTokenExpiry:                 now.Add(time.Hour),
+				CodeChallengeMethodsSupported: []string{"plain", "S256"},
 			},
 		})
 		var stdout bytes.Buffer
@@ -329,11 +373,13 @@ func TestCredentialPlugin(t *testing.T) {
 		defer cancel()
 		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
 			Want: testconfig.Want{
-				Scope:             "openid",
-				RedirectURIPrefix: "https://localhost:",
+				Scope:               "openid",
+				RedirectURIPrefix:   "https://localhost:",
+				CodeChallengeMethod: "S256",
 			},
 			Response: testconfig.Response{
-				IDTokenExpiry: now.Add(time.Hour),
+				IDTokenExpiry:                 now.Add(time.Hour),
+				CodeChallengeMethodsSupported: []string{"plain", "S256"},
 			},
 		})
 		var stdout bytes.Buffer
@@ -360,15 +406,17 @@ func TestCredentialPlugin(t *testing.T) {
 		defer cancel()
 		sv := oidcserver.New(t, keypair.None, testconfig.TestConfig{
 			Want: testconfig.Want{
-				Scope:             "openid",
-				RedirectURIPrefix: "http://localhost:",
+				Scope:               "openid",
+				RedirectURIPrefix:   "http://localhost:",
+				CodeChallengeMethod: "S256",
 				ExtraParams: map[string]string{
 					"ttl":    "86400",
 					"reauth": "false",
 				},
 			},
 			Response: testconfig.Response{
-				IDTokenExpiry: now.Add(time.Hour),
+				IDTokenExpiry:                 now.Add(time.Hour),
+				CodeChallengeMethodsSupported: []string{"plain", "S256"},
 			},
 		})
 		var stdout bytes.Buffer
