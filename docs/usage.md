@@ -20,7 +20,7 @@ Flags:
       --insecure-skip-tls-verify                        [SECURITY RISK] If set, the server's certificate will not be checked for validity
       --tls-renegotiation-once                          If set, allow a remote server to request renegotiation once per connection
       --tls-renegotiation-freely                        If set, allow a remote server to repeatedly request renegotiation
-      --oidc-pkce-method string                         PKCE method. By default, PKCE is automatically enabled if the provider supports it. One of (auto|no|S256) (default "auto")
+      --oidc-pkce-method string                         PKCE code challenge method. Automatically determined by default. One of (auto|no|S256) (default "auto")
       --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password|device-code) (default "auto")
       --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --skip-open-browser                               [authcode] Do not open the browser automatically
@@ -77,9 +77,17 @@ You can set the extra scopes to request to the provider by `--oidc-extra-scope`.
 
 ### PKCE
 
-Kubelogin automatically enables PKCE if the provider supports it.
-It is determined by the `code_challenge_methods_supported` claim of the OpenID Connect Discovery document.
-If your provider does not provide a valid claim, you can enforce the PKCE method by `--oidc-pkce-method`.
+Kubelogin automatically uses the PKCE if the provider supports it.
+It determines the code challenge method by the `code_challenge_methods_supported` claim of the OpenID Connect Discovery document.
+
+If your provider does not return a valid `code_challenge_methods_supported` claim,
+you can enforce the code challenge method by `--oidc-pkce-method`.
+
+```yaml
+- --oidc-pkce-method=S256
+```
+
+For the most providers, kubelogin automatically uses the PKCE by default.
 
 ### CA certificate
 

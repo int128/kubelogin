@@ -16,11 +16,11 @@ type pkceOptions struct {
 }
 
 func (o *pkceOptions) addFlags(f *pflag.FlagSet) {
-	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE S256 method")
-	if err := f.MarkDeprecated("oidc-use-pkce", "use --oidc-pkce-method instead. Note that PKCE is automatically enabled by default."); err != nil {
+	f.BoolVar(&o.UsePKCE, "oidc-use-pkce", false, "Force PKCE S256 code challenge method")
+	if err := f.MarkDeprecated("oidc-use-pkce", "use --oidc-pkce-method instead. For the most providers, you don't need to set the flag."); err != nil {
 		panic(err)
 	}
-	f.StringVar(&o.PKCEMethod, "oidc-pkce-method", "auto", fmt.Sprintf("PKCE method. By default, PKCE is automatically enabled if the provider supports it. One of (%s)", allPKCEMethods))
+	f.StringVar(&o.PKCEMethod, "oidc-pkce-method", "auto", fmt.Sprintf("PKCE code challenge method. Automatically determined by default. One of (%s)", allPKCEMethods))
 }
 
 func (o *pkceOptions) pkceMethod() (oidc.PKCEMethod, error) {
