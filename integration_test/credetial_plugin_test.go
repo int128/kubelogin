@@ -53,7 +53,7 @@ func TestCredentialPlugin(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, testconfig.Config{
+				svc := oidcserver.New(t, tc.keyPair, testconfig.Config{
 					Want: testconfig.Want{
 						Scope:               "openid",
 						RedirectURIPrefix:   "http://localhost:",
@@ -67,20 +67,20 @@ func TestCredentialPlugin(t *testing.T) {
 				var stdout bytes.Buffer
 				runGetToken(t, ctx, getTokenConfig{
 					tokenCacheDir: tokenCacheDir,
-					issuerURL:     sv.IssuerURL(),
+					issuerURL:     svc.IssuerURL(),
 					httpDriver:    httpdriver.New(ctx, t, httpDriverConfig),
 					now:           now,
 					stdout:        &stdout,
 					args:          tc.args,
 				})
-				assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+				assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 			})
 
 			t.Run("ROPC", func(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, testconfig.Config{
+				svc := oidcserver.New(t, tc.keyPair, testconfig.Config{
 					Want: testconfig.Want{
 						Scope:             "openid",
 						RedirectURIPrefix: "http://localhost:",
@@ -95,7 +95,7 @@ func TestCredentialPlugin(t *testing.T) {
 				var stdout bytes.Buffer
 				runGetToken(t, ctx, getTokenConfig{
 					tokenCacheDir: tokenCacheDir,
-					issuerURL:     sv.IssuerURL(),
+					issuerURL:     svc.IssuerURL(),
 					httpDriver:    httpdriver.Zero(t),
 					now:           now,
 					stdout:        &stdout,
@@ -104,17 +104,17 @@ func TestCredentialPlugin(t *testing.T) {
 						"--password", "PASS1",
 					}, tc.args...),
 				})
-				assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+				assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 			})
 
 			t.Run("TokenCacheLifecycle", func(t *testing.T) {
 				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
-				sv := oidcserver.New(t, tc.keyPair, testconfig.Config{})
+				svc := oidcserver.New(t, tc.keyPair, testconfig.Config{})
 
 				t.Run("NoCache", func(t *testing.T) {
-					sv.SetConfig(testconfig.Config{
+					svc.SetConfig(testconfig.Config{
 						Want: testconfig.Want{
 							Scope:               "openid",
 							RedirectURIPrefix:   "http://localhost:",
@@ -129,29 +129,29 @@ func TestCredentialPlugin(t *testing.T) {
 					var stdout bytes.Buffer
 					runGetToken(t, ctx, getTokenConfig{
 						tokenCacheDir: tokenCacheDir,
-						issuerURL:     sv.IssuerURL(),
+						issuerURL:     svc.IssuerURL(),
 						httpDriver:    httpdriver.New(ctx, t, httpDriverConfig),
 						now:           now,
 						stdout:        &stdout,
 						args:          tc.args,
 					})
-					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+					assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 				})
 				t.Run("Valid", func(t *testing.T) {
-					sv.SetConfig(testconfig.Config{})
+					svc.SetConfig(testconfig.Config{})
 					var stdout bytes.Buffer
 					runGetToken(t, ctx, getTokenConfig{
 						tokenCacheDir: tokenCacheDir,
-						issuerURL:     sv.IssuerURL(),
+						issuerURL:     svc.IssuerURL(),
 						httpDriver:    httpdriver.Zero(t),
 						now:           now,
 						stdout:        &stdout,
 						args:          tc.args,
 					})
-					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+					assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 				})
 				t.Run("Refresh", func(t *testing.T) {
-					sv.SetConfig(testconfig.Config{
+					svc.SetConfig(testconfig.Config{
 						Want: testconfig.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
@@ -166,16 +166,16 @@ func TestCredentialPlugin(t *testing.T) {
 					var stdout bytes.Buffer
 					runGetToken(t, ctx, getTokenConfig{
 						tokenCacheDir: tokenCacheDir,
-						issuerURL:     sv.IssuerURL(),
+						issuerURL:     svc.IssuerURL(),
 						httpDriver:    httpdriver.New(ctx, t, httpDriverConfig),
 						now:           now.Add(2 * time.Hour),
 						stdout:        &stdout,
 						args:          tc.args,
 					})
-					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(3*time.Hour))
+					assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(3*time.Hour))
 				})
 				t.Run("RefreshAgain", func(t *testing.T) {
-					sv.SetConfig(testconfig.Config{
+					svc.SetConfig(testconfig.Config{
 						Want: testconfig.Want{
 							Scope:             "openid",
 							RedirectURIPrefix: "http://localhost:",
@@ -189,13 +189,13 @@ func TestCredentialPlugin(t *testing.T) {
 					var stdout bytes.Buffer
 					runGetToken(t, ctx, getTokenConfig{
 						tokenCacheDir: tokenCacheDir,
-						issuerURL:     sv.IssuerURL(),
+						issuerURL:     svc.IssuerURL(),
 						httpDriver:    httpdriver.New(ctx, t, httpDriverConfig),
 						now:           now.Add(4 * time.Hour),
 						stdout:        &stdout,
 						args:          tc.args,
 					})
-					assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(5*time.Hour))
+					assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(5*time.Hour))
 				})
 			})
 		})
@@ -206,7 +206,7 @@ func TestCredentialPlugin(t *testing.T) {
 			t.Parallel()
 			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 			defer cancel()
-			sv := oidcserver.New(t, keypair.None, testconfig.Config{
+			svc := oidcserver.New(t, keypair.None, testconfig.Config{
 				Want: testconfig.Want{
 					Scope:               "openid",
 					RedirectURIPrefix:   "http://localhost:",
@@ -220,19 +220,19 @@ func TestCredentialPlugin(t *testing.T) {
 			var stdout bytes.Buffer
 			runGetToken(t, ctx, getTokenConfig{
 				tokenCacheDir: tokenCacheDir,
-				issuerURL:     sv.IssuerURL(),
+				issuerURL:     svc.IssuerURL(),
 				httpDriver:    httpdriver.New(ctx, t, httpdriver.Config{BodyContains: "Authenticated"}),
 				now:           now,
 				stdout:        &stdout,
 			})
-			assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+			assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 		})
 
 		t.Run("Enforce", func(t *testing.T) {
 			t.Parallel()
 			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 			defer cancel()
-			sv := oidcserver.New(t, keypair.None, testconfig.Config{
+			svc := oidcserver.New(t, keypair.None, testconfig.Config{
 				Want: testconfig.Want{
 					Scope:               "openid",
 					RedirectURIPrefix:   "http://localhost:",
@@ -246,13 +246,13 @@ func TestCredentialPlugin(t *testing.T) {
 			var stdout bytes.Buffer
 			runGetToken(t, ctx, getTokenConfig{
 				tokenCacheDir: tokenCacheDir,
-				issuerURL:     sv.IssuerURL(),
+				issuerURL:     svc.IssuerURL(),
 				httpDriver:    httpdriver.New(ctx, t, httpdriver.Config{BodyContains: "Authenticated"}),
 				now:           now,
 				stdout:        &stdout,
 				args:          []string{"--oidc-use-pkce"},
 			})
-			assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+			assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 		})
 	})
 
@@ -260,7 +260,7 @@ func TestCredentialPlugin(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.Server, testconfig.Config{
+		svc := oidcserver.New(t, keypair.Server, testconfig.Config{
 			Want: testconfig.Want{
 				Scope:               "openid",
 				RedirectURIPrefix:   "http://localhost:",
@@ -274,20 +274,20 @@ func TestCredentialPlugin(t *testing.T) {
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
-			issuerURL:     sv.IssuerURL(),
+			issuerURL:     svc.IssuerURL(),
 			httpDriver:    httpdriver.New(ctx, t, httpdriver.Config{TLSConfig: keypair.Server.TLSConfig, BodyContains: "Authenticated"}),
 			now:           now,
 			stdout:        &stdout,
 			args:          []string{"--certificate-authority-data", keypair.Server.CACertBase64},
 		})
-		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+		assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
 	t.Run("ExtraScopes", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, testconfig.Config{
+		svc := oidcserver.New(t, keypair.None, testconfig.Config{
 			Want: testconfig.Want{
 				Scope:               "email profile openid",
 				RedirectURIPrefix:   "http://localhost:",
@@ -301,7 +301,7 @@ func TestCredentialPlugin(t *testing.T) {
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
-			issuerURL:     sv.IssuerURL(),
+			issuerURL:     svc.IssuerURL(),
 			httpDriver:    httpdriver.New(ctx, t, httpdriver.Config{BodyContains: "Authenticated"}),
 			now:           now,
 			stdout:        &stdout,
@@ -310,14 +310,14 @@ func TestCredentialPlugin(t *testing.T) {
 				"--oidc-extra-scope", "profile",
 			},
 		})
-		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+		assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
 	t.Run("OpenURLAfterAuthentication", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, testconfig.Config{
+		svc := oidcserver.New(t, keypair.None, testconfig.Config{
 			Want: testconfig.Want{
 				Scope:               "openid",
 				RedirectURIPrefix:   "http://localhost:",
@@ -331,20 +331,20 @@ func TestCredentialPlugin(t *testing.T) {
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
-			issuerURL:     sv.IssuerURL(),
+			issuerURL:     svc.IssuerURL(),
 			httpDriver:    httpdriver.New(ctx, t, httpdriver.Config{BodyContains: "URL=https://example.com/success"}),
 			now:           now,
 			stdout:        &stdout,
 			args:          []string{"--open-url-after-authentication", "https://example.com/success"},
 		})
-		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+		assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
 	t.Run("RedirectURLHostname", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, testconfig.Config{
+		svc := oidcserver.New(t, keypair.None, testconfig.Config{
 			Want: testconfig.Want{
 				Scope:               "openid",
 				RedirectURIPrefix:   "http://127.0.0.1:",
@@ -358,20 +358,20 @@ func TestCredentialPlugin(t *testing.T) {
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
-			issuerURL:     sv.IssuerURL(),
+			issuerURL:     svc.IssuerURL(),
 			httpDriver:    httpdriver.New(ctx, t, httpdriver.Config{BodyContains: "Authenticated"}),
 			now:           now,
 			stdout:        &stdout,
 			args:          []string{"--oidc-redirect-url-hostname", "127.0.0.1"},
 		})
-		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+		assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
 	t.Run("RedirectURLHTTPS", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, testconfig.Config{
+		svc := oidcserver.New(t, keypair.None, testconfig.Config{
 			Want: testconfig.Want{
 				Scope:               "openid",
 				RedirectURIPrefix:   "https://localhost:",
@@ -385,7 +385,7 @@ func TestCredentialPlugin(t *testing.T) {
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
-			issuerURL:     sv.IssuerURL(),
+			issuerURL:     svc.IssuerURL(),
 			httpDriver: httpdriver.New(ctx, t, httpdriver.Config{
 				TLSConfig:    keypair.Server.TLSConfig,
 				BodyContains: "Authenticated",
@@ -397,14 +397,14 @@ func TestCredentialPlugin(t *testing.T) {
 				"--local-server-key", keypair.Server.KeyPath,
 			},
 		})
-		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+		assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
 	t.Run("ExtraParams", func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
-		sv := oidcserver.New(t, keypair.None, testconfig.Config{
+		svc := oidcserver.New(t, keypair.None, testconfig.Config{
 			Want: testconfig.Want{
 				Scope:               "openid",
 				RedirectURIPrefix:   "http://localhost:",
@@ -422,7 +422,7 @@ func TestCredentialPlugin(t *testing.T) {
 		var stdout bytes.Buffer
 		runGetToken(t, ctx, getTokenConfig{
 			tokenCacheDir: tokenCacheDir,
-			issuerURL:     sv.IssuerURL(),
+			issuerURL:     svc.IssuerURL(),
 			httpDriver:    httpdriver.New(ctx, t, httpdriver.Config{BodyContains: "Authenticated"}),
 			now:           now,
 			stdout:        &stdout,
@@ -431,7 +431,7 @@ func TestCredentialPlugin(t *testing.T) {
 				"--oidc-auth-request-extra-params", "reauth=false",
 			},
 		})
-		assertCredentialPluginStdout(t, &stdout, sv.LastTokenResponse().IDToken, now.Add(time.Hour))
+		assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 }
 
