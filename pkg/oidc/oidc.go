@@ -15,9 +15,18 @@ type Provider struct {
 	ClientID       string
 	ClientSecret   string   // optional
 	ExtraScopes    []string // optional
-	ForcePKCE      bool     // optional
-	UseAccessToken bool     // optional
+	PKCEMethod     PKCEMethod
+	UseAccessToken bool
 }
+
+// PKCEMethod represents a preferred method of PKCE.
+type PKCEMethod int
+
+const (
+	PKCEMethodAuto PKCEMethod = iota
+	PKCEMethodNo
+	PKCEMethodS256
+)
 
 // TokenSet represents a set of ID token and refresh token.
 type TokenSet struct {

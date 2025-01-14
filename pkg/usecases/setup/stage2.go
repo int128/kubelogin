@@ -73,9 +73,10 @@ type Stage2Input struct {
 	ClientID          string
 	ClientSecret      string
 	ExtraScopes       []string // optional
-	UsePKCE           bool     // optional
 	UseAccessToken    bool     // optional
 	ListenAddressArgs []string // non-nil if set by the command arg
+	PKCEMethod        oidc.PKCEMethod
+	PKCEMethodArg     string
 	GrantOptionSet    authentication.GrantOptionSet
 	TLSClientConfig   tlsclientconfig.Config
 }
@@ -88,7 +89,7 @@ func (u *Setup) DoStage2(ctx context.Context, in Stage2Input) error {
 			ClientID:       in.ClientID,
 			ClientSecret:   in.ClientSecret,
 			ExtraScopes:    in.ExtraScopes,
-			ForcePKCE:      in.UsePKCE,
+			PKCEMethod:     in.PKCEMethod,
 			UseAccessToken: in.UseAccessToken,
 		},
 		GrantOptionSet:  in.GrantOptionSet,
@@ -127,8 +128,8 @@ func makeCredentialPluginArgs(in Stage2Input) []string {
 	for _, extraScope := range in.ExtraScopes {
 		args = append(args, "--oidc-extra-scope="+extraScope)
 	}
-	if in.UsePKCE {
-		args = append(args, "--oidc-use-pkce")
+	if in.PKCEMethodArg != "" {
+		args = append(args, "--oidc-pkce-method="+in.PKCEMethodArg)
 	}
 	if in.UseAccessToken {
 		args = append(args, "--oidc-use-access-token")

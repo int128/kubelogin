@@ -10,13 +10,12 @@ import (
 	"fmt"
 )
 
-type Method string
+type Method int
 
 const (
-	NoMethod Method = ""
-
 	// Code challenge methods defined as https://tools.ietf.org/html/rfc7636#section-4.3
-	MethodS256 Method = "S256"
+	NoMethod Method = iota
+	MethodS256
 )
 
 // Params represents a set of the PKCE parameters.
@@ -59,7 +58,7 @@ func computeS256(b []byte) Params {
 	_, _ = s.Write([]byte(v))
 	return Params{
 		CodeChallenge:       base64URLEncode(s.Sum(nil)),
-		CodeChallengeMethod: string(MethodS256),
+		CodeChallengeMethod: "S256",
 		CodeVerifier:        v,
 	}
 }

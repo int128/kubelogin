@@ -11,7 +11,6 @@ Flags:
       --oidc-client-id string                           Client ID of the provider (mandatory)
       --oidc-client-secret string                       Client secret of the provider
       --oidc-extra-scope strings                        Scopes to request to the provider
-      --oidc-use-pkce                                   Force PKCE even if the provider does not support it
       --oidc-use-access-token                           Instead of using the id_token, use the access_token to authenticate to Kubernetes
       --force-refresh                                   If set, refresh the ID token regardless of its expiration time
       --token-cache-dir string                          Path to a directory of the token cache (default "~/.kube/cache/oidc-login")
@@ -21,6 +20,7 @@ Flags:
       --insecure-skip-tls-verify                        [SECURITY RISK] If set, the server's certificate will not be checked for validity
       --tls-renegotiation-once                          If set, allow a remote server to request renegotiation once per connection
       --tls-renegotiation-freely                        If set, allow a remote server to repeatedly request renegotiation
+      --oidc-pkce-method string                         PKCE code challenge method. Automatically determined by default. One of (auto|no|S256) (default "auto")
       --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password|device-code) (default "auto")
       --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --skip-open-browser                               [authcode] Do not open the browser automatically
@@ -74,6 +74,20 @@ You can set the extra scopes to request to the provider by `--oidc-extra-scope`.
 - --oidc-extra-scope=email
 - --oidc-extra-scope=profile
 ```
+
+### PKCE
+
+Kubelogin automatically uses the PKCE if the provider supports it.
+It determines the code challenge method by the `code_challenge_methods_supported` claim of the OpenID Connect Discovery document.
+
+If your provider does not return a valid `code_challenge_methods_supported` claim,
+you can enforce the code challenge method by `--oidc-pkce-method`.
+
+```yaml
+- --oidc-pkce-method=S256
+```
+
+For the most providers, you don't need to set this option explicitly.
 
 ### CA certificate
 

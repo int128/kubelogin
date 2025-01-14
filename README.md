@@ -47,7 +47,6 @@ users:
           - get-token
           - --oidc-issuer-url=ISSUER_URL
           - --oidc-client-id=YOUR_CLIENT_ID
-          - --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
 See [setup guide](docs/setup.md) for more.
@@ -91,7 +90,7 @@ Kubelogin will ask you to login via browser again if the token cache file does n
 You can dump claims of an ID token by `setup` command.
 
 ```console
-% kubectl oidc-login setup --oidc-issuer-url https://accounts.google.com --oidc-client-id REDACTED --oidc-client-secret REDACTED
+% kubectl oidc-login setup --oidc-issuer-url https://accounts.google.com --oidc-client-id REDACTED
 ...
 You got a token with the following claims:
 
