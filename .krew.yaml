@@ -60,3 +60,9 @@ spec:
       matchLabels:
         os: windows
         arch: amd64
+  - bin: kubelogin.exe
+    {{ addURIAndSha "https://github.com/int128/kubelogin/releases/download/{{ .TagName }}/kubelogin_windows_arm64.zip" .TagName }}
+    selector:
+      matchLabels:
+        os: windows
+        arch: arm64
