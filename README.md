@@ -88,6 +88,8 @@ You can log out by deleting the token cache.
 
 ```console
 % kubectl oidc-login clean
+Deleted the token cache at /home/user/.kube/cache/oidc-login
+Deleted the token cache in the keyring
 ```
 
 Kubelogin will ask you to log in via the browser again.

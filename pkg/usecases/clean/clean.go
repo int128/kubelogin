@@ -34,6 +34,5 @@ func (u *Clean) Do(ctx context.Context, in Input) error {
 	if err := u.TokenCacheRepository.DeleteAll(in.TokenCacheConfig); err != nil {
 		return fmt.Errorf("delete the token cache: %w", err)
 	}
-	u.Logger.Printf("Deleted the token cache")
 	return nil
 }
