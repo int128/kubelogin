@@ -191,7 +191,14 @@ func (r *Repository) DeleteAll(config tokencache.Config) error {
 		}(),
 		func() error {
 			switch config.Storage {
-			case tokencache.StorageAuto, tokencache.StorageKeyring:
+			case tokencache.StorageAuto:
+				if err := keyring.DeleteAll(keyringService); err != nil {
+					if errors.Is(err, keyring.ErrUnsupportedPlatform) {
+						return nil
+					}
+					return fmt.Errorf("keyring delete: %w", err)
+				}
+			case tokencache.StorageKeyring:
 				if err := keyring.DeleteAll(keyringService); err != nil {
 					return fmt.Errorf("keyring delete: %w", err)
 				}
