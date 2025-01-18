@@ -84,8 +84,14 @@ If the refresh token has expired, it will perform re-authentication.
 
 ### Troubleshoot
 
-You can log out by removing the token cache directory (default `~/.kube/cache/oidc-login`).
-Kubelogin will ask you to login via browser again if the token cache file does not exist i.e., it starts with a clean slate
+You can log out by deleting the token cache.
+
+```console
+% kubectl oidc-login clean
+```
+
+Kubelogin will ask you to log in via the browser again.
+If the browser has a cookie for the provider, you need to log out from the provider or clear the cookie.
 
 You can dump claims of an ID token by `setup` command.
 

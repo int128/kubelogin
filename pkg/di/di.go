@@ -20,6 +20,7 @@ import (
 	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
 	"github.com/int128/kubelogin/pkg/tokencache/repository"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/usecases/clean"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
@@ -47,6 +48,7 @@ func NewCmdForHeadless(clock.Interface, stdio.Stdin, stdio.Stdout, logger.Interf
 		standalone.Set,
 		credentialplugin.Set,
 		setup.Set,
+		clean.Set,
 
 		// infrastructure
 		cmd.Set,

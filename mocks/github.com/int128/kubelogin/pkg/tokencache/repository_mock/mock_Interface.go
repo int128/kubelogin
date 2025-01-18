@@ -24,6 +24,52 @@ func (_m *MockInterface) EXPECT() *MockInterface_Expecter {
 	return &MockInterface_Expecter{mock: &_m.Mock}
 }
 
+// DeleteAll provides a mock function with given fields: config
+func (_m *MockInterface) DeleteAll(config tokencache.Config) error {
+	ret := _m.Called(config)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteAll")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(tokencache.Config) error); ok {
+		r0 = rf(config)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockInterface_DeleteAll_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteAll'
+type MockInterface_DeleteAll_Call struct {
+	*mock.Call
+}
+
+// DeleteAll is a helper method to define mock.On call
+//   - config tokencache.Config
+func (_e *MockInterface_Expecter) DeleteAll(config interface{}) *MockInterface_DeleteAll_Call {
+	return &MockInterface_DeleteAll_Call{Call: _e.mock.On("DeleteAll", config)}
+}
+
+func (_c *MockInterface_DeleteAll_Call) Run(run func(config tokencache.Config)) *MockInterface_DeleteAll_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(tokencache.Config))
+	})
+	return _c
+}
+
+func (_c *MockInterface_DeleteAll_Call) Return(_a0 error) *MockInterface_DeleteAll_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockInterface_DeleteAll_Call) RunAndReturn(run func(tokencache.Config) error) *MockInterface_DeleteAll_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // FindByKey provides a mock function with given fields: config, key
 func (_m *MockInterface) FindByKey(config tokencache.Config, key tokencache.Key) (*oidc.TokenSet, error) {
 	ret := _m.Called(config, key)

@@ -24,6 +24,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/int128/kubelogin/pkg/usecases/clean"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
@@ -120,10 +121,18 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	cmdSetup := &cmd.Setup{
 		Setup: setupSetup,
 	}
+	cleanClean := &clean.Clean{
+		TokenCacheRepository: repositoryRepository,
+		Logger:               loggerInterface,
+	}
+	cmdClean := &cmd.Clean{
+		Clean: cleanClean,
+	}
 	cmdCmd := &cmd.Cmd{
 		Root:     root,
 		GetToken: cmdGetToken,
 		Setup:    cmdSetup,
+		Clean:    cmdClean,
 		Logger:   loggerInterface,
 	}
 	return cmdCmd
