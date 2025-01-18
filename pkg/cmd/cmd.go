@@ -16,6 +16,7 @@ var Set = wire.NewSet(
 	wire.Struct(new(Root), "*"),
 	wire.Struct(new(GetToken), "*"),
 	wire.Struct(new(Setup), "*"),
+	wire.Struct(new(Clean), "*"),
 )
 
 type Interface interface {
@@ -31,6 +32,7 @@ type Cmd struct {
 	Root     *Root
 	GetToken *GetToken
 	Setup    *Setup
+	Clean    *Clean
 	Logger   logger.Interface
 }
 
@@ -47,6 +49,9 @@ func (cmd *Cmd) Run(ctx context.Context, args []string, version string) int {
 
 	setupCmd := cmd.Setup.New()
 	rootCmd.AddCommand(setupCmd)
+
+	cleanCmd := cmd.Clean.New()
+	rootCmd.AddCommand(cleanCmd)
 
 	versionCmd := &cobra.Command{
 		Use:   "version",

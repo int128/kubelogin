@@ -13,6 +13,7 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/google/wire"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tokencache"
 	"github.com/zalando/go-keyring"
@@ -28,6 +29,7 @@ type Interface interface {
 	FindByKey(config tokencache.Config, key tokencache.Key) (*oidc.TokenSet, error)
 	Save(config tokencache.Config, key tokencache.Key, tokenSet oidc.TokenSet) error
 	Lock(config tokencache.Config, key tokencache.Key) (io.Closer, error)
+	DeleteAll(config tokencache.Config) error
 }
 
 type entity struct {
@@ -37,7 +39,9 @@ type entity struct {
 
 // Repository provides access to the token cache on the local filesystem.
 // Filename of a token cache is sha256 digest of the issuer, zero-character and client ID.
-type Repository struct{}
+type Repository struct {
+	Logger logger.Interface
+}
 
 // keyringService is used to namespace the keyring access.
 // Some implementations may also display this string when prompting the user
@@ -178,6 +182,39 @@ func (r *Repository) Lock(config tokencache.Config, key tokencache.Key) (io.Clos
 		return nil, fmt.Errorf("could not lock the cache file %s: %w", lockFilepath, err)
 	}
 	return lockFile, nil
+}
+
+func (r *Repository) DeleteAll(config tokencache.Config) error {
+	return errors.Join(
+		func() error {
+			if err := os.RemoveAll(config.Directory); err != nil {
+				return fmt.Errorf("remove the directory %s: %w", config.Directory, err)
+			}
+			r.Logger.Printf("Deleted the token cache at %s", config.Directory)
+			return nil
+		}(),
+		func() error {
+			switch config.Storage {
+			case tokencache.StorageAuto:
+				if err := keyring.DeleteAll(keyringService); err != nil {
+					if errors.Is(err, keyring.ErrUnsupportedPlatform) {
+						return nil
+					}
+					return fmt.Errorf("keyring delete: %w", err)
+				}
+				r.Logger.Printf("Deleted the token cache in the keyring")
+				return nil
+			case tokencache.StorageKeyring:
+				if err := keyring.DeleteAll(keyringService); err != nil {
+					return fmt.Errorf("keyring delete: %w", err)
+				}
+				r.Logger.Printf("Deleted the token cache in the keyring")
+				return nil
+			default:
+				return nil
+			}
+		}(),
+	)
 }
 
 func encodeKey(tokenSet oidc.TokenSet) ([]byte, error) {
