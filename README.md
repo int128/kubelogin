@@ -31,7 +31,7 @@ choco install kubelogin
 ```
 
 If you install via GitHub releases, save the binary as the name `kubectl-oidc_login` on your path.
-When you invoke `kubectl oidc-login`, kubectl finds the binary by the [naming convention of kubectl plugins](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/).
+When you invoke `kubectl oidc-login`, kubectl can find in by the [naming convention of kubectl plugins](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/).
 The other install methods do this for you.
 
 You need to set up the OIDC provider, cluster role binding, Kubernetes API server and kubeconfig.
@@ -51,7 +51,7 @@ users:
           - --oidc-client-id=YOUR_CLIENT_ID
 ```
 
-See [setup guide](docs/setup.md) for more.
+See the [setup guide](docs/setup.md) for more.
 
 ### Run
 
@@ -86,7 +86,7 @@ If the refresh token has expired, it will perform re-authentication.
 Kubelogin stores the token cache to the storage.
 If the OS keyring is available, it stores the token cache to the OS keyring.
 Otherwise, it stores the token cache to the file system.
-If you encounter an error, see the [token cache](docs/usage.md#token-cache).
+See the [token cache](docs/usage.md#token-cache) for details.
 
 You can log out by deleting the token cache.
 

@@ -12,6 +12,14 @@ Let's see the following steps:
 
 ## 1. Set up the OIDC provider
 
+Kubelogin supports the following authentication flows:
+
+- Authorization code flow
+- Device authorization grant
+- Resource owner password credentials grant
+
+See the [usage](usage.md) for the details.
+
 ### Google Identity Platform
 
 You can log in with a Google account.
