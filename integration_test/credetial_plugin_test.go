@@ -19,7 +19,7 @@ import (
 	"github.com/int128/kubelogin/pkg/testing/clock"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
+	clientauthenticationv1 "k8s.io/client-go/pkg/apis/clientauthentication/v1"
 )
 
 // Run the integration tests of the credential plugin use-case.
@@ -50,7 +50,6 @@ func TestCredentialPlugin(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			t.Run("AuthCode", func(t *testing.T) {
-				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
 				svc := oidcserver.New(t, tc.keyPair, testconfig.Config{
@@ -77,7 +76,6 @@ func TestCredentialPlugin(t *testing.T) {
 			})
 
 			t.Run("ROPC", func(t *testing.T) {
-				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
 				svc := oidcserver.New(t, tc.keyPair, testconfig.Config{
@@ -108,7 +106,6 @@ func TestCredentialPlugin(t *testing.T) {
 			})
 
 			t.Run("TokenCacheLifecycle", func(t *testing.T) {
-				t.Parallel()
 				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 				defer cancel()
 				svc := oidcserver.New(t, tc.keyPair, testconfig.Config{})
@@ -203,7 +200,6 @@ func TestCredentialPlugin(t *testing.T) {
 
 	t.Run("PKCE", func(t *testing.T) {
 		t.Run("Not supported by provider", func(t *testing.T) {
-			t.Parallel()
 			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 			defer cancel()
 			svc := oidcserver.New(t, keypair.None, testconfig.Config{
@@ -229,7 +225,6 @@ func TestCredentialPlugin(t *testing.T) {
 		})
 
 		t.Run("Enforce", func(t *testing.T) {
-			t.Parallel()
 			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 			defer cancel()
 			svc := oidcserver.New(t, keypair.None, testconfig.Config{
@@ -257,7 +252,6 @@ func TestCredentialPlugin(t *testing.T) {
 	})
 
 	t.Run("TLSData", func(t *testing.T) {
-		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		svc := oidcserver.New(t, keypair.Server, testconfig.Config{
@@ -284,7 +278,6 @@ func TestCredentialPlugin(t *testing.T) {
 	})
 
 	t.Run("ExtraScopes", func(t *testing.T) {
-		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		svc := oidcserver.New(t, keypair.None, testconfig.Config{
@@ -314,7 +307,6 @@ func TestCredentialPlugin(t *testing.T) {
 	})
 
 	t.Run("OpenURLAfterAuthentication", func(t *testing.T) {
-		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		svc := oidcserver.New(t, keypair.None, testconfig.Config{
@@ -341,7 +333,6 @@ func TestCredentialPlugin(t *testing.T) {
 	})
 
 	t.Run("RedirectURLHostname", func(t *testing.T) {
-		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		svc := oidcserver.New(t, keypair.None, testconfig.Config{
@@ -368,7 +359,6 @@ func TestCredentialPlugin(t *testing.T) {
 	})
 
 	t.Run("RedirectURLHTTPS", func(t *testing.T) {
-		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		svc := oidcserver.New(t, keypair.None, testconfig.Config{
@@ -401,7 +391,6 @@ func TestCredentialPlugin(t *testing.T) {
 	})
 
 	t.Run("ExtraParams", func(t *testing.T) {
-		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
 		svc := oidcserver.New(t, keypair.None, testconfig.Config{
@@ -446,6 +435,10 @@ type getTokenConfig struct {
 
 func runGetToken(t *testing.T, ctx context.Context, cfg getTokenConfig) {
 	cmd := di.NewCmdForHeadless(clock.Fake(cfg.now), os.Stdin, cfg.stdout, logger.New(t), cfg.httpDriver)
+	t.Setenv(
+		"KUBERNETES_EXEC_INFO",
+		`{"kind":"ExecCredential","apiVersion":"client.authentication.k8s.io/v1","spec":{"interactive":true}}`,
+	)
 	exitCode := cmd.Run(ctx, append([]string{
 		"kubelogin",
 		"get-token",
@@ -461,22 +454,22 @@ func runGetToken(t *testing.T, ctx context.Context, cfg getTokenConfig) {
 }
 
 func assertCredentialPluginStdout(t *testing.T, stdout io.Reader, token string, expiry time.Time) {
-	var got clientauthenticationv1beta1.ExecCredential
+	var got clientauthenticationv1.ExecCredential
 	if err := json.NewDecoder(stdout).Decode(&got); err != nil {
 		t.Errorf("could not decode json of the credential plugin: %s", err)
 		return
 	}
-	want := clientauthenticationv1beta1.ExecCredential{
+	want := clientauthenticationv1.ExecCredential{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "client.authentication.k8s.io/v1beta1",
+			APIVersion: "client.authentication.k8s.io/v1",
 			Kind:       "ExecCredential",
 		},
-		Status: &clientauthenticationv1beta1.ExecCredentialStatus{
+		Status: &clientauthenticationv1.ExecCredentialStatus{
 			Token:               token,
 			ExpirationTimestamp: &metav1.Time{Time: expiry},
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("kubeconfig mismatch (-want +got):\n%s", diff)
+		t.Errorf("stdout mismatch (-want +got):\n%s", diff)
 	}
 }
