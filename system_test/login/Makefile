@@ -9,7 +9,7 @@ export KUBECONFIG
 
 .PHONY: test
 test: build
-	# see the setup instruction
+	# See the setup instruction.
 	kubectl oidc-login setup \
 		--oidc-issuer-url=https://dex-server:10443/dex \
 		--oidc-client-id=YOUR_CLIENT_ID \
@@ -17,7 +17,8 @@ test: build
 		--oidc-extra-scope=email \
 		--certificate-authority=$(CERT_DIR)/ca.crt \
 		--browser-command=$(BIN_DIR)/chromelogin
-	# set up the kubeconfig
+
+	# Set up the kubeconfig.
 	kubectl config set-credentials oidc \
 		--exec-api-version=client.authentication.k8s.io/v1 \
 		--exec-interactive-mode=Never \
@@ -30,7 +31,11 @@ test: build
 		--exec-arg=--oidc-extra-scope=email \
 		--exec-arg=--certificate-authority=$(CERT_DIR)/ca.crt \
 		--exec-arg=--browser-command=$(BIN_DIR)/chromelogin
-	# make sure we can access the cluster
+
+	# Show the kubeconfig.
+	kubectl config view
+
+	# Test the authentication.
 	kubectl --user=oidc cluster-info
 
 .PHONY: build
