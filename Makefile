@@ -1,43 +1,22 @@
-TARGET := kubelogin
-TARGET_PLUGIN := kubectl-oidc_login
-CIRCLE_TAG ?= HEAD
-LDFLAGS := -X main.version=$(CIRCLE_TAG)
+.PHONY: all
+all:
 
-all: $(TARGET)
+.PHONY: test
+test:
+	go test -v -race ./pkg/...
 
-.PHONY: check
-check:
-	golangci-lint run
-	go test -v -race -cover -coverprofile=coverage.out ./...
+.PHONY: integration-test
+integration-test:
+	go test -v -race ./integration_test/...
 
-$(TARGET): $(wildcard *.go)
-	go build -o $@ -ldflags "$(LDFLAGS)"
+.PHONY: generate
+generate:
+	$(MAKE) -C tools
+	./tools/bin/wire ./pkg/di
+	rm -fr mocks/
+	./tools/bin/mockery
 
-$(TARGET_PLUGIN): $(TARGET)
-	ln -sf $(TARGET) $@
-
-.PHONY: run
-run: $(TARGET_PLUGIN)
-	-PATH=.:$(PATH) kubectl oidc-login --help
-
-dist:
-	VERSION=$(CIRCLE_TAG) goxzst -d dist/gh/ -o "$(TARGET)" -t "kubelogin.rb oidc-login.yaml" -- -ldflags "$(LDFLAGS)"
-	mv dist/gh/kubelogin.rb dist/
-	mkdir -p dist/plugins
-	cp dist/gh/oidc-login.yaml dist/plugins/oidc-login.yaml
-
-.PHONY: release
-release: dist
-	ghr -u "$(CIRCLE_PROJECT_USERNAME)" -r "$(CIRCLE_PROJECT_REPONAME)" "$(CIRCLE_TAG)" dist/gh/
-	ghcp commit -u "$(CIRCLE_PROJECT_USERNAME)" -r "homebrew-$(CIRCLE_PROJECT_REPONAME)" -m "$(CIRCLE_TAG)" -C dist/ kubelogin.rb
-	ghcp fork-commit -u kubernetes-sigs -r krew-index -b "oidc-login-$(CIRCLE_TAG)" -m "Bump oidc-login to $(CIRCLE_TAG)" -C dist/ plugins/oidc-login.yaml
-
-# http://blockdiag.com/en/seqdiag/index.html
-%.svg: %.seq
-	seqdiag -a -f /Library/Fonts/Verdana.ttf -T svg $<
-
-.PHONY: clean
-clean:
-	-rm $(TARGET)
-	-rm $(TARGET_PLUGIN)
-	-rm -r dist/
+.PHONY: lint
+lint:
+	$(MAKE) -C tools
+	./tools/bin/golangci-lint run

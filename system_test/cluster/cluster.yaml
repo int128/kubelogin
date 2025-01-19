@@ -1,0 +1,19 @@
+# https://kind.sigs.k8s.io/docs/user/configuration/
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+
+    kubeadmConfigPatches:
+      - |
+        kind: ClusterConfiguration
+        apiServer:
+          extraArgs:
+            oidc-issuer-url: https://dex-server:10443/dex
+            oidc-client-id: YOUR_CLIENT_ID
+            oidc-username-claim: email
+            oidc-ca-file: /usr/local/share/ca-certificates/dex-ca.crt
+
+    extraMounts:
+      - hostPath: /tmp/kubelogin-system-test-dex-ca.crt
+        containerPath: /usr/local/share/ca-certificates/dex-ca.crt

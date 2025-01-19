@@ -2,90 +2,173 @@ package credentialplugin
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin/mock_credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
-	"github.com/int128/kubelogin/pkg/adaptors/logger/mock_logger"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache/mock_tokencache"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
-	"github.com/int128/kubelogin/pkg/usecases/auth/mock_auth"
-	"golang.org/x/xerrors"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/credentialplugin/reader_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/credentialplugin/writer_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/tokencache/repository_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/authentication_mock"
+	"github.com/int128/kubelogin/mocks/io_mock"
+	"github.com/int128/kubelogin/pkg/credentialplugin"
+	"github.com/int128/kubelogin/pkg/testing/clock"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+
+	"github.com/int128/kubelogin/pkg/oidc"
+	testingJWT "github.com/int128/kubelogin/pkg/testing/jwt"
+	"github.com/int128/kubelogin/pkg/testing/logger"
+	"github.com/int128/kubelogin/pkg/tokencache"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 )
 
 func TestGetToken_Do(t *testing.T) {
-	dummyTokenClaims := map[string]string{"sub": "YOUR_SUBJECT"}
-	futureTime := time.Now().Add(time.Hour) //TODO: inject time service
+	dummyProvider := oidc.Provider{
+		IssuerURL:    "https://accounts.google.com",
+		ClientID:     "YOUR_CLIENT_ID",
+		ClientSecret: "YOUR_CLIENT_SECRET",
+	}
+	expiryTime := time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC).Local()
+	issuedIDToken := testingJWT.EncodeF(t, func(claims *testingJWT.Claims) {
+		claims.Issuer = "https://accounts.google.com"
+		claims.Subject = "YOUR_SUBJECT"
+		claims.ExpiresAt = jwt.NewNumericDate(expiryTime)
+	})
+	issuedTokenSet := oidc.TokenSet{
+		IDToken:      issuedIDToken,
+		RefreshToken: "YOUR_REFRESH_TOKEN",
+	}
+	issuedOutput := credentialplugin.Output{
+		Token:                          issuedIDToken,
+		Expiry:                         expiryTime,
+		ClientAuthenticationAPIVersion: "client.authentication.k8s.io/v1",
+	}
+	credentialpluginInput := credentialplugin.Input{
+		ClientAuthenticationAPIVersion: "client.authentication.k8s.io/v1",
+	}
+	grantOptionSet := authentication.GrantOptionSet{
+		AuthCodeBrowserOption: &authcode.BrowserOption{
+			BindAddress: []string{"127.0.0.1:0"},
+		},
+	}
 
-	t.Run("FullOptions", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+	t.Run("NoTokenCache", func(t *testing.T) {
+		tokenCacheKey := tokencache.Key{
+			Provider: oidc.Provider{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+		}
 		ctx := context.TODO()
 		in := Input{
-			IssuerURL:       "https://accounts.google.com",
-			ClientID:        "YOUR_CLIENT_ID",
-			ClientSecret:    "YOUR_CLIENT_SECRET",
-			TokenCacheDir:   "/path/to/token-cache",
-			ListenPort:      []int{10000},
-			SkipOpenBrowser: true,
-			Username:        "USER",
-			Password:        "PASS",
-			CACertFilename:  "/path/to/cert",
-			SkipTLSVerify:   true,
+			Provider: dummyProvider,
+			TokenCacheConfig: tokencache.Config{
+				Directory: "/path/to/token-cache",
+			},
+			GrantOptionSet: grantOptionSet,
 		}
-		mockAuthentication := mock_auth.NewMockInterface(ctrl)
+		mockAuthentication := authentication_mock.NewMockInterface(t)
 		mockAuthentication.EXPECT().
-			Do(ctx, auth.Input{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					IDPIssuerURL: "https://accounts.google.com",
-					ClientID:     "YOUR_CLIENT_ID",
-					ClientSecret: "YOUR_CLIENT_SECRET",
-				},
-				ListenPort:      []int{10000},
-				SkipOpenBrowser: true,
-				Username:        "USER",
-				Password:        "PASS",
-				CACertFilename:  "/path/to/cert",
-				SkipTLSVerify:   true,
+			Do(ctx, authentication.Input{
+				Provider:       dummyProvider,
+				GrantOptionSet: grantOptionSet,
 			}).
-			Return(&auth.Output{
-				IDToken:       "YOUR_ID_TOKEN",
-				RefreshToken:  "YOUR_REFRESH_TOKEN",
-				IDTokenExpiry: futureTime,
-				IDTokenClaims: dummyTokenClaims,
-			}, nil)
-		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
-		tokenCacheRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokencache.Key{
-				IssuerURL: "https://accounts.google.com",
-				ClientID:  "YOUR_CLIENT_ID",
-			}).
-			Return(nil, xerrors.New("file not found"))
-		tokenCacheRepository.EXPECT().
-			Save("/path/to/token-cache",
-				tokencache.Key{
-					IssuerURL: "https://accounts.google.com",
-					ClientID:  "YOUR_CLIENT_ID",
-				},
-				tokencache.TokenCache{
-					IDToken:      "YOUR_ID_TOKEN",
-					RefreshToken: "YOUR_REFRESH_TOKEN",
-				})
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		credentialPluginInteraction.EXPECT().
-			Write(credentialplugin.Output{
-				Token:  "YOUR_ID_TOKEN",
-				Expiry: futureTime,
-			})
+			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
+		mockCloser := io_mock.NewMockCloser(t)
+		mockCloser.EXPECT().
+			Close().
+			Return(nil)
+		mockRepository := repository_mock.NewMockInterface(t)
+		mockRepository.EXPECT().
+			Lock(in.TokenCacheConfig, tokenCacheKey).
+			Return(mockCloser, nil)
+		mockRepository.EXPECT().
+			FindByKey(in.TokenCacheConfig, tokenCacheKey).
+			Return(nil, errors.New("file not found"))
+		mockRepository.EXPECT().
+			Save(in.TokenCacheConfig, tokenCacheKey, issuedTokenSet).
+			Return(nil)
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			Read().
+			Return(credentialpluginInput, nil)
+		mockWriter := writer_mock.NewMockInterface(t)
+		mockWriter.EXPECT().
+			Write(issuedOutput).
+			Return(nil)
 		u := GetToken{
-			Authentication:       mockAuthentication,
-			TokenCacheRepository: tokenCacheRepository,
-			Interaction:          credentialPluginInteraction,
-			Logger:               mock_logger.New(t),
+			Authentication:         mockAuthentication,
+			TokenCacheRepository:   mockRepository,
+			CredentialPluginReader: mockReader,
+			CredentialPluginWriter: mockWriter,
+			Logger:                 logger.New(t),
+			Clock:                  clock.Fake(expiryTime.Add(-time.Hour)),
+		}
+		if err := u.Do(ctx, in); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
+	t.Run("ROPC", func(t *testing.T) {
+		grantOptionSet := authentication.GrantOptionSet{
+			ROPCOption: &ropc.Option{Username: "YOUR_USERNAME"},
+		}
+		tokenCacheKey := tokencache.Key{
+			Provider: oidc.Provider{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+			Username: "YOUR_USERNAME",
+		}
+
+		ctx := context.TODO()
+		in := Input{
+			Provider: dummyProvider,
+			TokenCacheConfig: tokencache.Config{
+				Directory: "/path/to/token-cache",
+			},
+			GrantOptionSet: grantOptionSet,
+		}
+		mockAuthentication := authentication_mock.NewMockInterface(t)
+		mockAuthentication.EXPECT().
+			Do(ctx, authentication.Input{
+				Provider:       dummyProvider,
+				GrantOptionSet: grantOptionSet,
+			}).
+			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
+		mockCloser := io_mock.NewMockCloser(t)
+		mockCloser.EXPECT().
+			Close().
+			Return(nil)
+		mockRepository := repository_mock.NewMockInterface(t)
+		mockRepository.EXPECT().
+			Lock(in.TokenCacheConfig, tokenCacheKey).
+			Return(mockCloser, nil)
+		mockRepository.EXPECT().
+			FindByKey(in.TokenCacheConfig, tokenCacheKey).
+			Return(nil, errors.New("file not found"))
+		mockRepository.EXPECT().
+			Save(in.TokenCacheConfig, tokenCacheKey, issuedTokenSet).
+			Return(nil)
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			Read().
+			Return(credentialplugin.Input{ClientAuthenticationAPIVersion: "client.authentication.k8s.io/v1"}, nil)
+		mockWriter := writer_mock.NewMockInterface(t)
+		mockWriter.EXPECT().
+			Write(issuedOutput).
+			Return(nil)
+		u := GetToken{
+			Authentication:         mockAuthentication,
+			TokenCacheRepository:   mockRepository,
+			CredentialPluginReader: mockReader,
+			CredentialPluginWriter: mockWriter,
+			Logger:                 logger.New(t),
+			Clock:                  clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -93,51 +176,54 @@ func TestGetToken_Do(t *testing.T) {
 	})
 
 	t.Run("HasValidIDToken", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+		tokenCacheKey := tokencache.Key{
+			Provider: oidc.Provider{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+		}
+
 		ctx := context.TODO()
 		in := Input{
-			IssuerURL:     "https://accounts.google.com",
-			ClientID:      "YOUR_CLIENT_ID",
-			ClientSecret:  "YOUR_CLIENT_SECRET",
-			TokenCacheDir: "/path/to/token-cache",
+			Provider: dummyProvider,
+			TokenCacheConfig: tokencache.Config{
+				Directory: "/path/to/token-cache",
+			},
+			GrantOptionSet: grantOptionSet,
 		}
-		mockAuthentication := mock_auth.NewMockInterface(ctrl)
-		mockAuthentication.EXPECT().
-			Do(ctx, auth.Input{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					IDPIssuerURL: "https://accounts.google.com",
+		mockCloser := io_mock.NewMockCloser(t)
+		mockCloser.EXPECT().
+			Close().
+			Return(nil)
+		mockRepository := repository_mock.NewMockInterface(t)
+		mockRepository.EXPECT().
+			Lock(in.TokenCacheConfig, tokenCacheKey).
+			Return(mockCloser, nil)
+		mockRepository.EXPECT().
+			FindByKey(in.TokenCacheConfig, tokencache.Key{
+				Provider: oidc.Provider{
+					IssuerURL:    "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
-					IDToken:      "VALID_ID_TOKEN",
 				},
 			}).
-			Return(&auth.Output{
-				AlreadyHasValidIDToken: true,
-				IDToken:                "VALID_ID_TOKEN",
-				IDTokenExpiry:          futureTime,
-				IDTokenClaims:          dummyTokenClaims,
-			}, nil)
-		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
-		tokenCacheRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokencache.Key{
-				IssuerURL: "https://accounts.google.com",
-				ClientID:  "YOUR_CLIENT_ID",
-			}).
-			Return(&tokencache.TokenCache{
-				IDToken: "VALID_ID_TOKEN",
-			}, nil)
-		credentialPluginInteraction := mock_credentialplugin.NewMockInterface(ctrl)
-		credentialPluginInteraction.EXPECT().
-			Write(credentialplugin.Output{
-				Token:  "VALID_ID_TOKEN",
-				Expiry: futureTime,
-			})
+			Return(&issuedTokenSet, nil)
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			Read().
+			Return(credentialpluginInput, nil)
+		mockWriter := writer_mock.NewMockInterface(t)
+		mockWriter.EXPECT().
+			Write(issuedOutput).
+			Return(nil)
 		u := GetToken{
-			Authentication:       mockAuthentication,
-			TokenCacheRepository: tokenCacheRepository,
-			Interaction:          credentialPluginInteraction,
-			Logger:               mock_logger.New(t),
+			Authentication:         authentication_mock.NewMockInterface(t),
+			TokenCacheRepository:   mockRepository,
+			CredentialPluginReader: mockReader,
+			CredentialPluginWriter: mockWriter,
+			Logger:                 logger.New(t),
+			Clock:                  clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err != nil {
 			t.Errorf("Do returned error: %+v", err)
@@ -145,37 +231,56 @@ func TestGetToken_Do(t *testing.T) {
 	})
 
 	t.Run("AuthenticationError", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+		tokenCacheKey := tokencache.Key{
+			Provider: oidc.Provider{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+		}
 		ctx := context.TODO()
 		in := Input{
-			IssuerURL:     "https://accounts.google.com",
-			ClientID:      "YOUR_CLIENT_ID",
-			ClientSecret:  "YOUR_CLIENT_SECRET",
-			TokenCacheDir: "/path/to/token-cache",
+			Provider: dummyProvider,
+			TokenCacheConfig: tokencache.Config{
+				Directory: "/path/to/token-cache",
+			},
+			GrantOptionSet: grantOptionSet,
 		}
-		mockAuthentication := mock_auth.NewMockInterface(ctrl)
+		mockAuthentication := authentication_mock.NewMockInterface(t)
 		mockAuthentication.EXPECT().
-			Do(ctx, auth.Input{
-				OIDCConfig: kubeconfig.OIDCConfig{
-					IDPIssuerURL: "https://accounts.google.com",
+			Do(ctx, authentication.Input{
+				Provider:       dummyProvider,
+				GrantOptionSet: grantOptionSet,
+			}).
+			Return(nil, errors.New("authentication error"))
+		mockCloser := io_mock.NewMockCloser(t)
+		mockCloser.EXPECT().
+			Close().
+			Return(nil)
+		mockRepository := repository_mock.NewMockInterface(t)
+		mockRepository.EXPECT().
+			Lock(in.TokenCacheConfig, tokenCacheKey).
+			Return(mockCloser, nil)
+		mockRepository.EXPECT().
+			FindByKey(in.TokenCacheConfig, tokencache.Key{
+				Provider: oidc.Provider{
+					IssuerURL:    "https://accounts.google.com",
 					ClientID:     "YOUR_CLIENT_ID",
 					ClientSecret: "YOUR_CLIENT_SECRET",
 				},
 			}).
-			Return(nil, xerrors.New("authentication error"))
-		tokenCacheRepository := mock_tokencache.NewMockInterface(ctrl)
-		tokenCacheRepository.EXPECT().
-			FindByKey("/path/to/token-cache", tokencache.Key{
-				IssuerURL: "https://accounts.google.com",
-				ClientID:  "YOUR_CLIENT_ID",
-			}).
-			Return(nil, xerrors.New("file not found"))
+			Return(nil, errors.New("file not found"))
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			Read().
+			Return(credentialpluginInput, nil)
 		u := GetToken{
-			Authentication:       mockAuthentication,
-			TokenCacheRepository: tokenCacheRepository,
-			Interaction:          mock_credentialplugin.NewMockInterface(ctrl),
-			Logger:               mock_logger.New(t),
+			Authentication:         mockAuthentication,
+			TokenCacheRepository:   mockRepository,
+			CredentialPluginReader: mockReader,
+			CredentialPluginWriter: writer_mock.NewMockInterface(t),
+			Logger:                 logger.New(t),
+			Clock:                  clock.Fake(expiryTime.Add(-time.Hour)),
 		}
 		if err := u.Do(ctx, in); err == nil {
 			t.Errorf("err wants non-nil but nil")

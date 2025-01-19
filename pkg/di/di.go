@@ -1,54 +1,65 @@
-//+build wireinject
+//go:build wireinject
+// +build wireinject
 
 // Package di provides dependency injection.
 package di
 
 import (
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/cmd"
-	credentialPluginAdaptor "github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/env"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/oidc"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
-	credentialPluginUseCase "github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/int128/kubelogin/pkg/cmd"
+	credentialpluginreader "github.com/int128/kubelogin/pkg/credentialplugin/reader"
+	credentialpluginwriter "github.com/int128/kubelogin/pkg/credentialplugin/writer"
+	"github.com/int128/kubelogin/pkg/infrastructure/browser"
+	"github.com/int128/kubelogin/pkg/infrastructure/clock"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
+	"github.com/int128/kubelogin/pkg/infrastructure/reader"
+	"github.com/int128/kubelogin/pkg/infrastructure/stdio"
+	kubeconfigLoader "github.com/int128/kubelogin/pkg/kubeconfig/loader"
+	kubeconfigWriter "github.com/int128/kubelogin/pkg/kubeconfig/writer"
+	"github.com/int128/kubelogin/pkg/oidc/client"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
+	"github.com/int128/kubelogin/pkg/tokencache/repository"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
+	"github.com/int128/kubelogin/pkg/usecases/clean"
+	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
 )
 
-// NewCmd returns an instance of adaptors.Cmd.
+// NewCmd returns an instance of infrastructure.Cmd.
 func NewCmd() cmd.Interface {
 	wire.Build(
-		// use-cases
-		auth.Set,
-		wire.Value(auth.DefaultLocalServerReadyFunc),
-		standalone.Set,
-		credentialPluginUseCase.Set,
+		NewCmdForHeadless,
 
-		// adaptors
-		cmd.Set,
-		env.Set,
-		kubeconfig.Set,
-		tokencache.Set,
-		credentialPluginAdaptor.Set,
-		oidc.Set,
+		// dependencies for production
+		clock.Set,
+		stdio.Set,
 		logger.Set,
+		browser.Set,
 	)
 	return nil
 }
 
-// NewCmdForHeadless returns an instance of adaptors.Cmd for headless testing.
-func NewCmdForHeadless(logger.Interface, auth.LocalServerReadyFunc, credentialPluginAdaptor.Interface) cmd.Interface {
+// NewCmdForHeadless returns an instance of infrastructure.Cmd for headless testing.
+func NewCmdForHeadless(clock.Interface, stdio.Stdin, stdio.Stdout, logger.Interface, browser.Interface) cmd.Interface {
 	wire.Build(
-		auth.Set,
+		// use-cases
+		authentication.Set,
 		standalone.Set,
-		credentialPluginUseCase.Set,
+		credentialplugin.Set,
+		setup.Set,
+		clean.Set,
+
+		// infrastructure
 		cmd.Set,
-		env.Set,
-		kubeconfig.Set,
-		tokencache.Set,
-		oidc.Set,
+		reader.Set,
+		kubeconfigLoader.Set,
+		kubeconfigWriter.Set,
+		repository.Set,
+		client.Set,
+		loader.Set,
+		credentialpluginreader.Set,
+		credentialpluginwriter.Set,
 	)
 	return nil
 }

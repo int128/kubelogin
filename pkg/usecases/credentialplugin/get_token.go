@@ -5,17 +5,20 @@ package credentialplugin
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/credentialplugin"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/adaptors/tokencache"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
-	"golang.org/x/xerrors"
+	"github.com/int128/kubelogin/pkg/credentialplugin"
+	credentialpluginreader "github.com/int128/kubelogin/pkg/credentialplugin/reader"
+	credentialpluginwriter "github.com/int128/kubelogin/pkg/credentialplugin/writer"
+	"github.com/int128/kubelogin/pkg/infrastructure/clock"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
+	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
+	"github.com/int128/kubelogin/pkg/tokencache"
+	"github.com/int128/kubelogin/pkg/tokencache/repository"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
-
-//go:generate mockgen -destination mock_credentialplugin/mock_credentialplugin.go github.com/int128/kubelogin/pkg/usecases/credentialplugin Interface
 
 var Set = wire.NewSet(
 	wire.Struct(new(GetToken), "*"),
@@ -28,72 +31,111 @@ type Interface interface {
 
 // Input represents an input DTO of the GetToken use-case.
 type Input struct {
-	IssuerURL       string
-	ClientID        string
-	ClientSecret    string
-	ExtraScopes     []string // optional
-	SkipOpenBrowser bool
-	ListenPort      []int
-	Username        string // If set, perform the resource owner password credentials grant
-	Password        string // If empty, read a password using Env.ReadPassword()
-	CACertFilename  string // If set, use the CA cert
-	SkipTLSVerify   bool
-	TokenCacheDir   string
+	Provider         oidc.Provider
+	ForceRefresh     bool
+	TokenCacheConfig tokencache.Config
+	GrantOptionSet   authentication.GrantOptionSet
+	TLSClientConfig  tlsclientconfig.Config
 }
 
 type GetToken struct {
-	Authentication       auth.Interface
-	TokenCacheRepository tokencache.Interface
-	Interaction          credentialplugin.Interface
-	Logger               logger.Interface
+	Authentication         authentication.Interface
+	TokenCacheRepository   repository.Interface
+	CredentialPluginReader credentialpluginreader.Interface
+	CredentialPluginWriter credentialpluginwriter.Interface
+	Logger                 logger.Interface
+	Clock                  clock.Interface
 }
 
 func (u *GetToken) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
 
-	u.Logger.V(1).Infof("finding a token from cache directory %s", in.TokenCacheDir)
-	cacheKey := tokencache.Key{IssuerURL: in.IssuerURL, ClientID: in.ClientID}
-	cache, err := u.TokenCacheRepository.FindByKey(in.TokenCacheDir, cacheKey)
+	credentialPluginInput, err := u.CredentialPluginReader.Read()
+	if err != nil {
+		return fmt.Errorf("could not read the input of credential plugin: %w", err)
+	}
+	u.Logger.V(1).Infof("credential plugin is called with apiVersion: %s", credentialPluginInput.ClientAuthenticationAPIVersion)
+
+	u.Logger.V(1).Infof("finding a token cache")
+	tokenCacheKey := tokencache.Key{
+		Provider:        in.Provider,
+		TLSClientConfig: in.TLSClientConfig,
+	}
+	if in.GrantOptionSet.ROPCOption != nil {
+		tokenCacheKey.Username = in.GrantOptionSet.ROPCOption.Username
+	}
+
+	u.Logger.V(1).Infof("acquiring the lock of token cache")
+	lock, err := u.TokenCacheRepository.Lock(in.TokenCacheConfig, tokenCacheKey)
+	if err != nil {
+		return fmt.Errorf("could not lock the token cache: %w", err)
+	}
+	defer func() {
+		u.Logger.V(1).Infof("releasing the lock of token cache")
+		if err := lock.Close(); err != nil {
+			u.Logger.Printf("could not unlock the token cache: %s", err)
+		}
+	}()
+
+	cachedTokenSet, err := u.TokenCacheRepository.FindByKey(in.TokenCacheConfig, tokenCacheKey)
 	if err != nil {
 		u.Logger.V(1).Infof("could not find a token cache: %s", err)
-		cache = &tokencache.TokenCache{}
 	}
-	out, err := u.Authentication.Do(ctx, auth.Input{
-		OIDCConfig: kubeconfig.OIDCConfig{
-			IDPIssuerURL: in.IssuerURL,
-			ClientID:     in.ClientID,
-			ClientSecret: in.ClientSecret,
-			ExtraScopes:  in.ExtraScopes,
-			IDToken:      cache.IDToken,
-			RefreshToken: cache.RefreshToken,
-		},
-		SkipOpenBrowser: in.SkipOpenBrowser,
-		ListenPort:      in.ListenPort,
-		Username:        in.Username,
-		Password:        in.Password,
-		CACertFilename:  in.CACertFilename,
-		SkipTLSVerify:   in.SkipTLSVerify,
-	})
-	if err != nil {
-		return xerrors.Errorf("error while authentication: %w", err)
-	}
-	for k, v := range out.IDTokenClaims {
-		u.Logger.V(1).Infof("the ID token has the claim: %s=%v", k, v)
-	}
-	if !out.AlreadyHasValidIDToken {
-		u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)
-		cache := tokencache.TokenCache{
-			IDToken:      out.IDToken,
-			RefreshToken: out.RefreshToken,
-		}
-		if err := u.TokenCacheRepository.Save(in.TokenCacheDir, cacheKey, cache); err != nil {
-			return xerrors.Errorf("could not write the token cache: %w", err)
+	if cachedTokenSet != nil {
+		if in.ForceRefresh {
+			u.Logger.V(1).Infof("forcing refresh of the existing token")
+		} else {
+			u.Logger.V(1).Infof("checking expiration of the existing token")
+			// Skip verification of the token to reduce time of a discovery request.
+			// Here it trusts the signature and claims and checks only expiration,
+			// because the token has been verified before caching.
+			claims, err := cachedTokenSet.DecodeWithoutVerify()
+			if err != nil {
+				return fmt.Errorf("invalid token cache (you may need to remove): %w", err)
+			}
+			if !claims.IsExpired(u.Clock) {
+				u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
+				out := credentialplugin.Output{
+					Token:                          cachedTokenSet.IDToken,
+					Expiry:                         claims.Expiry,
+					ClientAuthenticationAPIVersion: credentialPluginInput.ClientAuthenticationAPIVersion,
+				}
+				if err := u.CredentialPluginWriter.Write(out); err != nil {
+					return fmt.Errorf("could not write the token to client-go: %w", err)
+				}
+				return nil
+			}
+			u.Logger.V(1).Infof("you have an expired token at %s", claims.Expiry)
 		}
 	}
 
+	authenticationInput := authentication.Input{
+		Provider:        in.Provider,
+		GrantOptionSet:  in.GrantOptionSet,
+		CachedTokenSet:  cachedTokenSet,
+		TLSClientConfig: in.TLSClientConfig,
+	}
+	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
+	if err != nil {
+		return fmt.Errorf("authentication error: %w", err)
+	}
+	idTokenClaims, err := authenticationOutput.TokenSet.DecodeWithoutVerify()
+	if err != nil {
+		return fmt.Errorf("you got an invalid token: %w", err)
+	}
+	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
+	u.Logger.V(1).Infof("you got a valid token until %s", idTokenClaims.Expiry)
+	if err := u.TokenCacheRepository.Save(in.TokenCacheConfig, tokenCacheKey, authenticationOutput.TokenSet); err != nil {
+		return fmt.Errorf("could not write the token cache: %w", err)
+	}
 	u.Logger.V(1).Infof("writing the token to client-go")
-	if err := u.Interaction.Write(credentialplugin.Output{Token: out.IDToken, Expiry: out.IDTokenExpiry}); err != nil {
-		return xerrors.Errorf("could not write the token to client-go: %w", err)
+	out := credentialplugin.Output{
+		Token:                          authenticationOutput.TokenSet.IDToken,
+		Expiry:                         idTokenClaims.Expiry,
+		ClientAuthenticationAPIVersion: credentialPluginInput.ClientAuthenticationAPIVersion,
+	}
+	if err := u.CredentialPluginWriter.Write(out); err != nil {
+		return fmt.Errorf("could not write the token to client-go: %w", err)
 	}
 	return nil
 }

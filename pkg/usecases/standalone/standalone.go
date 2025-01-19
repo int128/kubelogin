@@ -2,15 +2,18 @@ package standalone
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/adaptors/kubeconfig"
-	"github.com/int128/kubelogin/pkg/adaptors/logger"
-	"github.com/int128/kubelogin/pkg/usecases/auth"
-	"golang.org/x/xerrors"
+	"github.com/int128/kubelogin/pkg/infrastructure/clock"
+	"github.com/int128/kubelogin/pkg/infrastructure/logger"
+	"github.com/int128/kubelogin/pkg/kubeconfig"
+	"github.com/int128/kubelogin/pkg/kubeconfig/loader"
+	"github.com/int128/kubelogin/pkg/kubeconfig/writer"
+	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/tlsclientconfig"
+	"github.com/int128/kubelogin/pkg/usecases/authentication"
 )
-
-//go:generate mockgen -destination mock_standalone/mock_standalone.go github.com/int128/kubelogin/pkg/usecases/standalone Interface
 
 // Set provides the use-case.
 var Set = wire.NewSet(
@@ -27,70 +30,97 @@ type Input struct {
 	KubeconfigFilename string                 // Default to the environment variable or global config as kubectl
 	KubeconfigContext  kubeconfig.ContextName // Default to the current context but ignored if KubeconfigUser is set
 	KubeconfigUser     kubeconfig.UserName    // Default to the user of the context
-	SkipOpenBrowser    bool
-	ListenPort         []int
-	Username           string // If set, perform the resource owner password credentials grant
-	Password           string // If empty, read a password using Env.ReadPassword()
-	CACertFilename     string // If set, use the CA cert
-	SkipTLSVerify      bool
+	GrantOptionSet     authentication.GrantOptionSet
+	TLSClientConfig    tlsclientconfig.Config
 }
 
-const oidcConfigErrorMessage = `No OIDC configuration found. Did you setup kubectl for OIDC authentication?
-  kubectl config set-credentials CONTEXT_NAME \
-    --auth-provider oidc \
-    --auth-provider-arg idp-issuer-url=https://issuer.example.com \
-    --auth-provider-arg client-id=YOUR_CLIENT_ID \
-    --auth-provider-arg client-secret=YOUR_CLIENT_SECRET`
+const oidcConfigErrorMessage = `No configuration found.
+You need to set up the OIDC provider, role binding, Kubernetes API server and kubeconfig.
+To show the setup instruction:
+
+	kubectl oidc-login setup
+
+See https://github.com/int128/kubelogin for more.
+`
 
 // Standalone provides the use case of explicit login.
 //
 // If the current auth provider is not oidc, show the error.
 // If the kubeconfig has a valid token, do nothing.
 // Otherwise, update the kubeconfig.
-//
 type Standalone struct {
-	Authentication auth.Interface
-	Kubeconfig     kubeconfig.Interface
-	Logger         logger.Interface
+	Authentication   authentication.Interface
+	KubeconfigLoader loader.Interface
+	KubeconfigWriter writer.Interface
+	Logger           logger.Interface
+	Clock            clock.Interface
 }
 
 func (u *Standalone) Do(ctx context.Context, in Input) error {
 	u.Logger.V(1).Infof("WARNING: log may contain your secrets such as token or password")
 
-	authProvider, err := u.Kubeconfig.GetCurrentAuthProvider(in.KubeconfigFilename, in.KubeconfigContext, in.KubeconfigUser)
+	authProvider, err := u.KubeconfigLoader.GetCurrentAuthProvider(in.KubeconfigFilename, in.KubeconfigContext, in.KubeconfigUser)
 	if err != nil {
 		u.Logger.Printf(oidcConfigErrorMessage)
-		return xerrors.Errorf("could not find the current authentication provider: %w", err)
+		return fmt.Errorf("could not find the current authentication provider: %w", err)
 	}
 	u.Logger.V(1).Infof("using the authentication provider of the user %s", authProvider.UserName)
 	u.Logger.V(1).Infof("a token will be written to %s", authProvider.LocationOfOrigin)
+	if authProvider.IDPCertificateAuthority != "" {
+		u.Logger.V(1).Infof("using the certificate %s", authProvider.IDPCertificateAuthority)
+		in.TLSClientConfig.CACertFilename = append(in.TLSClientConfig.CACertFilename, authProvider.IDPCertificateAuthority)
+	}
+	if authProvider.IDPCertificateAuthorityData != "" {
+		u.Logger.V(1).Infof("using the certificate in %s", authProvider.LocationOfOrigin)
+		in.TLSClientConfig.CACertData = append(in.TLSClientConfig.CACertData, authProvider.IDPCertificateAuthorityData)
+	}
+	var cachedTokenSet *oidc.TokenSet
+	if authProvider.IDToken != "" {
+		cachedTokenSet = &oidc.TokenSet{
+			IDToken:      authProvider.IDToken,
+			RefreshToken: authProvider.RefreshToken,
+		}
+		u.Logger.V(1).Infof("checking expiration of the existing token")
+		// Skip verification of the token to reduce time of a discovery request.
+		// Here it trusts the signature and claims and checks only expiration,
+		// because the token has been verified before caching.
+		claims, err := cachedTokenSet.DecodeWithoutVerify()
+		if err != nil {
+			return fmt.Errorf("invalid token cache (you may need to remove): %w", err)
+		}
+		if !claims.IsExpired(u.Clock) {
+			u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
+			return nil
+		}
+	}
 
-	out, err := u.Authentication.Do(ctx, auth.Input{
-		OIDCConfig:      authProvider.OIDCConfig,
-		SkipOpenBrowser: in.SkipOpenBrowser,
-		ListenPort:      in.ListenPort,
-		Username:        in.Username,
-		Password:        in.Password,
-		CACertFilename:  in.CACertFilename,
-		SkipTLSVerify:   in.SkipTLSVerify,
-	})
+	authenticationInput := authentication.Input{
+		Provider: oidc.Provider{
+			IssuerURL:    authProvider.IDPIssuerURL,
+			ClientID:     authProvider.ClientID,
+			ClientSecret: authProvider.ClientSecret,
+			ExtraScopes:  authProvider.ExtraScopes,
+		},
+		GrantOptionSet:  in.GrantOptionSet,
+		CachedTokenSet:  cachedTokenSet,
+		TLSClientConfig: in.TLSClientConfig,
+	}
+	authenticationOutput, err := u.Authentication.Do(ctx, authenticationInput)
 	if err != nil {
-		return xerrors.Errorf("error while authentication: %w", err)
-	}
-	for k, v := range out.IDTokenClaims {
-		u.Logger.V(1).Infof("the ID token has the claim: %s=%v", k, v)
-	}
-	if out.AlreadyHasValidIDToken {
-		u.Logger.Printf("You already have a valid token until %s", out.IDTokenExpiry)
-		return nil
+		return fmt.Errorf("authentication error: %w", err)
 	}
 
-	u.Logger.Printf("You got a valid token until %s", out.IDTokenExpiry)
-	authProvider.OIDCConfig.IDToken = out.IDToken
-	authProvider.OIDCConfig.RefreshToken = out.RefreshToken
+	idTokenClaims, err := authenticationOutput.TokenSet.DecodeWithoutVerify()
+	if err != nil {
+		return fmt.Errorf("you got an invalid token: %w", err)
+	}
+	u.Logger.V(1).Infof("you got a token: %s", idTokenClaims.Pretty)
+	u.Logger.Printf("You got a valid token until %s", idTokenClaims.Expiry)
+	authProvider.IDToken = authenticationOutput.TokenSet.IDToken
+	authProvider.RefreshToken = authenticationOutput.TokenSet.RefreshToken
 	u.Logger.V(1).Infof("writing the ID token and refresh token to %s", authProvider.LocationOfOrigin)
-	if err := u.Kubeconfig.UpdateAuthProvider(authProvider); err != nil {
-		return xerrors.Errorf("could not write the token to the kubeconfig: %w", err)
+	if err := u.KubeconfigWriter.UpdateAuthProvider(*authProvider); err != nil {
+		return fmt.Errorf("could not update the kubeconfig: %w", err)
 	}
 	return nil
 }
