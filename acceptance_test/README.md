@@ -1,15 +1,13 @@
 # kubelogin/acceptance_test
 
-This is a manual test for verifying Kubernetes OIDC authentication with your OIDC provider.
-
+This is a manual test to verify if the Kubernetes OIDC authentication works with your OIDC provider.
 
 ## Purpose
 
 This test checks the following points:
 
-1. You can set up your OIDC provider using [setup guide](../docs/setup.md).
+1. You can set up your OIDC provider using the [setup guide](../docs/setup.md).
 1. The plugin works with your OIDC provider.
-
 
 ## Getting Started
 
@@ -22,7 +20,7 @@ make -C ..
 ```
 
 You need to set up your provider.
-See [setup guide](../docs/setup.md) for more.
+See the [setup guide](../docs/setup.md) for more.
 
 You need to install the following tools:
 
@@ -44,7 +42,6 @@ For example, you can create a cluster with Google account authentication.
 ```sh
 make OIDC_ISSUER_URL=https://accounts.google.com \
   OIDC_CLIENT_ID=REDACTED.apps.googleusercontent.com \
-  OIDC_CLIENT_SECRET=REDACTED \
   YOUR_EMAIL=REDACTED@gmail.com
 ```
 
