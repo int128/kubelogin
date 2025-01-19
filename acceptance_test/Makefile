@@ -17,7 +17,6 @@ cluster:
 
 	# Set up kubectl.
 	kubectl config set-credentials oidc \
-		--exec-api-version=client.authentication.k8s.io/v1beta1 \
 		--exec-command=$(CURDIR)/../kubelogin \
 		--exec-arg=get-token \
 		--exec-arg=--token-cache-dir=$(OUTPUT_DIR)/token-cache \
