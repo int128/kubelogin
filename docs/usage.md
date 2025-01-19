@@ -108,7 +108,7 @@ See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyF
 Kubelogin stores the token cache to the OS keyring if available.
 It depends on [zalando/go-keyring](https://github.com/zalando/go-keyring) for the keyring storage.
 
-You can enforce the storage by `--token-cache-storage`.
+If you encounter a problem, try `--token-cache-storage` to set the storage.
 
 ```yaml
 # Force to use the OS keyring
@@ -130,13 +130,14 @@ If a value in the following options begins with a tilde character `~`, it is exp
 
 Kubelogin support the following flows:
 
-- Authorization code flow
-- Authorization code flow with a keyboard
-- Resource owner password credentials grant flow
+- [Authorization code flow](#authorization-code-flow)
+- [Authorization code flow with a keyboard](#authorization-code-flow-with-a-keyboard)
+- [Device authorization grant](#device-authorization-grant)
+- [Resource owner password credentials grant](#resource-owner-password-credentials-grant)
 
 ### Authorization code flow
 
-Kubelogin performs the authorization code flow by default.
+Kubelogin performs the [authorization code flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) by default.
 
 It starts the local server at port 8000 or 18000 by default.
 You need to register the following redirect URIs to the provider:
@@ -177,13 +178,14 @@ You can change the URL to show after authentication.
 - --open-url-after-authentication=https://example.com/success.html
 ```
 
-You can skip opening the browser if you encounter some environment problem.
+If you encounter a problem with the browser, you can change the browser command or skip opening the browser.
 
 ```yaml
+# Change the browser command
+- --browser-command=google-chrome
+# Do not open the browser
 - --skip-open-browser
 ```
-
-For Linux users, you change the default browser by `BROWSER` environment variable.
 
 ### Authorization code flow with a keyboard
 
@@ -215,13 +217,34 @@ You can add extra parameters to the authentication request.
 - --oidc-auth-request-extra-params=ttl=86400
 ```
 
-### Resource owner password credentials grant flow
+### Device authorization grant
 
-Kubelogin performs the resource owner password credentials grant flow
+Kubelogin performs the [device authorization grant](https://tools.ietf.org/html/rfc8628) when `--grant-type=device-code` is set.
+
+```yaml
+- --grant-type=device-code
+```
+
+It automatically opens the browser.
+If the provider returns the `verification_uri_complete` parameter, you don't need to enter the code.
+Otherwise, you need to enter the code shown.
+
+If you encounter a problem with the browser, you can change the browser command or skip opening the browser.
+
+```yaml
+# Change the browser command
+- --browser-command=google-chrome
+# Do not open the browser
+- --skip-open-browser
+```
+
+### Resource owner password credentials grant
+
+Kubelogin performs the resource owner password credentials grant
 when `--grant-type=password` or `--username` is set.
 
-Note that most OIDC providers do not support this flow.
-Keycloak supports this flow but you need to explicitly enable the "Direct Access Grants" feature in the client settings.
+Note that most OIDC providers do not support this grant.
+Keycloak supports this grant but you need to explicitly enable the "Direct Access Grants" feature in the client settings.
 
 You can set the username and password.
 
@@ -263,7 +286,7 @@ users:
   - name: oidc
     user:
       exec:
-        apiVersion: client.authentication.k8s.io/v1beta1
+        apiVersion: client.authentication.k8s.io/v1
         command: docker
         args:
           - run

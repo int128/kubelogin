@@ -30,17 +30,19 @@ kubectl krew install oidc-login
 choco install kubelogin
 ```
 
-If you install via GitHub releases, you need to put the `kubelogin` binary on your path under the name `kubectl-oidc_login` so that the [kubectl plugin mechanism](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/) can find it when you invoke `kubectl oidc-login`. The other install methods do this for you.
+If you install via GitHub releases, save the binary as the name `kubectl-oidc_login` on your path.
+When you invoke `kubectl oidc-login`, kubectl finds it by the [naming convention of kubectl plugins](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/).
+The other install methods do this for you.
 
 You need to set up the OIDC provider, cluster role binding, Kubernetes API server and kubeconfig.
-The kubeconfig looks like:
+Your kubeconfig looks like this:
 
 ```yaml
 users:
   - name: oidc
     user:
       exec:
-        apiVersion: client.authentication.k8s.io/v1beta1
+        apiVersion: client.authentication.k8s.io/v1
         command: kubectl
         args:
           - oidc-login
@@ -49,7 +51,7 @@ users:
           - --oidc-client-id=YOUR_CLIENT_ID
 ```
 
-See [setup guide](docs/setup.md) for more.
+See the [setup guide](docs/setup.md) for more.
 
 ### Run
 
@@ -62,27 +64,28 @@ kubectl get pods
 Kubectl executes kubelogin before calling the Kubernetes APIs.
 Kubelogin automatically opens the browser, and you can log in to the provider.
 
-<img src="docs/keycloak-login.png" alt="keycloak-login" width="455" height="329">
+After the authentication, kubelogin returns the credentials to kubectl.
+Kubectl then calls the Kubernetes APIs with the credentials.
 
-After authentication, kubelogin returns the credentials to kubectl and kubectl then calls the Kubernetes APIs with these credentials.
-
-```
+```console
 % kubectl get pods
 Open http://localhost:8000 for authentication
 NAME                          READY   STATUS    RESTARTS   AGE
 echoserver-86c78fdccd-nzmd5   1/1     Running   0          26d
 ```
 
-Kubelogin stores the ID token and refresh token to the token cache storage.
-If the OS keyring is available, it stores the token cache to the keyring.
-Otherwise, it stores the token cache to the file system.
-
-Kubelogin refreshes the expired token cache.
+Kubelogin stores the ID token and refresh token to the cache.
 If the ID token is valid, it just returns it.
 If the ID token has expired, it will refresh the token using the refresh token.
 If the refresh token has expired, it will perform re-authentication.
 
-### Troubleshoot
+## Troubleshooting
+
+### Token cache
+
+If the OS keyring is available, kubelogin stores the token cache to the OS keyring.
+Otherwise, kubelogin stores the token cache to the file system.
+See the [token cache](docs/usage.md#token-cache) for details.
 
 You can log out by deleting the token cache.
 
@@ -95,10 +98,12 @@ Deleted the token cache in the keyring
 Kubelogin will ask you to log in via the browser again.
 If the browser has a cookie for the provider, you need to log out from the provider or clear the cookie.
 
-You can dump claims of an ID token by `setup` command.
+### ID token claims
+
+You can run `setup` command to dump the claims of an ID token from the provider.
 
 ```console
-% kubectl oidc-login setup --oidc-issuer-url https://accounts.google.com --oidc-client-id REDACTED
+% kubectl oidc-login setup --oidc-issuer-url=ISSUER_URL --oidc-client-id=REDACTED
 ...
 You got a token with the following claims:
 
@@ -110,14 +115,14 @@ You got a token with the following claims:
 }
 ```
 
-You can increase the log level by `-v1` option.
+You can set `-v1` option to increase the log level.
 
 ```yaml
 users:
   - name: oidc
     user:
       exec:
-        apiVersion: client.authentication.k8s.io/v1beta1
+        apiVersion: client.authentication.k8s.io/v1
         command: kubectl
         args:
           - oidc-login
@@ -125,7 +130,7 @@ users:
           - -v1
 ```
 
-You can verify kubelogin works with your provider using [acceptance test](acceptance_test).
+You can run the [acceptance test](acceptance_test) to verify if kubelogin works with your provider.
 
 ## Docs
 
@@ -139,6 +144,3 @@ You can verify kubelogin works with your provider using [acceptance test](accept
 
 This is an open source software licensed under Apache License 2.0.
 Feel free to open issues and pull requests for improving code and documents.
-
-This software is developed with [GoLand](https://www.jetbrains.com/go/) licensed for open source development.
-Special thanks for the support.

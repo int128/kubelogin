@@ -12,6 +12,14 @@ Let's see the following steps:
 
 ## 1. Set up the OIDC provider
 
+Kubelogin supports the following authentication flows:
+
+- Authorization code flow
+- Device authorization grant
+- Resource owner password credentials grant
+
+See the [usage](usage.md) for the details.
+
 ### Google Identity Platform
 
 You can log in with a Google account.
@@ -23,10 +31,10 @@ Open [Google APIs Console](https://console.developers.google.com/apis/credential
 Check the client ID and secret.
 Replace the following variables in the later sections.
 
-| Variable             | Value                            |
-| -------------------- | -------------------------------- |
-| `ISSUER_URL`         | `https://accounts.google.com`    |
-| `YOUR_CLIENT_ID`     | `xxx.apps.googleusercontent.com` |
+| Variable         | Value                            |
+| ---------------- | -------------------------------- |
+| `ISSUER_URL`     | `https://accounts.google.com`    |
+| `YOUR_CLIENT_ID` | `xxx.apps.googleusercontent.com` |
 
 ### Keycloak
 
@@ -54,10 +62,10 @@ For example, if you have `admin` role of the client, you will get a JWT with the
 
 Replace the following variables in the later sections.
 
-| Variable             | Value                                                 |
-| -------------------- | ----------------------------------------------------- |
-| `ISSUER_URL`         | `https://keycloak.example.com/auth/realms/YOUR_REALM` |
-| `YOUR_CLIENT_ID`     | `YOUR_CLIENT_ID`                                      |
+| Variable         | Value                                                 |
+| ---------------- | ----------------------------------------------------- |
+| `ISSUER_URL`     | `https://keycloak.example.com/auth/realms/YOUR_REALM` |
+| `YOUR_CLIENT_ID` | `YOUR_CLIENT_ID`                                      |
 
 ### Dex with GitHub
 
@@ -187,31 +195,13 @@ Add the following flags to kube-apiserver:
 
 See [Kubernetes Authenticating: OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) for the all flags.
 
-If you are using [kops](https://github.com/kubernetes/kops), run `kops edit cluster` and append the following settings:
-
-```yaml
-spec:
-  kubeAPIServer:
-    oidcIssuerURL: ISSUER_URL
-    oidcClientID: YOUR_CLIENT_ID
-```
-
-If you are using [kube-aws](https://github.com/kubernetes-incubator/kube-aws), append the following settings to the `cluster.yaml`:
-
-```yaml
-oidc:
-  enabled: true
-  issuerUrl: ISSUER_URL
-  clientId: YOUR_CLIENT_ID
-```
-
 ## 5. Set up the kubeconfig
 
 Add `oidc` user to the kubeconfig.
 
 ```sh
 kubectl config set-credentials oidc \
-  --exec-api-version=client.authentication.k8s.io/v1beta1 \
+  --exec-api-version=client.authentication.k8s.io/v1 \
   --exec-command=kubectl \
   --exec-arg=oidc-login \
   --exec-arg=get-token \
