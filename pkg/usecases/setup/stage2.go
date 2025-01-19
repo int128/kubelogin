@@ -37,7 +37,7 @@ Add the following options to the kube-apiserver:
 Run the following command:
 
 	kubectl config set-credentials oidc \
-	  --exec-api-version=client.authentication.k8s.io/v1beta1 \
+	  --exec-api-version=client.authentication.k8s.io/v1 \
 	  --exec-command=kubectl \
 	  --exec-arg=oidc-login \
 	  --exec-arg=get-token \
