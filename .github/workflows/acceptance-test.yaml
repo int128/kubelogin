@@ -30,5 +30,9 @@ jobs:
           OIDC_ISSUER_URL: https://accounts.google.com
           OIDC_CLIENT_ID: REDACTED.apps.googleusercontent.com
           YOUR_EMAIL: REDACTED@gmail.com
+      - run: kubectl version
+        continue-on-error: true
+        env:
+          KUBECONFIG: acceptance_test/output/kubeconfig.yaml
       - run: make -C acceptance_test delete-cluster
       - run: make -C acceptance_test clean
