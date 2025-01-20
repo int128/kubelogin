@@ -50,10 +50,18 @@ func (cmd *Setup) New() *cobra.Command {
 		RunE: func(c *cobra.Command, _ []string) error {
 			var changedFlags []string
 			c.Flags().VisitAll(func(f *pflag.Flag) {
-				if f.Changed {
-					changedFlags = append(changedFlags, fmt.Sprintf("--%s=%s", f.Name, f.Value))
+				if !f.Changed {
+					return
 				}
+				if sliceValue, ok := f.Value.(pflag.SliceValue); ok {
+					for _, v := range sliceValue.GetSlice() {
+						changedFlags = append(changedFlags, fmt.Sprintf("--%s=%s", f.Name, v))
+					}
+					return
+				}
+				changedFlags = append(changedFlags, fmt.Sprintf("--%s=%s", f.Name, f.Value))
 			})
+
 			grantOptionSet, err := o.authenticationOptions.grantOptionSet()
 			if err != nil {
 				return fmt.Errorf("setup: %w", err)
