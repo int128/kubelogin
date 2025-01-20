@@ -4,33 +4,38 @@ OUTPUT_DIR := $(CURDIR)/output
 KUBECONFIG := $(OUTPUT_DIR)/kubeconfig.yaml
 export KUBECONFIG
 
-# create a Kubernetes cluster
 .PHONY: cluster
 cluster:
-	# create a cluster
+	# Create a cluster.
 	mkdir -p $(OUTPUT_DIR)
 	sed -e "s|OIDC_ISSUER_URL|$(OIDC_ISSUER_URL)|" -e "s|OIDC_CLIENT_ID|$(OIDC_CLIENT_ID)|" cluster.yaml > $(OUTPUT_DIR)/cluster.yaml
 	kind create cluster --name $(CLUSTER_NAME) --config $(OUTPUT_DIR)/cluster.yaml
-	# set up access control
+
+	# Set up the access control.
 	kubectl create clusterrole cluster-readonly --verb=get,watch,list --resource='*.*'
 	kubectl create clusterrolebinding cluster-readonly --clusterrole=cluster-readonly --user=$(YOUR_EMAIL)
-	# set up kubectl
+
+	# Set up kubectl.
 	kubectl config set-credentials oidc \
-		--exec-api-version=client.authentication.k8s.io/v1beta1 \
+		--exec-api-version=client.authentication.k8s.io/v1 \
+		--exec-interactive-mode=Never \
 		--exec-command=$(CURDIR)/../kubelogin \
 		--exec-arg=get-token \
 		--exec-arg=--token-cache-dir=$(OUTPUT_DIR)/token-cache \
 		--exec-arg=--oidc-issuer-url=$(OIDC_ISSUER_URL) \
 		--exec-arg=--oidc-client-id=$(OIDC_CLIENT_ID) \
-		--exec-arg=--oidc-client-secret=$(OIDC_CLIENT_SECRET) \
 		--exec-arg=--oidc-extra-scope=email
-	# switch the default user
+
+	# Switch the default user.
 	kubectl config set-context --current --user=oidc
 
-# clean up the resources
+	# Show the kubeconfig.
+	kubectl config view
+
 .PHONY: clean
 clean:
 	-rm -r $(OUTPUT_DIR)
+
 .PHONY: delete-cluster
 delete-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)

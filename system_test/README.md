@@ -2,12 +2,11 @@
 
 This is an automated test for verifying behavior of the plugin with a real Kubernetes cluster and OIDC provider.
 
-
 ## Purpose
 
 This test checks the following points:
 
-1. User can set up Kubernetes OIDC authentication using [setup guide](../docs/setup.md).
+1. User can set up Kubernetes OIDC authentication using the [setup guide](../docs/setup.md).
 1. User can log in to an OIDC provider on a browser.
 1. User can access the cluster using a token returned from the plugin.
 
@@ -17,7 +16,6 @@ It depends on the following components:
 - OIDC provider (Dex)
 - Browser (Chrome)
 - kubectl command
-
 
 ## How it works
 
@@ -44,7 +42,6 @@ It performs the test by the following steps:
 1. kubectl accesses an API with the token.
 1. kube-apiserver verifies the token by Dex.
 1. Check if kubectl exited with code 0.
-
 
 ## Run locally
 
@@ -79,7 +76,6 @@ Clean up.
 make terminate
 make clean
 ```
-
 
 ## Technical consideration
 
