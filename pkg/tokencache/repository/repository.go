@@ -125,6 +125,9 @@ func (r *Repository) Save(config tokencache.Config, key tokencache.Key, tokenSet
 			if errors.Is(err, keyring.ErrUnsupportedPlatform) {
 				return writeToFile(config, checksum, tokenSet)
 			}
+			if errors.Is(err, keyring.ErrSetDataTooBig) {
+				return writeToFile(config, checksum, tokenSet)
+			}
 			return err
 		}
 		return nil
