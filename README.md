@@ -21,7 +21,7 @@ Install the latest release from [Homebrew](https://brew.sh/), [Krew](https://git
 
 ```sh
 # Homebrew (macOS and Linux)
-brew install int128/kubelogin/kubelogin
+brew install kubelogin
 
 # Krew (macOS, Linux, Windows and ARM)
 kubectl krew install oidc-login
