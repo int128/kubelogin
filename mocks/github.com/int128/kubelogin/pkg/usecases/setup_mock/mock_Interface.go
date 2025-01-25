@@ -22,48 +22,16 @@ func (_m *MockInterface) EXPECT() *MockInterface_Expecter {
 	return &MockInterface_Expecter{mock: &_m.Mock}
 }
 
-// DoStage1 provides a mock function with no fields
-func (_m *MockInterface) DoStage1() {
-	_m.Called()
-}
-
-// MockInterface_DoStage1_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DoStage1'
-type MockInterface_DoStage1_Call struct {
-	*mock.Call
-}
-
-// DoStage1 is a helper method to define mock.On call
-func (_e *MockInterface_Expecter) DoStage1() *MockInterface_DoStage1_Call {
-	return &MockInterface_DoStage1_Call{Call: _e.mock.On("DoStage1")}
-}
-
-func (_c *MockInterface_DoStage1_Call) Run(run func()) *MockInterface_DoStage1_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockInterface_DoStage1_Call) Return() *MockInterface_DoStage1_Call {
-	_c.Call.Return()
-	return _c
-}
-
-func (_c *MockInterface_DoStage1_Call) RunAndReturn(run func()) *MockInterface_DoStage1_Call {
-	_c.Run(run)
-	return _c
-}
-
-// DoStage2 provides a mock function with given fields: ctx, in
-func (_m *MockInterface) DoStage2(ctx context.Context, in setup.Stage2Input) error {
+// Do provides a mock function with given fields: ctx, in
+func (_m *MockInterface) Do(ctx context.Context, in setup.Input) error {
 	ret := _m.Called(ctx, in)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DoStage2")
+		panic("no return value specified for Do")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, setup.Stage2Input) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, setup.Input) error); ok {
 		r0 = rf(ctx, in)
 	} else {
 		r0 = ret.Error(0)
@@ -72,31 +40,31 @@ func (_m *MockInterface) DoStage2(ctx context.Context, in setup.Stage2Input) err
 	return r0
 }
 
-// MockInterface_DoStage2_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DoStage2'
-type MockInterface_DoStage2_Call struct {
+// MockInterface_Do_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Do'
+type MockInterface_Do_Call struct {
 	*mock.Call
 }
 
-// DoStage2 is a helper method to define mock.On call
+// Do is a helper method to define mock.On call
 //   - ctx context.Context
-//   - in setup.Stage2Input
-func (_e *MockInterface_Expecter) DoStage2(ctx interface{}, in interface{}) *MockInterface_DoStage2_Call {
-	return &MockInterface_DoStage2_Call{Call: _e.mock.On("DoStage2", ctx, in)}
+//   - in setup.Input
+func (_e *MockInterface_Expecter) Do(ctx interface{}, in interface{}) *MockInterface_Do_Call {
+	return &MockInterface_Do_Call{Call: _e.mock.On("Do", ctx, in)}
 }
 
-func (_c *MockInterface_DoStage2_Call) Run(run func(ctx context.Context, in setup.Stage2Input)) *MockInterface_DoStage2_Call {
+func (_c *MockInterface_Do_Call) Run(run func(ctx context.Context, in setup.Input)) *MockInterface_Do_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(setup.Stage2Input))
+		run(args[0].(context.Context), args[1].(setup.Input))
 	})
 	return _c
 }
 
-func (_c *MockInterface_DoStage2_Call) Return(_a0 error) *MockInterface_DoStage2_Call {
+func (_c *MockInterface_Do_Call) Return(_a0 error) *MockInterface_Do_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *MockInterface_DoStage2_Call) RunAndReturn(run func(context.Context, setup.Stage2Input) error) *MockInterface_DoStage2_Call {
+func (_c *MockInterface_Do_Call) RunAndReturn(run func(context.Context, setup.Input) error) *MockInterface_Do_Call {
 	_c.Call.Return(run)
 	return _c
 }

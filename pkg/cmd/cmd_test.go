@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/credentialplugin_mock"
+	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/setup_mock"
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/usecases/standalone_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/testing/logger"
@@ -16,12 +17,21 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
+	"github.com/int128/kubelogin/pkg/usecases/setup"
 	"github.com/int128/kubelogin/pkg/usecases/standalone"
 )
 
 func TestCmd_Run(t *testing.T) {
 	const executable = "kubelogin"
 	const version = "HEAD"
+
+	defaultGrantOptionSet := authentication.GrantOptionSet{
+		AuthCodeBrowserOption: &authcode.BrowserOption{
+			BindAddress:           defaultListenAddress,
+			AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+			RedirectURLHostname:   "localhost",
+		},
+	}
 
 	t.Run("root", func(t *testing.T) {
 		tests := map[string]struct {
@@ -31,13 +41,7 @@ func TestCmd_Run(t *testing.T) {
 			"Defaults": {
 				args: []string{executable},
 				in: standalone.Input{
-					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authcode.BrowserOption{
-							BindAddress:           defaultListenAddress,
-							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-							RedirectURLHostname:   "localhost",
-						},
-					},
+					GrantOptionSet: defaultGrantOptionSet,
 				},
 			},
 			"FullOptions": {
@@ -51,13 +55,7 @@ func TestCmd_Run(t *testing.T) {
 					KubeconfigFilename: "/path/to/kubeconfig",
 					KubeconfigContext:  "hello.k8s.local",
 					KubeconfigUser:     "google",
-					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authcode.BrowserOption{
-							BindAddress:           defaultListenAddress,
-							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-							RedirectURLHostname:   "localhost",
-						},
-					},
+					GrantOptionSet:     defaultGrantOptionSet,
 				},
 			},
 		}
@@ -122,13 +120,7 @@ func TestCmd_Run(t *testing.T) {
 						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 						Storage:   tokencache.StorageAuto,
 					},
-					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authcode.BrowserOption{
-							BindAddress:           defaultListenAddress,
-							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-							RedirectURLHostname:   "localhost",
-						},
-					},
+					GrantOptionSet: defaultGrantOptionSet,
 				},
 			},
 			"FullOptions": {
@@ -153,13 +145,7 @@ func TestCmd_Run(t *testing.T) {
 						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 						Storage:   tokencache.StorageDisk,
 					},
-					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authcode.BrowserOption{
-							BindAddress:           defaultListenAddress,
-							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-							RedirectURLHostname:   "localhost",
-						},
-					},
+					GrantOptionSet: defaultGrantOptionSet,
 				},
 			},
 			"AccessToken": {
@@ -179,13 +165,7 @@ func TestCmd_Run(t *testing.T) {
 						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
 						Storage:   tokencache.StorageAuto,
 					},
-					GrantOptionSet: authentication.GrantOptionSet{
-						AuthCodeBrowserOption: &authcode.BrowserOption{
-							BindAddress:           defaultListenAddress,
-							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-							RedirectURLHostname:   "localhost",
-						},
-					},
+					GrantOptionSet: defaultGrantOptionSet,
 				},
 			},
 			"HomedirExpansion": {
@@ -279,6 +259,56 @@ func TestCmd_Run(t *testing.T) {
 			exitCode := cmd.Run(ctx, []string{executable, "get-token", "foo"}, version)
 			if exitCode != 1 {
 				t.Errorf("exitCode wants 1 but %d", exitCode)
+			}
+		})
+	})
+
+	t.Run("setup", func(t *testing.T) {
+		t.Run("NoOption", func(t *testing.T) {
+			ctx := context.TODO()
+			cmd := Cmd{
+				Logger: logger.New(t),
+				Root: &Root{
+					Logger: logger.New(t),
+				},
+			}
+			exitCode := cmd.Run(ctx, []string{executable, "setup"}, version)
+			if exitCode != 0 {
+				t.Errorf("exitCode wants 0 but %d", exitCode)
+			}
+		})
+
+		t.Run("WithOptions", func(t *testing.T) {
+			ctx := context.TODO()
+			setupMock := setup_mock.NewMockInterface(t)
+			setupMock.EXPECT().Do(ctx, setup.Input{
+				IssuerURL:      "https://issuer.example.com",
+				ClientID:       "YOUR_CLIENT",
+				ExtraScopes:    []string{"email", "profile"},
+				GrantOptionSet: defaultGrantOptionSet,
+				ChangedFlags: []string{
+					"--oidc-issuer-url=https://issuer.example.com",
+					"--oidc-client-id=YOUR_CLIENT",
+					"--oidc-extra-scope=email",
+					"--oidc-extra-scope=profile",
+				},
+			}).Return(nil)
+			cmd := Cmd{
+				Logger: logger.New(t),
+				Root: &Root{
+					Logger: logger.New(t),
+				},
+				Setup: &Setup{
+					Setup: setupMock,
+				},
+			}
+			exitCode := cmd.Run(ctx, []string{executable, "setup",
+				"--oidc-issuer-url", "https://issuer.example.com",
+				"--oidc-client-id", "YOUR_CLIENT",
+				"--oidc-extra-scope", "email,profile",
+			}, version)
+			if exitCode != 0 {
+				t.Errorf("exitCode wants 0 but %d", exitCode)
 			}
 		})
 	})

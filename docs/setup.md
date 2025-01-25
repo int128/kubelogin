@@ -155,7 +155,7 @@ Leverage the following variables in the next steps.
 
 `YOUR_CLIENT_SECRET` is not required for this configuration.
 
-## 2. Verify authentication
+## 2. Authenticate with the OpenID Connect Provider
 
 Run the following command:
 
@@ -169,8 +169,7 @@ kubectl oidc-login setup \
 It launches the browser and navigates to `http://localhost:8000`.
 Please log in to the provider.
 
-You can set extra options, for example, extra scope or CA certificate.
-See also the full options.
+For the full options,
 
 ```sh
 kubectl oidc-login setup --help
@@ -178,13 +177,11 @@ kubectl oidc-login setup --help
 
 ## 3. Bind a cluster role
 
-Here bind `cluster-admin` role to you.
+You can run the following command to bind `cluster-admin` role to you:
 
 ```sh
 kubectl create clusterrolebinding oidc-cluster-admin --clusterrole=cluster-admin --user='ISSUER_URL#YOUR_SUBJECT'
 ```
-
-As well as you can create a custom cluster role and bind it.
 
 ## 4. Set up the Kubernetes API server
 
