@@ -24,17 +24,18 @@ See the [usage](usage.md) for the details.
 
 You can log in with a Google account.
 
-Open [Google APIs Console](https://console.developers.google.com/apis/credentials) and create an OAuth client with the following setting:
+Open [Google APIs Console](https://console.cloud.google.com/apis/credentials) and create an OAuth client with the following setting:
 
-- Application Type: Other
+- Application Type: Desktop app
 
 Check the client ID and secret.
 Replace the following variables in the later sections.
 
-| Variable         | Value                            |
-| ---------------- | -------------------------------- |
-| `ISSUER_URL`     | `https://accounts.google.com`    |
-| `YOUR_CLIENT_ID` | `xxx.apps.googleusercontent.com` |
+| Variable             | Value                            |
+| -------------------- | -------------------------------- |
+| `ISSUER_URL`         | `https://accounts.google.com`    |
+| `YOUR_CLIENT_ID`     | `xxx.apps.googleusercontent.com` |
+| `YOUR_CLIENT_SECRET` | `XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` |
 
 ### Keycloak
 
@@ -162,6 +163,7 @@ Run the following command:
 kubectl oidc-login setup \
   --oidc-issuer-url=ISSUER_URL \
   --oidc-client-id=YOUR_CLIENT_ID
+  --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
 It launches the browser and navigates to `http://localhost:8000`.
@@ -201,12 +203,14 @@ Add `oidc` user to the kubeconfig.
 
 ```sh
 kubectl config set-credentials oidc \
+  --exec-interactive-mode=Never
   --exec-api-version=client.authentication.k8s.io/v1 \
   --exec-command=kubectl \
   --exec-arg=oidc-login \
   --exec-arg=get-token \
   --exec-arg=--oidc-issuer-url=ISSUER_URL \
   --exec-arg=--oidc-client-id=YOUR_CLIENT_ID
+  --exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET
 ```
 
 ## 6. Verify cluster access
