@@ -202,7 +202,6 @@ Add `oidc` user to the kubeconfig.
 kubectl config set-credentials oidc \
   --exec-interactive-mode=Never
   --exec-api-version=client.authentication.k8s.io/v1 \
-  --exec-interactive-mode=Never \
   --exec-command=kubectl \
   --exec-arg=oidc-login \
   --exec-arg=get-token \
