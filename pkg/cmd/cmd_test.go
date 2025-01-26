@@ -29,7 +29,6 @@ func TestCmd_Run(t *testing.T) {
 		AuthCodeBrowserOption: &authcode.BrowserOption{
 			BindAddress:           defaultListenAddress,
 			AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-			RedirectURLHostname:   "localhost",
 		},
 	}
 
@@ -191,7 +190,6 @@ func TestCmd_Run(t *testing.T) {
 						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:           defaultListenAddress,
 							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-							RedirectURLHostname:   "localhost",
 							LocalServerCertFile:   filepath.Join(userHomeDir, ".kube/oidc-server.crt"),
 							LocalServerKeyFile:    filepath.Join(userHomeDir, ".kube/oidc-server.key"),
 						},

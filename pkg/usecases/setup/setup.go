@@ -42,6 +42,7 @@ type Input struct {
 	IssuerURL       string
 	ClientID        string
 	ClientSecret    string
+	RedirectURL     string
 	ExtraScopes     []string
 	UseAccessToken  bool
 	PKCEMethod      oidc.PKCEMethod
@@ -57,6 +58,7 @@ func (u Setup) Do(ctx context.Context, in Input) error {
 			IssuerURL:      in.IssuerURL,
 			ClientID:       in.ClientID,
 			ClientSecret:   in.ClientSecret,
+			RedirectURL:    in.RedirectURL,
 			ExtraScopes:    in.ExtraScopes,
 			PKCEMethod:     in.PKCEMethod,
 			UseAccessToken: in.UseAccessToken,

@@ -31,15 +31,13 @@ type AuthCodeURLInput struct {
 	State                  string
 	Nonce                  string
 	PKCEParams             pkce.Params
-	RedirectURI            string
 	AuthRequestExtraParams map[string]string
 }
 
 type ExchangeAuthCodeInput struct {
-	Code        string
-	PKCEParams  pkce.Params
-	Nonce       string
-	RedirectURI string
+	Code       string
+	PKCEParams pkce.Params
+	Nonce      string
 }
 
 type GetTokenByAuthCodeInput struct {
@@ -47,7 +45,7 @@ type GetTokenByAuthCodeInput struct {
 	State                  string
 	Nonce                  string
 	PKCEParams             pkce.Params
-	RedirectURLHostname    string
+	RedirectURLHostname    string // DEPRECATED
 	AuthRequestExtraParams map[string]string
 	LocalServerSuccessHTML string
 	LocalServerCertFile    string
@@ -97,19 +95,15 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 
 // GetAuthCodeURL returns the URL of authentication request for the authorization code flow.
 func (c *client) GetAuthCodeURL(in AuthCodeURLInput) string {
-	cfg := c.oauth2Config
-	cfg.RedirectURL = in.RedirectURI
 	opts := authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams)
-	return cfg.AuthCodeURL(in.State, opts...)
+	return c.oauth2Config.AuthCodeURL(in.State, opts...)
 }
 
 // ExchangeAuthCode exchanges the authorization code and token.
 func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
-	cfg := c.oauth2Config
-	cfg.RedirectURL = in.RedirectURI
 	opts := tokenRequestOptions(in.PKCEParams)
-	token, err := cfg.Exchange(ctx, in.Code, opts...)
+	token, err := c.oauth2Config.Exchange(ctx, in.Code, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("exchange error: %w", err)
 	}
