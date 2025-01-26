@@ -114,13 +114,10 @@ It depends on [zalando/go-keyring](https://github.com/zalando/go-keyring).
 - --token-cache-storage=keyring
 ```
 
-You can clean up the token cache by the clean command.
+You can delete the token cache by the clean command.
 
 ```console
 % kubectl oidc-login clean
-Deleted the token cache at /home/user/.kube/cache/oidc-login
-
-% kubectl oidc-login clean --token-cache-storage=keyring
 Deleted the token cache at /home/user/.kube/cache/oidc-login
 Deleted the token cache from the keyring
 ```

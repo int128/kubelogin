@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tokencache"
 	"github.com/zalando/go-keyring"
@@ -39,9 +37,7 @@ type entity struct {
 
 // Repository provides access to the token cache on the local filesystem.
 // Filename of a token cache is sha256 digest of the issuer, zero-character and client ID.
-type Repository struct {
-	Logger logger.Interface
-}
+type Repository struct{}
 
 // keyringService is used to namespace the keyring access.
 // Some implementations may also display this string when prompting the user
@@ -167,25 +163,20 @@ func (r *Repository) Lock(config tokencache.Config, key tokencache.Key) (io.Clos
 }
 
 func (r *Repository) DeleteAll(config tokencache.Config) error {
-	return errors.Join(
-		func() error {
-			if err := os.RemoveAll(config.Directory); err != nil {
-				return fmt.Errorf("remove the directory %s: %w", config.Directory, err)
-			}
-			r.Logger.Printf("Deleted the token cache at %s", config.Directory)
-			return nil
-		}(),
-		func() error {
-			if config.Storage != tokencache.StorageKeyring {
-				return nil
-			}
-			if err := keyring.DeleteAll(keyringService); err != nil {
-				return fmt.Errorf("keyring delete: %w", err)
-			}
-			r.Logger.Printf("Deleted the token cache from the keyring")
-			return nil
-		}(),
-	)
+	switch config.Storage {
+	case tokencache.StorageDisk:
+		if err := os.RemoveAll(config.Directory); err != nil {
+			return fmt.Errorf("remove the directory %s: %w", config.Directory, err)
+		}
+		return nil
+	case tokencache.StorageKeyring:
+		if err := keyring.DeleteAll(keyringService); err != nil {
+			return fmt.Errorf("keyring delete: %w", err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unknown storage mode: %v", config.Storage)
+	}
 }
 
 func encodeKey(tokenSet oidc.TokenSet) ([]byte, error) {
