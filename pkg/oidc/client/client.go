@@ -176,6 +176,11 @@ func (c *client) GetTokenByClientCredentials(ctx context.Context, in GetTokenByC
 	if err != nil {
 		return nil, fmt.Errorf("could not acquire token: %w", err)
 	}
+	if c.useAccessToken {
+		return &oidc.TokenSet{
+			IDToken:      token.AccessToken,
+			RefreshToken: token.RefreshToken}, nil
+	}
 	return c.verifyToken(ctx, token, "")
 }
 
