@@ -14,7 +14,7 @@ Flags:
       --oidc-use-access-token                           Instead of using the id_token, use the access_token to authenticate to Kubernetes
       --force-refresh                                   If set, refresh the ID token regardless of its expiration time
       --token-cache-dir string                          Path to a directory of the token cache (default "~/.kube/cache/oidc-login")
-      --token-cache-storage string                      Storage for the token cache. One of (auto|keyring|disk) (default "auto")
+      --token-cache-storage string                      Storage for the token cache. One of (disk|keyring) (default "disk")
       --certificate-authority stringArray               Path to a cert file for the certificate authority
       --certificate-authority-data stringArray          Base64 encoded cert for the certificate authority
       --insecure-skip-tls-verify                        [SECURITY RISK] If set, the server's certificate will not be checked for validity
@@ -105,16 +105,13 @@ See also [net/http#ProxyFromEnvironment](https://golang.org/pkg/net/http/#ProxyF
 
 ### Token cache
 
-Kubelogin stores the token cache to the OS keyring if available.
-It depends on [zalando/go-keyring](https://github.com/zalando/go-keyring) for the keyring storage.
+Kubelogin stores the token cache to the file system by default.
 
-If you encounter a problem, try `--token-cache-storage` to set the storage.
+You can store the token cache to the OS keyring for enhanced security.
+It depends on [zalando/go-keyring](https://github.com/zalando/go-keyring).
 
 ```yaml
-# Force to use the OS keyring
 - --token-cache-storage=keyring
-# Force to use the file system
-- --token-cache-storage=disk
 ```
 
 ### Home directory expansion

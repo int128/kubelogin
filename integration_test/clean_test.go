@@ -20,7 +20,6 @@ func TestClean(t *testing.T) {
 		"kubelogin",
 		"clean",
 		"--token-cache-dir", tokenCacheDir,
-		"--token-cache-storage", "disk",
 	}, "HEAD")
 	if exitCode != 0 {
 		t.Errorf("exit status wants 0 but %d", exitCode)

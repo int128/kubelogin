@@ -83,8 +83,8 @@ If the refresh token has expired, it will perform re-authentication.
 
 ### Token cache
 
-If the OS keyring is available, kubelogin stores the token cache to the OS keyring.
-Otherwise, kubelogin stores the token cache to the file system.
+Kubelogin stores the token cache to the file system by default.
+It also supports the OS keyring for enhanced security.
 See the [token cache](docs/usage.md#token-cache) for details.
 
 You can log out by deleting the token cache.

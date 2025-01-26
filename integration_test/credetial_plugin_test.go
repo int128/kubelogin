@@ -443,7 +443,6 @@ func runGetToken(t *testing.T, ctx context.Context, cfg getTokenConfig) {
 		"kubelogin",
 		"get-token",
 		"--token-cache-dir", cfg.tokenCacheDir,
-		"--token-cache-storage", "disk",
 		"--oidc-issuer-url", cfg.issuerURL,
 		"--oidc-client-id", "kubernetes",
 		"--listen-address", "127.0.0.1:0",

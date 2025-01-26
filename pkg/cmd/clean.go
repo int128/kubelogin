@@ -31,8 +31,8 @@ func (cmd *Clean) New() *cobra.Command {
 		Short: "Delete the token cache",
 		Long: `Delete the token cache.
 
-This deletes both the OS keyring and the directory by default.
-If you encounter an error of keyring, try --token-cache-storage=disk.
+This deletes the token cache directory.
+Set --token-cache-storage=keyring to delete the token cache from the OS keyring as well.
 `,
 		Args: cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {

@@ -118,7 +118,6 @@ func TestCmd_Run(t *testing.T) {
 					},
 					TokenCacheConfig: tokencache.Config{
 						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
-						Storage:   tokencache.StorageAuto,
 					},
 					GrantOptionSet: defaultGrantOptionSet,
 				},
@@ -131,7 +130,7 @@ func TestCmd_Run(t *testing.T) {
 					"--oidc-client-secret", "YOUR_CLIENT_SECRET",
 					"--oidc-extra-scope", "email",
 					"--oidc-extra-scope", "profile",
-					"--token-cache-storage", "disk",
+					"--token-cache-storage", "keyring",
 					"-v1",
 				},
 				in: credentialplugin.Input{
@@ -143,7 +142,7 @@ func TestCmd_Run(t *testing.T) {
 					},
 					TokenCacheConfig: tokencache.Config{
 						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
-						Storage:   tokencache.StorageDisk,
+						Storage:   tokencache.StorageKeyring,
 					},
 					GrantOptionSet: defaultGrantOptionSet,
 				},
@@ -163,7 +162,6 @@ func TestCmd_Run(t *testing.T) {
 					},
 					TokenCacheConfig: tokencache.Config{
 						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
-						Storage:   tokencache.StorageAuto,
 					},
 					GrantOptionSet: defaultGrantOptionSet,
 				},
@@ -185,7 +183,6 @@ func TestCmd_Run(t *testing.T) {
 					},
 					TokenCacheConfig: tokencache.Config{
 						Directory: filepath.Join(userHomeDir, ".kube/oidc-cache"),
-						Storage:   tokencache.StorageAuto,
 					},
 					GrantOptionSet: authentication.GrantOptionSet{
 						AuthCodeBrowserOption: &authcode.BrowserOption{

@@ -57,16 +57,6 @@ func (r *Repository) FindByKey(config tokencache.Config, key tokencache.Key) (*o
 		return nil, fmt.Errorf("could not compute the key: %w", err)
 	}
 	switch config.Storage {
-	case tokencache.StorageAuto:
-		t, err := readFromKeyring(checksum)
-		if errors.Is(err, keyring.ErrUnsupportedPlatform) ||
-			errors.Is(err, keyring.ErrNotFound) {
-			return readFromFile(config, checksum)
-		}
-		if err != nil {
-			return nil, err
-		}
-		return t, nil
 	case tokencache.StorageDisk:
 		return readFromFile(config, checksum)
 	case tokencache.StorageKeyring:
@@ -120,17 +110,6 @@ func (r *Repository) Save(config tokencache.Config, key tokencache.Key, tokenSet
 		return fmt.Errorf("could not compute the key: %w", err)
 	}
 	switch config.Storage {
-	case tokencache.StorageAuto:
-		if err := writeToKeyring(checksum, tokenSet); err != nil {
-			if errors.Is(err, keyring.ErrUnsupportedPlatform) {
-				return writeToFile(config, checksum, tokenSet)
-			}
-			if errors.Is(err, keyring.ErrSetDataTooBig) {
-				return writeToFile(config, checksum, tokenSet)
-			}
-			return err
-		}
-		return nil
 	case tokencache.StorageDisk:
 		return writeToFile(config, checksum, tokenSet)
 	case tokencache.StorageKeyring:
@@ -197,25 +176,14 @@ func (r *Repository) DeleteAll(config tokencache.Config) error {
 			return nil
 		}(),
 		func() error {
-			switch config.Storage {
-			case tokencache.StorageAuto:
-				if err := keyring.DeleteAll(keyringService); err != nil {
-					if errors.Is(err, keyring.ErrUnsupportedPlatform) {
-						return nil
-					}
-					return fmt.Errorf("keyring delete: %w", err)
-				}
-				r.Logger.Printf("Deleted the token cache in the keyring")
-				return nil
-			case tokencache.StorageKeyring:
-				if err := keyring.DeleteAll(keyringService); err != nil {
-					return fmt.Errorf("keyring delete: %w", err)
-				}
-				r.Logger.Printf("Deleted the token cache in the keyring")
-				return nil
-			default:
+			if config.Storage != tokencache.StorageKeyring {
 				return nil
 			}
+			if err := keyring.DeleteAll(keyringService); err != nil {
+				return fmt.Errorf("keyring delete: %w", err)
+			}
+			r.Logger.Printf("Deleted the token cache from the keyring")
+			return nil
 		}(),
 	)
 }
