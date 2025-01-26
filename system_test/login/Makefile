@@ -15,7 +15,6 @@ test: build
 		--oidc-client-id=YOUR_CLIENT_ID \
 		--oidc-client-secret=YOUR_CLIENT_SECRET \
 		--oidc-extra-scope=email \
-		--token-cache-storage=keyring \
 		--certificate-authority=$(CERT_DIR)/ca.crt \
 		--browser-command=$(BIN_DIR)/chromelogin
 
