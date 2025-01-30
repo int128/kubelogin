@@ -18,7 +18,7 @@ func getDefaultTokenCacheDir() string {
 	return filepath.Join("~", ".kube", "cache", "oidc-login")
 }
 
-var allTokenCacheStorage = strings.Join([]string{"auto", "keyring", "disk"}, "|")
+var allTokenCacheStorage = strings.Join([]string{"disk", "keyring"}, "|")
 
 type tokenCacheOptions struct {
 	TokenCacheDir     string
@@ -27,7 +27,7 @@ type tokenCacheOptions struct {
 
 func (o *tokenCacheOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.TokenCacheDir, "token-cache-dir", getDefaultTokenCacheDir(), "Path to a directory of the token cache")
-	f.StringVar(&o.TokenCacheStorage, "token-cache-storage", "auto", fmt.Sprintf("Storage for the token cache. One of (%s)", allTokenCacheStorage))
+	f.StringVar(&o.TokenCacheStorage, "token-cache-storage", "disk", fmt.Sprintf("Storage for the token cache. One of (%s)", allTokenCacheStorage))
 }
 
 func (o *tokenCacheOptions) expandHomedir() {
@@ -39,12 +39,10 @@ func (o *tokenCacheOptions) tokenCacheConfig() (tokencache.Config, error) {
 		Directory: o.TokenCacheDir,
 	}
 	switch o.TokenCacheStorage {
-	case "auto":
-		config.Storage = tokencache.StorageAuto
-	case "keyring":
-		config.Storage = tokencache.StorageKeyring
 	case "disk":
 		config.Storage = tokencache.StorageDisk
+	case "keyring":
+		config.Storage = tokencache.StorageKeyring
 	default:
 		return tokencache.Config{}, fmt.Errorf("token-cache-storage must be one of (%s)", allTokenCacheStorage)
 	}

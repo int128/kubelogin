@@ -97,9 +97,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		Standalone: standaloneStandalone,
 		Logger:     loggerInterface,
 	}
-	repositoryRepository := &repository.Repository{
-		Logger: loggerInterface,
-	}
+	repositoryRepository := &repository.Repository{}
 	reader3 := &reader2.Reader{}
 	writer3 := &writer2.Writer{
 		Stdout: stdout,

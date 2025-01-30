@@ -203,7 +203,7 @@ Add `oidc` user to the kubeconfig.
 
 ```sh
 kubectl config set-credentials oidc \
-  --exec-interactive-mode=Never
+  --exec-interactive-mode=Never \
   --exec-api-version=client.authentication.k8s.io/v1 \
   --exec-command=kubectl \
   --exec-arg=oidc-login \
@@ -213,6 +213,9 @@ kubectl config set-credentials oidc \
 ```
 
 If your provider requires a client secret, add `--oidc-client-secret=YOUR_CLIENT_SECRET`.
+
+For security, it is recommended to add `--token-cache-storage=keyring` to store the token cache to the keyring instead of the file system.
+If you encounter an error, see the [token cache](usage.md#token-cache) for details.
 
 ## 6. Verify cluster access
 

@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/google/wire"
-	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tokencache"
 	"github.com/zalando/go-keyring"
@@ -39,9 +37,7 @@ type entity struct {
 
 // Repository provides access to the token cache on the local filesystem.
 // Filename of a token cache is sha256 digest of the issuer, zero-character and client ID.
-type Repository struct {
-	Logger logger.Interface
-}
+type Repository struct{}
 
 // keyringService is used to namespace the keyring access.
 // Some implementations may also display this string when prompting the user
@@ -57,16 +53,6 @@ func (r *Repository) FindByKey(config tokencache.Config, key tokencache.Key) (*o
 		return nil, fmt.Errorf("could not compute the key: %w", err)
 	}
 	switch config.Storage {
-	case tokencache.StorageAuto:
-		t, err := readFromKeyring(checksum)
-		if errors.Is(err, keyring.ErrUnsupportedPlatform) ||
-			errors.Is(err, keyring.ErrNotFound) {
-			return readFromFile(config, checksum)
-		}
-		if err != nil {
-			return nil, err
-		}
-		return t, nil
 	case tokencache.StorageDisk:
 		return readFromFile(config, checksum)
 	case tokencache.StorageKeyring:
@@ -120,17 +106,6 @@ func (r *Repository) Save(config tokencache.Config, key tokencache.Key, tokenSet
 		return fmt.Errorf("could not compute the key: %w", err)
 	}
 	switch config.Storage {
-	case tokencache.StorageAuto:
-		if err := writeToKeyring(checksum, tokenSet); err != nil {
-			if errors.Is(err, keyring.ErrUnsupportedPlatform) {
-				return writeToFile(config, checksum, tokenSet)
-			}
-			if errors.Is(err, keyring.ErrSetDataTooBig) {
-				return writeToFile(config, checksum, tokenSet)
-			}
-			return err
-		}
-		return nil
 	case tokencache.StorageDisk:
 		return writeToFile(config, checksum, tokenSet)
 	case tokencache.StorageKeyring:
@@ -188,36 +163,20 @@ func (r *Repository) Lock(config tokencache.Config, key tokencache.Key) (io.Clos
 }
 
 func (r *Repository) DeleteAll(config tokencache.Config) error {
-	return errors.Join(
-		func() error {
-			if err := os.RemoveAll(config.Directory); err != nil {
-				return fmt.Errorf("remove the directory %s: %w", config.Directory, err)
-			}
-			r.Logger.Printf("Deleted the token cache at %s", config.Directory)
-			return nil
-		}(),
-		func() error {
-			switch config.Storage {
-			case tokencache.StorageAuto:
-				if err := keyring.DeleteAll(keyringService); err != nil {
-					if errors.Is(err, keyring.ErrUnsupportedPlatform) {
-						return nil
-					}
-					return fmt.Errorf("keyring delete: %w", err)
-				}
-				r.Logger.Printf("Deleted the token cache in the keyring")
-				return nil
-			case tokencache.StorageKeyring:
-				if err := keyring.DeleteAll(keyringService); err != nil {
-					return fmt.Errorf("keyring delete: %w", err)
-				}
-				r.Logger.Printf("Deleted the token cache in the keyring")
-				return nil
-			default:
-				return nil
-			}
-		}(),
-	)
+	switch config.Storage {
+	case tokencache.StorageDisk:
+		if err := os.RemoveAll(config.Directory); err != nil {
+			return fmt.Errorf("remove the directory %s: %w", config.Directory, err)
+		}
+		return nil
+	case tokencache.StorageKeyring:
+		if err := keyring.DeleteAll(keyringService); err != nil {
+			return fmt.Errorf("keyring delete: %w", err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unknown storage mode: %v", config.Storage)
+	}
 }
 
 func encodeKey(tokenSet oidc.TokenSet) ([]byte, error) {
