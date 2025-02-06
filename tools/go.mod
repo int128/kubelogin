@@ -1,6 +1,6 @@
 module github.com/int128/kubelogin/tools
 
-go 1.23.5
+go 1.23.6
 
 require (
 	github.com/golangci/golangci-lint v1.63.4
