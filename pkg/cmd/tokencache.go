@@ -18,7 +18,7 @@ func getDefaultTokenCacheDir() string {
 	return filepath.Join("~", ".kube", "cache", "oidc-login")
 }
 
-var allTokenCacheStorage = strings.Join([]string{"disk", "keyring"}, "|")
+var allTokenCacheStorage = strings.Join([]string{"disk", "keyring", "none"}, "|")
 
 type tokenCacheOptions struct {
 	TokenCacheDir     string
@@ -43,6 +43,8 @@ func (o *tokenCacheOptions) tokenCacheConfig() (tokencache.Config, error) {
 		config.Storage = tokencache.StorageDisk
 	case "keyring":
 		config.Storage = tokencache.StorageKeyring
+	case "none":
+		config.Storage = tokencache.StorageNone
 	default:
 		return tokencache.Config{}, fmt.Errorf("token-cache-storage must be one of (%s)", allTokenCacheStorage)
 	}
