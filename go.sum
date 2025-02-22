@@ -119,10 +119,10 @@ github.com/chavacava/garif v0.1.0 h1:2JHa3hbYf5D9dsgseMKAmc/MZ109otzgNFk5s87H9Pc
 github.com/chavacava/garif v0.1.0/go.mod h1:XMyYCkEL58DF0oyW4qDjjnPWONs2HBqYKI+UIPD+Gww=
 github.com/chigopher/pathlib v0.19.1 h1:RoLlUJc0CqBGwq239cilyhxPNLXTK+HXoASGyGznx5A=
 github.com/chigopher/pathlib v0.19.1/go.mod h1:tzC1dZLW8o33UQpWkNkhvPwL5n4yyFRFm/jL1YGWFvY=
-github.com/chromedp/cdproto v0.0.0-20250120090109-d38428e4d9c8 h1:Q2byC+xLgH/Z7hExJ8G/jVqsvCfGhMmNgM1ysZARA3o=
-github.com/chromedp/cdproto v0.0.0-20250120090109-d38428e4d9c8/go.mod h1:RTGuBeCeabAJGi3OZf71a6cGa7oYBfBP75VJZFLv6SU=
-github.com/chromedp/chromedp v0.12.1 h1:kBMblXk7xH5/6j3K9uk8d7/c+fzXWiUsCsPte0VMwOA=
-github.com/chromedp/chromedp v0.12.1/go.mod h1:F6+wdq9LKFDMoyxhq46ZLz4VLXrsrCAR3sFqJz4Nqc0=
+github.com/chromedp/cdproto v0.0.0-20250222051814-50c6cb17f10a h1:EnkQjhmp/MxhDB4KOTssv6xC20aQ9rhFRCfGHTsTqmE=
+github.com/chromedp/cdproto v0.0.0-20250222051814-50c6cb17f10a/go.mod h1:NItd7aLkcfOA/dcMXvl8p1u+lQqioRMq/SqDp71Pb/k=
+github.com/chromedp/chromedp v0.13.0 h1:ydOqt7Y9LkwgutrX5C8bx49D+o63L6WcGUDyIoE0A5M=
+github.com/chromedp/chromedp v0.13.0/go.mod h1:O3nO4Lno7iLoVX+7GdqQkehhKG7DtLf/zFRyJo0AhXY=
 github.com/chromedp/sysutil v1.1.0 h1:PUFNv5EcprjqXZD9nJb9b/c9ibAbxiYo4exNWZyipwM=
 github.com/chromedp/sysutil v1.1.0/go.mod h1:WiThHUdltqCNKGc4gaU50XgYjwjYIhKWoHGPTUfWTJ8=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
@@ -181,6 +181,8 @@ github.com/go-gl/glfw/v3.3/glfw v0.0.0-20191125211704-12ad95a8df72/go.mod h1:tQ2
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200222043503-6f7a984d4dc4/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
 github.com/go-jose/go-jose/v4 v4.0.2 h1:R3l3kkBds16bO7ZFAEEcofK0MkrAJt3jlJznWZG0nvk=
 github.com/go-jose/go-jose/v4 v4.0.2/go.mod h1:WVf9LFMHh/QVrmqrOfqun0C45tMe3RoiKJMPvgWwLfY=
+github.com/go-json-experiment/json v0.0.0-20250211171154-1ae217ad3535 h1:yE7argOs92u+sSCRgqqe6eF+cDaVhSPlioy1UkA0p/w=
+github.com/go-json-experiment/json v0.0.0-20250211171154-1ae217ad3535/go.mod h1:BWmvoE1Xia34f3l/ibJweyhrT+aROb/FQ6d+37F0e2s=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-kit/kit v0.9.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-kit/log v0.1.0/go.mod h1:zbhenjAZHb184qTLMA9ZjW7ThYL0H2mk7Q6pNt4vbaY=
