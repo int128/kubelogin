@@ -29,4 +29,6 @@ const (
 	StorageDisk Storage = iota
 	// StorageDisk will only store cached keys in the OS keyring.
 	StorageKeyring
+	// StorageNone will not store cached keys.
+	StorageNone
 )
