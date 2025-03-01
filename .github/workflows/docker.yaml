@@ -64,7 +64,7 @@ jobs:
           metadata: ${{ steps.build.outputs.metadata }}
 
   test:
-    if: needs.build.outputs.image-uri
+    if: needs.build.outputs.image-uri != ''
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
