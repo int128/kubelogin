@@ -15,6 +15,7 @@ type Provider struct {
 	ClientID       string
 	ClientSecret   string   // optional
 	ExtraScopes    []string // optional
+	RedirectURL    string   // optional
 	PKCEMethod     PKCEMethod
 	UseAccessToken bool
 }
