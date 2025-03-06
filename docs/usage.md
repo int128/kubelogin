@@ -14,7 +14,7 @@ Flags:
       --oidc-use-access-token                           Instead of using the id_token, use the access_token to authenticate to Kubernetes
       --force-refresh                                   If set, refresh the ID token regardless of its expiration time
       --token-cache-dir string                          Path to a directory of the token cache (default "~/.kube/cache/oidc-login")
-      --token-cache-storage string                      Storage for the token cache. One of (disk|keyring) (default "disk")
+      --token-cache-storage string                      Storage for the token cache. One of (disk|keyring|none) (default "disk")
       --certificate-authority stringArray               Path to a cert file for the certificate authority
       --certificate-authority-data stringArray          Base64 encoded cert for the certificate authority
       --insecure-skip-tls-verify                        [SECURITY RISK] If set, the server's certificate will not be checked for validity
@@ -121,6 +121,8 @@ You can delete the token cache by the clean command.
 Deleted the token cache at /home/user/.kube/cache/oidc-login
 Deleted the token cache from the keyring
 ```
+
+For systems with immutable storage and no keyring, a cache type of none is available.
 
 ### Home directory expansion
 
