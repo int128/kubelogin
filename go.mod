@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/chromedp/chromedp v0.13.1
-	github.com/coreos/go-oidc/v3 v3.12.0
+	github.com/coreos/go-oidc/v3 v3.13.0
 	github.com/gofrs/flock v0.12.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/go-cmp v0.7.0
@@ -78,7 +78,7 @@ require (
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/ghostiam/protogetter v0.3.9 // indirect
 	github.com/go-critic/go-critic v0.12.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-json-experiment/json v0.0.0-20250211171154-1ae217ad3535 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-toolsmith/astcast v1.1.0 // indirect
@@ -222,13 +222,13 @@ require (
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
 	golang.org/x/exp/typeparams v0.0.0-20250210185358-939b2ce775ac // indirect
 	golang.org/x/mod v0.23.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
 	google.golang.org/protobuf v1.36.1 // indirect
