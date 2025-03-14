@@ -22,6 +22,7 @@ import (
 	"github.com/int128/kubelogin/pkg/tokencache/repository"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/clientcredentials"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"github.com/int128/kubelogin/pkg/usecases/clean"
@@ -76,13 +77,17 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		Browser: browserInterface,
 		Logger:  loggerInterface,
 	}
+	clientCredentials := &clientcredentials.ClientCredentials{
+		Logger: loggerInterface,
+	}
 	authenticationAuthentication := &authentication.Authentication{
-		ClientFactory:    factory,
-		Logger:           loggerInterface,
-		AuthCodeBrowser:  authcodeBrowser,
-		AuthCodeKeyboard: keyboard,
-		ROPC:             ropcROPC,
-		DeviceCode:       deviceCode,
+		ClientFactory:     factory,
+		Logger:            loggerInterface,
+		AuthCodeBrowser:   authcodeBrowser,
+		AuthCodeKeyboard:  keyboard,
+		ROPC:              ropcROPC,
+		DeviceCode:        deviceCode,
+		ClientCredentials: clientCredentials,
 	}
 	loader3 := &loader2.Loader{}
 	writerWriter := &writer.Writer{}
