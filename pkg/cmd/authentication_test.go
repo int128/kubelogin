@@ -21,7 +21,6 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				AuthCodeBrowserOption: &authcode.BrowserOption{
 					BindAddress:           defaultListenAddress,
 					AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-					RedirectURLHostname:   "localhost",
 				},
 			},
 		},
@@ -61,19 +60,19 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				"--grant-type", "authcode-keyboard",
 			},
 			want: authentication.GrantOptionSet{
-				AuthCodeKeyboardOption: &authcode.KeyboardOption{
-					RedirectURL: oobRedirectURI,
-				},
+				AuthCodeKeyboardOption: &authcode.KeyboardOption{},
 			},
 		},
 		"GrantType=authcode-keyboard with full options": {
 			args: []string{
 				"--grant-type", "authcode-keyboard",
 				"--oidc-redirect-url-authcode-keyboard", "http://localhost",
+				"--oidc-auth-request-extra-params", "ttl=86400",
+				"--oidc-auth-request-extra-params", "reauth=true",
 			},
 			want: authentication.GrantOptionSet{
 				AuthCodeKeyboardOption: &authcode.KeyboardOption{
-					RedirectURL: "http://localhost",
+					AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 				},
 			},
 		},
