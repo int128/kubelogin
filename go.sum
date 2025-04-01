@@ -119,10 +119,10 @@ github.com/chavacava/garif v0.1.0 h1:2JHa3hbYf5D9dsgseMKAmc/MZ109otzgNFk5s87H9Pc
 github.com/chavacava/garif v0.1.0/go.mod h1:XMyYCkEL58DF0oyW4qDjjnPWONs2HBqYKI+UIPD+Gww=
 github.com/chigopher/pathlib v0.19.1 h1:RoLlUJc0CqBGwq239cilyhxPNLXTK+HXoASGyGznx5A=
 github.com/chigopher/pathlib v0.19.1/go.mod h1:tzC1dZLW8o33UQpWkNkhvPwL5n4yyFRFm/jL1YGWFvY=
-github.com/chromedp/cdproto v0.0.0-20250319231242-a755498943c8 h1:AqW2bDQf67Zbq6Tpop/+yJSIknxhiQecO2B8jNYTAPs=
-github.com/chromedp/cdproto v0.0.0-20250319231242-a755498943c8/go.mod h1:NItd7aLkcfOA/dcMXvl8p1u+lQqioRMq/SqDp71Pb/k=
-github.com/chromedp/chromedp v0.13.3 h1:c6nTn97XQBykzcXiGYL5LLebw3h3CEyrCihm4HquYh0=
-github.com/chromedp/chromedp v0.13.3/go.mod h1:khsDP9OP20GrowpJfZ7N05iGCwcAYxk7qf9AZBzR3Qw=
+github.com/chromedp/cdproto v0.0.0-20250401205909-91afd104e2b8 h1:k5Q26sl2euPK4oyhfIC+84SYKrr+JCRtjYFlDS71s1c=
+github.com/chromedp/cdproto v0.0.0-20250401205909-91afd104e2b8/go.mod h1:NItd7aLkcfOA/dcMXvl8p1u+lQqioRMq/SqDp71Pb/k=
+github.com/chromedp/chromedp v0.13.5 h1:FrgR5oAJsKtKOQMeusSiF67Rvnw/cFV3yRC690GfbTM=
+github.com/chromedp/chromedp v0.13.5/go.mod h1:pzEMe7rBROFW34SWhxqUr1AI7bNdkZ4WCgdEQfD39n0=
 github.com/chromedp/sysutil v1.1.0 h1:PUFNv5EcprjqXZD9nJb9b/c9ibAbxiYo4exNWZyipwM=
 github.com/chromedp/sysutil v1.1.0/go.mod h1:WiThHUdltqCNKGc4gaU50XgYjwjYIhKWoHGPTUfWTJ8=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
