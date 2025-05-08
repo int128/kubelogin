@@ -3,16 +3,17 @@ package devicecode
 import (
 	"context"
 	"fmt"
-
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
+	"github.com/skip2/go-qrcode"
 )
 
 type Option struct {
 	SkipOpenBrowser bool
 	BrowserCommand  string
+	GenerateQRCode  bool
 }
 
 // DeviceCode provides the oauth2 device code flow.
@@ -49,9 +50,26 @@ func (u *DeviceCode) Do(ctx context.Context, in *Option, oidcClient client.Inter
 	return tokenSet, nil
 }
 
+func (u *DeviceCode) getQRCode(o *Option, url string) (string, error) {
+	if !o.GenerateQRCode {
+		return "", nil
+	}
+	var q *qrcode.QRCode
+	q, err := qrcode.New(url, qrcode.Low)
+	if err != nil {
+		return "", fmt.Errorf("unable to generate QRCode: %w", err)
+	}
+	return q.ToString(true), nil
+}
+
 func (u *DeviceCode) openURL(ctx context.Context, o *Option, url string) {
+	qr, err := u.getQRCode(o, url)
+
+	if err != nil {
+		u.Logger.Printf("error: could not generate QR code: %s", err)
+	}
 	if o != nil && o.SkipOpenBrowser {
-		u.Logger.Printf("Please visit the following URL in your browser: %s", url)
+		u.Logger.Printf("Please visit the following URL in your browser: %s\n%s", url, qr)
 		return
 	}
 
@@ -60,13 +78,15 @@ func (u *DeviceCode) openURL(ctx context.Context, o *Option, url string) {
 		if err := u.Browser.OpenCommand(ctx, url, o.BrowserCommand); err != nil {
 			u.Logger.Printf(`error: could not open the browser: %s
 
-Please visit the following URL in your browser manually: %s`, err, url)
+Please visit the following URL in your browser manually: %s
+%s`, err, url, qr)
 		}
 		return
 	}
 	if err := u.Browser.Open(url); err != nil {
 		u.Logger.Printf(`error: could not open the browser: %s
 
-Please visit the following URL in your browser manually: %s`, err, url)
+Please visit the following URL in your browser manually: %s
+%s`, err, url, qr)
 	}
 }

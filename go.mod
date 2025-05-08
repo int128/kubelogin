@@ -12,6 +12,7 @@ require (
 	github.com/int128/oauth2cli v1.15.1
 	github.com/int128/oauth2dev v1.0.1
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0

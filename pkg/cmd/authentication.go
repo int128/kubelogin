@@ -28,6 +28,7 @@ type authenticationOptions struct {
 	AuthRequestExtraParams      map[string]string
 	Username                    string
 	Password                    string
+	GenerateQRCode              bool
 }
 
 var allGrantType = strings.Join([]string{
@@ -52,6 +53,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
+	f.BoolVar(&o.GenerateQRCode, "generate-qrcode", false, "[device-code] Generate a QR code for authentication")
 }
 
 func (o *authenticationOptions) expandHomedir() {
@@ -87,6 +89,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 		s.DeviceCodeOption = &devicecode.Option{
 			SkipOpenBrowser: o.SkipOpenBrowser,
 			BrowserCommand:  o.BrowserCommand,
+			GenerateQRCode:  o.GenerateQRCode,
 		}
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
