@@ -311,6 +311,65 @@ func (_c *MockInterface_GetTokenByAuthCode_Call) RunAndReturn(run func(context.C
 	return _c
 }
 
+// GetTokenByClientCredentials provides a mock function with given fields: ctx, in
+func (_m *MockInterface) GetTokenByClientCredentials(ctx context.Context, in client.GetTokenByClientCredentialsInput) (*oidc.TokenSet, error) {
+	ret := _m.Called(ctx, in)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTokenByClientCredentials")
+	}
+
+	var r0 *oidc.TokenSet
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, client.GetTokenByClientCredentialsInput) (*oidc.TokenSet, error)); ok {
+		return rf(ctx, in)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, client.GetTokenByClientCredentialsInput) *oidc.TokenSet); ok {
+		r0 = rf(ctx, in)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*oidc.TokenSet)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, client.GetTokenByClientCredentialsInput) error); ok {
+		r1 = rf(ctx, in)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockInterface_GetTokenByClientCredentials_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTokenByClientCredentials'
+type MockInterface_GetTokenByClientCredentials_Call struct {
+	*mock.Call
+}
+
+// GetTokenByClientCredentials is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in client.GetTokenByClientCredentialsInput
+func (_e *MockInterface_Expecter) GetTokenByClientCredentials(ctx interface{}, in interface{}) *MockInterface_GetTokenByClientCredentials_Call {
+	return &MockInterface_GetTokenByClientCredentials_Call{Call: _e.mock.On("GetTokenByClientCredentials", ctx, in)}
+}
+
+func (_c *MockInterface_GetTokenByClientCredentials_Call) Run(run func(ctx context.Context, in client.GetTokenByClientCredentialsInput)) *MockInterface_GetTokenByClientCredentials_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(client.GetTokenByClientCredentialsInput))
+	})
+	return _c
+}
+
+func (_c *MockInterface_GetTokenByClientCredentials_Call) Return(_a0 *oidc.TokenSet, _a1 error) *MockInterface_GetTokenByClientCredentials_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockInterface_GetTokenByClientCredentials_Call) RunAndReturn(run func(context.Context, client.GetTokenByClientCredentialsInput) (*oidc.TokenSet, error)) *MockInterface_GetTokenByClientCredentials_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetTokenByROPC provides a mock function with given fields: ctx, username, password
 func (_m *MockInterface) GetTokenByROPC(ctx context.Context, username string, password string) (*oidc.TokenSet, error) {
 	ret := _m.Called(ctx, username, password)
