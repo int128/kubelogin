@@ -57,6 +57,8 @@ func (r *Repository) FindByKey(config tokencache.Config, key tokencache.Key) (*o
 		return readFromFile(config, checksum)
 	case tokencache.StorageKeyring:
 		return readFromKeyring(checksum)
+	case tokencache.StorageNone:
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("unknown storage mode: %v", config.Storage)
 	}
@@ -110,6 +112,8 @@ func (r *Repository) Save(config tokencache.Config, key tokencache.Key, tokenSet
 		return writeToFile(config, checksum, tokenSet)
 	case tokencache.StorageKeyring:
 		return writeToKeyring(checksum, tokenSet)
+	case tokencache.StorageNone:
+		return nil
 	default:
 		return fmt.Errorf("unknown storage mode: %v", config.Storage)
 	}
@@ -142,7 +146,15 @@ func writeToKeyring(checksum string, tokenSet oidc.TokenSet) error {
 	return nil
 }
 
+// Implement io.Closer for noneStorage type
+type noneStorageCloser struct{}
+
+func (c noneStorageCloser) Close() error { return nil }
+
 func (r *Repository) Lock(config tokencache.Config, key tokencache.Key) (io.Closer, error) {
+	if config.Storage == tokencache.StorageNone {
+		return noneStorageCloser{}, nil
+	}
 	checksum, err := computeChecksum(key)
 	if err != nil {
 		return nil, fmt.Errorf("could not compute the key: %w", err)
@@ -173,6 +185,8 @@ func (r *Repository) DeleteAll(config tokencache.Config) error {
 		if err := keyring.DeleteAll(keyringService); err != nil {
 			return fmt.Errorf("keyring delete: %w", err)
 		}
+		return nil
+	case tokencache.StorageNone:
 		return nil
 	default:
 		return fmt.Errorf("unknown storage mode: %v", config.Storage)
