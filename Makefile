@@ -17,4 +17,4 @@ generate:
 
 .PHONY: lint
 lint:
-	go tool github.com/golangci/golangci-lint/cmd/golangci-lint run
+	go tool golangci-lint run
