@@ -1,6 +1,7 @@
-outpkg: "{{.PackageName}}_mock"
-dir: "mocks/{{.PackagePath}}_mock"
-
+dir: mocks/{{.SrcPackagePath}}_mock
+pkgname: '{{.SrcPackageName}}_mock'
+filename: mocks.go
+template: testify
 packages:
   github.com/int128/kubelogin:
     config:
@@ -8,4 +9,4 @@ packages:
       recursive: true
   io:
     interfaces:
-      Closer:
+      Closer: {}
