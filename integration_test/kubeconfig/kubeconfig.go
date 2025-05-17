@@ -27,7 +27,11 @@ func Create(t *testing.T, v *Values) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	tpl, err := template.ParseFiles("kubeconfig/testdata/kubeconfig.yaml")
 	if err != nil {
 		t.Fatal(err)
@@ -51,7 +55,11 @@ func Verify(t *testing.T, kubeconfig string, want AuthProviderConfig) {
 		t.Errorf("could not open kubeconfig: %s", err)
 		return
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			t.Errorf("could not close kubeconfig: %s", err)
+		}
+	}()
 
 	var y struct {
 		Users []struct {
