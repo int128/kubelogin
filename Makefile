@@ -13,7 +13,7 @@ integration-test:
 generate:
 	go tool github.com/google/wire/cmd/wire ./pkg/di
 	rm -fr mocks/
-	go tool github.com/vektra/mockery/v2
+	go tool mockery
 
 .PHONY: lint
 lint:
