@@ -29,7 +29,11 @@ dummy`)), req)
 	if err != nil {
 		t.Errorf("could not create a response: %s", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Errorf("could not close response body: %s", err)
+		}
+	}()
 
 	transport := &Transport{
 		Base:   &mockTransport{resp: resp},

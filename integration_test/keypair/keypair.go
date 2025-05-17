@@ -36,7 +36,11 @@ func readAsBase64(name string) string {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	var s strings.Builder
 	e := base64.NewEncoder(base64.StdEncoding, &s)
 	if _, err := io.Copy(e, f); err != nil {
