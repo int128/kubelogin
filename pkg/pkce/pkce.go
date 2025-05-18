@@ -2,13 +2,7 @@
 // See also https://tools.ietf.org/html/rfc7636.
 package pkce
 
-import (
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/binary"
-	"fmt"
-)
+import "golang.org/x/oauth2"
 
 type Method int
 
@@ -20,9 +14,22 @@ const (
 
 // Params represents a set of the PKCE parameters.
 type Params struct {
-	CodeChallenge       string
-	CodeChallengeMethod string
-	CodeVerifier        string
+	Method   Method
+	Verifier string
+}
+
+func (params Params) AuthCodeOption() oauth2.AuthCodeOption {
+	if params.Method == MethodS256 {
+		return oauth2.S256ChallengeOption(params.Verifier)
+	}
+	return nil
+}
+
+func (params Params) TokenRequestOption() oauth2.AuthCodeOption {
+	if params.Method == MethodS256 {
+		return oauth2.VerifierOption(params.Verifier)
+	}
+	return nil
 }
 
 // New returns a parameters supported by the provider.
@@ -30,39 +37,10 @@ type Params struct {
 // It returns a zero value if no method is available.
 func New(method Method) (Params, error) {
 	if method == MethodS256 {
-		return NewS256()
+		return Params{
+			Method:   MethodS256,
+			Verifier: oauth2.GenerateVerifier(),
+		}, nil
 	}
 	return Params{}, nil
-}
-
-// NewS256 generates a parameters for S256.
-func NewS256() (Params, error) {
-	b, err := random32()
-	if err != nil {
-		return Params{}, fmt.Errorf("could not generate a random: %w", err)
-	}
-	return computeS256(b), nil
-}
-
-func random32() ([]byte, error) {
-	b := make([]byte, 32)
-	if err := binary.Read(rand.Reader, binary.LittleEndian, b); err != nil {
-		return nil, fmt.Errorf("read error: %w", err)
-	}
-	return b, nil
-}
-
-func computeS256(b []byte) Params {
-	v := base64URLEncode(b)
-	s := sha256.New()
-	_, _ = s.Write([]byte(v))
-	return Params{
-		CodeChallenge:       base64URLEncode(s.Sum(nil)),
-		CodeChallengeMethod: "S256",
-		CodeVerifier:        v,
-	}
-}
-
-func base64URLEncode(b []byte) string {
-	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(b)
 }
