@@ -25,10 +25,10 @@ type Config struct {
 type Storage byte
 
 const (
-	// StorageAuto will prefer keyring when available, and fallback to disk when not.
-	StorageAuto Storage = iota
 	// StorageDisk will only store cached keys on disk.
-	StorageDisk
+	StorageDisk Storage = iota
 	// StorageDisk will only store cached keys in the OS keyring.
 	StorageKeyring
+	// StorageNone will not store cached keys.
+	StorageNone
 )

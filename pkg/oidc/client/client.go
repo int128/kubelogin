@@ -115,11 +115,8 @@ func authorizationRequestOptions(nonce string, pkceParams pkce.Params, extraPara
 		oauth2.AccessTypeOffline,
 		gooidc.Nonce(nonce),
 	}
-	if pkceParams.CodeChallenge != "" {
-		opts = append(opts, oauth2.SetAuthURLParam("code_challenge", pkceParams.CodeChallenge))
-	}
-	if pkceParams.CodeChallengeMethod != "" {
-		opts = append(opts, oauth2.SetAuthURLParam("code_challenge_method", pkceParams.CodeChallengeMethod))
+	if pkceOpt := pkceParams.AuthCodeOption(); pkceOpt != nil {
+		opts = append(opts, pkceOpt)
 	}
 	for key, value := range extraParams {
 		opts = append(opts, oauth2.SetAuthURLParam(key, value))
@@ -128,11 +125,10 @@ func authorizationRequestOptions(nonce string, pkceParams pkce.Params, extraPara
 }
 
 func tokenRequestOptions(pkceParams pkce.Params) []oauth2.AuthCodeOption {
-	var opts []oauth2.AuthCodeOption
-	if pkceParams.CodeVerifier != "" {
-		opts = append(opts, oauth2.SetAuthURLParam("code_verifier", pkceParams.CodeVerifier))
+	if pkceOpt := pkceParams.TokenRequestOption(); pkceOpt != nil {
+		return []oauth2.AuthCodeOption{pkceOpt}
 	}
-	return opts
+	return nil
 }
 
 func (c *client) NegotiatedPKCEMethod() pkce.Method {

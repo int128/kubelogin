@@ -9,15 +9,11 @@ import (
 )
 
 type cleanOptions struct {
-	tokenCacheOptions tokenCacheOptions
+	TokenCacheDir string
 }
 
 func (o *cleanOptions) addFlags(f *pflag.FlagSet) {
-	o.tokenCacheOptions.addFlags(f)
-}
-
-func (o *cleanOptions) expandHomedir() {
-	o.tokenCacheOptions.expandHomedir()
+	f.StringVar(&o.TokenCacheDir, "token-cache-dir", getDefaultTokenCacheDir(), "Path to a directory of the token cache")
 }
 
 type Clean struct {
@@ -31,18 +27,13 @@ func (cmd *Clean) New() *cobra.Command {
 		Short: "Delete the token cache",
 		Long: `Delete the token cache.
 
-This deletes both the OS keyring and the directory by default.
-If you encounter an error of keyring, try --token-cache-storage=disk.
+This deletes the token cache directory from both the file system and the keyring.
 `,
 		Args: cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
-			o.expandHomedir()
-			tokenCacheConfig, err := o.tokenCacheOptions.tokenCacheConfig()
-			if err != nil {
-				return fmt.Errorf("clean: %w", err)
-			}
+			o.TokenCacheDir = expandHomedir(o.TokenCacheDir)
 			in := clean.Input{
-				TokenCacheConfig: tokenCacheConfig,
+				TokenCacheDir: o.TokenCacheDir,
 			}
 			if err := cmd.Clean.Do(c.Context(), in); err != nil {
 				return fmt.Errorf("clean: %w", err)

@@ -68,6 +68,8 @@ Replace the following variables in the later sections.
 | `ISSUER_URL`     | `https://keycloak.example.com/auth/realms/YOUR_REALM` |
 | `YOUR_CLIENT_ID` | `YOUR_CLIENT_ID`                                      |
 
+`YOUR_CLIENT_SECRET` is not required for this configuration.
+
 ### Dex with GitHub
 
 You can log in with a GitHub account.
@@ -130,7 +132,7 @@ Replace the following variables in the later sections.
 | `ISSUER_URL`     | `https://YOUR_ORGANIZATION.okta.com` |
 | `YOUR_CLIENT_ID` | random string                        |
 
-You do not need to set `YOUR_CLIENT_SECRET`.
+`YOUR_CLIENT_SECRET` is not required for this configuration.
 
 If you need `groups` claim for access control,
 see [jetstack/okta-kubectl-auth](https://github.com/jetstack/okta-kubectl-auth/blob/master/docs/okta-setup.md) and [#250](https://github.com/int128/kubelogin/issues/250).
@@ -163,8 +165,9 @@ Run the following command:
 kubectl oidc-login setup \
   --oidc-issuer-url=ISSUER_URL \
   --oidc-client-id=YOUR_CLIENT_ID
-  --oidc-client-secret=YOUR_CLIENT_SECRET
 ```
+
+If your provider requires a client secret, add `--oidc-client-secret=YOUR_CLIENT_SECRET`.
 
 It launches the browser and navigates to `http://localhost:8000`.
 Please log in to the provider.
@@ -200,15 +203,19 @@ Add `oidc` user to the kubeconfig.
 
 ```sh
 kubectl config set-credentials oidc \
-  --exec-interactive-mode=Never
+  --exec-interactive-mode=Never \
   --exec-api-version=client.authentication.k8s.io/v1 \
   --exec-command=kubectl \
   --exec-arg=oidc-login \
   --exec-arg=get-token \
   --exec-arg=--oidc-issuer-url=ISSUER_URL \
   --exec-arg=--oidc-client-id=YOUR_CLIENT_ID
-  --exec-arg=--oidc-client-secret=YOUR_CLIENT_SECRET
 ```
+
+If your provider requires a client secret, add `--oidc-client-secret=YOUR_CLIENT_SECRET`.
+
+For security, it is recommended to add `--token-cache-storage=keyring` to store the token cache to the keyring instead of the file system.
+If you encounter an error, see the [token cache](usage.md#token-cache) for details.
 
 ## 6. Verify cluster access
 

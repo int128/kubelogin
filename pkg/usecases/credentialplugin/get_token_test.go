@@ -112,6 +112,63 @@ func TestGetToken_Do(t *testing.T) {
 		}
 	})
 
+	t.Run("TokenCacheNoneReturnsNone", func(t *testing.T) {
+		tokenCacheKey := tokencache.Key{
+			Provider: oidc.Provider{
+				IssuerURL:    "https://accounts.google.com",
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+			},
+		}
+		ctx := context.TODO()
+		in := Input{
+			Provider: dummyProvider,
+			TokenCacheConfig: tokencache.Config{
+				Storage: tokencache.StorageNone,
+			},
+			GrantOptionSet: grantOptionSet,
+		}
+		mockAuthentication := authentication_mock.NewMockInterface(t)
+		mockAuthentication.EXPECT().
+			Do(ctx, authentication.Input{
+				Provider:       dummyProvider,
+				GrantOptionSet: grantOptionSet,
+			}).
+			Return(&authentication.Output{TokenSet: issuedTokenSet}, nil)
+		mockCloser := io_mock.NewMockCloser(t)
+		mockCloser.EXPECT().
+			Close().
+			Return(nil)
+		mockRepository := repository_mock.NewMockInterface(t)
+		mockRepository.EXPECT().
+			Lock(in.TokenCacheConfig, tokenCacheKey).
+			Return(mockCloser, nil)
+		mockRepository.EXPECT().
+			FindByKey(in.TokenCacheConfig, tokenCacheKey).
+			Return(nil, nil)
+		mockRepository.EXPECT().
+			Save(in.TokenCacheConfig, tokenCacheKey, issuedTokenSet).
+			Return(nil)
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			Read().
+			Return(credentialpluginInput, nil)
+		mockWriter := writer_mock.NewMockInterface(t)
+		mockWriter.EXPECT().
+			Write(issuedOutput).
+			Return(nil)
+		u := GetToken{
+			Authentication:         mockAuthentication,
+			TokenCacheRepository:   mockRepository,
+			CredentialPluginReader: mockReader,
+			CredentialPluginWriter: mockWriter,
+			Logger:                 logger.New(t),
+			Clock:                  clock.Fake(expiryTime.Add(-time.Hour)),
+		}
+		if err := u.Do(ctx, in); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
 	t.Run("ROPC", func(t *testing.T) {
 		grantOptionSet := authentication.GrantOptionSet{
 			ROPCOption: &ropc.Option{Username: "YOUR_USERNAME"},

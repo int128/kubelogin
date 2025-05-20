@@ -11,12 +11,10 @@ integration-test:
 
 .PHONY: generate
 generate:
-	$(MAKE) -C tools
-	./tools/bin/wire ./pkg/di
+	go tool github.com/google/wire/cmd/wire ./pkg/di
 	rm -fr mocks/
-	./tools/bin/mockery
+	go tool mockery
 
 .PHONY: lint
 lint:
-	$(MAKE) -C tools
-	./tools/bin/golangci-lint run
+	go tool golangci-lint run
