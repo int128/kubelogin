@@ -12,8 +12,6 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const oobRedirectURI = "urn:ietf:wg:oauth:2.0:oob"
-
 type authenticationOptions struct {
 	GrantType                   string
 	ListenAddress               []string
@@ -23,8 +21,8 @@ type authenticationOptions struct {
 	LocalServerCertFile         string
 	LocalServerKeyFile          string
 	OpenURLAfterAuthentication  string
-	RedirectURLHostname         string
-	RedirectURLAuthCodeKeyboard string
+	RedirectURLHostname         string // DEPRECATED
+	RedirectURLAuthCodeKeyboard string // DEPRECATED
 	AuthRequestExtraParams      map[string]string
 	Username                    string
 	Password                    string
@@ -47,8 +45,14 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode] Certificate path for the local server")
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
-	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "localhost", "[authcode] Hostname of the redirect URL")
-	f.StringVar(&o.RedirectURLAuthCodeKeyboard, "oidc-redirect-url-authcode-keyboard", oobRedirectURI, "[authcode-keyboard] Redirect URL")
+	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "", "[authcode] Hostname of the redirect URL")
+	if err := f.MarkDeprecated("oidc-redirect-url-hostname", "use --oidc-redirect-url instead."); err != nil {
+		panic(err)
+	}
+	f.StringVar(&o.RedirectURLAuthCodeKeyboard, "oidc-redirect-url-authcode-keyboard", "", "Equivalent to --oidc-redirect-url")
+	if err := f.MarkDeprecated("oidc-redirect-url-authcode-keyboard", "use --oidc-redirect-url instead."); err != nil {
+		panic(err)
+	}
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
@@ -76,7 +80,6 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 	case o.GrantType == "authcode-keyboard":
 		s.AuthCodeKeyboardOption = &authcode.KeyboardOption{
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
-			RedirectURL:            o.RedirectURLAuthCodeKeyboard,
 		}
 	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):
 		s.ROPCOption = &ropc.Option{
