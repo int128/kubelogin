@@ -16,6 +16,7 @@ import (
 	testingLogger "github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/clientcredentials"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"github.com/stretchr/testify/mock"
 )
@@ -175,6 +176,47 @@ func TestAuthentication_Do(t *testing.T) {
 			TokenSet: oidc.TokenSet{
 				IDToken:      "YOUR_ID_TOKEN",
 				RefreshToken: "YOUR_REFRESH_TOKEN",
+			},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("NoToken/ClientCredentials", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		ccIn := client.GetTokenByClientCredentialsInput{
+			EndpointParams: map[string][]string{
+				"audience": []string{"gopher://myaud"},
+			},
+		}
+		in := Input{Provider: dummyProvider,
+			TLSClientConfig: dummyTLSClientConfig,
+			GrantOptionSet:  GrantOptionSet{ClientCredentialsOption: &ccIn}}
+		testToken := &oidc.TokenSet{IDToken: "TEST_ID_TOKEN"}
+		mockClient := client_mock.NewMockInterface(t)
+		mockClient.EXPECT().
+			GetTokenByClientCredentials(ctx, ccIn).Return(testToken, nil).Once()
+
+		mockClientFactory := client_mock.NewMockFactoryInterface(t)
+		mockClientFactory.EXPECT().
+			New(ctx, dummyProvider, dummyTLSClientConfig).
+			Return(mockClient, nil)
+		u := Authentication{
+			ClientFactory: mockClientFactory,
+			Logger:        testingLogger.New(t),
+			ClientCredentials: &clientcredentials.ClientCredentials{
+				Logger: testingLogger.New(t),
+			},
+		}
+		got, err := u.Do(ctx, in)
+		if err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+		want := &Output{
+			TokenSet: oidc.TokenSet{
+				IDToken: "TEST_ID_TOKEN",
 			},
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
