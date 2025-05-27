@@ -159,7 +159,10 @@ func (_c *MockInterface_Printf_Call) Run(run func(format string, args ...interfa
 			arg0 = args[0].(string)
 		}
 		var arg1 []interface{}
-		variadicArgs := args[1].([]interface{})
+		var variadicArgs []interface{}
+		if len(args) > 1 {
+			variadicArgs = args[1].([]interface{})
+		}
 		arg1 = variadicArgs
 		run(
 			arg0,
@@ -290,7 +293,10 @@ func (_c *MockVerbose_Infof_Call) Run(run func(format string, args ...interface{
 			arg0 = args[0].(string)
 		}
 		var arg1 []interface{}
-		variadicArgs := args[1].([]interface{})
+		var variadicArgs []interface{}
+		if len(args) > 1 {
+			variadicArgs = args[1].([]interface{})
+		}
 		arg1 = variadicArgs
 		run(
 			arg0,
@@ -368,7 +374,10 @@ func (_c *mockgoLogger_Printf_Call) Run(run func(format string, v ...interface{}
 			arg0 = args[0].(string)
 		}
 		var arg1 []interface{}
-		variadicArgs := args[1].([]interface{})
+		var variadicArgs []interface{}
+		if len(args) > 1 {
+			variadicArgs = args[1].([]interface{})
+		}
 		arg1 = variadicArgs
 		run(
 			arg0,

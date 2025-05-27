@@ -66,7 +66,10 @@ func (_c *mocktestingLogger_Logf_Call) Run(run func(format string, v ...interfac
 			arg0 = args[0].(string)
 		}
 		var arg1 []interface{}
-		variadicArgs := args[1].([]interface{})
+		var variadicArgs []interface{}
+		if len(args) > 1 {
+			variadicArgs = args[1].([]interface{})
+		}
 		arg1 = variadicArgs
 		run(
 			arg0,
