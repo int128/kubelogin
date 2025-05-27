@@ -69,14 +69,20 @@ type MockService_AuthenticateCode_Call struct {
 }
 
 // AuthenticateCode is a helper method to define mock.On call
-//   - req
+//   - req service.AuthenticationRequest
 func (_e *MockService_Expecter) AuthenticateCode(req interface{}) *MockService_AuthenticateCode_Call {
 	return &MockService_AuthenticateCode_Call{Call: _e.mock.On("AuthenticateCode", req)}
 }
 
 func (_c *MockService_AuthenticateCode_Call) Run(run func(req service.AuthenticationRequest)) *MockService_AuthenticateCode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(service.AuthenticationRequest))
+		var arg0 service.AuthenticationRequest
+		if args[0] != nil {
+			arg0 = args[0].(service.AuthenticationRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -125,16 +131,32 @@ type MockService_AuthenticatePassword_Call struct {
 }
 
 // AuthenticatePassword is a helper method to define mock.On call
-//   - username
-//   - password
-//   - scope
+//   - username string
+//   - password string
+//   - scope string
 func (_e *MockService_Expecter) AuthenticatePassword(username interface{}, password interface{}, scope interface{}) *MockService_AuthenticatePassword_Call {
 	return &MockService_AuthenticatePassword_Call{Call: _e.mock.On("AuthenticatePassword", username, password, scope)}
 }
 
 func (_c *MockService_AuthenticatePassword_Call) Run(run func(username string, password string, scope string)) *MockService_AuthenticatePassword_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -229,14 +251,20 @@ type MockService_Exchange_Call struct {
 }
 
 // Exchange is a helper method to define mock.On call
-//   - req
+//   - req service.TokenRequest
 func (_e *MockService_Expecter) Exchange(req interface{}) *MockService_Exchange_Call {
 	return &MockService_Exchange_Call{Call: _e.mock.On("Exchange", req)}
 }
 
 func (_c *MockService_Exchange_Call) Run(run func(req service.TokenRequest)) *MockService_Exchange_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(service.TokenRequest))
+		var arg0 service.TokenRequest
+		if args[0] != nil {
+			arg0 = args[0].(service.TokenRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -421,14 +449,20 @@ type MockService_Refresh_Call struct {
 }
 
 // Refresh is a helper method to define mock.On call
-//   - refreshToken
+//   - refreshToken string
 func (_e *MockService_Expecter) Refresh(refreshToken interface{}) *MockService_Refresh_Call {
 	return &MockService_Refresh_Call{Call: _e.mock.On("Refresh", refreshToken)}
 }
 
 func (_c *MockService_Refresh_Call) Run(run func(refreshToken string)) *MockService_Refresh_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -455,14 +489,20 @@ type MockService_SetConfig_Call struct {
 }
 
 // SetConfig is a helper method to define mock.On call
-//   - config
+//   - config testconfig.Config
 func (_e *MockService_Expecter) SetConfig(config interface{}) *MockService_SetConfig_Call {
 	return &MockService_SetConfig_Call{Call: _e.mock.On("SetConfig", config)}
 }
 
 func (_c *MockService_SetConfig_Call) Run(run func(config testconfig.Config)) *MockService_SetConfig_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(testconfig.Config))
+		var arg0 testconfig.Config
+		if args[0] != nil {
+			arg0 = args[0].(testconfig.Config)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -536,14 +576,20 @@ type MockProvider_AuthenticateCode_Call struct {
 }
 
 // AuthenticateCode is a helper method to define mock.On call
-//   - req
+//   - req service.AuthenticationRequest
 func (_e *MockProvider_Expecter) AuthenticateCode(req interface{}) *MockProvider_AuthenticateCode_Call {
 	return &MockProvider_AuthenticateCode_Call{Call: _e.mock.On("AuthenticateCode", req)}
 }
 
 func (_c *MockProvider_AuthenticateCode_Call) Run(run func(req service.AuthenticationRequest)) *MockProvider_AuthenticateCode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(service.AuthenticationRequest))
+		var arg0 service.AuthenticationRequest
+		if args[0] != nil {
+			arg0 = args[0].(service.AuthenticationRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -592,16 +638,32 @@ type MockProvider_AuthenticatePassword_Call struct {
 }
 
 // AuthenticatePassword is a helper method to define mock.On call
-//   - username
-//   - password
-//   - scope
+//   - username string
+//   - password string
+//   - scope string
 func (_e *MockProvider_Expecter) AuthenticatePassword(username interface{}, password interface{}, scope interface{}) *MockProvider_AuthenticatePassword_Call {
 	return &MockProvider_AuthenticatePassword_Call{Call: _e.mock.On("AuthenticatePassword", username, password, scope)}
 }
 
 func (_c *MockProvider_AuthenticatePassword_Call) Run(run func(username string, password string, scope string)) *MockProvider_AuthenticatePassword_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -696,14 +758,20 @@ type MockProvider_Exchange_Call struct {
 }
 
 // Exchange is a helper method to define mock.On call
-//   - req
+//   - req service.TokenRequest
 func (_e *MockProvider_Expecter) Exchange(req interface{}) *MockProvider_Exchange_Call {
 	return &MockProvider_Exchange_Call{Call: _e.mock.On("Exchange", req)}
 }
 
 func (_c *MockProvider_Exchange_Call) Run(run func(req service.TokenRequest)) *MockProvider_Exchange_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(service.TokenRequest))
+		var arg0 service.TokenRequest
+		if args[0] != nil {
+			arg0 = args[0].(service.TokenRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -798,14 +866,20 @@ type MockProvider_Refresh_Call struct {
 }
 
 // Refresh is a helper method to define mock.On call
-//   - refreshToken
+//   - refreshToken string
 func (_e *MockProvider_Expecter) Refresh(refreshToken interface{}) *MockProvider_Refresh_Call {
 	return &MockProvider_Refresh_Call{Call: _e.mock.On("Refresh", refreshToken)}
 }
 
 func (_c *MockProvider_Refresh_Call) Run(run func(refreshToken string)) *MockProvider_Refresh_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
