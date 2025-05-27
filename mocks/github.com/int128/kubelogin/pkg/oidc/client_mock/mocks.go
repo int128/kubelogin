@@ -76,15 +76,26 @@ type MockInterface_ExchangeAuthCode_Call struct {
 }
 
 // ExchangeAuthCode is a helper method to define mock.On call
-//   - ctx
-//   - in
+//   - ctx context.Context
+//   - in client.ExchangeAuthCodeInput
 func (_e *MockInterface_Expecter) ExchangeAuthCode(ctx interface{}, in interface{}) *MockInterface_ExchangeAuthCode_Call {
 	return &MockInterface_ExchangeAuthCode_Call{Call: _e.mock.On("ExchangeAuthCode", ctx, in)}
 }
 
 func (_c *MockInterface_ExchangeAuthCode_Call) Run(run func(ctx context.Context, in client.ExchangeAuthCodeInput)) *MockInterface_ExchangeAuthCode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(client.ExchangeAuthCodeInput))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 client.ExchangeAuthCodeInput
+		if args[1] != nil {
+			arg1 = args[1].(client.ExchangeAuthCodeInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -133,15 +144,26 @@ type MockInterface_ExchangeDeviceCode_Call struct {
 }
 
 // ExchangeDeviceCode is a helper method to define mock.On call
-//   - ctx
-//   - authResponse
+//   - ctx context.Context
+//   - authResponse *oauth2dev.AuthorizationResponse
 func (_e *MockInterface_Expecter) ExchangeDeviceCode(ctx interface{}, authResponse interface{}) *MockInterface_ExchangeDeviceCode_Call {
 	return &MockInterface_ExchangeDeviceCode_Call{Call: _e.mock.On("ExchangeDeviceCode", ctx, authResponse)}
 }
 
 func (_c *MockInterface_ExchangeDeviceCode_Call) Run(run func(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse)) *MockInterface_ExchangeDeviceCode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*oauth2dev.AuthorizationResponse))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *oauth2dev.AuthorizationResponse
+		if args[1] != nil {
+			arg1 = args[1].(*oauth2dev.AuthorizationResponse)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -179,14 +201,20 @@ type MockInterface_GetAuthCodeURL_Call struct {
 }
 
 // GetAuthCodeURL is a helper method to define mock.On call
-//   - in
+//   - in client.AuthCodeURLInput
 func (_e *MockInterface_Expecter) GetAuthCodeURL(in interface{}) *MockInterface_GetAuthCodeURL_Call {
 	return &MockInterface_GetAuthCodeURL_Call{Call: _e.mock.On("GetAuthCodeURL", in)}
 }
 
 func (_c *MockInterface_GetAuthCodeURL_Call) Run(run func(in client.AuthCodeURLInput)) *MockInterface_GetAuthCodeURL_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.AuthCodeURLInput))
+		var arg0 client.AuthCodeURLInput
+		if args[0] != nil {
+			arg0 = args[0].(client.AuthCodeURLInput)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -235,14 +263,20 @@ type MockInterface_GetDeviceAuthorization_Call struct {
 }
 
 // GetDeviceAuthorization is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockInterface_Expecter) GetDeviceAuthorization(ctx interface{}) *MockInterface_GetDeviceAuthorization_Call {
 	return &MockInterface_GetDeviceAuthorization_Call{Call: _e.mock.On("GetDeviceAuthorization", ctx)}
 }
 
 func (_c *MockInterface_GetDeviceAuthorization_Call) Run(run func(ctx context.Context)) *MockInterface_GetDeviceAuthorization_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -291,16 +325,32 @@ type MockInterface_GetTokenByAuthCode_Call struct {
 }
 
 // GetTokenByAuthCode is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - localServerReadyChan
+//   - ctx context.Context
+//   - in client.GetTokenByAuthCodeInput
+//   - localServerReadyChan chan<- string
 func (_e *MockInterface_Expecter) GetTokenByAuthCode(ctx interface{}, in interface{}, localServerReadyChan interface{}) *MockInterface_GetTokenByAuthCode_Call {
 	return &MockInterface_GetTokenByAuthCode_Call{Call: _e.mock.On("GetTokenByAuthCode", ctx, in, localServerReadyChan)}
 }
 
 func (_c *MockInterface_GetTokenByAuthCode_Call) Run(run func(ctx context.Context, in client.GetTokenByAuthCodeInput, localServerReadyChan chan<- string)) *MockInterface_GetTokenByAuthCode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(client.GetTokenByAuthCodeInput), args[2].(chan<- string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 client.GetTokenByAuthCodeInput
+		if args[1] != nil {
+			arg1 = args[1].(client.GetTokenByAuthCodeInput)
+		}
+		var arg2 chan<- string
+		if args[2] != nil {
+			arg2 = args[2].(chan<- string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -349,16 +399,32 @@ type MockInterface_GetTokenByROPC_Call struct {
 }
 
 // GetTokenByROPC is a helper method to define mock.On call
-//   - ctx
-//   - username
-//   - password
+//   - ctx context.Context
+//   - username string
+//   - password string
 func (_e *MockInterface_Expecter) GetTokenByROPC(ctx interface{}, username interface{}, password interface{}) *MockInterface_GetTokenByROPC_Call {
 	return &MockInterface_GetTokenByROPC_Call{Call: _e.mock.On("GetTokenByROPC", ctx, username, password)}
 }
 
 func (_c *MockInterface_GetTokenByROPC_Call) Run(run func(ctx context.Context, username string, password string)) *MockInterface_GetTokenByROPC_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -451,15 +517,26 @@ type MockInterface_Refresh_Call struct {
 }
 
 // Refresh is a helper method to define mock.On call
-//   - ctx
-//   - refreshToken
+//   - ctx context.Context
+//   - refreshToken string
 func (_e *MockInterface_Expecter) Refresh(ctx interface{}, refreshToken interface{}) *MockInterface_Refresh_Call {
 	return &MockInterface_Refresh_Call{Call: _e.mock.On("Refresh", ctx, refreshToken)}
 }
 
 func (_c *MockInterface_Refresh_Call) Run(run func(ctx context.Context, refreshToken string)) *MockInterface_Refresh_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -535,16 +612,32 @@ type MockFactoryInterface_New_Call struct {
 }
 
 // New is a helper method to define mock.On call
-//   - ctx
-//   - prov
-//   - tlsClientConfig
+//   - ctx context.Context
+//   - prov oidc.Provider
+//   - tlsClientConfig tlsclientconfig.Config
 func (_e *MockFactoryInterface_Expecter) New(ctx interface{}, prov interface{}, tlsClientConfig interface{}) *MockFactoryInterface_New_Call {
 	return &MockFactoryInterface_New_Call{Call: _e.mock.On("New", ctx, prov, tlsClientConfig)}
 }
 
 func (_c *MockFactoryInterface_New_Call) Run(run func(ctx context.Context, prov oidc.Provider, tlsClientConfig tlsclientconfig.Config)) *MockFactoryInterface_New_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(oidc.Provider), args[2].(tlsclientconfig.Config))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 oidc.Provider
+		if args[1] != nil {
+			arg1 = args[1].(oidc.Provider)
+		}
+		var arg2 tlsclientconfig.Config
+		if args[2] != nil {
+			arg2 = args[2].(tlsclientconfig.Config)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
