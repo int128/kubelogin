@@ -89,16 +89,16 @@ func (_c *MockInterface_Open_Call) RunAndReturn(run func(url string) error) *Moc
 }
 
 // OpenCommand provides a mock function for the type MockInterface
-func (_mock *MockInterface) OpenCommand(ctx context.Context, url string, command string) error {
-	ret := _mock.Called(ctx, url, command)
+func (_mock *MockInterface) OpenCommand(ctx context.Context, command string, args []string, url string) error {
+	ret := _mock.Called(ctx, command, args, url)
 
 	if len(ret) == 0 {
 		panic("no return value specified for OpenCommand")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = returnFunc(ctx, url, command)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []string, string) error); ok {
+		r0 = returnFunc(ctx, command, args, url)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -112,13 +112,14 @@ type MockInterface_OpenCommand_Call struct {
 
 // OpenCommand is a helper method to define mock.On call
 //   - ctx context.Context
-//   - url string
 //   - command string
-func (_e *MockInterface_Expecter) OpenCommand(ctx interface{}, url interface{}, command interface{}) *MockInterface_OpenCommand_Call {
-	return &MockInterface_OpenCommand_Call{Call: _e.mock.On("OpenCommand", ctx, url, command)}
+//   - args []string
+//   - url string
+func (_e *MockInterface_Expecter) OpenCommand(ctx interface{}, command interface{}, args interface{}, url interface{}) *MockInterface_OpenCommand_Call {
+	return &MockInterface_OpenCommand_Call{Call: _e.mock.On("OpenCommand", ctx, command, args, url)}
 }
 
-func (_c *MockInterface_OpenCommand_Call) Run(run func(ctx context.Context, url string, command string)) *MockInterface_OpenCommand_Call {
+func (_c *MockInterface_OpenCommand_Call) Run(run func(ctx context.Context, command string, args []string, url string)) *MockInterface_OpenCommand_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -128,14 +129,19 @@ func (_c *MockInterface_OpenCommand_Call) Run(run func(ctx context.Context, url 
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 string
+		var arg2 []string
 		if args[2] != nil {
-			arg2 = args[2].(string)
+			arg2 = args[2].([]string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -146,7 +152,7 @@ func (_c *MockInterface_OpenCommand_Call) Return(err error) *MockInterface_OpenC
 	return _c
 }
 
-func (_c *MockInterface_OpenCommand_Call) RunAndReturn(run func(ctx context.Context, url string, command string) error) *MockInterface_OpenCommand_Call {
+func (_c *MockInterface_OpenCommand_Call) RunAndReturn(run func(ctx context.Context, command string, args []string, url string) error) *MockInterface_OpenCommand_Call {
 	_c.Call.Return(run)
 	return _c
 }
