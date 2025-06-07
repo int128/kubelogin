@@ -64,7 +64,7 @@ func (c *client) Open(url string) error {
 	return nil
 }
 
-func (c *client) OpenCommand(_ context.Context, url, _ string) error {
+func (c *client) OpenCommand(_ context.Context, _ string, _ []string, url string) error {
 	return c.Open(url)
 }
 
@@ -77,6 +77,6 @@ func (c *zeroClient) Open(url string) error {
 	return nil
 }
 
-func (c *zeroClient) OpenCommand(_ context.Context, url, _ string) error {
+func (c *zeroClient) OpenCommand(_ context.Context, _ string, _ []string, url string) error {
 	return c.Open(url)
 }

@@ -136,7 +136,48 @@ func TestBrowser_Do(t *testing.T) {
 			}, nil)
 		mockBrowser := browser_mock.NewMockInterface(t)
 		mockBrowser.EXPECT().
-			OpenCommand(mock.Anything, "LOCAL_SERVER_URL", "firefox").
+			OpenCommand(mock.Anything, "firefox", []string(nil), "LOCAL_SERVER_URL").
+			Return(nil)
+		u := Browser{
+			Logger:  logger.New(t),
+			Browser: mockBrowser,
+		}
+		got, err := u.Do(ctx, o, mockClient)
+		if err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+		want := &oidc.TokenSet{
+			IDToken:      "YOUR_ID_TOKEN",
+			RefreshToken: "YOUR_REFRESH_TOKEN",
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("OpenBrowserCommandArgs", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		o := &BrowserOption{
+			BindAddress:           []string{"127.0.0.1:8000"},
+			BrowserCommand:        "firefox",
+			BrowserArgs:           []string{"arg1", "arg2"},
+			AuthenticationTimeout: 10 * time.Second,
+		}
+		mockClient := client_mock.NewMockInterface(t)
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod)
+		mockClient.EXPECT().
+			GetTokenByAuthCode(mock.Anything, mock.Anything, mock.Anything).
+			Run(func(_ context.Context, _ client.GetTokenByAuthCodeInput, readyChan chan<- string) {
+				readyChan <- "LOCAL_SERVER_URL"
+			}).
+			Return(&oidc.TokenSet{
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			}, nil)
+		mockBrowser := browser_mock.NewMockInterface(t)
+		mockBrowser.EXPECT().
+			OpenCommand(mock.Anything, "firefox", []string{"arg1", "arg2"}, "LOCAL_SERVER_URL").
 			Return(nil)
 		u := Browser{
 			Logger:  logger.New(t),
