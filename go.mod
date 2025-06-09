@@ -1,6 +1,6 @@
 module github.com/int128/kubelogin
 
-go 1.24.3
+go 1.24.4
 
 require (
 	github.com/chromedp/chromedp v0.13.6
