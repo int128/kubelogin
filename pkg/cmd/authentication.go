@@ -20,6 +20,7 @@ type authenticationOptions struct {
 	AuthenticationTimeoutSec    int
 	SkipOpenBrowser             bool
 	BrowserCommand              string
+	BrowserArgs                 []string
 	LocalServerCertFile         string
 	LocalServerKeyFile          string
 	OpenURLAfterAuthentication  string
@@ -43,6 +44,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringSliceVar(&o.ListenAddress, "listen-address", defaultListenAddress, "[authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
 	f.StringVar(&o.BrowserCommand, "browser-command", "", "[authcode] Command to open the browser")
+	f.StringSliceVar(&o.BrowserArgs, "browser-args", nil, "[authcode] Command arguments to use when openning the browser")
 	f.IntVar(&o.AuthenticationTimeoutSec, "authentication-timeout-sec", defaultAuthenticationTimeoutSec, "[authcode] Timeout of authentication in seconds")
 	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode] Certificate path for the local server")
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
@@ -66,6 +68,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			BindAddress:                o.ListenAddress,
 			SkipOpenBrowser:            o.SkipOpenBrowser,
 			BrowserCommand:             o.BrowserCommand,
+			BrowserArgs:                o.BrowserArgs,
 			AuthenticationTimeout:      time.Duration(o.AuthenticationTimeoutSec) * time.Second,
 			LocalServerCertFile:        o.LocalServerCertFile,
 			LocalServerKeyFile:         o.LocalServerKeyFile,
