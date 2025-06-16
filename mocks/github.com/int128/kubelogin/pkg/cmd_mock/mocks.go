@@ -60,16 +60,32 @@ type MockInterface_Run_Call struct {
 }
 
 // Run is a helper method to define mock.On call
-//   - ctx
-//   - args
-//   - version
+//   - ctx context.Context
+//   - args []string
+//   - version string
 func (_e *MockInterface_Expecter) Run(ctx interface{}, args interface{}, version interface{}) *MockInterface_Run_Call {
 	return &MockInterface_Run_Call{Call: _e.mock.On("Run", ctx, args, version)}
 }
 
 func (_c *MockInterface_Run_Call) Run(run func(ctx context.Context, args []string, version string)) *MockInterface_Run_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }

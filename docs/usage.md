@@ -10,6 +10,7 @@ Flags:
       --oidc-issuer-url string                          Issuer URL of the provider (mandatory)
       --oidc-client-id string                           Client ID of the provider (mandatory)
       --oidc-client-secret string                       Client secret of the provider
+      --oidc-redirect-url string                        [authcode, authcode-keyboard] Redirect URL
       --oidc-extra-scope strings                        Scopes to request to the provider
       --oidc-use-access-token                           Instead of using the id_token, use the access_token to authenticate to Kubernetes
       --force-refresh                                   If set, refresh the ID token regardless of its expiration time
@@ -29,9 +30,7 @@ Flags:
       --local-server-cert string                        [authcode] Certificate path for the local server
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
-      --oidc-redirect-url-hostname string               [authcode] Hostname of the redirect URL (default "localhost")
-      --oidc-redirect-url-authcode-keyboard string      [authcode-keyboard] Redirect URL (default "urn:ietf:wg:oauth:2.0:oob")
-      --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard] Extra query parameters to send with an authentication request (default [])
+      --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
       --password string                                 [password] Password for resource owner password credentials grant
   -h, --help                                            help for get-token
@@ -137,14 +136,36 @@ If a value in the following options begins with a tilde character `~`, it is exp
 
 Kubelogin support the following flows:
 
-- [Authorization code flow](#authorization-code-flow)
-- [Authorization code flow with a keyboard](#authorization-code-flow-with-a-keyboard)
-- [Device authorization grant](#device-authorization-grant)
-- [Resource owner password credentials grant](#resource-owner-password-credentials-grant)
+- [Device Authorization Grant](#device-authorization-grant)
+- [Authorization Code Flow](#authorization-code-flow)
+- [Authorization Code Flow with a Keyboard](#authorization-code-flow-with-a-keyboard)
+- [Resource Owner Password Credentials Grant](#resource-owner-password-credentials-grant)
+- [Client Credentials Flow](#client-credentials-flow)
 
-### Authorization code flow
+### Device Authorization Grant
 
-Kubelogin performs the [authorization code flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) by default.
+It performs the [Device Authorization Grant (RFC 8628)](https://tools.ietf.org/html/rfc8628) when `--grant-type=device-code` is set.
+
+```yaml
+- --grant-type=device-code
+```
+
+It automatically opens the browser.
+If the provider returns the `verification_uri_complete` parameter, you don't need to enter the code.
+Otherwise, you need to enter the code shown.
+
+If you encounter a problem with the browser, you can change the browser command or skip opening the browser.
+
+```yaml
+# Change the browser command
+- --browser-command=google-chrome
+# Do not open the browser
+- --skip-open-browser
+```
+
+### Authorization Code Flow
+
+It performs the [Authorization Code Flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) when `--grant-type=authcode` is set or the flag is not given.
 
 It starts the local server at port 8000 or 18000 by default.
 You need to register the following redirect URIs to the provider:
@@ -159,17 +180,19 @@ You can change the listening address.
 - --listen-address=127.0.0.1:23456
 ```
 
+The redirect URL defaults to `http://localhost` with the listening port.
+You can override the redirect URL.
+
+```yaml
+- --oidc-redirect-url=http://127.0.0.1:8000/
+- --oidc-redirect-url=http://your-local-hostname:8000/
+```
+
 You can specify a certificate for the local webserver if HTTPS is required by your identity provider.
 
 ```yaml
 - --local-server-cert=localhost.crt
 - --local-server-key=localhost.key
-```
-
-You can change the hostname of redirect URI from the default value `localhost`.
-
-```yaml
-- --oidc-redirect-url-hostname=127.0.0.1
 ```
 
 You can add extra parameters to the authentication request.
@@ -194,12 +217,19 @@ If you encounter a problem with the browser, you can change the browser command 
 - --skip-open-browser
 ```
 
-### Authorization code flow with a keyboard
+### Authorization Code Flow with a keyboard
 
 If you cannot access the browser, instead use the authorization code flow with a keyboard.
 
 ```yaml
 - --grant-type=authcode-keyboard
+```
+
+You need to explicitly set the redirect URL.
+
+```yaml
+- --oidc-redirect-url=urn:ietf:wg:oauth:2.0:oob
+- --oidc-redirect-url=http://localhost
 ```
 
 Kubelogin will show the URL and prompt.
@@ -211,43 +241,15 @@ Open https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&client_id=
 Enter code: YOUR_CODE
 ```
 
-The default of redirect URI is `urn:ietf:wg:oauth:2.0:oob`.
-You can overwrite it.
-
-```yaml
-- oidc-redirect-url-authcode-keyboard=http://localhost
-```
-
 You can add extra parameters to the authentication request.
 
 ```yaml
 - --oidc-auth-request-extra-params=ttl=86400
 ```
 
-### Device authorization grant
+### Resource Owner Password Credentials Grant
 
-Kubelogin performs the [device authorization grant](https://tools.ietf.org/html/rfc8628) when `--grant-type=device-code` is set.
-
-```yaml
-- --grant-type=device-code
-```
-
-It automatically opens the browser.
-If the provider returns the `verification_uri_complete` parameter, you don't need to enter the code.
-Otherwise, you need to enter the code shown.
-
-If you encounter a problem with the browser, you can change the browser command or skip opening the browser.
-
-```yaml
-# Change the browser command
-- --browser-command=google-chrome
-# Do not open the browser
-- --skip-open-browser
-```
-
-### Resource owner password credentials grant
-
-Kubelogin performs the resource owner password credentials grant
+It performs the [Resource Owner Password Credentials Grant](https://datatracker.ietf.org/doc/html/rfc6749#section-4.3)
 when `--grant-type=password` or `--username` is set.
 
 Note that most OIDC providers do not support this grant.
@@ -282,6 +284,16 @@ If the username is not set, kubelogin will show the prompt for the username and 
 Username: foo
 Password:
 ```
+
+### Client Credentials Flow
+
+It performs the [OAuth 2.0 Client Credentials Flow](https://datatracker.ietf.org/doc/html/rfc6749#section-1.3.4) when `--grant-type=client-credentials` is set.
+
+```yaml
+- --grant-type=client-credentials
+```
+
+Per specification, this flow only returns authorization tokens.
 
 ## Run in Docker
 

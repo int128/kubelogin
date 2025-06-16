@@ -7,13 +7,15 @@ import (
 	"time"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
+	"github.com/int128/oauth2cli"
+	"github.com/int128/oauth2dev"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
+
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/pkce"
-	"github.com/int128/oauth2cli"
-	"github.com/int128/oauth2dev"
-	"golang.org/x/oauth2"
 )
 
 type Interface interface {
@@ -22,6 +24,7 @@ type Interface interface {
 	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
 	NegotiatedPKCEMethod() pkce.Method
 	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
+	GetTokenByClientCredentials(ctx context.Context, in GetTokenByClientCredentialsInput) (*oidc.TokenSet, error)
 	GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error)
 	ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error)
@@ -31,15 +34,13 @@ type AuthCodeURLInput struct {
 	State                  string
 	Nonce                  string
 	PKCEParams             pkce.Params
-	RedirectURI            string
 	AuthRequestExtraParams map[string]string
 }
 
 type ExchangeAuthCodeInput struct {
-	Code        string
-	PKCEParams  pkce.Params
-	Nonce       string
-	RedirectURI string
+	Code       string
+	PKCEParams pkce.Params
+	Nonce      string
 }
 
 type GetTokenByAuthCodeInput struct {
@@ -47,11 +48,15 @@ type GetTokenByAuthCodeInput struct {
 	State                  string
 	Nonce                  string
 	PKCEParams             pkce.Params
-	RedirectURLHostname    string
+	RedirectURLHostname    string // DEPRECATED
 	AuthRequestExtraParams map[string]string
 	LocalServerSuccessHTML string
 	LocalServerCertFile    string
 	LocalServerKeyFile     string
+}
+
+type GetTokenByClientCredentialsInput struct {
+	EndpointParams map[string][]string
 }
 
 type client struct {
@@ -118,19 +123,15 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 
 // GetAuthCodeURL returns the URL of authentication request for the authorization code flow.
 func (c *client) GetAuthCodeURL(in AuthCodeURLInput) string {
-	cfg := c.oauth2Config
-	cfg.RedirectURL = in.RedirectURI
 	opts := authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams)
-	return cfg.AuthCodeURL(in.State, opts...)
+	return c.oauth2Config.AuthCodeURL(in.State, opts...)
 }
 
 // ExchangeAuthCode exchanges the authorization code and token.
 func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
-	cfg := c.oauth2Config
-	cfg.RedirectURL = in.RedirectURI
 	opts := tokenRequestOptions(in.PKCEParams)
-	token, err := cfg.Exchange(ctx, in.Code, opts...)
+	token, err := c.oauth2Config.Exchange(ctx, in.Code, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("exchange error: %w", err)
 	}
@@ -168,6 +169,32 @@ func (c *client) GetTokenByROPC(ctx context.Context, username, password string) 
 	token, err := c.oauth2Config.PasswordCredentialsToken(ctx, username, password)
 	if err != nil {
 		return nil, fmt.Errorf("resource owner password credentials flow error: %w", err)
+	}
+	return c.verifyToken(ctx, token, "")
+}
+
+// GetTokenByClientCredentials performs the client credentials flow.
+func (c *client) GetTokenByClientCredentials(ctx context.Context, in GetTokenByClientCredentialsInput) (*oidc.TokenSet, error) {
+	ctx = c.wrapContext(ctx)
+	c.logger.V(1).Infof("%s, %s, %v", c.oauth2Config.ClientID, c.oauth2Config.Endpoint.AuthURL, c.oauth2Config.Scopes)
+
+	config := clientcredentials.Config{
+		ClientID:       c.oauth2Config.ClientID,
+		ClientSecret:   c.oauth2Config.ClientSecret,
+		TokenURL:       c.oauth2Config.Endpoint.TokenURL,
+		Scopes:         c.oauth2Config.Scopes,
+		EndpointParams: in.EndpointParams,
+		AuthStyle:      oauth2.AuthStyleInHeader,
+	}
+	source := config.TokenSource(ctx)
+	token, err := source.Token()
+	if err != nil {
+		return nil, fmt.Errorf("could not acquire token: %w", err)
+	}
+	if c.useAccessToken {
+		return &oidc.TokenSet{
+			IDToken:      token.AccessToken,
+			RefreshToken: token.RefreshToken}, nil
 	}
 	return c.verifyToken(ctx, token, "")
 }

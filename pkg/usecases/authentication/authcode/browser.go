@@ -19,7 +19,7 @@ type BrowserOption struct {
 	BindAddress                []string
 	AuthenticationTimeout      time.Duration
 	OpenURLAfterAuthentication string
-	RedirectURLHostname        string
+	RedirectURLHostname        string // DEPRECATED
 	AuthRequestExtraParams     map[string]string
 	LocalServerCertFile        string
 	LocalServerKeyFile         string

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
@@ -21,7 +22,6 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				AuthCodeBrowserOption: &authcode.BrowserOption{
 					BindAddress:           defaultListenAddress,
 					AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-					RedirectURLHostname:   "localhost",
 				},
 			},
 		},
@@ -61,19 +61,19 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				"--grant-type", "authcode-keyboard",
 			},
 			want: authentication.GrantOptionSet{
-				AuthCodeKeyboardOption: &authcode.KeyboardOption{
-					RedirectURL: oobRedirectURI,
-				},
+				AuthCodeKeyboardOption: &authcode.KeyboardOption{},
 			},
 		},
 		"GrantType=authcode-keyboard with full options": {
 			args: []string{
 				"--grant-type", "authcode-keyboard",
 				"--oidc-redirect-url-authcode-keyboard", "http://localhost",
+				"--oidc-auth-request-extra-params", "ttl=86400",
+				"--oidc-auth-request-extra-params", "reauth=true",
 			},
 			want: authentication.GrantOptionSet{
 				AuthCodeKeyboardOption: &authcode.KeyboardOption{
-					RedirectURL: "http://localhost",
+					AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
 				},
 			},
 		},
@@ -89,6 +89,21 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				ROPCOption: &ropc.Option{
 					Username: "USER",
 					Password: "PASS",
+				},
+			},
+		},
+		"GrantType=client-credentials": {
+			args: []string{
+				"--grant-type", "client-credentials",
+				"--oidc-auth-request-extra-params", "audience=https://example.com/service1",
+				"--oidc-auth-request-extra-params", "jti=myUUID",
+			},
+			want: authentication.GrantOptionSet{
+				ClientCredentialsOption: &client.GetTokenByClientCredentialsInput{
+					EndpointParams: map[string][]string{
+						"audience": []string{"https://example.com/service1"},
+						"jti":      []string{"myUUID"},
+					},
 				},
 			},
 		},
