@@ -13,7 +13,8 @@ Let's see the following steps:
 ## 1. Set up the OIDC provider
 
 Kubelogin supports the authentication flows such as Device Authorization Grant or Authorization Code Flow.
-See the [usage](usage.md) for the details.
+For the details of flows supported in Kubelogin, see the [usage](usage.md).
+For the details of your provider, ask the administrator of your provider.
 
 ## 2. Authenticate with the OpenID Connect Provider
 
