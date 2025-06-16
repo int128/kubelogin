@@ -1,4 +1,4 @@
-package logging
+package transport
 
 import (
 	"net/http"
@@ -12,12 +12,12 @@ const (
 	levelDumpBody    = 3
 )
 
-type Transport struct {
+type WithLogging struct {
 	Base   http.RoundTripper
 	Logger logger.Interface
 }
 
-func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *WithLogging) RoundTrip(req *http.Request) (*http.Response, error) {
 	if !t.Logger.IsEnabled(levelDumpHeaders) {
 		return t.Base.RoundTrip(req)
 	}
