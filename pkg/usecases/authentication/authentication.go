@@ -10,6 +10,7 @@ import (
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/clientcredentials"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 )
@@ -22,6 +23,7 @@ var Set = wire.NewSet(
 	wire.Struct(new(authcode.Keyboard), "*"),
 	wire.Struct(new(ropc.ROPC), "*"),
 	wire.Struct(new(devicecode.DeviceCode), "*"),
+	wire.Struct(new(clientcredentials.ClientCredentials), "*"),
 )
 
 type Interface interface {
@@ -37,10 +39,11 @@ type Input struct {
 }
 
 type GrantOptionSet struct {
-	AuthCodeBrowserOption  *authcode.BrowserOption
-	AuthCodeKeyboardOption *authcode.KeyboardOption
-	ROPCOption             *ropc.Option
-	DeviceCodeOption       *devicecode.Option
+	AuthCodeBrowserOption   *authcode.BrowserOption
+	AuthCodeKeyboardOption  *authcode.KeyboardOption
+	ROPCOption              *ropc.Option
+	DeviceCodeOption        *devicecode.Option
+	ClientCredentialsOption *client.GetTokenByClientCredentialsInput
 }
 
 // Output represents an output DTO of the Authentication use-case.
@@ -52,7 +55,7 @@ type Output struct {
 //
 // If the IDToken is not set, it performs the authentication flow.
 // If the IDToken is valid, it does nothing.
-// If the IDtoken has expired and the RefreshToken is set, it refreshes the token.
+// If the IDToken has expired and the RefreshToken is set, it refreshes the token.
 // If the RefreshToken has expired, it performs the authentication flow.
 //
 // The authentication flow is determined as:
@@ -61,12 +64,13 @@ type Output struct {
 // Otherwise, it performs the resource owner password credentials flow.
 // If the Password is not set, it asks a password by the prompt.
 type Authentication struct {
-	ClientFactory    client.FactoryInterface
-	Logger           logger.Interface
-	AuthCodeBrowser  *authcode.Browser
-	AuthCodeKeyboard *authcode.Keyboard
-	ROPC             *ropc.ROPC
-	DeviceCode       *devicecode.DeviceCode
+	ClientFactory     client.FactoryInterface
+	Logger            logger.Interface
+	AuthCodeBrowser   *authcode.Browser
+	AuthCodeKeyboard  *authcode.Keyboard
+	ROPC              *ropc.ROPC
+	DeviceCode        *devicecode.DeviceCode
+	ClientCredentials *clientcredentials.ClientCredentials
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -110,6 +114,13 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		tokenSet, err := u.DeviceCode.Do(ctx, in.GrantOptionSet.DeviceCodeOption, oidcClient)
 		if err != nil {
 			return nil, fmt.Errorf("device-code error: %w", err)
+		}
+		return &Output{TokenSet: *tokenSet}, nil
+	}
+	if in.GrantOptionSet.ClientCredentialsOption != nil {
+		tokenSet, err := u.ClientCredentials.Do(ctx, in.GrantOptionSet.ClientCredentialsOption, oidcClient)
+		if err != nil {
+			return nil, fmt.Errorf("client-credentials error: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}

@@ -5,11 +5,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/pflag"
+
+	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
-	"github.com/spf13/pflag"
 )
 
 type authenticationOptions struct {
@@ -34,6 +36,7 @@ var allGrantType = strings.Join([]string{
 	"authcode-keyboard",
 	"password",
 	"device-code",
+	"client-credentials",
 }, "|")
 
 func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
@@ -56,6 +59,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
+
 }
 
 func (o *authenticationOptions) expandHomedir() {
@@ -91,6 +95,12 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			SkipOpenBrowser: o.SkipOpenBrowser,
 			BrowserCommand:  o.BrowserCommand,
 		}
+	case o.GrantType == "client-credentials":
+		endpointparams := make(map[string][]string, len(o.AuthRequestExtraParams))
+		for k, v := range o.AuthRequestExtraParams {
+			endpointparams[k] = []string{v}
+		}
+		s.ClientCredentialsOption = &client.GetTokenByClientCredentialsInput{EndpointParams: endpointparams}
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
 	}

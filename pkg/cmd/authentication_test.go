@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
@@ -88,6 +89,21 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				ROPCOption: &ropc.Option{
 					Username: "USER",
 					Password: "PASS",
+				},
+			},
+		},
+		"GrantType=client-credentials": {
+			args: []string{
+				"--grant-type", "client-credentials",
+				"--oidc-auth-request-extra-params", "audience=https://example.com/service1",
+				"--oidc-auth-request-extra-params", "jti=myUUID",
+			},
+			want: authentication.GrantOptionSet{
+				ClientCredentialsOption: &client.GetTokenByClientCredentialsInput{
+					EndpointParams: map[string][]string{
+						"audience": []string{"https://example.com/service1"},
+						"jti":      []string{"myUUID"},
+					},
 				},
 			},
 		},
