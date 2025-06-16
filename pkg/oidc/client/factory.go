@@ -40,16 +40,17 @@ func (f *Factory) New(ctx context.Context, prov oidc.Provider, tlsClientConfig t
 	if err != nil {
 		return nil, fmt.Errorf("could not load the TLS client config: %w", err)
 	}
-	baseTransport := &http.Transport{
-		TLSClientConfig: rawTLSClientConfig,
-		Proxy:           http.ProxyFromEnvironment,
-	}
-	loggingTransport := &transport.WithLogging{
-		Base:   baseTransport,
-		Logger: f.Logger,
-	}
 	httpClient := &http.Client{
-		Transport: loggingTransport,
+		Transport: &transport.WithHeader{
+			Base: &transport.WithLogging{
+				Base: &http.Transport{
+					TLSClientConfig: rawTLSClientConfig,
+					Proxy:           http.ProxyFromEnvironment,
+				},
+				Logger: f.Logger,
+			},
+			RequestHeaders: prov.RequestHeaders,
+		},
 	}
 
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)

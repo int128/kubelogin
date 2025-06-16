@@ -77,29 +77,8 @@ func (c *client) wrapContext(ctx context.Context) context.Context {
 	return ctx
 }
 
-// httpTransportFn is a simple type wrapper for a function to make it usable as
-// [net/http.Transport].
-type httpTransportFn func(req *http.Request) (*http.Response, error)
-
-func (f httpTransportFn) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
-
 // GetTokenByAuthCode performs the authorization code flow.
 func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error) {
-	// Token retrievel fails when an auth code has been retrieved using Azure AD
-	// Single Page Application due to the missing "Origin" header for CORS
-	// validation.
-	//
-	// Since oauthcli does not expose a parameter to set headers directly we
-	// have to use a workaround by wrapping the http transport to set the header
-	// on the request before it is sent.
-	//
-	// Ref: https://github.com/int128/kubelogin/issues/1048
-	origTransport := c.httpClient.Transport
-	c.httpClient.Transport = httpTransportFn(func(req *http.Request) (*http.Response, error) {
-		req.Header.Set("Origin", in.RedirectURLHostname)
-		return origTransport.RoundTrip(req)
-	})
-
 	ctx = c.wrapContext(ctx)
 	config := oauth2cli.Config{
 		OAuth2Config:           c.oauth2Config,

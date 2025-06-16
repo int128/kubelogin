@@ -13,6 +13,7 @@ Flags:
       --oidc-redirect-url string                        [authcode, authcode-keyboard] Redirect URL
       --oidc-extra-scope strings                        Scopes to request to the provider
       --oidc-use-access-token                           Instead of using the id_token, use the access_token to authenticate to Kubernetes
+      --oidc-request-header stringToString              HTTP headers to send with an authentication request (default [])
       --force-refresh                                   If set, refresh the ID token regardless of its expiration time
       --token-cache-dir string                          Path to a directory of the token cache (default "~/.kube/cache/oidc-login")
       --token-cache-storage string                      Storage for the token cache. One of (disk|keyring|none) (default "disk")
@@ -87,6 +88,10 @@ you can enforce the code challenge method by `--oidc-pkce-method`.
 ```
 
 For the most providers, you don't need to set this option explicitly.
+
+### HTTP headers
+
+If your provider requires extra HTTP headers, you can set them by `--oidc-request-header`.
 
 ### CA certificate
 

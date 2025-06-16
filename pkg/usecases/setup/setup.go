@@ -45,6 +45,7 @@ type Input struct {
 	RedirectURL     string
 	ExtraScopes     []string
 	UseAccessToken  bool
+	RequestHeaders  map[string]string
 	PKCEMethod      oidc.PKCEMethod
 	GrantOptionSet  authentication.GrantOptionSet
 	TLSClientConfig tlsclientconfig.Config
@@ -62,6 +63,7 @@ func (u Setup) Do(ctx context.Context, in Input) error {
 			ExtraScopes:    in.ExtraScopes,
 			PKCEMethod:     in.PKCEMethod,
 			UseAccessToken: in.UseAccessToken,
+			RequestHeaders: in.RequestHeaders,
 		},
 		GrantOptionSet:  in.GrantOptionSet,
 		TLSClientConfig: in.TLSClientConfig,
