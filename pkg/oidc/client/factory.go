@@ -12,7 +12,7 @@ import (
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
-	"github.com/int128/kubelogin/pkg/oidc/client/logging"
+	"github.com/int128/kubelogin/pkg/oidc/client/transport"
 	"github.com/int128/kubelogin/pkg/pkce"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig/loader"
@@ -44,7 +44,7 @@ func (f *Factory) New(ctx context.Context, prov oidc.Provider, tlsClientConfig t
 		TLSClientConfig: rawTLSClientConfig,
 		Proxy:           http.ProxyFromEnvironment,
 	}
-	loggingTransport := &logging.Transport{
+	loggingTransport := &transport.WithLogging{
 		Base:   baseTransport,
 		Logger: f.Logger,
 	}

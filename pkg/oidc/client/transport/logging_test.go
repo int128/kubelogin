@@ -1,4 +1,4 @@
-package logging
+package transport
 
 import (
 	"bufio"
@@ -20,7 +20,7 @@ func (t *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.resp, nil
 }
 
-func TestLoggingTransport_RoundTrip(t *testing.T) {
+func TestWithLogging_RoundTrip(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/hello", nil)
 	resp, err := http.ReadResponse(bufio.NewReader(strings.NewReader(`HTTP/1.1 200 OK
 Host: example.com
@@ -35,7 +35,7 @@ dummy`)), req)
 		}
 	}()
 
-	transport := &Transport{
+	transport := &WithLogging{
 		Base:   &mockTransport{resp: resp},
 		Logger: logger.New(t),
 	}
