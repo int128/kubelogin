@@ -10,6 +10,7 @@ Flags:
       --oidc-issuer-url string                          Issuer URL of the provider (mandatory)
       --oidc-client-id string                           Client ID of the provider (mandatory)
       --oidc-client-secret string                       Client secret of the provider
+      --oidc-redirect-url string                        [authcode, authcode-keyboard] Redirect URL
       --oidc-extra-scope strings                        Scopes to request to the provider
       --oidc-use-access-token                           Instead of using the id_token, use the access_token to authenticate to Kubernetes
       --force-refresh                                   If set, refresh the ID token regardless of its expiration time
@@ -29,8 +30,6 @@ Flags:
       --local-server-cert string                        [authcode] Certificate path for the local server
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
-      --oidc-redirect-url-hostname string               [authcode] Hostname of the redirect URL (default "localhost")
-      --oidc-redirect-url-authcode-keyboard string      [authcode-keyboard] Redirect URL (default "urn:ietf:wg:oauth:2.0:oob")
       --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
       --password string                                 [password] Password for resource owner password credentials grant
@@ -160,17 +159,19 @@ You can change the listening address.
 - --listen-address=127.0.0.1:23456
 ```
 
+The redirect URL defaults to `http://localhost` with the listening port.
+You can override the redirect URL.
+
+```yaml
+- --oidc-redirect-url=http://127.0.0.1:8000/
+- --oidc-redirect-url=http://your-local-hostname:8000/
+```
+
 You can specify a certificate for the local webserver if HTTPS is required by your identity provider.
 
 ```yaml
 - --local-server-cert=localhost.crt
 - --local-server-key=localhost.key
-```
-
-You can change the hostname of redirect URI from the default value `localhost`.
-
-```yaml
-- --oidc-redirect-url-hostname=127.0.0.1
 ```
 
 You can add extra parameters to the authentication request.
@@ -203,6 +204,13 @@ If you cannot access the browser, instead use the authorization code flow with a
 - --grant-type=authcode-keyboard
 ```
 
+You need to explicitly set the redirect URL.
+
+```yaml
+- --oidc-redirect-url=urn:ietf:wg:oauth:2.0:oob
+- --oidc-redirect-url=http://localhost
+```
+
 Kubelogin will show the URL and prompt.
 Open the URL in the browser and then copy the code shown.
 
@@ -210,13 +218,6 @@ Open the URL in the browser and then copy the code shown.
 % kubectl get pods
 Open https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&client_id=...
 Enter code: YOUR_CODE
-```
-
-The default of redirect URI is `urn:ietf:wg:oauth:2.0:oob`.
-You can overwrite it.
-
-```yaml
-- oidc-redirect-url-authcode-keyboard=http://localhost
 ```
 
 You can add extra parameters to the authentication request.

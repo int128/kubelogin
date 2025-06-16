@@ -49,14 +49,20 @@ type MockInterface_AddFlags_Call struct {
 }
 
 // AddFlags is a helper method to define mock.On call
-//   - f
+//   - f *pflag.FlagSet
 func (_e *MockInterface_Expecter) AddFlags(f interface{}) *MockInterface_AddFlags_Call {
 	return &MockInterface_AddFlags_Call{Call: _e.mock.On("AddFlags", f)}
 }
 
 func (_c *MockInterface_AddFlags_Call) Run(run func(f *pflag.FlagSet)) *MockInterface_AddFlags_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*pflag.FlagSet))
+		var arg0 *pflag.FlagSet
+		if args[0] != nil {
+			arg0 = args[0].(*pflag.FlagSet)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -94,14 +100,20 @@ type MockInterface_IsEnabled_Call struct {
 }
 
 // IsEnabled is a helper method to define mock.On call
-//   - level
+//   - level int
 func (_e *MockInterface_Expecter) IsEnabled(level interface{}) *MockInterface_IsEnabled_Call {
 	return &MockInterface_IsEnabled_Call{Call: _e.mock.On("IsEnabled", level)}
 }
 
 func (_c *MockInterface_IsEnabled_Call) Run(run func(level int)) *MockInterface_IsEnabled_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int))
+		var arg0 int
+		if args[0] != nil {
+			arg0 = args[0].(int)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -133,8 +145,8 @@ type MockInterface_Printf_Call struct {
 }
 
 // Printf is a helper method to define mock.On call
-//   - format
-//   - args
+//   - format string
+//   - args ...interface{}
 func (_e *MockInterface_Expecter) Printf(format interface{}, args ...interface{}) *MockInterface_Printf_Call {
 	return &MockInterface_Printf_Call{Call: _e.mock.On("Printf",
 		append([]interface{}{format}, args...)...)}
@@ -142,8 +154,20 @@ func (_e *MockInterface_Expecter) Printf(format interface{}, args ...interface{}
 
 func (_c *MockInterface_Printf_Call) Run(run func(format string, args ...interface{})) *MockInterface_Printf_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := args[1].([]interface{})
-		run(args[0].(string), variadicArgs...)
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 []interface{}
+		var variadicArgs []interface{}
+		if len(args) > 1 {
+			variadicArgs = args[1].([]interface{})
+		}
+		arg1 = variadicArgs
+		run(
+			arg0,
+			arg1...,
+		)
 	})
 	return _c
 }
@@ -183,14 +207,20 @@ type MockInterface_V_Call struct {
 }
 
 // V is a helper method to define mock.On call
-//   - level
+//   - level int
 func (_e *MockInterface_Expecter) V(level interface{}) *MockInterface_V_Call {
 	return &MockInterface_V_Call{Call: _e.mock.On("V", level)}
 }
 
 func (_c *MockInterface_V_Call) Run(run func(level int)) *MockInterface_V_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int))
+		var arg0 int
+		if args[0] != nil {
+			arg0 = args[0].(int)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -249,8 +279,8 @@ type MockVerbose_Infof_Call struct {
 }
 
 // Infof is a helper method to define mock.On call
-//   - format
-//   - args
+//   - format string
+//   - args ...interface{}
 func (_e *MockVerbose_Expecter) Infof(format interface{}, args ...interface{}) *MockVerbose_Infof_Call {
 	return &MockVerbose_Infof_Call{Call: _e.mock.On("Infof",
 		append([]interface{}{format}, args...)...)}
@@ -258,8 +288,20 @@ func (_e *MockVerbose_Expecter) Infof(format interface{}, args ...interface{}) *
 
 func (_c *MockVerbose_Infof_Call) Run(run func(format string, args ...interface{})) *MockVerbose_Infof_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := args[1].([]interface{})
-		run(args[0].(string), variadicArgs...)
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 []interface{}
+		var variadicArgs []interface{}
+		if len(args) > 1 {
+			variadicArgs = args[1].([]interface{})
+		}
+		arg1 = variadicArgs
+		run(
+			arg0,
+			arg1...,
+		)
 	})
 	return _c
 }
@@ -318,8 +360,8 @@ type mockgoLogger_Printf_Call struct {
 }
 
 // Printf is a helper method to define mock.On call
-//   - format
-//   - v
+//   - format string
+//   - v ...interface{}
 func (_e *mockgoLogger_Expecter) Printf(format interface{}, v ...interface{}) *mockgoLogger_Printf_Call {
 	return &mockgoLogger_Printf_Call{Call: _e.mock.On("Printf",
 		append([]interface{}{format}, v...)...)}
@@ -327,8 +369,20 @@ func (_e *mockgoLogger_Expecter) Printf(format interface{}, v ...interface{}) *m
 
 func (_c *mockgoLogger_Printf_Call) Run(run func(format string, v ...interface{})) *mockgoLogger_Printf_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := args[1].([]interface{})
-		run(args[0].(string), variadicArgs...)
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 []interface{}
+		var variadicArgs []interface{}
+		if len(args) > 1 {
+			variadicArgs = args[1].([]interface{})
+		}
+		arg1 = variadicArgs
+		run(
+			arg0,
+			arg1...,
+		)
 	})
 	return _c
 }

@@ -60,14 +60,20 @@ type MockInterface_Open_Call struct {
 }
 
 // Open is a helper method to define mock.On call
-//   - url
+//   - url string
 func (_e *MockInterface_Expecter) Open(url interface{}) *MockInterface_Open_Call {
 	return &MockInterface_Open_Call{Call: _e.mock.On("Open", url)}
 }
 
 func (_c *MockInterface_Open_Call) Run(run func(url string)) *MockInterface_Open_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -105,16 +111,32 @@ type MockInterface_OpenCommand_Call struct {
 }
 
 // OpenCommand is a helper method to define mock.On call
-//   - ctx
-//   - url
-//   - command
+//   - ctx context.Context
+//   - url string
+//   - command string
 func (_e *MockInterface_Expecter) OpenCommand(ctx interface{}, url interface{}, command interface{}) *MockInterface_OpenCommand_Call {
 	return &MockInterface_OpenCommand_Call{Call: _e.mock.On("OpenCommand", ctx, url, command)}
 }
 
 func (_c *MockInterface_OpenCommand_Call) Run(run func(ctx context.Context, url string, command string)) *MockInterface_OpenCommand_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }

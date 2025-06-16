@@ -15,7 +15,6 @@ const keyboardPrompt = "Enter code: "
 
 type KeyboardOption struct {
 	AuthRequestExtraParams map[string]string
-	RedirectURL            string
 }
 
 // Keyboard provides the authorization code flow with keyboard interactive.
@@ -42,7 +41,6 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 		State:                  state,
 		Nonce:                  nonce,
 		PKCEParams:             pkceParams,
-		RedirectURI:            o.RedirectURL,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
 	})
 	u.Logger.Printf("Please visit the following URL in your browser: %s", authCodeURL)
@@ -53,10 +51,9 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 
 	u.Logger.V(1).Infof("exchanging the code and token")
 	tokenSet, err := oidcClient.ExchangeAuthCode(ctx, client.ExchangeAuthCodeInput{
-		Code:        code,
-		PKCEParams:  pkceParams,
-		Nonce:       nonce,
-		RedirectURI: o.RedirectURL,
+		Code:       code,
+		PKCEParams: pkceParams,
+		Nonce:      nonce,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("could not exchange the authorization code: %w", err)
