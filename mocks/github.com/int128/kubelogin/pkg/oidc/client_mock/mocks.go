@@ -399,15 +399,26 @@ type MockInterface_GetTokenByClientCredentials_Call struct {
 }
 
 // GetTokenByClientCredentials is a helper method to define mock.On call
-//   - ctx
-//   - in
+//   - ctx context.Context
+//   - in client.GetTokenByClientCredentialsInput
 func (_e *MockInterface_Expecter) GetTokenByClientCredentials(ctx interface{}, in interface{}) *MockInterface_GetTokenByClientCredentials_Call {
 	return &MockInterface_GetTokenByClientCredentials_Call{Call: _e.mock.On("GetTokenByClientCredentials", ctx, in)}
 }
 
 func (_c *MockInterface_GetTokenByClientCredentials_Call) Run(run func(ctx context.Context, in client.GetTokenByClientCredentialsInput)) *MockInterface_GetTokenByClientCredentials_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(client.GetTokenByClientCredentialsInput))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 client.GetTokenByClientCredentialsInput
+		if args[1] != nil {
+			arg1 = args[1].(client.GetTokenByClientCredentialsInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
