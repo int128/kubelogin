@@ -52,8 +52,8 @@ type mocktestingLogger_Logf_Call struct {
 }
 
 // Logf is a helper method to define mock.On call
-//   - format
-//   - v
+//   - format string
+//   - v ...interface{}
 func (_e *mocktestingLogger_Expecter) Logf(format interface{}, v ...interface{}) *mocktestingLogger_Logf_Call {
 	return &mocktestingLogger_Logf_Call{Call: _e.mock.On("Logf",
 		append([]interface{}{format}, v...)...)}
@@ -61,8 +61,20 @@ func (_e *mocktestingLogger_Expecter) Logf(format interface{}, v ...interface{})
 
 func (_c *mocktestingLogger_Logf_Call) Run(run func(format string, v ...interface{})) *mocktestingLogger_Logf_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := args[1].([]interface{})
-		run(args[0].(string), variadicArgs...)
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 []interface{}
+		var variadicArgs []interface{}
+		if len(args) > 1 {
+			variadicArgs = args[1].([]interface{})
+		}
+		arg1 = variadicArgs
+		run(
+			arg0,
+			arg1...,
+		)
 	})
 	return _c
 }

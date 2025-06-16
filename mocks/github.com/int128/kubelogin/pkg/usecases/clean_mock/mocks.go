@@ -61,15 +61,26 @@ type MockInterface_Do_Call struct {
 }
 
 // Do is a helper method to define mock.On call
-//   - ctx
-//   - in
+//   - ctx context.Context
+//   - in clean.Input
 func (_e *MockInterface_Expecter) Do(ctx interface{}, in interface{}) *MockInterface_Do_Call {
 	return &MockInterface_Do_Call{Call: _e.mock.On("Do", ctx, in)}
 }
 
 func (_c *MockInterface_Do_Call) Run(run func(ctx context.Context, in clean.Input)) *MockInterface_Do_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(clean.Input))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 clean.Input
+		if args[1] != nil {
+			arg1 = args[1].(clean.Input)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

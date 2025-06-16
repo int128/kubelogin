@@ -70,16 +70,32 @@ type MockInterface_GetCurrentAuthProvider_Call struct {
 }
 
 // GetCurrentAuthProvider is a helper method to define mock.On call
-//   - explicitFilename
-//   - contextName
-//   - userName
+//   - explicitFilename string
+//   - contextName kubeconfig.ContextName
+//   - userName kubeconfig.UserName
 func (_e *MockInterface_Expecter) GetCurrentAuthProvider(explicitFilename interface{}, contextName interface{}, userName interface{}) *MockInterface_GetCurrentAuthProvider_Call {
 	return &MockInterface_GetCurrentAuthProvider_Call{Call: _e.mock.On("GetCurrentAuthProvider", explicitFilename, contextName, userName)}
 }
 
 func (_c *MockInterface_GetCurrentAuthProvider_Call) Run(run func(explicitFilename string, contextName kubeconfig.ContextName, userName kubeconfig.UserName)) *MockInterface_GetCurrentAuthProvider_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(kubeconfig.ContextName), args[2].(kubeconfig.UserName))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 kubeconfig.ContextName
+		if args[1] != nil {
+			arg1 = args[1].(kubeconfig.ContextName)
+		}
+		var arg2 kubeconfig.UserName
+		if args[2] != nil {
+			arg2 = args[2].(kubeconfig.UserName)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }

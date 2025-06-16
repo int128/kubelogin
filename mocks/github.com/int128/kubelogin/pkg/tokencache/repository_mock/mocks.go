@@ -62,14 +62,20 @@ type MockInterface_DeleteAll_Call struct {
 }
 
 // DeleteAll is a helper method to define mock.On call
-//   - config
+//   - config tokencache.Config
 func (_e *MockInterface_Expecter) DeleteAll(config interface{}) *MockInterface_DeleteAll_Call {
 	return &MockInterface_DeleteAll_Call{Call: _e.mock.On("DeleteAll", config)}
 }
 
 func (_c *MockInterface_DeleteAll_Call) Run(run func(config tokencache.Config)) *MockInterface_DeleteAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(tokencache.Config))
+		var arg0 tokencache.Config
+		if args[0] != nil {
+			arg0 = args[0].(tokencache.Config)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -118,15 +124,26 @@ type MockInterface_FindByKey_Call struct {
 }
 
 // FindByKey is a helper method to define mock.On call
-//   - config
-//   - key
+//   - config tokencache.Config
+//   - key tokencache.Key
 func (_e *MockInterface_Expecter) FindByKey(config interface{}, key interface{}) *MockInterface_FindByKey_Call {
 	return &MockInterface_FindByKey_Call{Call: _e.mock.On("FindByKey", config, key)}
 }
 
 func (_c *MockInterface_FindByKey_Call) Run(run func(config tokencache.Config, key tokencache.Key)) *MockInterface_FindByKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(tokencache.Config), args[1].(tokencache.Key))
+		var arg0 tokencache.Config
+		if args[0] != nil {
+			arg0 = args[0].(tokencache.Config)
+		}
+		var arg1 tokencache.Key
+		if args[1] != nil {
+			arg1 = args[1].(tokencache.Key)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -175,15 +192,26 @@ type MockInterface_Lock_Call struct {
 }
 
 // Lock is a helper method to define mock.On call
-//   - config
-//   - key
+//   - config tokencache.Config
+//   - key tokencache.Key
 func (_e *MockInterface_Expecter) Lock(config interface{}, key interface{}) *MockInterface_Lock_Call {
 	return &MockInterface_Lock_Call{Call: _e.mock.On("Lock", config, key)}
 }
 
 func (_c *MockInterface_Lock_Call) Run(run func(config tokencache.Config, key tokencache.Key)) *MockInterface_Lock_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(tokencache.Config), args[1].(tokencache.Key))
+		var arg0 tokencache.Config
+		if args[0] != nil {
+			arg0 = args[0].(tokencache.Config)
+		}
+		var arg1 tokencache.Key
+		if args[1] != nil {
+			arg1 = args[1].(tokencache.Key)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -221,16 +249,32 @@ type MockInterface_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//   - config
-//   - key
-//   - tokenSet
+//   - config tokencache.Config
+//   - key tokencache.Key
+//   - tokenSet oidc.TokenSet
 func (_e *MockInterface_Expecter) Save(config interface{}, key interface{}, tokenSet interface{}) *MockInterface_Save_Call {
 	return &MockInterface_Save_Call{Call: _e.mock.On("Save", config, key, tokenSet)}
 }
 
 func (_c *MockInterface_Save_Call) Run(run func(config tokencache.Config, key tokencache.Key, tokenSet oidc.TokenSet)) *MockInterface_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(tokencache.Config), args[1].(tokencache.Key), args[2].(oidc.TokenSet))
+		var arg0 tokencache.Config
+		if args[0] != nil {
+			arg0 = args[0].(tokencache.Config)
+		}
+		var arg1 tokencache.Key
+		if args[1] != nil {
+			arg1 = args[1].(tokencache.Key)
+		}
+		var arg2 oidc.TokenSet
+		if args[2] != nil {
+			arg2 = args[2].(oidc.TokenSet)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
