@@ -136,15 +136,36 @@ If a value in the following options begins with a tilde character `~`, it is exp
 
 Kubelogin support the following flows:
 
-- [Authorization code flow](#authorization-code-flow)
-- [Authorization code flow with a keyboard](#authorization-code-flow-with-a-keyboard)
-- [Device authorization grant](#device-authorization-grant)
-- [Resource owner password credentials grant](#resource-owner-password-credentials-grant)
-- [Client Credentials flow](#client-credentials-flow)
+- [Device Authorization Grant](#device-authorization-grant)
+- [Authorization Code Flow](#authorization-code-flow)
+- [Authorization Code Flow with a Keyboard](#authorization-code-flow-with-a-keyboard)
+- [Resource Owner Password Credentials Grant](#resource-owner-password-credentials-grant)
+- [Client Credentials Flow](#client-credentials-flow)
 
-### Authorization code flow
+### Device Authorization Grant
 
-Kubelogin performs the [authorization code flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) by default.
+It performs the [Device Authorization Grant (RFC 8628)](https://tools.ietf.org/html/rfc8628) when `--grant-type=device-code` is set.
+
+```yaml
+- --grant-type=device-code
+```
+
+It automatically opens the browser.
+If the provider returns the `verification_uri_complete` parameter, you don't need to enter the code.
+Otherwise, you need to enter the code shown.
+
+If you encounter a problem with the browser, you can change the browser command or skip opening the browser.
+
+```yaml
+# Change the browser command
+- --browser-command=google-chrome
+# Do not open the browser
+- --skip-open-browser
+```
+
+### Authorization Code Flow
+
+It performs the [Authorization Code Flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) when `--grant-type=authcode` is set or the flag is not given.
 
 It starts the local server at port 8000 or 18000 by default.
 You need to register the following redirect URIs to the provider:
@@ -196,7 +217,7 @@ If you encounter a problem with the browser, you can change the browser command 
 - --skip-open-browser
 ```
 
-### Authorization code flow with a keyboard
+### Authorization Code Flow with a keyboard
 
 If you cannot access the browser, instead use the authorization code flow with a keyboard.
 
@@ -226,30 +247,9 @@ You can add extra parameters to the authentication request.
 - --oidc-auth-request-extra-params=ttl=86400
 ```
 
-### Device authorization grant
+### Resource Owner Password Credentials Grant
 
-Kubelogin performs the [device authorization grant](https://tools.ietf.org/html/rfc8628) when `--grant-type=device-code` is set.
-
-```yaml
-- --grant-type=device-code
-```
-
-It automatically opens the browser.
-If the provider returns the `verification_uri_complete` parameter, you don't need to enter the code.
-Otherwise, you need to enter the code shown.
-
-If you encounter a problem with the browser, you can change the browser command or skip opening the browser.
-
-```yaml
-# Change the browser command
-- --browser-command=google-chrome
-# Do not open the browser
-- --skip-open-browser
-```
-
-### Resource owner password credentials grant
-
-Kubelogin performs the resource owner password credentials grant
+It performs the [Resource Owner Password Credentials Grant](https://datatracker.ietf.org/doc/html/rfc6749#section-4.3)
 when `--grant-type=password` or `--username` is set.
 
 Note that most OIDC providers do not support this grant.
@@ -287,7 +287,7 @@ Password:
 
 ### Client Credentials Flow
 
-Kubelogin performs the [OAuth 2.0 client credentials flow](https://datatracker.ietf.org/doc/html/rfc6749#section-1.3.4) when `--grant-type=client-credentials` is set.
+It performs the [OAuth 2.0 Client Credentials Flow](https://datatracker.ietf.org/doc/html/rfc6749#section-1.3.4) when `--grant-type=client-credentials` is set.
 
 ```yaml
 - --grant-type=client-credentials
