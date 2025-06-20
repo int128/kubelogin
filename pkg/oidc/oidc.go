@@ -18,6 +18,7 @@ type Provider struct {
 	RedirectURL    string   // optional
 	PKCEMethod     PKCEMethod
 	UseAccessToken bool
+	RequestHeaders map[string]string
 }
 
 // PKCEMethod represents a preferred method of PKCE.
