@@ -686,8 +686,8 @@ github.com/uudashr/gocognit v1.2.0 h1:3BU9aMr1xbhPlvJLSydKwdLN3tEUUrzPSSM8S4hDYR
 github.com/uudashr/gocognit v1.2.0/go.mod h1:k/DdKPI6XBZO1q7HgoV2juESI2/Ofj9AcHPZhBBdrTU=
 github.com/uudashr/iface v1.3.1 h1:bA51vmVx1UIhiIsQFSNq6GZ6VPTk3WNMZgRiCe9R29U=
 github.com/uudashr/iface v1.3.1/go.mod h1:4QvspiRd3JLPAEXBQ9AiZpLbJlrWWgRChOKDJEuQTdg=
-github.com/vektra/mockery/v3 v3.4.0 h1:PqaVrJASwCeW+zuLIIrTD1ripo7SZlUqOi+uVtU4RLw=
-github.com/vektra/mockery/v3 v3.4.0/go.mod h1:nHEhwwFt+3/CD3XdeklPWnRpDL96KNZgRiGuMPZNjN8=
+github.com/vektra/mockery/v3 v3.5.0 h1:BatbjYJLL6P/h0Jkb/+6REJaqaqp8eTbFE8uwQtt11E=
+github.com/vektra/mockery/v3 v3.5.0/go.mod h1:nHEhwwFt+3/CD3XdeklPWnRpDL96KNZgRiGuMPZNjN8=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f h1:J9EGpcZtP0E/raorCMxlFGSTBrsSlaDGf3jU/qvAE2c=
