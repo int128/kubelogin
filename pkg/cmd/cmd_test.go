@@ -29,7 +29,6 @@ func TestCmd_Run(t *testing.T) {
 		AuthCodeBrowserOption: &authcode.BrowserOption{
 			BindAddress:           defaultListenAddress,
 			AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-			RedirectURLHostname:   "localhost",
 		},
 	}
 
@@ -130,6 +129,7 @@ func TestCmd_Run(t *testing.T) {
 					"--oidc-client-secret", "YOUR_CLIENT_SECRET",
 					"--oidc-extra-scope", "email",
 					"--oidc-extra-scope", "profile",
+					"--oidc-request-header", "Origin=localhost:8080",
 					"--token-cache-storage", "keyring",
 					"-v1",
 				},
@@ -139,6 +139,9 @@ func TestCmd_Run(t *testing.T) {
 						ClientID:     "YOUR_CLIENT_ID",
 						ClientSecret: "YOUR_CLIENT_SECRET",
 						ExtraScopes:  []string{"email", "profile"},
+						RequestHeaders: map[string]string{
+							"Origin": "localhost:8080",
+						},
 					},
 					TokenCacheConfig: tokencache.Config{
 						Directory: filepath.Join(userHomeDir, ".kube/cache/oidc-login"),
@@ -188,7 +191,6 @@ func TestCmd_Run(t *testing.T) {
 						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:           defaultListenAddress,
 							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
-							RedirectURLHostname:   "localhost",
 							LocalServerCertFile:   filepath.Join(userHomeDir, ".kube/oidc-server.crt"),
 							LocalServerKeyFile:    filepath.Join(userHomeDir, ".kube/oidc-server.key"),
 						},

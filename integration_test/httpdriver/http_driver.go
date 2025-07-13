@@ -44,7 +44,11 @@ func (c *client) Open(url string) error {
 		c.t.Errorf("could not send a request: %s", err)
 		return nil
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			c.t.Errorf("could not close response body: %s", err)
+		}
+	}()
 	if resp.StatusCode != 200 {
 		c.t.Errorf("StatusCode wants 200 but %d", resp.StatusCode)
 	}

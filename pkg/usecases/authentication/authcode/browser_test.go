@@ -28,7 +28,6 @@ func TestBrowser_Do(t *testing.T) {
 			LocalServerCertFile:        "/path/to/local-server-cert",
 			LocalServerKeyFile:         "/path/to/local-server-key",
 			OpenURLAfterAuthentication: "https://example.com/success.html",
-			RedirectURLHostname:        "localhost",
 			AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
 		}
 		mockClient := client_mock.NewMockInterface(t)
@@ -41,9 +40,6 @@ func TestBrowser_Do(t *testing.T) {
 				}
 				if diff := cmp.Diff(BrowserRedirectHTML("https://example.com/success.html"), in.LocalServerSuccessHTML); diff != "" {
 					t.Errorf("LocalServerSuccessHTML mismatch (-want +got):\n%s", diff)
-				}
-				if diff := cmp.Diff(o.RedirectURLHostname, in.RedirectURLHostname); diff != "" {
-					t.Errorf("RedirectURLHostname mismatch (-want +got):\n%s", diff)
 				}
 				if diff := cmp.Diff(o.AuthRequestExtraParams, in.AuthRequestExtraParams); diff != "" {
 					t.Errorf("AuthRequestExtraParams mismatch (-want +got):\n%s", diff)

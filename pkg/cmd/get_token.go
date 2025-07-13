@@ -16,8 +16,10 @@ type getTokenOptions struct {
 	IssuerURL             string
 	ClientID              string
 	ClientSecret          string
+	RedirectURL           string
 	ExtraScopes           []string
 	UseAccessToken        bool
+	RequestHeaders        map[string]string
 	tokenCacheOptions     tokenCacheOptions
 	tlsOptions            tlsOptions
 	pkceOptions           pkceOptions
@@ -29,8 +31,10 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.IssuerURL, "oidc-issuer-url", "", "Issuer URL of the provider (mandatory)")
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider (mandatory)")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
+	f.StringVar(&o.RedirectURL, "oidc-redirect-url", "", "[authcode, authcode-keyboard] Redirect URL")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
 	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
+	f.StringToStringVar(&o.RequestHeaders, "oidc-request-header", nil, "HTTP headers to send with an authentication request")
 	f.BoolVar(&o.ForceRefresh, "force-refresh", false, "If set, refresh the ID token regardless of its expiration time")
 	o.tokenCacheOptions.addFlags(f)
 	o.tlsOptions.addFlags(f)
@@ -80,14 +84,20 @@ func (cmd *GetToken) New() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("get-token: %w", err)
 			}
+			redirectURL := o.RedirectURL
+			if o.authenticationOptions.RedirectURLAuthCodeKeyboard != "" {
+				redirectURL = o.authenticationOptions.RedirectURLAuthCodeKeyboard
+			}
 			in := credentialplugin.Input{
 				Provider: oidc.Provider{
 					IssuerURL:      o.IssuerURL,
 					ClientID:       o.ClientID,
 					ClientSecret:   o.ClientSecret,
+					RedirectURL:    redirectURL,
 					PKCEMethod:     pkceMethod,
 					UseAccessToken: o.UseAccessToken,
 					ExtraScopes:    o.ExtraScopes,
+					RequestHeaders: o.RequestHeaders,
 				},
 				ForceRefresh:     o.ForceRefresh,
 				TokenCacheConfig: tokenCacheConfig,

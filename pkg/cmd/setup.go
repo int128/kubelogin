@@ -15,8 +15,10 @@ type setupOptions struct {
 	IssuerURL             string
 	ClientID              string
 	ClientSecret          string
+	RedirectURL           string
 	ExtraScopes           []string
 	UseAccessToken        bool
+	RequestHeaders        map[string]string
 	tlsOptions            tlsOptions
 	pkceOptions           pkceOptions
 	authenticationOptions authenticationOptions
@@ -26,8 +28,10 @@ func (o *setupOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.IssuerURL, "oidc-issuer-url", "", "Issuer URL of the provider")
 	f.StringVar(&o.ClientID, "oidc-client-id", "", "Client ID of the provider")
 	f.StringVar(&o.ClientSecret, "oidc-client-secret", "", "Client secret of the provider")
+	f.StringVar(&o.RedirectURL, "oidc-redirect-url", "", "[authcode, authcode-keyboard] Redirect URL")
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
 	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
+	f.StringToStringVar(&o.RequestHeaders, "oidc-request-header", nil, "HTTP headers to send with an authentication request")
 	o.tlsOptions.addFlags(f)
 	o.pkceOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
@@ -74,8 +78,10 @@ func (cmd *Setup) New() *cobra.Command {
 				IssuerURL:       o.IssuerURL,
 				ClientID:        o.ClientID,
 				ClientSecret:    o.ClientSecret,
+				RedirectURL:     o.RedirectURL,
 				ExtraScopes:     o.ExtraScopes,
 				UseAccessToken:  o.UseAccessToken,
+				RequestHeaders:  o.RequestHeaders,
 				PKCEMethod:      pkceMethod,
 				GrantOptionSet:  grantOptionSet,
 				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
