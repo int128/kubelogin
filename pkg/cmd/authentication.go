@@ -25,6 +25,7 @@ type authenticationOptions struct {
 	OpenURLAfterAuthentication  string
 	RedirectURLHostname         string // DEPRECATED
 	RedirectURLAuthCodeKeyboard string // DEPRECATED
+	AuthRequestAccessType       string
 	AuthRequestExtraParams      map[string]string
 	Username                    string
 	Password                    string
@@ -56,10 +57,10 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	if err := f.MarkDeprecated("oidc-redirect-url-authcode-keyboard", "use --oidc-redirect-url instead."); err != nil {
 		panic(err)
 	}
+	f.StringVar(&o.AuthRequestAccessType, "oidc-access-type", "offline", "[authcode, authcode-keyboard] Access type of the authentication request")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
-
 }
 
 func (o *authenticationOptions) expandHomedir() {
@@ -79,10 +80,12 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			LocalServerKeyFile:         o.LocalServerKeyFile,
 			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,
 			RedirectURLHostname:        o.RedirectURLHostname,
+			AuthRequestAccessType:      o.AuthRequestAccessType,
 			AuthRequestExtraParams:     o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "authcode-keyboard":
 		s.AuthCodeKeyboardOption = &authcode.KeyboardOption{
+			AuthRequestAccessType:  o.AuthRequestAccessType,
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):

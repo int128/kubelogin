@@ -15,6 +15,7 @@ type AuthCodeURLInput struct {
 	State                  string
 	Nonce                  string
 	PKCEParams             pkce.Params
+	AccessType             string
 	AuthRequestExtraParams map[string]string
 }
 
@@ -78,8 +79,10 @@ func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput)
 
 func authorizationRequestOptions(in AuthCodeURLInput) []oauth2.AuthCodeOption {
 	opts := []oauth2.AuthCodeOption{
-		oauth2.AccessTypeOffline,
 		gooidc.Nonce(in.Nonce),
+	}
+	if in.AccessType != "" {
+		opts = append(opts, oauth2.SetAuthURLParam("access_type", in.AccessType))
 	}
 	if pkceOpt := in.PKCEParams.AuthCodeOption(); pkceOpt != nil {
 		opts = append(opts, pkceOpt)
