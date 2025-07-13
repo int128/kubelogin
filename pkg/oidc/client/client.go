@@ -28,14 +28,13 @@ type Interface interface {
 }
 
 type client struct {
-	httpClient                  *http.Client
-	provider                    *gooidc.Provider
-	oauth2Config                oauth2.Config
-	clock                       clock.Interface
-	logger                      logger.Interface
-	negotiatedPKCEMethod        pkce.Method
-	deviceAuthorizationEndpoint string
-	useAccessToken              bool
+	httpClient           *http.Client
+	provider             *gooidc.Provider
+	oauth2Config         oauth2.Config
+	clock                clock.Interface
+	logger               logger.Interface
+	negotiatedPKCEMethod pkce.Method
+	useAccessToken       bool
 }
 
 func (c *client) wrapContext(ctx context.Context) context.Context {
