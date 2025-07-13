@@ -11,13 +11,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type authCodeInterface interface {
-	NegotiatedPKCEMethod() pkce.Method
-	GetAuthCodeURL(in AuthCodeURLInput) string
-	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
-	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
-}
-
 type AuthCodeURLInput struct {
 	State                  string
 	Nonce                  string

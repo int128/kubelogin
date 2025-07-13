@@ -7,20 +7,22 @@ import (
 	"time"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
-	"golang.org/x/oauth2"
-
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/pkce"
+	"github.com/int128/oauth2dev"
+	"golang.org/x/oauth2"
 )
 
 type Interface interface {
-	authCodeInterface
-	ropcInterface
-	clientCredentialsInterface
-	deviceCodeInterface
-	Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error)
+	GetAuthCodeURL(in AuthCodeURLInput) string
+	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
+	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
+	NegotiatedPKCEMethod() pkce.Method
+	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
+	GetTokenByClientCredentials(ctx context.Context, in GetTokenByClientCredentialsInput) (*oidc.TokenSet, error)
+	GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error)
 }
 
 type client struct {

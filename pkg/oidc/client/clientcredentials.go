@@ -9,10 +9,6 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-type clientCredentialsInterface interface {
-	GetTokenByClientCredentials(ctx context.Context, in GetTokenByClientCredentialsInput) (*oidc.TokenSet, error)
-}
-
 type GetTokenByClientCredentialsInput struct {
 	EndpointParams map[string][]string
 }

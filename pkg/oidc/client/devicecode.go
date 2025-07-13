@@ -9,11 +9,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type deviceCodeInterface interface {
-	GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error)
-	ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error)
-}
-
 // GetDeviceAuthorization initializes the device authorization code challenge
 func (c *client) GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error) {
 	ctx = c.wrapContext(ctx)
