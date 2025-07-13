@@ -56,10 +56,9 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	if err := f.MarkDeprecated("oidc-redirect-url-authcode-keyboard", "use --oidc-redirect-url instead."); err != nil {
 		panic(err)
 	}
-	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard] Extra query parameters to send with an authentication request")
+	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
-
 }
 
 func (o *authenticationOptions) expandHomedir() {
