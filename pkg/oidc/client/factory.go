@@ -62,10 +62,6 @@ func (f *Factory) New(ctx context.Context, prov oidc.Provider, tlsClientConfig t
 	if err != nil {
 		return nil, fmt.Errorf("could not determine supported PKCE methods: %w", err)
 	}
-	deviceAuthorizationEndpoint, err := extractDeviceAuthorizationEndpoint(provider)
-	if err != nil {
-		return nil, fmt.Errorf("could not determine device authorization endpoint: %w", err)
-	}
 	return &client{
 		httpClient: httpClient,
 		provider:   provider,
@@ -76,11 +72,10 @@ func (f *Factory) New(ctx context.Context, prov oidc.Provider, tlsClientConfig t
 			RedirectURL:  prov.RedirectURL,
 			Scopes:       append(prov.ExtraScopes, gooidc.ScopeOpenID),
 		},
-		clock:                       f.Clock,
-		logger:                      f.Logger,
-		negotiatedPKCEMethod:        determinePKCEMethod(supportedPKCEMethods, prov.PKCEMethod),
-		deviceAuthorizationEndpoint: deviceAuthorizationEndpoint,
-		useAccessToken:              prov.UseAccessToken,
+		clock:                f.Clock,
+		logger:               f.Logger,
+		negotiatedPKCEMethod: determinePKCEMethod(supportedPKCEMethods, prov.PKCEMethod),
+		useAccessToken:       prov.UseAccessToken,
 	}, nil
 }
 
@@ -106,14 +101,4 @@ func extractSupportedPKCEMethods(provider *gooidc.Provider) ([]string, error) {
 		return nil, fmt.Errorf("invalid discovery document: %w", err)
 	}
 	return claims.CodeChallengeMethodsSupported, nil
-}
-
-func extractDeviceAuthorizationEndpoint(provider *gooidc.Provider) (string, error) {
-	var claims struct {
-		DeviceAuthorizationEndpoint string `json:"device_authorization_endpoint"`
-	}
-	if err := provider.Claims(&claims); err != nil {
-		return "", fmt.Errorf("invalid discovery document: %w", err)
-	}
-	return claims.DeviceAuthorizationEndpoint, nil
 }

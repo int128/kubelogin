@@ -14,7 +14,7 @@ func (c *client) GetDeviceAuthorization(ctx context.Context) (*oauth2dev.Authori
 	ctx = c.wrapContext(ctx)
 	config := c.oauth2Config
 	config.Endpoint = oauth2.Endpoint{
-		AuthURL: c.deviceAuthorizationEndpoint,
+		AuthURL: c.provider.Endpoint().DeviceAuthURL,
 	}
 	return oauth2dev.RetrieveCode(ctx, config)
 }
