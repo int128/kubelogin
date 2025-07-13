@@ -50,12 +50,14 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 		successHTML = BrowserRedirectHTML(o.OpenURLAfterAuthentication)
 	}
 	in := client.GetTokenByAuthCodeInput{
+		AuthCodeURLInput: client.AuthCodeURLInput{
+			State:                  state,
+			Nonce:                  nonce,
+			PKCEParams:             pkceParams,
+			AuthRequestExtraParams: o.AuthRequestExtraParams,
+		},
 		BindAddress:            o.BindAddress,
-		State:                  state,
-		Nonce:                  nonce,
-		PKCEParams:             pkceParams,
 		RedirectURLHostname:    o.RedirectURLHostname,
-		AuthRequestExtraParams: o.AuthRequestExtraParams,
 		LocalServerSuccessHTML: successHTML,
 		LocalServerCertFile:    o.LocalServerCertFile,
 		LocalServerKeyFile:     o.LocalServerKeyFile,
