@@ -19,7 +19,7 @@ func (c *client) GetDeviceAuthorization(ctx context.Context) (*oauth2dev.Authori
 	return oauth2dev.RetrieveCode(ctx, config)
 }
 
-// ExchangeDeviceCode exchanges the device to an oidc.TokenSet
+// ExchangeDeviceCode exchanges the device authorization code for an oidc.TokenSet
 func (c *client) ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
 	tokenResponse, err := oauth2dev.PollToken(ctx, c.oauth2Config, *authResponse)
