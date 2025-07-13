@@ -31,6 +31,7 @@ Flags:
       --local-server-cert string                        [authcode] Certificate path for the local server
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
+      --oidc-access-type string                         [authcode, authcode-keyboard] Access type of the authentication request (default "offline")
       --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
       --password string                                 [password] Password for resource owner password credentials grant

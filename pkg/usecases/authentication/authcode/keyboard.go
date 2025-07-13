@@ -14,6 +14,7 @@ import (
 const keyboardPrompt = "Enter code: "
 
 type KeyboardOption struct {
+	AuthRequestAccessType  string
 	AuthRequestExtraParams map[string]string
 }
 

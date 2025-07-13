@@ -20,6 +20,7 @@ type BrowserOption struct {
 	AuthenticationTimeout      time.Duration
 	OpenURLAfterAuthentication string
 	RedirectURLHostname        string // DEPRECATED
+	AuthRequestAccessType      string
 	AuthRequestExtraParams     map[string]string
 	LocalServerCertFile        string
 	LocalServerKeyFile         string
@@ -50,12 +51,15 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 		successHTML = BrowserRedirectHTML(o.OpenURLAfterAuthentication)
 	}
 	in := client.GetTokenByAuthCodeInput{
+		AuthCodeURLInput: client.AuthCodeURLInput{
+			State:                  state,
+			Nonce:                  nonce,
+			PKCEParams:             pkceParams,
+			AccessType:             o.AuthRequestAccessType,
+			AuthRequestExtraParams: o.AuthRequestExtraParams,
+		},
 		BindAddress:            o.BindAddress,
-		State:                  state,
-		Nonce:                  nonce,
-		PKCEParams:             pkceParams,
 		RedirectURLHostname:    o.RedirectURLHostname,
-		AuthRequestExtraParams: o.AuthRequestExtraParams,
 		LocalServerSuccessHTML: successHTML,
 		LocalServerCertFile:    o.LocalServerCertFile,
 		LocalServerKeyFile:     o.LocalServerKeyFile,
