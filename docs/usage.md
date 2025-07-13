@@ -93,6 +93,12 @@ For the most providers, you don't need to set this option explicitly.
 
 If your provider requires extra HTTP headers, you can set them by `--oidc-request-header`.
 
+For Azure AD Single Page Application with PKCE, you can set `Origin` header as follows:
+
+```yaml
+- --oidc-request-header=Origin=localhost
+```
+
 ### CA certificate
 
 You can use your self-signed certificate for the provider.
