@@ -6,7 +6,7 @@ require (
 	github.com/chromedp/chromedp v0.13.7
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/gofrs/flock v0.12.1
-	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/google/go-cmp v0.7.0
 	github.com/google/wire v0.6.0
 	github.com/int128/oauth2cli v1.17.0
