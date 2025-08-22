@@ -8,7 +8,7 @@ require (
 	github.com/gofrs/flock v0.12.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-cmp v0.7.0
-	github.com/google/wire v0.6.0
+	github.com/google/wire v0.7.0
 	github.com/int128/oauth2cli v1.17.0
 	github.com/int128/oauth2dev v1.1.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
