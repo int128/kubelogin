@@ -13,6 +13,7 @@ import (
 type Option struct {
 	SkipOpenBrowser bool
 	BrowserCommand  string
+	BrowserArgs     []string
 }
 
 // DeviceCode provides the oauth2 device code flow.
@@ -57,7 +58,7 @@ func (u *DeviceCode) openURL(ctx context.Context, o *Option, url string) {
 
 	u.Logger.V(1).Infof("opening %s in the browser", url)
 	if o != nil && o.BrowserCommand != "" {
-		if err := u.Browser.OpenCommand(ctx, url, o.BrowserCommand); err != nil {
+		if err := u.Browser.OpenCommand(ctx, o.BrowserCommand, o.BrowserArgs, url); err != nil {
 			u.Logger.Printf(`error: could not open the browser: %s
 
 Please visit the following URL in your browser manually: %s`, err, url)
