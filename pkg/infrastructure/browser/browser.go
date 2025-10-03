@@ -23,7 +23,7 @@ var Set = wire.NewSet(
 
 type Interface interface {
 	Open(url string) error
-	OpenCommand(ctx context.Context, url, command string) error
+	OpenCommand(ctx context.Context, command string, args []string, url string) error
 }
 
 type Browser struct{}
@@ -34,8 +34,9 @@ func (*Browser) Open(url string) error {
 }
 
 // OpenCommand opens the browser using the command.
-func (*Browser) OpenCommand(ctx context.Context, url, command string) error {
-	c := exec.CommandContext(ctx, command, url)
+func (*Browser) OpenCommand(ctx context.Context, command string, args []string, url string) error {
+	args = append(args, url)
+	c := exec.CommandContext(ctx, command, args...)
 	c.Stdout = os.Stderr // see above
 	c.Stderr = os.Stderr
 	return c.Run()
