@@ -62,11 +62,17 @@ func (f *Factory) New(ctx context.Context, prov oidc.Provider, tlsClientConfig t
 	if err != nil {
 		return nil, fmt.Errorf("could not determine supported PKCE methods: %w", err)
 	}
+
+	endpoint := provider.Endpoint()
+	if prov.ClientSecret == "" {
+		endpoint.AuthStyle = oauth2.AuthStyleInParams
+	}
+
 	return &client{
 		httpClient: httpClient,
 		provider:   provider,
 		oauth2Config: oauth2.Config{
-			Endpoint:     provider.Endpoint(),
+			Endpoint:     endpoint,
 			ClientID:     prov.ClientID,
 			ClientSecret: prov.ClientSecret,
 			RedirectURL:  prov.RedirectURL,
