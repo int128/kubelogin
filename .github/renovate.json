@@ -1,0 +1,11 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>int128/renovate-base",
+    "github>int128/go-renovate-config#v1.9.0",
+    "github>int128/go-renovate-config:go-version-with-dockerfile#v1.9.0",
+    "github>int128/go-renovate-config:kubernetes#v1.9.0",
+    "github>int128/go-renovate-config:github-releases#v1.9.0(**/kustomization.yaml)",
+    "helpers:pinGitHubActionDigests"
+  ]
+}
