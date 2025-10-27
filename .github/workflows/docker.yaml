@@ -40,7 +40,7 @@ jobs:
         id: metadata
         with:
           images: ghcr.io/${{ github.repository }}
-      - uses: int128/docker-build-cache-config-action@b3744816a5ba1ad9885b634d530b35ca90ece622 # v1.39.0
+      - uses: int128/docker-build-cache-config-action@fb186e80c08f14a2e56ed9105d4594562bff013f # v1.40.0
         id: cache
         with:
           image: ghcr.io/${{ github.repository }}/cache
@@ -58,7 +58,7 @@ jobs:
             linux/amd64
             linux/arm64
             linux/ppc64le
-      - uses: int128/docker-build-metadata-action@9c2bcc42f1eb3177723d8e815f818be496c63406 # v1.1.0
+      - uses: int128/docker-build-metadata-action@f38781ddbaa410e9f8fa55a291dce7480798f1a0 # v1.2.0
         id: build-metadata
         with:
           metadata: ${{ steps.build.outputs.metadata }}
