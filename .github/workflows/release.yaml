@@ -76,3 +76,13 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: rajatjindal/krew-release-bot@3d9faef30a82761d610544f62afddca00993eef9 # v0.0.47
+      - uses: michidk/run-komac@42850f04bf386869019d9889ed232af44e179d38 # v2.1.0
+        env:
+          BASE_URL: https://github.com/int128/kubelogin/releases/download/${{ github.ref_name }}
+        with:
+          args: >
+            update int128.kubelogin
+              --version ${{ github.ref_name }}
+              --url ${{ env.BASE_URL }}/kubelogin_${{ github.ref_name }}_windows_amd64.zip
+              --url ${{ env.BASE_URL }}/kubelogin_${{ github.ref_name }}_windows_arm64.zip
+              --token ${{ secrets.WINGET_TOKEN }} --submit
