@@ -24,6 +24,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/clientcredentials"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/implicit"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"github.com/int128/kubelogin/pkg/usecases/clean"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
@@ -69,6 +70,10 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		Reader: readerReader,
 		Logger: loggerInterface,
 	}
+	implicitBrowser := &implicit.Browser{
+		Browser: browserInterface,
+		Logger:  loggerInterface,
+	}
 	ropcROPC := &ropc.ROPC{
 		Reader: readerReader,
 		Logger: loggerInterface,
@@ -85,6 +90,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		Logger:            loggerInterface,
 		AuthCodeBrowser:   authcodeBrowser,
 		AuthCodeKeyboard:  keyboard,
+		ImplicitBrowser:   implicitBrowser,
 		ROPC:              ropcROPC,
 		DeviceCode:        deviceCode,
 		ClientCredentials: clientCredentials,

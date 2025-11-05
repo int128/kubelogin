@@ -12,6 +12,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/clientcredentials"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/implicit"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 )
 
@@ -21,6 +22,7 @@ var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*Authentication)),
 	wire.Struct(new(authcode.Browser), "*"),
 	wire.Struct(new(authcode.Keyboard), "*"),
+	wire.Struct(new(implicit.Browser), "*"),
 	wire.Struct(new(ropc.ROPC), "*"),
 	wire.Struct(new(devicecode.DeviceCode), "*"),
 	wire.Struct(new(clientcredentials.ClientCredentials), "*"),
@@ -41,6 +43,7 @@ type Input struct {
 type GrantOptionSet struct {
 	AuthCodeBrowserOption   *authcode.BrowserOption
 	AuthCodeKeyboardOption  *authcode.KeyboardOption
+	ImplicitBrowserOption   *implicit.BrowserOption
 	ROPCOption              *ropc.Option
 	DeviceCodeOption        *devicecode.Option
 	ClientCredentialsOption *client.GetTokenByClientCredentialsInput
@@ -68,6 +71,7 @@ type Authentication struct {
 	Logger            logger.Interface
 	AuthCodeBrowser   *authcode.Browser
 	AuthCodeKeyboard  *authcode.Keyboard
+	ImplicitBrowser   *implicit.Browser
 	ROPC              *ropc.ROPC
 	DeviceCode        *devicecode.DeviceCode
 	ClientCredentials *clientcredentials.ClientCredentials
@@ -100,6 +104,13 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		tokenSet, err := u.AuthCodeKeyboard.Do(ctx, in.GrantOptionSet.AuthCodeKeyboardOption, oidcClient)
 		if err != nil {
 			return nil, fmt.Errorf("authcode-keyboard error: %w", err)
+		}
+		return &Output{TokenSet: *tokenSet}, nil
+	}
+	if in.GrantOptionSet.ImplicitBrowserOption != nil {
+		tokenSet, err := u.ImplicitBrowser.Do(ctx, in.GrantOptionSet.ImplicitBrowserOption, oidcClient)
+		if err != nil {
+			return nil, fmt.Errorf("implicit-browser error: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}

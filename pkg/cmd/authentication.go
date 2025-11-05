@@ -11,6 +11,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/implicit"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 )
 
@@ -34,6 +35,7 @@ var allGrantType = strings.Join([]string{
 	"auto",
 	"authcode",
 	"authcode-keyboard",
+	"implicit",
 	"password",
 	"device-code",
 	"client-credentials",
@@ -41,13 +43,13 @@ var allGrantType = strings.Join([]string{
 
 func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.GrantType, "grant-type", "auto", fmt.Sprintf("Authorization grant type to use. One of (%s)", allGrantType))
-	f.StringSliceVar(&o.ListenAddress, "listen-address", defaultListenAddress, "[authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order")
-	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
-	f.StringVar(&o.BrowserCommand, "browser-command", "", "[authcode] Command to open the browser")
-	f.IntVar(&o.AuthenticationTimeoutSec, "authentication-timeout-sec", defaultAuthenticationTimeoutSec, "[authcode] Timeout of authentication in seconds")
-	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode] Certificate path for the local server")
-	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
-	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
+	f.StringSliceVar(&o.ListenAddress, "listen-address", defaultListenAddress, "[authcode, implicit] Address to bind to the local server. If multiple addresses are set, it will try binding in order")
+	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode, implicit] Do not open the browser automatically")
+	f.StringVar(&o.BrowserCommand, "browser-command", "", "[authcode, implicit] Command to open the browser")
+	f.IntVar(&o.AuthenticationTimeoutSec, "authentication-timeout-sec", defaultAuthenticationTimeoutSec, "[authcode, implicit] Timeout of authentication in seconds")
+	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode, implicit] Certificate path for the local server")
+	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode, implicit] Certificate key path for the local server")
+	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode, implicit] If set, open the URL in the browser after authentication")
 	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "", "[authcode] Hostname of the redirect URL")
 	if err := f.MarkDeprecated("oidc-redirect-url-hostname", "use --oidc-redirect-url instead."); err != nil {
 		panic(err)
@@ -56,7 +58,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	if err := f.MarkDeprecated("oidc-redirect-url-authcode-keyboard", "use --oidc-redirect-url instead."); err != nil {
 		panic(err)
 	}
-	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request")
+	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard, client-credentials, implicit] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
 }
@@ -83,6 +85,17 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 	case o.GrantType == "authcode-keyboard":
 		s.AuthCodeKeyboardOption = &authcode.KeyboardOption{
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
+		}
+	case o.GrantType == "implicit":
+		s.ImplicitBrowserOption = &implicit.BrowserOption{
+			BindAddress:                o.ListenAddress,
+			SkipOpenBrowser:            o.SkipOpenBrowser,
+			BrowserCommand:             o.BrowserCommand,
+			AuthenticationTimeout:      time.Duration(o.AuthenticationTimeoutSec) * time.Second,
+			LocalServerCertFile:        o.LocalServerCertFile,
+			LocalServerKeyFile:         o.LocalServerKeyFile,
+			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,
+			AuthRequestExtraParams:     o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):
 		s.ROPCOption = &ropc.Option{

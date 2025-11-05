@@ -433,6 +433,80 @@ func (_c *MockInterface_GetTokenByClientCredentials_Call) RunAndReturn(run func(
 	return _c
 }
 
+// GetTokenByImplicitFlow provides a mock function for the type MockInterface
+func (_mock *MockInterface) GetTokenByImplicitFlow(ctx context.Context, in client.GetTokenByImplicitFlowInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error) {
+	ret := _mock.Called(ctx, in, localServerReadyChan)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTokenByImplicitFlow")
+	}
+
+	var r0 *oidc.TokenSet
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, client.GetTokenByImplicitFlowInput, chan<- string) (*oidc.TokenSet, error)); ok {
+		return returnFunc(ctx, in, localServerReadyChan)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, client.GetTokenByImplicitFlowInput, chan<- string) *oidc.TokenSet); ok {
+		r0 = returnFunc(ctx, in, localServerReadyChan)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*oidc.TokenSet)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, client.GetTokenByImplicitFlowInput, chan<- string) error); ok {
+		r1 = returnFunc(ctx, in, localServerReadyChan)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockInterface_GetTokenByImplicitFlow_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTokenByImplicitFlow'
+type MockInterface_GetTokenByImplicitFlow_Call struct {
+	*mock.Call
+}
+
+// GetTokenByImplicitFlow is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in client.GetTokenByImplicitFlowInput
+//   - localServerReadyChan chan<- string
+func (_e *MockInterface_Expecter) GetTokenByImplicitFlow(ctx interface{}, in interface{}, localServerReadyChan interface{}) *MockInterface_GetTokenByImplicitFlow_Call {
+	return &MockInterface_GetTokenByImplicitFlow_Call{Call: _e.mock.On("GetTokenByImplicitFlow", ctx, in, localServerReadyChan)}
+}
+
+func (_c *MockInterface_GetTokenByImplicitFlow_Call) Run(run func(ctx context.Context, in client.GetTokenByImplicitFlowInput, localServerReadyChan chan<- string)) *MockInterface_GetTokenByImplicitFlow_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 client.GetTokenByImplicitFlowInput
+		if args[1] != nil {
+			arg1 = args[1].(client.GetTokenByImplicitFlowInput)
+		}
+		var arg2 chan<- string
+		if args[2] != nil {
+			arg2 = args[2].(chan<- string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockInterface_GetTokenByImplicitFlow_Call) Return(tokenSet *oidc.TokenSet, err error) *MockInterface_GetTokenByImplicitFlow_Call {
+	_c.Call.Return(tokenSet, err)
+	return _c
+}
+
+func (_c *MockInterface_GetTokenByImplicitFlow_Call) RunAndReturn(run func(ctx context.Context, in client.GetTokenByImplicitFlowInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)) *MockInterface_GetTokenByImplicitFlow_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetTokenByROPC provides a mock function for the type MockInterface
 func (_mock *MockInterface) GetTokenByROPC(ctx context.Context, username string, password string) (*oidc.TokenSet, error) {
 	ret := _mock.Called(ctx, username, password)
