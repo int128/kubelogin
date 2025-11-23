@@ -15,6 +15,7 @@ type AuthCodeURLInput struct {
 	State                  string
 	Nonce                  string
 	PKCEParams             pkce.Params
+	AccessType             string
 	AuthRequestExtraParams map[string]string
 }
 
@@ -25,12 +26,9 @@ type ExchangeAuthCodeInput struct {
 }
 
 type GetTokenByAuthCodeInput struct {
+	AuthCodeURLInput
 	BindAddress            []string
-	State                  string
-	Nonce                  string
-	PKCEParams             pkce.Params
 	RedirectURLHostname    string // DEPRECATED
-	AuthRequestExtraParams map[string]string
 	LocalServerSuccessHTML string
 	LocalServerCertFile    string
 	LocalServerKeyFile     string
@@ -46,7 +44,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 	config := oauth2cli.Config{
 		OAuth2Config:           c.oauth2Config,
 		State:                  in.State,
-		AuthCodeOptions:        authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams),
+		AuthCodeOptions:        authorizationRequestOptions(in.AuthCodeURLInput),
 		TokenRequestOptions:    tokenRequestOptions(in.PKCEParams),
 		LocalServerBindAddress: in.BindAddress,
 		LocalServerReadyChan:   localServerReadyChan,
@@ -65,8 +63,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 
 // GetAuthCodeURL returns the URL of authentication request for the authorization code flow.
 func (c *client) GetAuthCodeURL(in AuthCodeURLInput) string {
-	opts := authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams)
-	return c.oauth2Config.AuthCodeURL(in.State, opts...)
+	return c.oauth2Config.AuthCodeURL(in.State, authorizationRequestOptions(in)...)
 }
 
 // ExchangeAuthCode exchanges the authorization code and token.
@@ -80,15 +77,17 @@ func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput)
 	return c.verifyToken(ctx, token, in.Nonce)
 }
 
-func authorizationRequestOptions(nonce string, pkceParams pkce.Params, extraParams map[string]string) []oauth2.AuthCodeOption {
+func authorizationRequestOptions(in AuthCodeURLInput) []oauth2.AuthCodeOption {
 	opts := []oauth2.AuthCodeOption{
-		oauth2.AccessTypeOffline,
-		gooidc.Nonce(nonce),
+		gooidc.Nonce(in.Nonce),
 	}
-	if pkceOpt := pkceParams.AuthCodeOption(); pkceOpt != nil {
+	if in.AccessType != "" {
+		opts = append(opts, oauth2.SetAuthURLParam("access_type", in.AccessType))
+	}
+	if pkceOpt := in.PKCEParams.AuthCodeOption(); pkceOpt != nil {
 		opts = append(opts, pkceOpt)
 	}
-	for key, value := range extraParams {
+	for key, value := range in.AuthRequestExtraParams {
 		opts = append(opts, oauth2.SetAuthURLParam(key, value))
 	}
 	return opts
