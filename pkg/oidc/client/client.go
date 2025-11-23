@@ -19,6 +19,7 @@ type Interface interface {
 	GetAuthCodeURL(in AuthCodeURLInput) string
 	ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput) (*oidc.TokenSet, error)
 	GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
+	GetTokenByImplicitFlow(ctx context.Context, in GetTokenByImplicitFlowInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error)
 	NegotiatedPKCEMethod() pkce.Method
 	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
 	GetTokenByClientCredentials(ctx context.Context, in GetTokenByClientCredentialsInput) (*oidc.TokenSet, error)

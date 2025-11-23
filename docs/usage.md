@@ -23,15 +23,15 @@ Flags:
       --tls-renegotiation-once                          If set, allow a remote server to request renegotiation once per connection
       --tls-renegotiation-freely                        If set, allow a remote server to repeatedly request renegotiation
       --oidc-pkce-method string                         PKCE code challenge method. Automatically determined by default. One of (auto|no|S256) (default "auto")
-      --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password|device-code|client-credentials) (default "auto")
-      --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
-      --skip-open-browser                               [authcode] Do not open the browser automatically
-      --browser-command string                          [authcode] Command to open the browser
-      --authentication-timeout-sec int                  [authcode] Timeout of authentication in seconds (default 180)
-      --local-server-cert string                        [authcode] Certificate path for the local server
-      --local-server-key string                         [authcode] Certificate key path for the local server
-      --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
-      --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request (default [])
+      --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|implicit|password|device-code|client-credentials) (default "auto")
+      --listen-address strings                          [authcode, implicit] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
+      --skip-open-browser                               [authcode, implicit] Do not open the browser automatically
+      --browser-command string                          [authcode, implicit] Command to open the browser
+      --authentication-timeout-sec int                  [authcode, implicit] Timeout of authentication in seconds (default 180)
+      --local-server-cert string                        [authcode, implicit] Certificate path for the local server
+      --local-server-key string                         [authcode, implicit] Certificate key path for the local server
+      --open-url-after-authentication string            [authcode, implicit] If set, open the URL in the browser after authentication
+      --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, implicit, client-credentials] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
       --password string                                 [password] Password for resource owner password credentials grant
   -h, --help                                            help for get-token
@@ -150,6 +150,7 @@ Kubelogin support the following flows:
 - [Device Authorization Grant](#device-authorization-grant)
 - [Authorization Code Flow](#authorization-code-flow)
 - [Authorization Code Flow with a Keyboard](#authorization-code-flow-with-a-keyboard)
+- [Implicit Flow](#implicit-flow)
 - [Resource Owner Password Credentials Grant](#resource-owner-password-credentials-grant)
 - [Client Credentials Flow](#client-credentials-flow)
 
@@ -257,6 +258,27 @@ You can add extra parameters to the authentication request.
 ```yaml
 - --oidc-auth-request-extra-params=ttl=86400
 ```
+
+### Implicit Flow
+
+The implicit flow is used when it is desired that the ID token contain claims for the requests scopes. One use for this would be to allow role bindings to be based off a user's groups.
+
+It should be noted that the Implicit Flow is deprecated by the OpenID Foundation.
+
+It performs the [Implicit Flow](https://openid.net/specs/openid-connect-core-1_0.html#ImplicitFlowAuth) when `--grant-type=implicit` is set.
+
+```yaml
+- --grant-type=implicit
+```
+
+The implicit flow returns only an ID token without an access token or refresh token.
+This flow is useful when you want to:
+- Avoid minting unused access tokens
+- Request specific claims be included in the ID token
+- Enforce shorter credential lifetimes (no refresh tokens)
+
+Note that the implicit flow does not support refresh tokens.
+You will need to re-authenticate when the ID token expires.
 
 ### Resource Owner Password Credentials Grant
 
