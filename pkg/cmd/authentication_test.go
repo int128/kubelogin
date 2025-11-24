@@ -36,7 +36,6 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				"--local-server-cert", "/path/to/local-server-cert",
 				"--local-server-key", "/path/to/local-server-key",
 				"--open-url-after-authentication", "https://example.com/success.html",
-				"--oidc-redirect-url-hostname", "example",
 				"--oidc-auth-request-extra-params", "ttl=86400",
 				"--oidc-auth-request-extra-params", "reauth=true",
 				"--username", "USER",
@@ -51,7 +50,6 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 					LocalServerCertFile:        "/path/to/local-server-cert",
 					LocalServerKeyFile:         "/path/to/local-server-key",
 					OpenURLAfterAuthentication: "https://example.com/success.html",
-					RedirectURLHostname:        "example",
 					AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
 				},
 			},
@@ -67,7 +65,6 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 		"GrantType=authcode-keyboard with full options": {
 			args: []string{
 				"--grant-type", "authcode-keyboard",
-				"--oidc-redirect-url-authcode-keyboard", "http://localhost",
 				"--oidc-auth-request-extra-params", "ttl=86400",
 				"--oidc-auth-request-extra-params", "reauth=true",
 			},

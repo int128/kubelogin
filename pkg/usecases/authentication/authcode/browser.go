@@ -19,7 +19,6 @@ type BrowserOption struct {
 	BindAddress                []string
 	AuthenticationTimeout      time.Duration
 	OpenURLAfterAuthentication string
-	RedirectURLHostname        string // DEPRECATED
 	AuthRequestAccessType      string
 	AuthRequestExtraParams     map[string]string
 	LocalServerCertFile        string
@@ -59,7 +58,10 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
 		},
 		BindAddress:            o.BindAddress,
-		RedirectURLHostname:    o.RedirectURLHostname,
+		State:                  state,
+		Nonce:                  nonce,
+		PKCEParams:             pkceParams,
+		AuthRequestExtraParams: o.AuthRequestExtraParams,
 		LocalServerSuccessHTML: successHTML,
 		LocalServerCertFile:    o.LocalServerCertFile,
 		LocalServerKeyFile:     o.LocalServerKeyFile,

@@ -15,20 +15,18 @@ import (
 )
 
 type authenticationOptions struct {
-	GrantType                   string
-	ListenAddress               []string
-	AuthenticationTimeoutSec    int
-	SkipOpenBrowser             bool
-	BrowserCommand              string
-	LocalServerCertFile         string
-	LocalServerKeyFile          string
-	OpenURLAfterAuthentication  string
-	RedirectURLHostname         string // DEPRECATED
-	RedirectURLAuthCodeKeyboard string // DEPRECATED
-	AuthRequestAccessType       string
-	AuthRequestExtraParams      map[string]string
-	Username                    string
-	Password                    string
+	GrantType                  string
+	ListenAddress              []string
+	AuthenticationTimeoutSec   int
+	SkipOpenBrowser            bool
+	BrowserCommand             string
+	LocalServerCertFile        string
+	LocalServerKeyFile         string
+	OpenURLAfterAuthentication string
+	AuthRequestAccessType      string
+	AuthRequestExtraParams     map[string]string
+	Username                   string
+	Password                   string
 }
 
 var allGrantType = strings.Join([]string{
@@ -49,14 +47,6 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode] Certificate path for the local server")
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
-	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "", "[authcode] Hostname of the redirect URL")
-	if err := f.MarkDeprecated("oidc-redirect-url-hostname", "use --oidc-redirect-url instead."); err != nil {
-		panic(err)
-	}
-	f.StringVar(&o.RedirectURLAuthCodeKeyboard, "oidc-redirect-url-authcode-keyboard", "", "Equivalent to --oidc-redirect-url")
-	if err := f.MarkDeprecated("oidc-redirect-url-authcode-keyboard", "use --oidc-redirect-url instead."); err != nil {
-		panic(err)
-	}
 	f.StringVar(&o.AuthRequestAccessType, "oidc-access-type", "offline", "[authcode, authcode-keyboard] Access type of the authentication request")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
@@ -79,7 +69,6 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			LocalServerCertFile:        o.LocalServerCertFile,
 			LocalServerKeyFile:         o.LocalServerKeyFile,
 			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,
-			RedirectURLHostname:        o.RedirectURLHostname,
 			AuthRequestAccessType:      o.AuthRequestAccessType,
 			AuthRequestExtraParams:     o.AuthRequestExtraParams,
 		}
