@@ -84,16 +84,12 @@ func (cmd *GetToken) New() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("get-token: %w", err)
 			}
-			redirectURL := o.RedirectURL
-			if o.authenticationOptions.RedirectURLAuthCodeKeyboard != "" {
-				redirectURL = o.authenticationOptions.RedirectURLAuthCodeKeyboard
-			}
 			in := credentialplugin.Input{
 				Provider: oidc.Provider{
 					IssuerURL:      o.IssuerURL,
 					ClientID:       o.ClientID,
 					ClientSecret:   o.ClientSecret,
-					RedirectURL:    redirectURL,
+					RedirectURL:    o.RedirectURL,
 					PKCEMethod:     pkceMethod,
 					UseAccessToken: o.UseAccessToken,
 					ExtraScopes:    o.ExtraScopes,
