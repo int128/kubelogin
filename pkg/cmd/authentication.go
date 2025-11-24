@@ -23,7 +23,6 @@ type authenticationOptions struct {
 	LocalServerCertFile         string
 	LocalServerKeyFile          string
 	OpenURLAfterAuthentication  string
-	RedirectURLHostname         string // DEPRECATED
 	RedirectURLAuthCodeKeyboard string // DEPRECATED
 	AuthRequestExtraParams      map[string]string
 	Username                    string
@@ -48,10 +47,6 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode] Certificate path for the local server")
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
-	f.StringVar(&o.RedirectURLHostname, "oidc-redirect-url-hostname", "", "[authcode] Hostname of the redirect URL")
-	if err := f.MarkDeprecated("oidc-redirect-url-hostname", "use --oidc-redirect-url instead."); err != nil {
-		panic(err)
-	}
 	f.StringVar(&o.RedirectURLAuthCodeKeyboard, "oidc-redirect-url-authcode-keyboard", "", "Equivalent to --oidc-redirect-url")
 	if err := f.MarkDeprecated("oidc-redirect-url-authcode-keyboard", "use --oidc-redirect-url instead."); err != nil {
 		panic(err)
@@ -77,7 +72,6 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			LocalServerCertFile:        o.LocalServerCertFile,
 			LocalServerKeyFile:         o.LocalServerKeyFile,
 			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,
-			RedirectURLHostname:        o.RedirectURLHostname,
 			AuthRequestExtraParams:     o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "authcode-keyboard":

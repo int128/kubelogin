@@ -29,7 +29,6 @@ type GetTokenByAuthCodeInput struct {
 	State                  string
 	Nonce                  string
 	PKCEParams             pkce.Params
-	RedirectURLHostname    string // DEPRECATED
 	AuthRequestExtraParams map[string]string
 	LocalServerSuccessHTML string
 	LocalServerCertFile    string
@@ -50,7 +49,6 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		TokenRequestOptions:    tokenRequestOptions(in.PKCEParams),
 		LocalServerBindAddress: in.BindAddress,
 		LocalServerReadyChan:   localServerReadyChan,
-		RedirectURLHostname:    in.RedirectURLHostname,
 		LocalServerSuccessHTML: in.LocalServerSuccessHTML,
 		LocalServerCertFile:    in.LocalServerCertFile,
 		LocalServerKeyFile:     in.LocalServerKeyFile,

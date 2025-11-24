@@ -332,32 +332,6 @@ func TestCredentialPlugin(t *testing.T) {
 		assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
-	t.Run("RedirectURLHostname", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-		defer cancel()
-		svc := oidcserver.New(t, keypair.None, testconfig.Config{
-			Want: testconfig.Want{
-				Scope:               "openid",
-				RedirectURIPrefix:   "http://127.0.0.1:",
-				CodeChallengeMethod: "S256",
-			},
-			Response: testconfig.Response{
-				IDTokenExpiry:                 now.Add(time.Hour),
-				CodeChallengeMethodsSupported: []string{"plain", "S256"},
-			},
-		})
-		var stdout bytes.Buffer
-		runGetToken(t, ctx, getTokenConfig{
-			tokenCacheDir: tokenCacheDir,
-			issuerURL:     svc.IssuerURL(),
-			httpDriver:    httpdriver.New(ctx, t, httpdriver.Config{BodyContains: "Authenticated"}),
-			now:           now,
-			stdout:        &stdout,
-			args:          []string{"--oidc-redirect-url-hostname", "127.0.0.1"},
-		})
-		assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
-	})
-
 	t.Run("RedirectURLHTTPS", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
