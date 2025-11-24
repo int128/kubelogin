@@ -65,7 +65,6 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 		"GrantType=authcode-keyboard with full options": {
 			args: []string{
 				"--grant-type", "authcode-keyboard",
-				"--oidc-redirect-url-authcode-keyboard", "http://localhost",
 				"--oidc-auth-request-extra-params", "ttl=86400",
 				"--oidc-auth-request-extra-params", "reauth=true",
 			},
