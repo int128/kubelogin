@@ -397,10 +397,10 @@ github.com/huandu/xstrings v1.5.0/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/int128/listener v1.2.0 h1:Gj+wLX1mCfetZWJz0wi7343JuP8qGrYcbavNQR2xye4=
-github.com/int128/listener v1.2.0/go.mod h1:k2nhHj+0PLFQ9VD15FnRubK8iJ5t9cif15HwhQ8Liok=
-github.com/int128/oauth2cli v1.17.0 h1:i1r9uuTuRzlLAc2iaVQEDtjLPtD9ZftLJEQI0geaUOo=
-github.com/int128/oauth2cli v1.17.0/go.mod h1:SpMnfW08HKxhY37064vntbBcKVhIq+0vQB8xcbnmQBM=
+github.com/int128/listener v1.3.0 h1:ZFePbpzFUt1i6hBSY15rzqo8tHZHJPPQkqCtgOAwS8g=
+github.com/int128/listener v1.3.0/go.mod h1:zF9mx2wn+2J/7Idmxi5kgqrGgERr6vr8fK8KqENrRZ0=
+github.com/int128/oauth2cli v1.18.0 h1:ECW600WoYKh5Z4gv92yNVsJ22iqzPW7u7z0dfWxMzkU=
+github.com/int128/oauth2cli v1.18.0/go.mod h1:8wWAPwFYS91aX3KKACFP//v2oLdqnugK/ndfJ6oH3xE=
 github.com/int128/oauth2dev v1.1.0 h1:6maJmtYFuc7Ga2XflFDNiZU2aY3fx8x5CDcbB2wXJUU=
 github.com/int128/oauth2dev v1.1.0/go.mod h1:sEmpj0+i7uHg+NG/XdQ7O03p1ob7UmT+f26NHwsPHvk=
 github.com/jedib0t/go-pretty/v6 v6.6.7 h1:m+LbHpm0aIAPLzLbMfn8dc3Ht8MW7lsSO4MPItz/Uuo=
