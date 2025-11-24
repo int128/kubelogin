@@ -179,7 +179,17 @@ func TestDeviceCode_openURL(t *testing.T) {
 			Browser: browserMock,
 			Logger:  logger.New(t),
 		}
-		browserMock.EXPECT().OpenCommand(ctx, url, "test-command").Return(testError).Once()
+		browserMock.EXPECT().OpenCommand(ctx, "test-command", []string(nil), url).Return(testError).Once()
 		deviceCode.openURL(ctx, &Option{BrowserCommand: "test-command"}, url)
+	})
+
+	t.Run("BrowserCommand and BrowserArgs are set", func(t *testing.T) {
+		browserMock := browser_mock.NewMockInterface(t)
+		deviceCode := &DeviceCode{
+			Browser: browserMock,
+			Logger:  logger.New(t),
+		}
+		browserMock.EXPECT().OpenCommand(ctx, "test-command", []string{"arg1", "arg2"}, url).Return(testError).Once()
+		deviceCode.openURL(ctx, &Option{BrowserCommand: "test-command", BrowserArgs: []string{"arg1", "arg2"}}, url)
 	})
 }

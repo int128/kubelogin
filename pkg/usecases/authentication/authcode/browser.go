@@ -16,6 +16,7 @@ import (
 type BrowserOption struct {
 	SkipOpenBrowser            bool
 	BrowserCommand             string
+	BrowserArgs                []string
 	BindAddress                []string
 	AuthenticationTimeout      time.Duration
 	OpenURLAfterAuthentication string
@@ -101,7 +102,7 @@ func (u *Browser) openURL(ctx context.Context, o *BrowserOption, url string) {
 
 	u.Logger.V(1).Infof("opening %s in the browser", url)
 	if o.BrowserCommand != "" {
-		if err := u.Browser.OpenCommand(ctx, url, o.BrowserCommand); err != nil {
+		if err := u.Browser.OpenCommand(ctx, o.BrowserCommand, o.BrowserArgs, url); err != nil {
 			u.Logger.Printf(`error: could not open the browser: %s
 
 Please visit the following URL in your browser manually: %s`, err, url)
