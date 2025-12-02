@@ -96,7 +96,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 			if !claims.IsExpired(u.Clock) {
 				u.Logger.V(1).Infof("you already have a valid token until %s", claims.Expiry)
 				out := credentialplugin.Output{
-					Token:                          cachedTokenSet.IDToken,
+					Token:                          in.Provider.SelectToken(cachedTokenSet),
 					Expiry:                         claims.Expiry,
 					ClientAuthenticationAPIVersion: credentialPluginInput.ClientAuthenticationAPIVersion,
 				}
@@ -130,7 +130,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 	}
 	u.Logger.V(1).Infof("writing the token to client-go")
 	out := credentialplugin.Output{
-		Token:                          authenticationOutput.TokenSet.IDToken,
+		Token:                          in.Provider.SelectToken(&authenticationOutput.TokenSet),
 		Expiry:                         idTokenClaims.Expiry,
 		ClientAuthenticationAPIVersion: credentialPluginInput.ClientAuthenticationAPIVersion,
 	}
