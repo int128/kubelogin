@@ -58,7 +58,7 @@ jobs:
             linux/amd64
             linux/arm64
             linux/ppc64le
-      - uses: int128/docker-build-metadata-action@f38781ddbaa410e9f8fa55a291dce7480798f1a0 # v1.2.0
+      - uses: int128/docker-build-metadata-action@41e39ebd0266ad988bd1df2d28967a6f5edf50f6 # v1.6.0
         id: build-metadata
         with:
           metadata: ${{ steps.build.outputs.metadata }}
