@@ -58,8 +58,9 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 
 	u.Logger.V(1).Infof("finding a token cache")
 	tokenCacheKey := tokencache.Key{
-		Provider:        in.Provider,
-		TLSClientConfig: in.TLSClientConfig,
+		Provider:               in.Provider,
+		TLSClientConfig:        in.TLSClientConfig,
+		AuthRequestExtraParams: in.GrantOptionSet.AuthRequestExtraParams(),
 	}
 	if in.GrantOptionSet.ROPCOption != nil {
 		tokenCacheKey.Username = in.GrantOptionSet.ROPCOption.Username

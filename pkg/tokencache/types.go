@@ -7,9 +7,10 @@ import (
 
 // Key represents a key of a token cache.
 type Key struct {
-	Provider        oidc.Provider
-	TLSClientConfig tlsclientconfig.Config
-	Username        string
+	Provider               oidc.Provider
+	TLSClientConfig        tlsclientconfig.Config
+	Username               string
+	AuthRequestExtraParams map[string]string
 }
 
 // Config represents a configuration for the token cache.
