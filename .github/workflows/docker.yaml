@@ -58,10 +58,11 @@ jobs:
             linux/amd64
             linux/arm64
             linux/ppc64le
-      - uses: int128/docker-build-metadata-action@f38781ddbaa410e9f8fa55a291dce7480798f1a0 # v1.2.0
+      - uses: int128/docker-build-metadata-action@84d7e640b499144c1ea8f428a9cdf83b5fc7bb35 # v2.0.0
         id: build-metadata
         with:
-          metadata: ${{ steps.build.outputs.metadata }}
+          tags: ${{ steps.metadata.outputs.tags }}
+          digest: ${{ steps.build.outputs.digest }}
 
   test:
     if: needs.build.outputs.image-uri != ''
