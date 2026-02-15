@@ -46,6 +46,28 @@ type GrantOptionSet struct {
 	ClientCredentialsOption *client.GetTokenByClientCredentialsInput
 }
 
+// AuthRequestExtraParams returns the extra parameters for the auth request
+// from whichever grant option is set.
+func (g GrantOptionSet) AuthRequestExtraParams() map[string]string {
+	if g.AuthCodeBrowserOption != nil {
+		return g.AuthCodeBrowserOption.AuthRequestExtraParams
+	}
+	if g.AuthCodeKeyboardOption != nil {
+		return g.AuthCodeKeyboardOption.AuthRequestExtraParams
+	}
+	if g.ClientCredentialsOption != nil && g.ClientCredentialsOption.EndpointParams != nil {
+		// Convert map[string][]string back to map[string]string
+		params := make(map[string]string, len(g.ClientCredentialsOption.EndpointParams))
+		for k, v := range g.ClientCredentialsOption.EndpointParams {
+			if len(v) > 0 {
+				params[k] = v[0]
+			}
+		}
+		return params
+	}
+	return nil
+}
+
 // Output represents an output DTO of the Authentication use-case.
 type Output struct {
 	TokenSet oidc.TokenSet

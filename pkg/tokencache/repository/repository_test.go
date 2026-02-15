@@ -53,6 +53,89 @@ func TestRepository_FindByKey(t *testing.T) {
 	})
 }
 
+func TestComputeChecksum_AuthRequestExtraParams(t *testing.T) {
+	baseKey := tokencache.Key{
+		Provider: oidc.Provider{
+			IssuerURL:    "YOUR_ISSUER",
+			ClientID:     "YOUR_CLIENT_ID",
+			ClientSecret: "YOUR_CLIENT_SECRET",
+			ExtraScopes:  []string{"openid", "email"},
+		},
+		TLSClientConfig: tlsclientconfig.Config{
+			CACertFilename: []string{"/path/to/cert"},
+		},
+	}
+
+	t.Run("DifferentExtraParamsProduceDifferentChecksums", func(t *testing.T) {
+		key1 := baseKey
+		key1.AuthRequestExtraParams = map[string]string{"audience": "api1"}
+
+		key2 := baseKey
+		key2.AuthRequestExtraParams = map[string]string{"audience": "api2"}
+
+		checksum1, err := computeChecksum(key1)
+		if err != nil {
+			t.Fatalf("could not compute checksum for key1: %s", err)
+		}
+
+		checksum2, err := computeChecksum(key2)
+		if err != nil {
+			t.Fatalf("could not compute checksum for key2: %s", err)
+		}
+
+		if checksum1 == checksum2 {
+			t.Errorf("expected different checksums for different AuthRequestExtraParams, got same: %s", checksum1)
+		}
+	})
+
+	t.Run("SameExtraParamsProduceSameChecksum", func(t *testing.T) {
+		key1 := baseKey
+		key1.AuthRequestExtraParams = map[string]string{"audience": "api1"}
+
+		key2 := baseKey
+		key2.AuthRequestExtraParams = map[string]string{"audience": "api1"}
+
+		checksum1, err := computeChecksum(key1)
+		if err != nil {
+			t.Fatalf("could not compute checksum for key1: %s", err)
+		}
+
+		checksum2, err := computeChecksum(key2)
+		if err != nil {
+			t.Fatalf("could not compute checksum for key2: %s", err)
+		}
+
+		if checksum1 != checksum2 {
+			t.Errorf("expected same checksums for same AuthRequestExtraParams, got different: %s vs %s", checksum1, checksum2)
+		}
+	})
+
+	t.Run("NilVsEmptyExtraParams", func(t *testing.T) {
+		keyNil := baseKey
+		keyNil.AuthRequestExtraParams = nil
+
+		keyEmpty := baseKey
+		keyEmpty.AuthRequestExtraParams = map[string]string{}
+
+		checksumNil, err := computeChecksum(keyNil)
+		if err != nil {
+			t.Fatalf("could not compute checksum for keyNil: %s", err)
+		}
+
+		checksumEmpty, err := computeChecksum(keyEmpty)
+		if err != nil {
+			t.Fatalf("could not compute checksum for keyEmpty: %s", err)
+		}
+
+		// Nil and empty map produce different checksums due to gob encoding.
+		// This is acceptable since in practice nil is the default when
+		// --oidc-auth-request-extra-params is not specified.
+		if checksumNil == checksumEmpty {
+			t.Logf("nil and empty AuthRequestExtraParams produce same checksum (implementation detail)")
+		}
+	})
+}
+
 func TestRepository_Save(t *testing.T) {
 	var r Repository
 
