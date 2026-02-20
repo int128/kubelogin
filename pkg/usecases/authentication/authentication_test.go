@@ -188,7 +188,7 @@ func TestAuthentication_Do(t *testing.T) {
 		defer cancel()
 		ccIn := client.GetTokenByClientCredentialsInput{
 			EndpointParams: map[string][]string{
-				"audience": []string{"gopher://myaud"},
+				"audience": {"gopher://myaud"},
 			},
 		}
 		in := Input{Provider: dummyProvider,
@@ -221,6 +221,72 @@ func TestAuthentication_Do(t *testing.T) {
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+}
+
+func TestGrantOptionSet_AuthRequestExtraParams(t *testing.T) {
+	t.Run("AuthCodeBrowserOption", func(t *testing.T) {
+		gos := GrantOptionSet{
+			AuthCodeBrowserOption: &authcode.BrowserOption{
+				AuthRequestExtraParams: map[string]string{"audience": "api1", "foo": "bar"},
+			},
+		}
+		got := gos.AuthRequestExtraParams()
+		want := map[string]string{"audience": "api1", "foo": "bar"}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("AuthCodeKeyboardOption", func(t *testing.T) {
+		gos := GrantOptionSet{
+			AuthCodeKeyboardOption: &authcode.KeyboardOption{
+				AuthRequestExtraParams: map[string]string{"audience": "api2"},
+			},
+		}
+		got := gos.AuthRequestExtraParams()
+		want := map[string]string{"audience": "api2"}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("ClientCredentialsOption", func(t *testing.T) {
+		gos := GrantOptionSet{
+			ClientCredentialsOption: &client.GetTokenByClientCredentialsInput{
+				EndpointParams: map[string][]string{
+					"audience": {"api3"},
+					"scope":    {"read", "write"},
+				},
+			},
+		}
+		got := gos.AuthRequestExtraParams()
+		// Only the first value of each key is returned
+		want := map[string]string{"audience": "api3", "scope": "read"}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("ROPCOption", func(t *testing.T) {
+		gos := GrantOptionSet{
+			ROPCOption: &ropc.Option{
+				Username: "user",
+				Password: "pass",
+			},
+		}
+		got := gos.AuthRequestExtraParams()
+		if got != nil {
+			t.Errorf("expected nil, got %v", got)
+		}
+	})
+
+	t.Run("NoOption", func(t *testing.T) {
+		gos := GrantOptionSet{}
+		got := gos.AuthRequestExtraParams()
+		if got != nil {
+			t.Errorf("expected nil, got %v", got)
 		}
 	})
 }
