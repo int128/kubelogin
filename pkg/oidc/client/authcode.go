@@ -43,9 +43,9 @@ func (c *client) NegotiatedPKCEMethod() pkce.Method {
 // GetTokenByAuthCode performs the authorization code flow.
 func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
-	parsedRedirectUrl, err := url.Parse(c.oauth2Config.RedirectURL)
+	parsedRedirectURL, err := url.Parse(c.oauth2Config.RedirectURL)
 	if err != nil {
-		return nil, fmt.Errorf("Couldn't parse redirect url to get path: %w", err)
+		return nil, fmt.Errorf("invalid redirect url: %w", err)
 	}
 	config := oauth2cli.Config{
 		OAuth2Config:            c.oauth2Config,
@@ -55,7 +55,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 		LocalServerBindAddress:  in.BindAddress,
 		LocalServerReadyChan:    localServerReadyChan,
 		LocalServerSuccessHTML:  in.LocalServerSuccessHTML,
-		LocalServerCallbackPath: parsedRedirectUrl.Path,
+		LocalServerCallbackPath: parsedRedirectURL.Path,
 		LocalServerCertFile:     in.LocalServerCertFile,
 		LocalServerKeyFile:      in.LocalServerKeyFile,
 		Logf:                    c.logger.V(1).Infof,
