@@ -83,6 +83,6 @@ func (u Setup) Do(ctx context.Context, in Input) error {
 	}); err != nil {
 		return fmt.Errorf("render the template: %w", err)
 	}
-	u.Logger.Printf(b.String())
+	u.Logger.Printf("%s", b.String())
 	return nil
 }
