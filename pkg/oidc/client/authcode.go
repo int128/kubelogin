@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/int128/kubelogin/pkg/oidc"
@@ -42,17 +43,22 @@ func (c *client) NegotiatedPKCEMethod() pkce.Method {
 // GetTokenByAuthCode performs the authorization code flow.
 func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeInput, localServerReadyChan chan<- string) (*oidc.TokenSet, error) {
 	ctx = c.wrapContext(ctx)
+	parsedRedirectURL, err := url.Parse(c.oauth2Config.RedirectURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid redirect url: %w", err)
+	}
 	config := oauth2cli.Config{
-		OAuth2Config:           c.oauth2Config,
-		State:                  in.State,
-		AuthCodeOptions:        authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams),
-		TokenRequestOptions:    tokenRequestOptions(in.PKCEParams),
-		LocalServerBindAddress: in.BindAddress,
-		LocalServerReadyChan:   localServerReadyChan,
-		LocalServerSuccessHTML: in.LocalServerSuccessHTML,
-		LocalServerCertFile:    in.LocalServerCertFile,
-		LocalServerKeyFile:     in.LocalServerKeyFile,
-		Logf:                   c.logger.V(1).Infof,
+		OAuth2Config:            c.oauth2Config,
+		State:                   in.State,
+		AuthCodeOptions:         authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams),
+		TokenRequestOptions:     tokenRequestOptions(in.PKCEParams),
+		LocalServerBindAddress:  in.BindAddress,
+		LocalServerReadyChan:    localServerReadyChan,
+		LocalServerSuccessHTML:  in.LocalServerSuccessHTML,
+		LocalServerCallbackPath: parsedRedirectURL.Path,
+		LocalServerCertFile:     in.LocalServerCertFile,
+		LocalServerKeyFile:      in.LocalServerKeyFile,
+		Logf:                    c.logger.V(1).Infof,
 	}
 	token, err := oauth2cli.GetToken(ctx, config)
 	if err != nil {
