@@ -18,6 +18,7 @@ type BrowserOption struct {
 	BrowserCommand             string
 	BindAddress                []string
 	AuthenticationTimeout      time.Duration
+	ConfiguredTimeout          time.Duration
 	OpenURLAfterAuthentication string
 	AuthRequestExtraParams     map[string]string
 	LocalServerCertFile        string
@@ -32,6 +33,7 @@ type Browser struct {
 
 func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.Interface) (*oidc.TokenSet, error) {
 	u.Logger.V(1).Infof("starting the authentication code flow using the browser")
+
 	state, err := oidc.NewState()
 	if err != nil {
 		return nil, fmt.Errorf("could not generate a state: %w", err)
@@ -59,8 +61,17 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 		LocalServerKeyFile:     o.LocalServerKeyFile,
 	}
 
+	success := false
 	ctx, cancel := context.WithTimeout(ctx, o.AuthenticationTimeout)
 	defer cancel()
+	defer func() {
+		if !success {
+			o.AuthenticationTimeout = o.AuthenticationTimeout * 2
+			if o.AuthenticationTimeout > 4*time.Hour {
+				o.AuthenticationTimeout = 4 * time.Hour
+			}
+		}
+	}()
 	readyChan := make(chan string, 1)
 	var out *oidc.TokenSet
 	var eg errgroup.Group
@@ -89,6 +100,8 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 	if err := eg.Wait(); err != nil {
 		return nil, fmt.Errorf("authentication error: %w", err)
 	}
+	success = true
+	o.AuthenticationTimeout = o.ConfiguredTimeout
 	u.Logger.V(1).Infof("finished the authorization code flow via the browser")
 	return out, nil
 }
