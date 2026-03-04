@@ -1,7 +1,7 @@
 {
   "name": "kubelogin",
   "description": "Forked int128 which support okta implicit authorization flow kubelogin utility",
-  "owner": "DevOPS Tooling",
+  "owner": "Developer Productivity",
   "type": "library",
   "status": "released"
 }
