@@ -32,6 +32,7 @@ type Interface interface {
 
 type entity struct {
 	IDToken      string `json:"id_token,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
@@ -98,6 +99,7 @@ func decodeKey(b []byte) (*oidc.TokenSet, error) {
 	}
 	return &oidc.TokenSet{
 		IDToken:      e.IDToken,
+		AccessToken:  e.AccessToken,
 		RefreshToken: e.RefreshToken,
 	}, nil
 }
@@ -196,6 +198,7 @@ func (r *Repository) DeleteAll(config tokencache.Config) error {
 func encodeKey(tokenSet oidc.TokenSet) ([]byte, error) {
 	e := entity{
 		IDToken:      tokenSet.IDToken,
+		AccessToken:  tokenSet.AccessToken,
 		RefreshToken: tokenSet.RefreshToken,
 	}
 	return json.Marshal(&e)
