@@ -81,22 +81,12 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 			return nil, fmt.Errorf("access_token is missing in the token response: %#v", accessToken)
 		}
 
-		// We intentionally do not perform a ClientID check here because there
-		// are some use cases in access_tokens where we *expect* the audience
-		// to differ. For example, one can explicitly set
-		// `audience=CLUSTER_CLIENT_ID` as an extra auth parameter.
-		verifier = c.provider.Verifier(&gooidc.Config{ClientID: "", Now: c.clock.Now, SkipClientIDCheck: true})
-
-		_, err := verifier.Verify(ctx, accessToken)
-		if err != nil {
-			return nil, fmt.Errorf("could not verify the access token: %w", err)
-		}
-
 		// There is no `nonce` to check on the `access_token`. We rely on the
 		// above `nonce` check on the `id_token`.
-
+		// Opaque access tokens are valid under OIDC, thus we cannot verify it without making calls to provider-specific endpoints.
 		return &oidc.TokenSet{
-			IDToken:      accessToken,
+			IDToken:      idToken,
+			AccessToken:  token.AccessToken,
 			RefreshToken: token.RefreshToken,
 		}, nil
 	}
