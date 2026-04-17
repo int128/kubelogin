@@ -63,7 +63,7 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
       - run: go build -ldflags '-X main.version=${{ github.ref_name }}'
-      - uses: int128/go-release-action@a66c6363c3786fda1b453243ade66b09bb5390cd # v2.2.0
+      - uses: int128/go-release-action@9e1d6ec29fc6ffc2ba55f631baf4a73017d228e1 # v2.5.0
         with:
           binary: kubelogin
 
