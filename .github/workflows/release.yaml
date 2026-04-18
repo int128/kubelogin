@@ -18,8 +18,25 @@ on:
       - pkg/**
       - go.*
 
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}--${{ github.ref }}
+
 jobs:
+  create:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    outputs:
+      draft-release-name: ${{ steps.create-draft-release.outputs.draft-release-name }}
+    permissions:
+      contents: write
+    steps:
+      - if: github.event_name == 'push'
+        id: create-draft-release
+        uses: int128/go-release-action/create-draft-release@9e1d6ec29fc6ffc2ba55f631baf4a73017d228e1 # v2.5.0
+
   build:
+    needs: create
     strategy:
       matrix:
         platform:
@@ -62,17 +79,8 @@ jobs:
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-      - run: go build -ldflags '-X main.version=${{ github.ref_name }}'
+      - run: go build -ldflags "-X main.version=$GITHUB_SHA"
       - uses: int128/go-release-action@9e1d6ec29fc6ffc2ba55f631baf4a73017d228e1 # v2.5.0
         with:
           binary: kubelogin
-
-  publish:
-    if: github.ref_type == 'tag'
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: rajatjindal/krew-release-bot@c970b8a8f6dbc2f2285a26e3ae160903b87002c3 # v0.0.51
+          release-name: ${{ needs.create.outputs.draft-release-name }}
