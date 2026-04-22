@@ -46,6 +46,11 @@ type Logger struct {
 func (*Logger) AddFlags(f *pflag.FlagSet) {
 	gf := flag.NewFlagSet("", flag.ContinueOnError)
 	klog.InitFlags(gf)
+	// Opt into the new klog behavior so that -stderrthreshold is honored even
+	// when -logtostderr=true (the default).
+	// Ref: kubernetes/klog#212, kubernetes/klog#432
+	_ = gf.Set("legacy_stderr_threshold_behavior", "false")
+	_ = gf.Set("stderrthreshold", "INFO")
 	f.AddGoFlagSet(gf)
 }
 
