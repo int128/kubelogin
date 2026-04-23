@@ -62,19 +62,10 @@ func (c *client) Refresh(ctx context.Context, refreshToken string) (*oidc.TokenS
 // verifyToken verifies the token with the certificates of the provider and the nonce.
 // If the nonce is an empty string, it does not verify the nonce.
 func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce string) (*oidc.TokenSet, error) {
-	idToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		return nil, fmt.Errorf("id_token is missing in the token response: %#v", token)
-	}
-	verifier := c.provider.Verifier(&gooidc.Config{ClientID: c.oauth2Config.ClientID, Now: c.clock.Now})
-	verifiedIDToken, err := verifier.Verify(ctx, idToken)
-	if err != nil {
-		return nil, fmt.Errorf("could not verify the ID token: %w", err)
-	}
-	if nonce != "" && nonce != verifiedIDToken.Nonce {
-		return nil, fmt.Errorf("nonce did not match (wants %s but got %s)", nonce, verifiedIDToken.Nonce)
-	}
+	idToken, hasIDToken := token.Extra("id_token").(string)
 
+	// When using access tokens, the id_token is not required (some providers
+	// do not return it on refresh). Verify the access token directly.
 	if c.useAccessToken {
 		accessToken, ok := token.Extra("access_token").(string)
 		if !ok {
@@ -85,20 +76,42 @@ func (c *client) verifyToken(ctx context.Context, token *oauth2.Token, nonce str
 		// are some use cases in access_tokens where we *expect* the audience
 		// to differ. For example, one can explicitly set
 		// `audience=CLUSTER_CLIENT_ID` as an extra auth parameter.
-		verifier = c.provider.Verifier(&gooidc.Config{ClientID: "", Now: c.clock.Now, SkipClientIDCheck: true})
+		verifier := c.provider.Verifier(&gooidc.Config{ClientID: "", Now: c.clock.Now, SkipClientIDCheck: true})
 
 		_, err := verifier.Verify(ctx, accessToken)
 		if err != nil {
 			return nil, fmt.Errorf("could not verify the access token: %w", err)
 		}
 
-		// There is no `nonce` to check on the `access_token`. We rely on the
-		// above `nonce` check on the `id_token`.
+		// If an id_token is present, verify it and check the nonce.
+		if hasIDToken {
+			idVerifier := c.provider.Verifier(&gooidc.Config{ClientID: c.oauth2Config.ClientID, Now: c.clock.Now})
+			verifiedIDToken, err := idVerifier.Verify(ctx, idToken)
+			if err != nil {
+				return nil, fmt.Errorf("could not verify the ID token: %w", err)
+			}
+			if nonce != "" && nonce != verifiedIDToken.Nonce {
+				return nil, fmt.Errorf("nonce did not match (wants %s but got %s)", nonce, verifiedIDToken.Nonce)
+			}
+		}
 
 		return &oidc.TokenSet{
 			IDToken:      accessToken,
 			RefreshToken: token.RefreshToken,
 		}, nil
+	}
+
+	// Standard id_token flow: id_token is mandatory.
+	if !hasIDToken {
+		return nil, fmt.Errorf("id_token is missing in the token response: %#v", token)
+	}
+	verifier := c.provider.Verifier(&gooidc.Config{ClientID: c.oauth2Config.ClientID, Now: c.clock.Now})
+	verifiedIDToken, err := verifier.Verify(ctx, idToken)
+	if err != nil {
+		return nil, fmt.Errorf("could not verify the ID token: %w", err)
+	}
+	if nonce != "" && nonce != verifiedIDToken.Nonce {
+		return nil, fmt.Errorf("nonce did not match (wants %s but got %s)", nonce, verifiedIDToken.Nonce)
 	}
 	return &oidc.TokenSet{
 		IDToken:      idToken,
