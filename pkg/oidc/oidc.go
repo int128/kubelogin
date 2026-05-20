@@ -33,11 +33,19 @@ const (
 // TokenSet represents a set of ID token and refresh token.
 type TokenSet struct {
 	IDToken      string
+	AccessToken  string
 	RefreshToken string
 }
 
 func (ts TokenSet) DecodeWithoutVerify() (*jwt.Claims, error) {
 	return jwt.DecodeWithoutVerify(ts.IDToken)
+}
+
+func (p *Provider) SelectToken(ts *TokenSet) string {
+	if p.UseAccessToken {
+		return ts.AccessToken
+	}
+	return ts.IDToken
 }
 
 func NewState() (string, error) {
