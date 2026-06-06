@@ -76,4 +76,4 @@ jobs:
           cache-dependency-path: go.sum
       - run: go mod tidy
       - run: make generate
-      - uses: int128/update-generated-files-action@35e85d10473f03dbf877833ad665894f1ccc3cdc # v2.96.0
+      - uses: int128/update-generated-files-action@678c755dae6c86602016092994c428b76bf58526 # v2.97.0
