@@ -68,7 +68,7 @@ type MockStdout_Write_Call struct {
 
 // Write is a helper method to define mock.On call
 //   - p []byte
-func (_e *MockStdout_Expecter) Write(p interface{}) *MockStdout_Write_Call {
+func (_e *MockStdout_Expecter) Write(p any) *MockStdout_Write_Call {
 	return &MockStdout_Write_Call{Call: _e.mock.On("Write", p)}
 }
 
@@ -155,7 +155,7 @@ type MockStdin_Read_Call struct {
 
 // Read is a helper method to define mock.On call
 //   - p []byte
-func (_e *MockStdin_Expecter) Read(p interface{}) *MockStdin_Read_Call {
+func (_e *MockStdin_Expecter) Read(p any) *MockStdin_Read_Call {
 	return &MockStdin_Read_Call{Call: _e.mock.On("Read", p)}
 }
 

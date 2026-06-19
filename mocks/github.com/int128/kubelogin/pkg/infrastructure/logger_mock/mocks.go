@@ -50,7 +50,7 @@ type MockInterface_AddFlags_Call struct {
 
 // AddFlags is a helper method to define mock.On call
 //   - f *pflag.FlagSet
-func (_e *MockInterface_Expecter) AddFlags(f interface{}) *MockInterface_AddFlags_Call {
+func (_e *MockInterface_Expecter) AddFlags(f any) *MockInterface_AddFlags_Call {
 	return &MockInterface_AddFlags_Call{Call: _e.mock.On("AddFlags", f)}
 }
 
@@ -101,7 +101,7 @@ type MockInterface_IsEnabled_Call struct {
 
 // IsEnabled is a helper method to define mock.On call
 //   - level int
-func (_e *MockInterface_Expecter) IsEnabled(level interface{}) *MockInterface_IsEnabled_Call {
+func (_e *MockInterface_Expecter) IsEnabled(level any) *MockInterface_IsEnabled_Call {
 	return &MockInterface_IsEnabled_Call{Call: _e.mock.On("IsEnabled", level)}
 }
 
@@ -147,9 +147,9 @@ type MockInterface_Printf_Call struct {
 // Printf is a helper method to define mock.On call
 //   - format string
 //   - args ...interface{}
-func (_e *MockInterface_Expecter) Printf(format interface{}, args ...interface{}) *MockInterface_Printf_Call {
+func (_e *MockInterface_Expecter) Printf(format any, args ...any) *MockInterface_Printf_Call {
 	return &MockInterface_Printf_Call{Call: _e.mock.On("Printf",
-		append([]interface{}{format}, args...)...)}
+		append([]any{format}, args...)...)}
 }
 
 func (_c *MockInterface_Printf_Call) Run(run func(format string, args ...interface{})) *MockInterface_Printf_Call {
@@ -208,7 +208,7 @@ type MockInterface_V_Call struct {
 
 // V is a helper method to define mock.On call
 //   - level int
-func (_e *MockInterface_Expecter) V(level interface{}) *MockInterface_V_Call {
+func (_e *MockInterface_Expecter) V(level any) *MockInterface_V_Call {
 	return &MockInterface_V_Call{Call: _e.mock.On("V", level)}
 }
 
@@ -281,9 +281,9 @@ type MockVerbose_Infof_Call struct {
 // Infof is a helper method to define mock.On call
 //   - format string
 //   - args ...interface{}
-func (_e *MockVerbose_Expecter) Infof(format interface{}, args ...interface{}) *MockVerbose_Infof_Call {
+func (_e *MockVerbose_Expecter) Infof(format any, args ...any) *MockVerbose_Infof_Call {
 	return &MockVerbose_Infof_Call{Call: _e.mock.On("Infof",
-		append([]interface{}{format}, args...)...)}
+		append([]any{format}, args...)...)}
 }
 
 func (_c *MockVerbose_Infof_Call) Run(run func(format string, args ...interface{})) *MockVerbose_Infof_Call {
@@ -362,9 +362,9 @@ type mockgoLogger_Printf_Call struct {
 // Printf is a helper method to define mock.On call
 //   - format string
 //   - v ...interface{}
-func (_e *mockgoLogger_Expecter) Printf(format interface{}, v ...interface{}) *mockgoLogger_Printf_Call {
+func (_e *mockgoLogger_Expecter) Printf(format any, v ...any) *mockgoLogger_Printf_Call {
 	return &mockgoLogger_Printf_Call{Call: _e.mock.On("Printf",
-		append([]interface{}{format}, v...)...)}
+		append([]any{format}, v...)...)}
 }
 
 func (_c *mockgoLogger_Printf_Call) Run(run func(format string, v ...interface{})) *mockgoLogger_Printf_Call {

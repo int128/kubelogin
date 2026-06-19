@@ -63,7 +63,7 @@ type MockInterface_Run_Call struct {
 //   - ctx context.Context
 //   - args []string
 //   - version string
-func (_e *MockInterface_Expecter) Run(ctx interface{}, args interface{}, version interface{}) *MockInterface_Run_Call {
+func (_e *MockInterface_Expecter) Run(ctx any, args any, version any) *MockInterface_Run_Call {
 	return &MockInterface_Run_Call{Call: _e.mock.On("Run", ctx, args, version)}
 }
 

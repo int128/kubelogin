@@ -63,7 +63,7 @@ type MockInterface_Do_Call struct {
 // Do is a helper method to define mock.On call
 //   - ctx context.Context
 //   - in standalone.Input
-func (_e *MockInterface_Expecter) Do(ctx interface{}, in interface{}) *MockInterface_Do_Call {
+func (_e *MockInterface_Expecter) Do(ctx any, in any) *MockInterface_Do_Call {
 	return &MockInterface_Do_Call{Call: _e.mock.On("Do", ctx, in)}
 }
 
