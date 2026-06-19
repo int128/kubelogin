@@ -78,7 +78,7 @@ type MockInterface_ExchangeAuthCode_Call struct {
 // ExchangeAuthCode is a helper method to define mock.On call
 //   - ctx context.Context
 //   - in client.ExchangeAuthCodeInput
-func (_e *MockInterface_Expecter) ExchangeAuthCode(ctx interface{}, in interface{}) *MockInterface_ExchangeAuthCode_Call {
+func (_e *MockInterface_Expecter) ExchangeAuthCode(ctx any, in any) *MockInterface_ExchangeAuthCode_Call {
 	return &MockInterface_ExchangeAuthCode_Call{Call: _e.mock.On("ExchangeAuthCode", ctx, in)}
 }
 
@@ -146,7 +146,7 @@ type MockInterface_ExchangeDeviceCode_Call struct {
 // ExchangeDeviceCode is a helper method to define mock.On call
 //   - ctx context.Context
 //   - authResponse *oauth2dev.AuthorizationResponse
-func (_e *MockInterface_Expecter) ExchangeDeviceCode(ctx interface{}, authResponse interface{}) *MockInterface_ExchangeDeviceCode_Call {
+func (_e *MockInterface_Expecter) ExchangeDeviceCode(ctx any, authResponse any) *MockInterface_ExchangeDeviceCode_Call {
 	return &MockInterface_ExchangeDeviceCode_Call{Call: _e.mock.On("ExchangeDeviceCode", ctx, authResponse)}
 }
 
@@ -202,7 +202,7 @@ type MockInterface_GetAuthCodeURL_Call struct {
 
 // GetAuthCodeURL is a helper method to define mock.On call
 //   - in client.AuthCodeURLInput
-func (_e *MockInterface_Expecter) GetAuthCodeURL(in interface{}) *MockInterface_GetAuthCodeURL_Call {
+func (_e *MockInterface_Expecter) GetAuthCodeURL(in any) *MockInterface_GetAuthCodeURL_Call {
 	return &MockInterface_GetAuthCodeURL_Call{Call: _e.mock.On("GetAuthCodeURL", in)}
 }
 
@@ -264,7 +264,7 @@ type MockInterface_GetDeviceAuthorization_Call struct {
 
 // GetDeviceAuthorization is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockInterface_Expecter) GetDeviceAuthorization(ctx interface{}) *MockInterface_GetDeviceAuthorization_Call {
+func (_e *MockInterface_Expecter) GetDeviceAuthorization(ctx any) *MockInterface_GetDeviceAuthorization_Call {
 	return &MockInterface_GetDeviceAuthorization_Call{Call: _e.mock.On("GetDeviceAuthorization", ctx)}
 }
 
@@ -328,7 +328,7 @@ type MockInterface_GetTokenByAuthCode_Call struct {
 //   - ctx context.Context
 //   - in client.GetTokenByAuthCodeInput
 //   - localServerReadyChan chan<- string
-func (_e *MockInterface_Expecter) GetTokenByAuthCode(ctx interface{}, in interface{}, localServerReadyChan interface{}) *MockInterface_GetTokenByAuthCode_Call {
+func (_e *MockInterface_Expecter) GetTokenByAuthCode(ctx any, in any, localServerReadyChan any) *MockInterface_GetTokenByAuthCode_Call {
 	return &MockInterface_GetTokenByAuthCode_Call{Call: _e.mock.On("GetTokenByAuthCode", ctx, in, localServerReadyChan)}
 }
 
@@ -401,7 +401,7 @@ type MockInterface_GetTokenByClientCredentials_Call struct {
 // GetTokenByClientCredentials is a helper method to define mock.On call
 //   - ctx context.Context
 //   - in client.GetTokenByClientCredentialsInput
-func (_e *MockInterface_Expecter) GetTokenByClientCredentials(ctx interface{}, in interface{}) *MockInterface_GetTokenByClientCredentials_Call {
+func (_e *MockInterface_Expecter) GetTokenByClientCredentials(ctx any, in any) *MockInterface_GetTokenByClientCredentials_Call {
 	return &MockInterface_GetTokenByClientCredentials_Call{Call: _e.mock.On("GetTokenByClientCredentials", ctx, in)}
 }
 
@@ -470,7 +470,7 @@ type MockInterface_GetTokenByROPC_Call struct {
 //   - ctx context.Context
 //   - username string
 //   - password string
-func (_e *MockInterface_Expecter) GetTokenByROPC(ctx interface{}, username interface{}, password interface{}) *MockInterface_GetTokenByROPC_Call {
+func (_e *MockInterface_Expecter) GetTokenByROPC(ctx any, username any, password any) *MockInterface_GetTokenByROPC_Call {
 	return &MockInterface_GetTokenByROPC_Call{Call: _e.mock.On("GetTokenByROPC", ctx, username, password)}
 }
 
@@ -587,7 +587,7 @@ type MockInterface_Refresh_Call struct {
 // Refresh is a helper method to define mock.On call
 //   - ctx context.Context
 //   - refreshToken string
-func (_e *MockInterface_Expecter) Refresh(ctx interface{}, refreshToken interface{}) *MockInterface_Refresh_Call {
+func (_e *MockInterface_Expecter) Refresh(ctx any, refreshToken any) *MockInterface_Refresh_Call {
 	return &MockInterface_Refresh_Call{Call: _e.mock.On("Refresh", ctx, refreshToken)}
 }
 
@@ -683,7 +683,7 @@ type MockFactoryInterface_New_Call struct {
 //   - ctx context.Context
 //   - prov oidc.Provider
 //   - tlsClientConfig tlsclientconfig.Config
-func (_e *MockFactoryInterface_Expecter) New(ctx interface{}, prov interface{}, tlsClientConfig interface{}) *MockFactoryInterface_New_Call {
+func (_e *MockFactoryInterface_Expecter) New(ctx any, prov any, tlsClientConfig any) *MockFactoryInterface_New_Call {
 	return &MockFactoryInterface_New_Call{Call: _e.mock.On("New", ctx, prov, tlsClientConfig)}
 }
 

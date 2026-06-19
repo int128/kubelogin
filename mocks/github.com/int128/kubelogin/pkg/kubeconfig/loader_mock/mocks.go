@@ -73,7 +73,7 @@ type MockInterface_GetCurrentAuthProvider_Call struct {
 //   - explicitFilename string
 //   - contextName kubeconfig.ContextName
 //   - userName kubeconfig.UserName
-func (_e *MockInterface_Expecter) GetCurrentAuthProvider(explicitFilename interface{}, contextName interface{}, userName interface{}) *MockInterface_GetCurrentAuthProvider_Call {
+func (_e *MockInterface_Expecter) GetCurrentAuthProvider(explicitFilename any, contextName any, userName any) *MockInterface_GetCurrentAuthProvider_Call {
 	return &MockInterface_GetCurrentAuthProvider_Call{Call: _e.mock.On("GetCurrentAuthProvider", explicitFilename, contextName, userName)}
 }
 

@@ -63,7 +63,7 @@ type MockInterface_DeleteAll_Call struct {
 
 // DeleteAll is a helper method to define mock.On call
 //   - config tokencache.Config
-func (_e *MockInterface_Expecter) DeleteAll(config interface{}) *MockInterface_DeleteAll_Call {
+func (_e *MockInterface_Expecter) DeleteAll(config any) *MockInterface_DeleteAll_Call {
 	return &MockInterface_DeleteAll_Call{Call: _e.mock.On("DeleteAll", config)}
 }
 
@@ -126,7 +126,7 @@ type MockInterface_FindByKey_Call struct {
 // FindByKey is a helper method to define mock.On call
 //   - config tokencache.Config
 //   - key tokencache.Key
-func (_e *MockInterface_Expecter) FindByKey(config interface{}, key interface{}) *MockInterface_FindByKey_Call {
+func (_e *MockInterface_Expecter) FindByKey(config any, key any) *MockInterface_FindByKey_Call {
 	return &MockInterface_FindByKey_Call{Call: _e.mock.On("FindByKey", config, key)}
 }
 
@@ -194,7 +194,7 @@ type MockInterface_Lock_Call struct {
 // Lock is a helper method to define mock.On call
 //   - config tokencache.Config
 //   - key tokencache.Key
-func (_e *MockInterface_Expecter) Lock(config interface{}, key interface{}) *MockInterface_Lock_Call {
+func (_e *MockInterface_Expecter) Lock(config any, key any) *MockInterface_Lock_Call {
 	return &MockInterface_Lock_Call{Call: _e.mock.On("Lock", config, key)}
 }
 
@@ -252,7 +252,7 @@ type MockInterface_Save_Call struct {
 //   - config tokencache.Config
 //   - key tokencache.Key
 //   - tokenSet oidc.TokenSet
-func (_e *MockInterface_Expecter) Save(config interface{}, key interface{}, tokenSet interface{}) *MockInterface_Save_Call {
+func (_e *MockInterface_Expecter) Save(config any, key any, tokenSet any) *MockInterface_Save_Call {
 	return &MockInterface_Save_Call{Call: _e.mock.On("Save", config, key, tokenSet)}
 }
 

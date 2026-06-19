@@ -70,7 +70,7 @@ type MockService_AuthenticateCode_Call struct {
 
 // AuthenticateCode is a helper method to define mock.On call
 //   - req service.AuthenticationRequest
-func (_e *MockService_Expecter) AuthenticateCode(req interface{}) *MockService_AuthenticateCode_Call {
+func (_e *MockService_Expecter) AuthenticateCode(req any) *MockService_AuthenticateCode_Call {
 	return &MockService_AuthenticateCode_Call{Call: _e.mock.On("AuthenticateCode", req)}
 }
 
@@ -134,7 +134,7 @@ type MockService_AuthenticatePassword_Call struct {
 //   - username string
 //   - password string
 //   - scope string
-func (_e *MockService_Expecter) AuthenticatePassword(username interface{}, password interface{}, scope interface{}) *MockService_AuthenticatePassword_Call {
+func (_e *MockService_Expecter) AuthenticatePassword(username any, password any, scope any) *MockService_AuthenticatePassword_Call {
 	return &MockService_AuthenticatePassword_Call{Call: _e.mock.On("AuthenticatePassword", username, password, scope)}
 }
 
@@ -252,7 +252,7 @@ type MockService_Exchange_Call struct {
 
 // Exchange is a helper method to define mock.On call
 //   - req service.TokenRequest
-func (_e *MockService_Expecter) Exchange(req interface{}) *MockService_Exchange_Call {
+func (_e *MockService_Expecter) Exchange(req any) *MockService_Exchange_Call {
 	return &MockService_Exchange_Call{Call: _e.mock.On("Exchange", req)}
 }
 
@@ -450,7 +450,7 @@ type MockService_Refresh_Call struct {
 
 // Refresh is a helper method to define mock.On call
 //   - refreshToken string
-func (_e *MockService_Expecter) Refresh(refreshToken interface{}) *MockService_Refresh_Call {
+func (_e *MockService_Expecter) Refresh(refreshToken any) *MockService_Refresh_Call {
 	return &MockService_Refresh_Call{Call: _e.mock.On("Refresh", refreshToken)}
 }
 
@@ -490,7 +490,7 @@ type MockService_SetConfig_Call struct {
 
 // SetConfig is a helper method to define mock.On call
 //   - config testconfig.Config
-func (_e *MockService_Expecter) SetConfig(config interface{}) *MockService_SetConfig_Call {
+func (_e *MockService_Expecter) SetConfig(config any) *MockService_SetConfig_Call {
 	return &MockService_SetConfig_Call{Call: _e.mock.On("SetConfig", config)}
 }
 
@@ -577,7 +577,7 @@ type MockProvider_AuthenticateCode_Call struct {
 
 // AuthenticateCode is a helper method to define mock.On call
 //   - req service.AuthenticationRequest
-func (_e *MockProvider_Expecter) AuthenticateCode(req interface{}) *MockProvider_AuthenticateCode_Call {
+func (_e *MockProvider_Expecter) AuthenticateCode(req any) *MockProvider_AuthenticateCode_Call {
 	return &MockProvider_AuthenticateCode_Call{Call: _e.mock.On("AuthenticateCode", req)}
 }
 
@@ -641,7 +641,7 @@ type MockProvider_AuthenticatePassword_Call struct {
 //   - username string
 //   - password string
 //   - scope string
-func (_e *MockProvider_Expecter) AuthenticatePassword(username interface{}, password interface{}, scope interface{}) *MockProvider_AuthenticatePassword_Call {
+func (_e *MockProvider_Expecter) AuthenticatePassword(username any, password any, scope any) *MockProvider_AuthenticatePassword_Call {
 	return &MockProvider_AuthenticatePassword_Call{Call: _e.mock.On("AuthenticatePassword", username, password, scope)}
 }
 
@@ -759,7 +759,7 @@ type MockProvider_Exchange_Call struct {
 
 // Exchange is a helper method to define mock.On call
 //   - req service.TokenRequest
-func (_e *MockProvider_Expecter) Exchange(req interface{}) *MockProvider_Exchange_Call {
+func (_e *MockProvider_Expecter) Exchange(req any) *MockProvider_Exchange_Call {
 	return &MockProvider_Exchange_Call{Call: _e.mock.On("Exchange", req)}
 }
 
@@ -867,7 +867,7 @@ type MockProvider_Refresh_Call struct {
 
 // Refresh is a helper method to define mock.On call
 //   - refreshToken string
-func (_e *MockProvider_Expecter) Refresh(refreshToken interface{}) *MockProvider_Refresh_Call {
+func (_e *MockProvider_Expecter) Refresh(refreshToken any) *MockProvider_Refresh_Call {
 	return &MockProvider_Refresh_Call{Call: _e.mock.On("Refresh", refreshToken)}
 }
 
