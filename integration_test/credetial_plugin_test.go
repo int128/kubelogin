@@ -198,6 +198,57 @@ func TestCredentialPlugin(t *testing.T) {
 		})
 	}
 
+	t.Run("DeviceCode", func(t *testing.T) {
+		t.Run("WithoutPKCE", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+			defer cancel()
+			svc := oidcserver.New(t, keypair.None, testconfig.Config{
+				Want: testconfig.Want{
+					Scope:               "openid",
+					CodeChallengeMethod: "",
+				},
+				Response: testconfig.Response{
+					IDTokenExpiry: now.Add(time.Hour),
+				},
+			})
+			var stdout bytes.Buffer
+			runGetToken(t, ctx, getTokenConfig{
+				tokenCacheDir: tokenCacheDir,
+				issuerURL:     svc.IssuerURL(),
+				httpDriver:    httpdriver.Zero(t),
+				now:           now,
+				stdout:        &stdout,
+				args:          []string{"--grant-type", "device-code", "--skip-open-browser"},
+			})
+			assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
+		})
+
+		t.Run("WithPKCE", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+			defer cancel()
+			svc := oidcserver.New(t, keypair.None, testconfig.Config{
+				Want: testconfig.Want{
+					Scope:               "openid",
+					CodeChallengeMethod: "S256",
+				},
+				Response: testconfig.Response{
+					IDTokenExpiry:                 now.Add(time.Hour),
+					CodeChallengeMethodsSupported: []string{"S256"},
+				},
+			})
+			var stdout bytes.Buffer
+			runGetToken(t, ctx, getTokenConfig{
+				tokenCacheDir: tokenCacheDir,
+				issuerURL:     svc.IssuerURL(),
+				httpDriver:    httpdriver.Zero(t),
+				now:           now,
+				stdout:        &stdout,
+				args:          []string{"--grant-type", "device-code", "--skip-open-browser"},
+			})
+			assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
+		})
+	})
+
 	t.Run("PKCE", func(t *testing.T) {
 		t.Run("Not supported by provider", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.TODO(), timeout)
