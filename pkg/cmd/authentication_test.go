@@ -102,7 +102,7 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 						"audience": []string{"https://example.com/service1"},
 						"jti":      []string{"myUUID"},
 					},
-					AuthStyle: oauth2.AuthStyleAutoDetect, // default is "auto"
+					AuthStyle: oauth2.AuthStyleInHeader, // default is "auto"
 				},
 			},
 		},
@@ -121,10 +121,10 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				},
 			},
 		},
-		"GrantType=client-credentials auth style parameter": {
+		"GrantType=client-credentials auth style auto detection": {
 			args: []string{
 				"--grant-type", "client-credentials",
-				"--client-credentials-auth-style", "parameter",
+				"--client-credentials-auth-style", "auto",
 				"--oidc-auth-request-extra-params", "audience=https://example.com/service1",
 			},
 			want: authentication.GrantOptionSet{
@@ -132,7 +132,7 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 					EndpointParams: map[string][]string{
 						"audience": []string{"https://example.com/service1"},
 					},
-					AuthStyle: oauth2.AuthStyleInParams,
+					AuthStyle: oauth2.AuthStyleAutoDetect,
 				},
 			},
 		},

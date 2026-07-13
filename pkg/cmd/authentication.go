@@ -49,7 +49,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request")
-	f.StringVar(&o.ClientCredentialsAuthStyle, "client-credentials-auth-style", "auto", "[client-credentials] Auth style for sending client credentials. header (HTTP Basic Auth) or parameters (Request Body)")
+	f.StringVar(&o.ClientCredentialsAuthStyle, "client-credentials-auth-style", "header", "[client-credentials] Auth style for sending client credentials. header (HTTP Basic Auth), parameters (Request Body) or auto for auto detection")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
 }
