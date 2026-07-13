@@ -10,6 +10,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
 	"github.com/spf13/pflag"
+	"golang.org/x/oauth2"
 )
 
 func Test_authenticationOptions_grantOptionSet(t *testing.T) {
@@ -89,7 +90,7 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				},
 			},
 		},
-		"GrantType=client-credentials": {
+		"GrantType=client-credentials (default auth style)": {
 			args: []string{
 				"--grant-type", "client-credentials",
 				"--oidc-auth-request-extra-params", "audience=https://example.com/service1",
@@ -101,6 +102,37 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 						"audience": []string{"https://example.com/service1"},
 						"jti":      []string{"myUUID"},
 					},
+					AuthStyle: oauth2.AuthStyleAutoDetect, // default is "auto"
+				},
+			},
+		},
+		"GrantType=client-credentials auth style header": {
+			args: []string{
+				"--grant-type", "client-credentials",
+				"--client-credentials-auth-style", "header",
+				"--oidc-auth-request-extra-params", "audience=https://example.com/service1",
+			},
+			want: authentication.GrantOptionSet{
+				ClientCredentialsOption: &client.GetTokenByClientCredentialsInput{
+					EndpointParams: map[string][]string{
+						"audience": []string{"https://example.com/service1"},
+					},
+					AuthStyle: oauth2.AuthStyleInHeader,
+				},
+			},
+		},
+		"GrantType=client-credentials auth style parameter": {
+			args: []string{
+				"--grant-type", "client-credentials",
+				"--client-credentials-auth-style", "parameter",
+				"--oidc-auth-request-extra-params", "audience=https://example.com/service1",
+			},
+			want: authentication.GrantOptionSet{
+				ClientCredentialsOption: &client.GetTokenByClientCredentialsInput{
+					EndpointParams: map[string][]string{
+						"audience": []string{"https://example.com/service1"},
+					},
+					AuthStyle: oauth2.AuthStyleInParams,
 				},
 			},
 		},
