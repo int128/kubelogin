@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
+	"golang.org/x/oauth2"
 
 	"github.com/int128/kubelogin/pkg/oidc/client"
 	"github.com/int128/kubelogin/pkg/usecases/authentication"
@@ -24,6 +25,7 @@ type authenticationOptions struct {
 	LocalServerKeyFile         string
 	OpenURLAfterAuthentication string
 	AuthRequestExtraParams     map[string]string
+	ClientCredentialsAuthStyle string
 	Username                   string
 	Password                   string
 }
@@ -47,6 +49,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request")
+	f.StringVar(&o.ClientCredentialsAuthStyle, "client-credentials-auth-style", "header", "[client-credentials] Auth style for sending client credentials. header (HTTP Basic Auth), parameters (Request Body) or auto for auto detection")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
 }
@@ -84,11 +87,23 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			BrowserCommand:  o.BrowserCommand,
 		}
 	case o.GrantType == "client-credentials":
+		var authStyle oauth2.AuthStyle
 		endpointparams := make(map[string][]string, len(o.AuthRequestExtraParams))
 		for k, v := range o.AuthRequestExtraParams {
 			endpointparams[k] = []string{v}
 		}
-		s.ClientCredentialsOption = &client.GetTokenByClientCredentialsInput{EndpointParams: endpointparams}
+
+		if o.ClientCredentialsAuthStyle == "header" {
+			authStyle = oauth2.AuthStyleInHeader
+		}
+		if o.ClientCredentialsAuthStyle == "parameter" {
+			authStyle = oauth2.AuthStyleInParams
+		}
+		if o.ClientCredentialsAuthStyle == "auto" {
+			authStyle = oauth2.AuthStyleAutoDetect
+		}
+
+		s.ClientCredentialsOption = &client.GetTokenByClientCredentialsInput{EndpointParams: endpointparams, AuthStyle: authStyle}
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
 	}
