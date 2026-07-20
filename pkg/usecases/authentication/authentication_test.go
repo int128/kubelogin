@@ -18,6 +18,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/clientcredentials"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/tokenexchange"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -207,6 +208,50 @@ func TestAuthentication_Do(t *testing.T) {
 			ClientFactory: mockClientFactory,
 			Logger:        testingLogger.New(t),
 			ClientCredentials: &clientcredentials.ClientCredentials{
+				Logger: testingLogger.New(t),
+			},
+		}
+		got, err := u.Do(ctx, in)
+		if err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+		want := &Output{
+			TokenSet: oidc.TokenSet{
+				IDToken: "TEST_ID_TOKEN",
+			},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("NoToken/TokenExchange", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		teIn := tokenexchange.TokenExchangeOption{
+			SubjectToken:     "SUBJECT_TOKEN",
+			SubjectTokenType: "urn:ietf:params:oauth:token-type:access_token",
+		}
+		in := Input{
+			Provider:        dummyProvider,
+			TLSClientConfig: dummyTLSClientConfig,
+			GrantOptionSet:  GrantOptionSet{TokenExchangeOption: &teIn},
+		}
+		mockClient := client_mock.NewMockInterface(t)
+		mockClient.EXPECT().
+			GetTokenByTokenExchange(ctx, client.GetTokenByTokenExchangeInput{
+				SubjectToken:     "SUBJECT_TOKEN",
+				SubjectTokenType: "urn:ietf:params:oauth:token-type:access_token",
+			}).
+			Return(&oidc.TokenSet{IDToken: "TEST_ID_TOKEN"}, nil).Once()
+		mockClientFactory := client_mock.NewMockFactoryInterface(t)
+		mockClientFactory.EXPECT().
+			New(ctx, dummyProvider, dummyTLSClientConfig).
+			Return(mockClient, nil)
+		u := Authentication{
+			ClientFactory: mockClientFactory,
+			Logger:        testingLogger.New(t),
+			TokenExchange: &tokenexchange.TokenExchange{
 				Logger: testingLogger.New(t),
 			},
 		}
