@@ -12,6 +12,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/authcode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/tokenexchange"
 )
 
 type authenticationOptions struct {
@@ -62,7 +63,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringSliceVar(&o.TokenExchangeAudience, "token-exchange-audience", []string{}, "[token-exchange] the audience the client intends to use")
 	f.StringVar(&o.TokenExchangeRequestedTokenType, "token-exchange-requested-token-type", "", "[token-exchange] return type desired in response, e.g. id-token or access-token")
 	f.StringVar(&o.TokenExchangeSubjectToken, "token-exchange-subject-token", "", "[token-exchange] the token to exchange (required)")
-	f.StringVar(&o.TokenExchangeSubjectTokenType, "token-exchange-subject-token-type", "", "[token-exchange] the type of token provided, e.g. id-token or access-token (required)")
+	f.StringVar(&o.TokenExchangeSubjectTokenType, "token-exchange-subject-token-type", client.AccessTokenType, "[token-exchange] the type of token provided, e.g. id-token or access-token (required)")
 	f.StringVar(&o.TokenExchangeActorToken, "token-exchange-actor-token", "", "[token-exchange] optional token for delegated access pattern")
 	f.StringVar(&o.TokenExchangeActorTokenType, "token-exchange-actor-token-type", "", "[token-exchange] type of the actor token, e.g. id-token or access-token")
 }
@@ -107,6 +108,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 		s.ClientCredentialsOption = &client.GetTokenByClientCredentialsInput{EndpointParams: endpointparams}
 	case o.GrantType == "token-exchange":
 		// TODO(vdbe): implement this
+		s.TokenExchangeOption = &tokenexchange.TokenExchangeOption{}
 		err = fmt.Errorf("grant-type %s is not implemented", allGrantType)
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)

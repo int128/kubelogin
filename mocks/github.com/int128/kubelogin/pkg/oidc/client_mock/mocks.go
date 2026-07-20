@@ -461,6 +461,18 @@ func (_mock *MockInterface) GetTokenByROPC(ctx context.Context, username string,
 	return r0, r1
 }
 
+// GetTokenByTokenExchage provides a mock function for the type MockInterface
+func (_mock *MockInterface) GetTokenByTokenExchange(ctx context.Context, in client.GetTokenByTokenExchangeInput) (*oidc.TokenSet, error) {
+	// TODO(vdbe): implement this
+	ret := _mock.Called(ctx, in)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTokenByAuthCode")
+	}
+
+	panic("`GetTokenByTokenExchange` not yet implemented")
+}
+
 // MockInterface_GetTokenByROPC_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTokenByROPC'
 type MockInterface_GetTokenByROPC_Call struct {
 	*mock.Call

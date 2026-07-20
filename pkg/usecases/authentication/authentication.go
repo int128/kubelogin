@@ -13,6 +13,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/clientcredentials"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/tokenexchange"
 )
 
 // Set provides the use-case of Authentication.
@@ -44,6 +45,7 @@ type GrantOptionSet struct {
 	ROPCOption              *ropc.Option
 	DeviceCodeOption        *devicecode.Option
 	ClientCredentialsOption *client.GetTokenByClientCredentialsInput
+	TokenExchangeOption     *tokenexchange.TokenExchangeOption
 }
 
 // AuthRequestExtraParams returns the extra parameters for the auth request
@@ -73,6 +75,7 @@ type Output struct {
 	TokenSet oidc.TokenSet
 }
 
+// TODO(vdbe): update comment to include `TokenExchange`
 // Authentication provides the internal use-case of authentication.
 //
 // If the IDToken is not set, it performs the authentication flow.
@@ -93,6 +96,7 @@ type Authentication struct {
 	ROPC              *ropc.ROPC
 	DeviceCode        *devicecode.DeviceCode
 	ClientCredentials *clientcredentials.ClientCredentials
+	TokenExchange     *tokenexchange.TokenExchange
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -143,6 +147,13 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		tokenSet, err := u.ClientCredentials.Do(ctx, in.GrantOptionSet.ClientCredentialsOption, oidcClient)
 		if err != nil {
 			return nil, fmt.Errorf("client-credentials error: %w", err)
+		}
+		return &Output{TokenSet: *tokenSet}, nil
+	}
+	if in.GrantOptionSet.TokenExchangeOption != nil {
+		tokenSet, err := u.TokenExchange.Do(ctx, in.GrantOptionSet.TokenExchangeOption, oidcClient)
+		if err != nil {
+			return nil, fmt.Errorf("token-exchange: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}
