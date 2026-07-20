@@ -25,6 +25,7 @@ var Set = wire.NewSet(
 	wire.Struct(new(ropc.ROPC), "*"),
 	wire.Struct(new(devicecode.DeviceCode), "*"),
 	wire.Struct(new(clientcredentials.ClientCredentials), "*"),
+	wire.Struct(new(tokenexchange.TokenExchange), "*"),
 )
 
 type Interface interface {
@@ -75,7 +76,6 @@ type Output struct {
 	TokenSet oidc.TokenSet
 }
 
-// TODO(vdbe): update comment to include `TokenExchange`
 // Authentication provides the internal use-case of authentication.
 //
 // If the IDToken is not set, it performs the authentication flow.
@@ -85,8 +85,9 @@ type Output struct {
 //
 // The authentication flow is determined as:
 //
-// If the Username is not set, it performs the authorization code flow.
-// Otherwise, it performs the resource owner password credentials flow.
+// If the Username is set, it performs the resource owner password credentials flow.
+// If SubjectToken is set, it performs the token exchange flow.
+// Otherwise, it performs the authorization code flow.
 // If the Password is not set, it asks a password by the prompt.
 type Authentication struct {
 	ClientFactory     client.FactoryInterface
@@ -153,7 +154,7 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 	if in.GrantOptionSet.TokenExchangeOption != nil {
 		tokenSet, err := u.TokenExchange.Do(ctx, in.GrantOptionSet.TokenExchangeOption, oidcClient)
 		if err != nil {
-			return nil, fmt.Errorf("token-exchange: %w", err)
+			return nil, fmt.Errorf("token-exchange error: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}

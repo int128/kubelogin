@@ -75,7 +75,7 @@ func (o *authenticationOptions) expandHomedir() {
 
 func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {
 	switch {
-	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == ""):
+	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == "" && o.TokenExchangeSubjectToken == ""):
 		s.AuthCodeBrowserOption = &authcode.BrowserOption{
 			BindAddress:                o.ListenAddress,
 			SkipOpenBrowser:            o.SkipOpenBrowser,
@@ -106,10 +106,18 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			endpointparams[k] = []string{v}
 		}
 		s.ClientCredentialsOption = &client.GetTokenByClientCredentialsInput{EndpointParams: endpointparams}
-	case o.GrantType == "token-exchange":
-		// TODO(vdbe): implement this
-		s.TokenExchangeOption = &tokenexchange.TokenExchangeOption{}
-		err = fmt.Errorf("grant-type %s is not implemented", allGrantType)
+	case o.GrantType == "token-exchange" || (o.GrantType == "auto" && o.TokenExchangeSubjectToken != ""):
+		s.TokenExchangeOption = &tokenexchange.TokenExchangeOption{
+			Resource:           o.TokenExchangeResource,
+			Audience:           o.TokenExchangeAudience,
+			RequestedTokenType: o.TokenExchangeRequestedTokenType,
+			SubjectToken:       o.TokenExchangeSubjectToken,
+			SubjectTokenType:   o.TokenExchangeSubjectTokenType,
+			ActorToken:         o.TokenExchangeActorToken,
+			ActorTokenType:     o.TokenExchangeActorTokenType,
+
+			AuthRequestExtraParams: o.AuthRequestExtraParams,
+		}
 	default:
 		err = fmt.Errorf("grant-type must be one of (%s)", allGrantType)
 	}
