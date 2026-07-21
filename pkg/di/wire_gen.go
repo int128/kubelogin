@@ -25,6 +25,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/clientcredentials"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/tokenexchange"
 	"github.com/int128/kubelogin/pkg/usecases/clean"
 	"github.com/int128/kubelogin/pkg/usecases/credentialplugin"
 	"github.com/int128/kubelogin/pkg/usecases/setup"
@@ -80,6 +81,9 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 	clientCredentials := &clientcredentials.ClientCredentials{
 		Logger: loggerInterface,
 	}
+	tokenExchange := &tokenexchange.TokenExchange{
+		Logger: loggerInterface,
+	}
 	authenticationAuthentication := &authentication.Authentication{
 		ClientFactory:     factory,
 		Logger:            loggerInterface,
@@ -88,6 +92,7 @@ func NewCmdForHeadless(clockInterface clock.Interface, stdin stdio.Stdin, stdout
 		ROPC:              ropcROPC,
 		DeviceCode:        deviceCode,
 		ClientCredentials: clientCredentials,
+		TokenExchange:     tokenExchange,
 	}
 	loader3 := &loader2.Loader{}
 	writerWriter := &writer.Writer{}
