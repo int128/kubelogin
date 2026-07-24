@@ -64,6 +64,7 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			SkipOpenBrowser:            o.SkipOpenBrowser,
 			BrowserCommand:             o.BrowserCommand,
 			AuthenticationTimeout:      time.Duration(o.AuthenticationTimeoutSec) * time.Second,
+			ConfiguredTimeout:          time.Duration(o.AuthenticationTimeoutSec) * time.Second,
 			LocalServerCertFile:        o.LocalServerCertFile,
 			LocalServerKeyFile:         o.LocalServerKeyFile,
 			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,
