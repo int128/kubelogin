@@ -23,7 +23,7 @@ Flags:
       --tls-renegotiation-once                          If set, allow a remote server to request renegotiation once per connection
       --tls-renegotiation-freely                        If set, allow a remote server to repeatedly request renegotiation
       --oidc-pkce-method string                         PKCE code challenge method. Automatically determined by default. One of (auto|no|S256) (default "auto")
-      --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password|device-code|client-credentials) (default "auto")
+      --grant-type string                               Authorization grant type to use. One of (auto|authcode|authcode-keyboard|password|device-code|client-credentials|token-exchange) (default "auto")
       --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --skip-open-browser                               [authcode] Do not open the browser automatically
       --browser-command string                          [authcode] Command to open the browser
@@ -31,9 +31,16 @@ Flags:
       --local-server-cert string                        [authcode] Certificate path for the local server
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
-      --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request (default [])
+      --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, client-credentials, token-exchange] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
       --password string                                 [password] Password for resource owner password credentials grant
+      --token-exchange-resource strings                 [token-exchange] a URI for the target resource the client intends to use
+      --token-exchange-audience strings                 [token-exchange] the audience the client intends to use
+      --token-exchange-requested-token-type string      [token-exchange] return type desired in response, e.g. id-token or access-token
+      --token-exchange-subject-token string             [token-exchange] the token to exchange (required)
+      --token-exchange-subject-token-type string        [token-exchange] the type of token provided, e.g. id-token or access-token (required) (default "urn:ietf:params:oauth:token-type:access_token")
+      --token-exchange-actor-token string               [token-exchange] optional token for delegated access pattern
+      --token-exchange-actor-token-type string          [token-exchange] type of the actor token, e.g. id-token or access-token
   -h, --help                                            help for get-token
 
 Global Flags:
@@ -305,6 +312,20 @@ It performs the [OAuth 2.0 Client Credentials Flow](https://datatracker.ietf.org
 ```
 
 Per specification, this flow only returns authorization tokens.
+
+### Token Exchange
+
+It performs the [Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693) when `--grant-type=token-exchange` is set.
+
+```yaml
+- --grant-type=toke-exchange
+```
+
+You need to explicitly set the subject token.
+
+```yaml
+- --subject-token=<subject_token>
+```
 
 ## Run in Docker
 
