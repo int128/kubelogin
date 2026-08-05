@@ -22,8 +22,8 @@ type Interface interface {
 	NegotiatedPKCEMethod() pkce.Method
 	GetTokenByROPC(ctx context.Context, username, password string) (*oidc.TokenSet, error)
 	GetTokenByClientCredentials(ctx context.Context, in GetTokenByClientCredentialsInput) (*oidc.TokenSet, error)
-	GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error)
-	ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error)
+	GetDeviceAuthorization(ctx context.Context, pkceParams pkce.Params) (*oauth2dev.AuthorizationResponse, error)
+	ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse, pkceParams pkce.Params) (*oidc.TokenSet, error)
 	Refresh(ctx context.Context, refreshToken string) (*oidc.TokenSet, error)
 }
 
