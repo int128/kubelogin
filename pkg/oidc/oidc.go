@@ -11,14 +11,15 @@ import (
 
 // Provider represents an OIDC provider.
 type Provider struct {
-	IssuerURL      string
-	ClientID       string
-	ClientSecret   string   // optional
-	ExtraScopes    []string // optional
-	RedirectURL    string   // optional
-	PKCEMethod     PKCEMethod
-	UseAccessToken bool
-	RequestHeaders map[string]string
+	IssuerURL              string
+	ClientID               string
+	ClientSecret           string   // optional
+	ExtraScopes            []string // optional
+	RedirectURL            string   // optional
+	PKCEMethod             PKCEMethod
+	UseAccessToken         bool
+	RequestHeaders         map[string]string
+	DeviceAuthorizationURL string // optional: overrides device_authorization_endpoint from discovery (e.g. GitLab omits it)
 }
 
 // PKCEMethod represents a preferred method of PKCE.
