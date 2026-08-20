@@ -159,6 +159,54 @@ func (svc *service) AuthenticatePassword(username, password, scope string) (*Tok
 	return resp, nil
 }
 
+func (svc *service) AuthenticateTokenExchange(req TokenExchangeRequest) (*TokenResponse, error) {
+	if req.SubjectToken == "" {
+		return nil, &ErrorResponse{Code: "invalid_request", Description: "subject_token is required"}
+	}
+	if req.SubjectTokenType == "" {
+		return nil, &ErrorResponse{Code: "invalid_request", Description: "subject_token_type is required"}
+	}
+	if req.ActorToken != "" && req.ActorTokenType == "" {
+		return nil, &ErrorResponse{Code: "invalid_request", Description: "actor_token_type is required when actor_token is set"}
+	}
+	if req.ActorToken == "" && req.ActorTokenType != "" {
+		return nil, &ErrorResponse{Code: "invalid_request", Description: "actor_token_type must not be set when actor_token is not set"}
+	}
+	if svc.config.Want.SubjectToken != "" && req.SubjectToken != svc.config.Want.SubjectToken {
+		svc.t.Errorf("subject_token wants `%s` but was `%s`", svc.config.Want.SubjectToken, req.SubjectToken)
+	}
+	if svc.config.Want.SubjectTokenType != "" && req.SubjectTokenType != svc.config.Want.SubjectTokenType {
+		svc.t.Errorf("subject_token_type wants `%s` but was `%s`", svc.config.Want.SubjectTokenType, req.SubjectTokenType)
+	}
+	if svc.config.Want.Scope != "" && req.Scope != svc.config.Want.Scope {
+		svc.t.Errorf("scope wants `%s` but was `%s`", svc.config.Want.Scope, req.Scope)
+	}
+	issuedTokenType := req.RequestTokenType
+	if issuedTokenType == "" {
+		issuedTokenType = "urn:ietf:params:oauth:token-type:access_token"
+	}
+	resp := &TokenResponse{
+		AccessToken:     "YOUR_ACCESS_TOKEN",
+		IssuedTokenType: issuedTokenType,
+		TokenType:       "Bearer",
+		ExpiresIn:       3600,
+
+		// RFC 8693 §2.2.1: A refresh token will typically not be issued when
+		// the exchange is of one temporary credential (the subject_token) for
+		// a different temporary credential (the issued token) ...
+		RefreshToken: "",
+		IDToken: testingJWT.EncodeF(svc.t, func(claims *testingJWT.Claims) {
+			claims.Issuer = svc.issuerURL
+			claims.Subject = "SUBJECT"
+			claims.IssuedAt = jwt.NewNumericDate(svc.config.Response.IDTokenExpiry.Add(-time.Hour))
+			claims.ExpiresAt = jwt.NewNumericDate(svc.config.Response.IDTokenExpiry)
+			claims.Audience = []string{"kubernetes"}
+		}),
+	}
+	svc.lastTokenResponse = resp
+	return resp, nil
+}
+
 func (svc *service) Refresh(refreshToken string) (*TokenResponse, error) {
 	if refreshToken != svc.config.Want.RefreshToken {
 		svc.t.Errorf("refreshToken wants %s but was %s", svc.config.Want.RefreshToken, refreshToken)
