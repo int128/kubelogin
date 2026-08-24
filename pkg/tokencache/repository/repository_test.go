@@ -110,6 +110,29 @@ func TestComputeChecksum_AuthRequestExtraParams(t *testing.T) {
 		}
 	})
 
+	t.Run("MultipleExtraParamsProduceStableChecksum", func(t *testing.T) {
+		key := baseKey
+		key.AuthRequestExtraParams = map[string]string{
+			"audience": "api1",
+			"prompt":   "login",
+		}
+
+		checksum, err := computeChecksum(key)
+		if err != nil {
+			t.Fatalf("could not compute checksum: %s", err)
+		}
+
+		for range 100 {
+			currentChecksum, err := computeChecksum(key)
+			if err != nil {
+				t.Fatalf("could not compute checksum: %s", err)
+			}
+			if currentChecksum != checksum {
+				t.Fatalf("expected a stable checksum, got %s then %s", checksum, currentChecksum)
+			}
+		}
+	})
+
 	t.Run("NilVsEmptyExtraParams", func(t *testing.T) {
 		keyNil := baseKey
 		keyNil.AuthRequestExtraParams = nil
