@@ -8,6 +8,7 @@ on:
       - .github/workflows/release.yaml
       - pkg/**
       - go.*
+      - VERSION
     tags:
       - v*
   pull_request:
@@ -17,26 +18,29 @@ on:
       - .github/workflows/release.yaml
       - pkg/**
       - go.*
+      - VERSION
 
 concurrency:
   cancel-in-progress: true
   group: ${{ github.workflow }}--${{ github.ref }}
 
 jobs:
-  create:
+  draft:
     runs-on: ubuntu-slim
     timeout-minutes: 10
     outputs:
-      draft-release-name: ${{ steps.create-draft-release.outputs.draft-release-name }}
+      release-name: ${{ steps.create-draft-release.outputs.release-name }}
     permissions:
       contents: write
     steps:
       - if: github.event_name == 'push'
         id: create-draft-release
-        uses: int128/go-release-action/create-draft-release@9e1d6ec29fc6ffc2ba55f631baf4a73017d228e1 # v2.5.0
+        uses: int128/create-draft-release-action@276acfb78ac7493dc4090577478f860fad409830 # v0.3.0
+        with:
+          release-name-file: VERSION
 
   build:
-    needs: create
+    needs: draft
     strategy:
       matrix:
         platform:
@@ -79,8 +83,9 @@ jobs:
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-      - run: go build -ldflags "-X main.version=$GITHUB_SHA"
-      - uses: int128/go-release-action@9e1d6ec29fc6ffc2ba55f631baf4a73017d228e1 # v2.5.0
+      - run: go build
+      - if: needs.draft.outputs.release-name
+        uses: int128/go-release-action@9e1d6ec29fc6ffc2ba55f631baf4a73017d228e1 # v2.5.0
         with:
           binary: kubelogin
-          release-name: ${{ needs.create.outputs.draft-release-name }}
+          release-name: ${{ needs.draft.outputs.release-name }}
