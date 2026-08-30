@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,7 +10,8 @@ import (
 	"github.com/int128/kubelogin/pkg/di"
 )
 
-var version = "HEAD"
+//go:embed VERSION
+var version string
 
 func main() {
 	ctx := context.Background()
