@@ -1,0 +1,41 @@
+name: release-next
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/release.yaml
+      - VERSION
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/workflows/release-next.yaml
+      - VERSION
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}--${{ github.ref }}
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - shell: bash
+        run: |
+          set -eux
+          current_version="$(cat VERSION)"
+          IFS='.' read -r major minor patch <<< "$current_version"
+          new_version="${major}.${minor}.$((patch + 1))"
+          echo -n "$new_version" > VERSION
+      - run: git diff
+      - uses: int128/update-generated-files-action@ffeee0fc8e9dc4718c1f36be68b9d89b2be28e51 # v2.109.0
+        with:
+          dry-run: ${{ github.event_name == 'pull_request' }}
+          title: Next release
+          head-branch-keys: |
+            ${{ github.workflow }}
+            ${{ github.job }}
