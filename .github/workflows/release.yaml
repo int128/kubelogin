@@ -92,7 +92,9 @@ jobs:
           release-name: ${{ needs.draft.outputs.release-name }}
 
   create-next-release-pr:
-    needs: build
+    needs:
+      - draft
+      - build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -104,5 +106,5 @@ jobs:
           IFS='.' read -r major minor patch <<< "$current_version"
           new_version="${major}.${minor}.$((patch + 1))"
           echo "$new_version" > VERSION
-      - if: github.event_name == 'push'
+      - if: needs.draft.outputs.release-name
         uses: int128/update-generated-files-action@ffeee0fc8e9dc4718c1f36be68b9d89b2be28e51 # v2.109.0
