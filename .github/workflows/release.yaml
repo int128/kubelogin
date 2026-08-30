@@ -38,7 +38,7 @@ jobs:
         uses: int128/create-draft-release-action@c252854c1006a29ecd4398bcb023323c1003403f # v0.4.0
         with:
           release-name-file: VERSION
-          dry-run: github.event_name == 'pull_request'
+          dry-run: ${{ github.event_name == 'pull_request' }}
 
   build:
     needs: draft
@@ -105,6 +105,7 @@ jobs:
           current_version="$(cat VERSION)"
           IFS='.' read -r major minor patch <<< "$current_version"
           new_version="${major}.${minor}.$((patch + 1))"
-          echo "$new_version" > VERSION
+          echo -n "$new_version" > VERSION
+      - run: git diff
       - if: needs.draft.outputs.release-name
         uses: int128/update-generated-files-action@ffeee0fc8e9dc4718c1f36be68b9d89b2be28e51 # v2.109.0
