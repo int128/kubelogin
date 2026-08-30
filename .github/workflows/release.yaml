@@ -34,11 +34,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - if: github.event_name == 'push'
-        id: create-draft-release
-        uses: int128/create-draft-release-action@276acfb78ac7493dc4090577478f860fad409830 # v0.3.0
+      - id: create-draft-release
+        uses: int128/create-draft-release-action@c252854c1006a29ecd4398bcb023323c1003403f # v0.4.0
         with:
           release-name-file: VERSION
+          dry-run: github.event_name == 'pull_request'
 
   build:
     needs: draft
