@@ -24,9 +24,15 @@ type authenticationOptions struct {
 	LocalServerKeyFile         string
 	OpenURLAfterAuthentication string
 	AuthRequestExtraParams     map[string]string
+	AuthRequestAccessType      string
 	Username                   string
 	Password                   string
 }
+
+var allAccessType = strings.Join([]string{
+	"offline",
+	"online",
+}, "|")
 
 var allGrantType = strings.Join([]string{
 	"auto",
@@ -47,6 +53,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request")
+	f.StringVar(&o.AuthRequestAccessType, "oidc-auth-request-access-type", "offline", fmt.Sprintf("[authcode, authcode-keyboard] Access type to request. One of (%s). Set to online to request no refresh token", allAccessType))
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
 }
@@ -57,6 +64,11 @@ func (o *authenticationOptions) expandHomedir() {
 }
 
 func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSet, err error) {
+	switch o.AuthRequestAccessType {
+	case "offline", "online":
+	default:
+		return s, fmt.Errorf("oidc-auth-request-access-type must be one of (%s)", allAccessType)
+	}
 	switch {
 	case o.GrantType == "authcode" || (o.GrantType == "auto" && o.Username == ""):
 		s.AuthCodeBrowserOption = &authcode.BrowserOption{
@@ -68,10 +80,12 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			LocalServerKeyFile:         o.LocalServerKeyFile,
 			OpenURLAfterAuthentication: o.OpenURLAfterAuthentication,
 			AuthRequestExtraParams:     o.AuthRequestExtraParams,
+			AccessType:                 o.AuthRequestAccessType,
 		}
 	case o.GrantType == "authcode-keyboard":
 		s.AuthCodeKeyboardOption = &authcode.KeyboardOption{
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
+			AccessType:             o.AuthRequestAccessType,
 		}
 	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):
 		s.ROPCOption = &ropc.Option{

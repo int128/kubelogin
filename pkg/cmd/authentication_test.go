@@ -22,6 +22,7 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				AuthCodeBrowserOption: &authcode.BrowserOption{
 					BindAddress:           defaultListenAddress,
 					AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+					AccessType:            "offline",
 				},
 			},
 		},
@@ -51,6 +52,20 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 					LocalServerKeyFile:         "/path/to/local-server-key",
 					OpenURLAfterAuthentication: "https://example.com/success.html",
 					AuthRequestExtraParams:     map[string]string{"ttl": "86400", "reauth": "true"},
+					AccessType:                 "offline",
+				},
+			},
+		},
+		"AccessType=online": {
+			args: []string{
+				"--grant-type", "authcode",
+				"--oidc-auth-request-access-type", "online",
+			},
+			want: authentication.GrantOptionSet{
+				AuthCodeBrowserOption: &authcode.BrowserOption{
+					BindAddress:           defaultListenAddress,
+					AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+					AccessType:            "online",
 				},
 			},
 		},
@@ -59,7 +74,9 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				"--grant-type", "authcode-keyboard",
 			},
 			want: authentication.GrantOptionSet{
-				AuthCodeKeyboardOption: &authcode.KeyboardOption{},
+				AuthCodeKeyboardOption: &authcode.KeyboardOption{
+					AccessType: "offline",
+				},
 			},
 		},
 		"GrantType=authcode-keyboard with full options": {
@@ -71,6 +88,7 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 			want: authentication.GrantOptionSet{
 				AuthCodeKeyboardOption: &authcode.KeyboardOption{
 					AuthRequestExtraParams: map[string]string{"ttl": "86400", "reauth": "true"},
+					AccessType:             "offline",
 				},
 			},
 		},
@@ -136,5 +154,17 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func Test_authenticationOptions_grantOptionSet_invalidAccessType(t *testing.T) {
+	var o authenticationOptions
+	f := pflag.NewFlagSet("", pflag.ContinueOnError)
+	o.addFlags(f)
+	if err := f.Parse([]string{"--oidc-auth-request-access-type", "invalid"}); err != nil {
+		t.Fatalf("Parse error: %s", err)
+	}
+	if _, err := o.grantOptionSet(); err == nil {
+		t.Errorf("grantOptionSet wants an error but was nil")
 	}
 }
