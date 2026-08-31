@@ -76,7 +76,7 @@ func (f *Factory) New(ctx context.Context, prov oidc.Provider, tlsClientConfig t
 			ClientID:     prov.ClientID,
 			ClientSecret: prov.ClientSecret,
 			RedirectURL:  prov.RedirectURL,
-			Scopes:       append(prov.ExtraScopes, gooidc.ScopeOpenID),
+			Scopes:       append([]string{gooidc.ScopeOpenID}, prov.ExtraScopes...),
 		},
 		clock:                f.Clock,
 		logger:               f.Logger,
