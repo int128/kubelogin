@@ -11,6 +11,8 @@ type Want struct {
 	Username            string            // optional
 	Password            string            // optional
 	RefreshToken        string            // optional
+	SubjectToken        string            // optional (token-exchange)
+	SubjectTokenType    string            // optional (token-exchange)
 }
 
 // Response represents a set of response values.
