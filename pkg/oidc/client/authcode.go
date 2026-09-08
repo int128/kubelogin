@@ -17,6 +17,7 @@ type AuthCodeURLInput struct {
 	Nonce                  string
 	PKCEParams             pkce.Params
 	AuthRequestExtraParams map[string]string
+	AccessType             string
 }
 
 type ExchangeAuthCodeInput struct {
@@ -31,6 +32,7 @@ type GetTokenByAuthCodeInput struct {
 	Nonce                  string
 	PKCEParams             pkce.Params
 	AuthRequestExtraParams map[string]string
+	AccessType             string
 	LocalServerSuccessHTML string
 	LocalServerCertFile    string
 	LocalServerKeyFile     string
@@ -50,7 +52,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 	config := oauth2cli.Config{
 		OAuth2Config:            c.oauth2Config,
 		State:                   in.State,
-		AuthCodeOptions:         authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams),
+		AuthCodeOptions:         authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams, in.AccessType),
 		TokenRequestOptions:     tokenRequestOptions(in.PKCEParams),
 		LocalServerBindAddress:  in.BindAddress,
 		LocalServerReadyChan:    localServerReadyChan,
@@ -69,7 +71,7 @@ func (c *client) GetTokenByAuthCode(ctx context.Context, in GetTokenByAuthCodeIn
 
 // GetAuthCodeURL returns the URL of authentication request for the authorization code flow.
 func (c *client) GetAuthCodeURL(in AuthCodeURLInput) string {
-	opts := authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams)
+	opts := authorizationRequestOptions(in.Nonce, in.PKCEParams, in.AuthRequestExtraParams, in.AccessType)
 	return c.oauth2Config.AuthCodeURL(in.State, opts...)
 }
 
@@ -84,9 +86,13 @@ func (c *client) ExchangeAuthCode(ctx context.Context, in ExchangeAuthCodeInput)
 	return c.verifyToken(ctx, token, in.Nonce)
 }
 
-func authorizationRequestOptions(nonce string, pkceParams pkce.Params, extraParams map[string]string) []oauth2.AuthCodeOption {
+func authorizationRequestOptions(nonce string, pkceParams pkce.Params, extraParams map[string]string, accessType string) []oauth2.AuthCodeOption {
+	accessTypeOption := oauth2.AccessTypeOffline
+	if accessType == "online" {
+		accessTypeOption = oauth2.AccessTypeOnline
+	}
 	opts := []oauth2.AuthCodeOption{
-		oauth2.AccessTypeOffline,
+		accessTypeOption,
 		gooidc.Nonce(nonce),
 	}
 	if pkceOpt := pkceParams.AuthCodeOption(); pkceOpt != nil {
