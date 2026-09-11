@@ -29,6 +29,31 @@ type Provider interface {
 	Exchange(req TokenRequest) (*TokenResponse, error)
 	AuthenticatePassword(username, password, scope string) (*TokenResponse, error)
 	Refresh(refreshToken string) (*TokenResponse, error)
+	DeviceAuthorization(req DeviceAuthorizationRequest) (*DeviceAuthorizationResponse, error)
+	ExchangeDeviceCode(req DeviceCodeTokenRequest) (*TokenResponse, error)
+}
+
+// DeviceAuthorizationRequest represents RFC 8628 device authorization request parameters.
+type DeviceAuthorizationRequest struct {
+	Scope               string
+	CodeChallenge       string
+	CodeChallengeMethod string
+}
+
+// DeviceAuthorizationResponse represents RFC 8628 device authorization response.
+type DeviceAuthorizationResponse struct {
+	DeviceCode              string `json:"device_code"`
+	UserCode                string `json:"user_code"`
+	VerificationURI         string `json:"verification_uri"`
+	VerificationURIComplete string `json:"verification_uri_complete,omitempty"`
+	ExpiresIn               int    `json:"expires_in"`
+	Interval                int    `json:"interval"`
+}
+
+// DeviceCodeTokenRequest represents a token request for the device code grant type.
+type DeviceCodeTokenRequest struct {
+	DeviceCode   string
+	CodeVerifier string
 }
 
 // DiscoveryResponse represents the type of:
@@ -37,6 +62,7 @@ type DiscoveryResponse struct {
 	Issuer                            string   `json:"issuer"`
 	AuthorizationEndpoint             string   `json:"authorization_endpoint"`
 	TokenEndpoint                     string   `json:"token_endpoint"`
+	DeviceAuthorizationEndpoint       string   `json:"device_authorization_endpoint,omitempty"`
 	UserinfoEndpoint                  string   `json:"userinfo_endpoint"`
 	RevocationEndpoint                string   `json:"revocation_endpoint"`
 	JwksURI                           string   `json:"jwks_uri"`

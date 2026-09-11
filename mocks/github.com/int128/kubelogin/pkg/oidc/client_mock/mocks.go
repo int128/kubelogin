@@ -111,8 +111,8 @@ func (_c *MockInterface_ExchangeAuthCode_Call) RunAndReturn(run func(ctx context
 }
 
 // ExchangeDeviceCode provides a mock function for the type MockInterface
-func (_mock *MockInterface) ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error) {
-	ret := _mock.Called(ctx, authResponse)
+func (_mock *MockInterface) ExchangeDeviceCode(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse, pkceParams pkce.Params) (*oidc.TokenSet, error) {
+	ret := _mock.Called(ctx, authResponse, pkceParams)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ExchangeDeviceCode")
@@ -120,18 +120,18 @@ func (_mock *MockInterface) ExchangeDeviceCode(ctx context.Context, authResponse
 
 	var r0 *oidc.TokenSet
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error)); ok {
-		return returnFunc(ctx, authResponse)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *oauth2dev.AuthorizationResponse, pkce.Params) (*oidc.TokenSet, error)); ok {
+		return returnFunc(ctx, authResponse, pkceParams)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *oauth2dev.AuthorizationResponse) *oidc.TokenSet); ok {
-		r0 = returnFunc(ctx, authResponse)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *oauth2dev.AuthorizationResponse, pkce.Params) *oidc.TokenSet); ok {
+		r0 = returnFunc(ctx, authResponse, pkceParams)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*oidc.TokenSet)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, *oauth2dev.AuthorizationResponse) error); ok {
-		r1 = returnFunc(ctx, authResponse)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *oauth2dev.AuthorizationResponse, pkce.Params) error); ok {
+		r1 = returnFunc(ctx, authResponse, pkceParams)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -146,11 +146,12 @@ type MockInterface_ExchangeDeviceCode_Call struct {
 // ExchangeDeviceCode is a helper method to define mock.On call
 //   - ctx context.Context
 //   - authResponse *oauth2dev.AuthorizationResponse
-func (_e *MockInterface_Expecter) ExchangeDeviceCode(ctx any, authResponse any) *MockInterface_ExchangeDeviceCode_Call {
-	return &MockInterface_ExchangeDeviceCode_Call{Call: _e.mock.On("ExchangeDeviceCode", ctx, authResponse)}
+//   - pkceParams pkce.Params
+func (_e *MockInterface_Expecter) ExchangeDeviceCode(ctx any, authResponse any, pkceParams any) *MockInterface_ExchangeDeviceCode_Call {
+	return &MockInterface_ExchangeDeviceCode_Call{Call: _e.mock.On("ExchangeDeviceCode", ctx, authResponse, pkceParams)}
 }
 
-func (_c *MockInterface_ExchangeDeviceCode_Call) Run(run func(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse)) *MockInterface_ExchangeDeviceCode_Call {
+func (_c *MockInterface_ExchangeDeviceCode_Call) Run(run func(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse, pkceParams pkce.Params)) *MockInterface_ExchangeDeviceCode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -160,9 +161,14 @@ func (_c *MockInterface_ExchangeDeviceCode_Call) Run(run func(ctx context.Contex
 		if args[1] != nil {
 			arg1 = args[1].(*oauth2dev.AuthorizationResponse)
 		}
+		var arg2 pkce.Params
+		if args[2] != nil {
+			arg2 = args[2].(pkce.Params)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -173,7 +179,7 @@ func (_c *MockInterface_ExchangeDeviceCode_Call) Return(tokenSet *oidc.TokenSet,
 	return _c
 }
 
-func (_c *MockInterface_ExchangeDeviceCode_Call) RunAndReturn(run func(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error)) *MockInterface_ExchangeDeviceCode_Call {
+func (_c *MockInterface_ExchangeDeviceCode_Call) RunAndReturn(run func(ctx context.Context, authResponse *oauth2dev.AuthorizationResponse, pkceParams pkce.Params) (*oidc.TokenSet, error)) *MockInterface_ExchangeDeviceCode_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -230,8 +236,8 @@ func (_c *MockInterface_GetAuthCodeURL_Call) RunAndReturn(run func(in client.Aut
 }
 
 // GetDeviceAuthorization provides a mock function for the type MockInterface
-func (_mock *MockInterface) GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error) {
-	ret := _mock.Called(ctx)
+func (_mock *MockInterface) GetDeviceAuthorization(ctx context.Context, pkceParams pkce.Params) (*oauth2dev.AuthorizationResponse, error) {
+	ret := _mock.Called(ctx, pkceParams)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetDeviceAuthorization")
@@ -239,18 +245,18 @@ func (_mock *MockInterface) GetDeviceAuthorization(ctx context.Context) (*oauth2
 
 	var r0 *oauth2dev.AuthorizationResponse
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) (*oauth2dev.AuthorizationResponse, error)); ok {
-		return returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pkce.Params) (*oauth2dev.AuthorizationResponse, error)); ok {
+		return returnFunc(ctx, pkceParams)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) *oauth2dev.AuthorizationResponse); ok {
-		r0 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pkce.Params) *oauth2dev.AuthorizationResponse); ok {
+		r0 = returnFunc(ctx, pkceParams)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*oauth2dev.AuthorizationResponse)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, pkce.Params) error); ok {
+		r1 = returnFunc(ctx, pkceParams)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -264,18 +270,24 @@ type MockInterface_GetDeviceAuthorization_Call struct {
 
 // GetDeviceAuthorization is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockInterface_Expecter) GetDeviceAuthorization(ctx any) *MockInterface_GetDeviceAuthorization_Call {
-	return &MockInterface_GetDeviceAuthorization_Call{Call: _e.mock.On("GetDeviceAuthorization", ctx)}
+//   - pkceParams pkce.Params
+func (_e *MockInterface_Expecter) GetDeviceAuthorization(ctx any, pkceParams any) *MockInterface_GetDeviceAuthorization_Call {
+	return &MockInterface_GetDeviceAuthorization_Call{Call: _e.mock.On("GetDeviceAuthorization", ctx, pkceParams)}
 }
 
-func (_c *MockInterface_GetDeviceAuthorization_Call) Run(run func(ctx context.Context)) *MockInterface_GetDeviceAuthorization_Call {
+func (_c *MockInterface_GetDeviceAuthorization_Call) Run(run func(ctx context.Context, pkceParams pkce.Params)) *MockInterface_GetDeviceAuthorization_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
+		var arg1 pkce.Params
+		if args[1] != nil {
+			arg1 = args[1].(pkce.Params)
+		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -286,7 +298,7 @@ func (_c *MockInterface_GetDeviceAuthorization_Call) Return(authorizationRespons
 	return _c
 }
 
-func (_c *MockInterface_GetDeviceAuthorization_Call) RunAndReturn(run func(ctx context.Context) (*oauth2dev.AuthorizationResponse, error)) *MockInterface_GetDeviceAuthorization_Call {
+func (_c *MockInterface_GetDeviceAuthorization_Call) RunAndReturn(run func(ctx context.Context, pkceParams pkce.Params) (*oauth2dev.AuthorizationResponse, error)) *MockInterface_GetDeviceAuthorization_Call {
 	_c.Call.Return(run)
 	return _c
 }
