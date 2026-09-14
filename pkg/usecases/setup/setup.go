@@ -39,31 +39,33 @@ var setupTemplate = template.Must(template.New("setup.md").Funcs(template.FuncMa
 }).Parse(setupMarkdown))
 
 type Input struct {
-	IssuerURL       string
-	ClientID        string
-	ClientSecret    string
-	RedirectURL     string
-	ExtraScopes     []string
-	UseAccessToken  bool
-	RequestHeaders  map[string]string
-	PKCEMethod      oidc.PKCEMethod
-	GrantOptionSet  authentication.GrantOptionSet
-	TLSClientConfig tlsclientconfig.Config
-	ChangedFlags    []string
+	IssuerURL              string
+	ClientID               string
+	ClientSecret           string
+	RedirectURL            string
+	ExtraScopes            []string
+	UseAccessToken         bool
+	RequestHeaders         map[string]string
+	DeviceAuthorizationURL string
+	PKCEMethod             oidc.PKCEMethod
+	GrantOptionSet         authentication.GrantOptionSet
+	TLSClientConfig        tlsclientconfig.Config
+	ChangedFlags           []string
 }
 
 func (u Setup) Do(ctx context.Context, in Input) error {
 	u.Logger.Printf("Authentication in progress...")
 	out, err := u.Authentication.Do(ctx, authentication.Input{
 		Provider: oidc.Provider{
-			IssuerURL:      in.IssuerURL,
-			ClientID:       in.ClientID,
-			ClientSecret:   in.ClientSecret,
-			RedirectURL:    in.RedirectURL,
-			ExtraScopes:    in.ExtraScopes,
-			PKCEMethod:     in.PKCEMethod,
-			UseAccessToken: in.UseAccessToken,
-			RequestHeaders: in.RequestHeaders,
+			IssuerURL:              in.IssuerURL,
+			ClientID:               in.ClientID,
+			ClientSecret:           in.ClientSecret,
+			RedirectURL:            in.RedirectURL,
+			ExtraScopes:            in.ExtraScopes,
+			PKCEMethod:             in.PKCEMethod,
+			UseAccessToken:         in.UseAccessToken,
+			RequestHeaders:         in.RequestHeaders,
+			DeviceAuthorizationURL: in.DeviceAuthorizationURL,
 		},
 		GrantOptionSet:  in.GrantOptionSet,
 		TLSClientConfig: in.TLSClientConfig,
