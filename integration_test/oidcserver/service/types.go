@@ -28,6 +28,7 @@ type Provider interface {
 	AuthenticateCode(req AuthenticationRequest) (code string, err error)
 	Exchange(req TokenRequest) (*TokenResponse, error)
 	AuthenticatePassword(username, password, scope string) (*TokenResponse, error)
+	AuthenticateTokenExchange(req TokenExchangeRequest) (*TokenResponse, error)
 	Refresh(refreshToken string) (*TokenResponse, error)
 }
 
@@ -85,14 +86,29 @@ type TokenRequest struct {
 	CodeVerifier string
 }
 
+// TokenExchangeRequest represents the parameters of an OAuth 2.0 token exchange
+// request as defined in RFC 8693 section 2.1
+// https://datatracker.ietf.org/doc/html/rfc8693#name-request
+type TokenExchangeRequest struct {
+	SubjectToken     string
+	SubjectTokenType string
+	ActorToken       string
+	ActorTokenType   string
+	Resource         []string
+	Audience         []string
+	RequestTokenType string
+	Scope            string
+}
+
 // TokenResponse represents the type of:
 // https://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
 type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	IDToken      string `json:"id_token"`
+	AccessToken     string `json:"access_token"`
+	IssuedTokenType string `json:"issued_token_type,omitempty"` // optional (token-exchange)
+	TokenType       string `json:"token_type"`
+	RefreshToken    string `json:"refresh_token"`
+	ExpiresIn       int    `json:"expires_in"`
+	IDToken         string `json:"id_token"`
 }
 
 // ErrorResponse represents the error response described in the following section:
