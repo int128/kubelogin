@@ -24,11 +24,12 @@ func New(t *testing.T, issuerURL string, config testconfig.Config) Service {
 }
 
 type service struct {
-	config                    testconfig.Config
-	t                         *testing.T
-	issuerURL                 string
-	lastAuthenticationRequest *AuthenticationRequest
-	lastTokenResponse         *TokenResponse
+	config                      testconfig.Config
+	t                           *testing.T
+	issuerURL                   string
+	lastAuthenticationRequest   *AuthenticationRequest
+	lastTokenResponse           *TokenResponse
+	lastDeviceAuthorizationRequest *DeviceAuthorizationRequest
 }
 
 func (svc *service) IssuerURL() string {
@@ -49,6 +50,7 @@ func (svc *service) Discovery() *DiscoveryResponse {
 		Issuer:                            svc.issuerURL,
 		AuthorizationEndpoint:             svc.issuerURL + "/auth",
 		TokenEndpoint:                     svc.issuerURL + "/token",
+		DeviceAuthorizationEndpoint:       svc.issuerURL + "/device",
 		JwksURI:                           svc.issuerURL + "/certs",
 		UserinfoEndpoint:                  svc.issuerURL + "/userinfo",
 		RevocationEndpoint:                svc.issuerURL + "/revoke",
@@ -121,6 +123,51 @@ func (svc *service) Exchange(req TokenRequest) (*TokenResponse, error) {
 			claims.ExpiresAt = jwt.NewNumericDate(svc.config.Response.IDTokenExpiry)
 			claims.Audience = []string{"kubernetes"}
 			claims.Nonce = svc.lastAuthenticationRequest.Nonce
+		}),
+	}
+	svc.lastTokenResponse = resp
+	return resp, nil
+}
+
+func (svc *service) DeviceAuthorization(req DeviceAuthorizationRequest) (*DeviceAuthorizationResponse, error) {
+	if req.Scope != svc.config.Want.Scope {
+		svc.t.Errorf("scope wants `%s` but was `%s`", svc.config.Want.Scope, req.Scope)
+	}
+	if diff := cmp.Diff(svc.config.Want.CodeChallengeMethod, req.CodeChallengeMethod); diff != "" {
+		svc.t.Errorf("code_challenge_method mismatch (-want +got):\n%s", diff)
+	}
+	svc.lastDeviceAuthorizationRequest = &req
+	return &DeviceAuthorizationResponse{
+		DeviceCode:      "TEST-DEVICE-CODE",
+		UserCode:        "TEST-USER-CODE",
+		VerificationURI: svc.issuerURL + "/activate",
+		ExpiresIn:       300,
+		Interval:        1,
+	}, nil
+}
+
+func (svc *service) ExchangeDeviceCode(req DeviceCodeTokenRequest) (*TokenResponse, error) {
+	if req.DeviceCode != "TEST-DEVICE-CODE" {
+		return nil, &ErrorResponse{Code: "invalid_grant", Description: fmt.Sprintf("unknown device_code %s", req.DeviceCode)}
+	}
+	if svc.lastDeviceAuthorizationRequest != nil && svc.lastDeviceAuthorizationRequest.CodeChallengeMethod == "S256" {
+		challenge := computeS256Challenge(req.CodeVerifier)
+		if challenge != svc.lastDeviceAuthorizationRequest.CodeChallenge {
+			svc.t.Errorf("pkce S256 challenge did not match (want %s but got %s)",
+				svc.lastDeviceAuthorizationRequest.CodeChallenge, challenge)
+		}
+	}
+	resp := &TokenResponse{
+		TokenType:    "Bearer",
+		ExpiresIn:    3600,
+		AccessToken:  "YOUR_ACCESS_TOKEN",
+		RefreshToken: svc.config.Response.RefreshToken,
+		IDToken: testingJWT.EncodeF(svc.t, func(claims *testingJWT.Claims) {
+			claims.Issuer = svc.issuerURL
+			claims.Subject = "SUBJECT"
+			claims.IssuedAt = jwt.NewNumericDate(svc.config.Response.IDTokenExpiry.Add(-time.Hour))
+			claims.ExpiresAt = jwt.NewNumericDate(svc.config.Response.IDTokenExpiry)
+			claims.Audience = []string{"kubernetes"}
 		}),
 	}
 	svc.lastTokenResponse = resp
