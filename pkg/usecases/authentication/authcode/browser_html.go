@@ -13,7 +13,8 @@ const BrowserSuccessHTML = `
 	<meta charset="UTF-8">
 	<title>Authenticated</title>
 	<script>
-		window.close()
+		// Only works with Firefox if 'dom.allow_scripts_to_close_windows' is set to True
+		window.open('','_self').close();
 	</script>
 	<style>
 		body {
