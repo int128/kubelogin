@@ -12,9 +12,6 @@ const BrowserSuccessHTML = `
 <head>
 	<meta charset="UTF-8">
 	<title>Authenticated</title>
-	<script>
-		window.close()
-	</script>
 	<style>
 		body {
 			background-color: #eee;
@@ -35,6 +32,9 @@ const BrowserSuccessHTML = `
 		<h1>Authenticated</h1>
 		<p>You have logged in to the cluster. You can close this window.</p>
 	</div>
+  <script text="text/javascript">
+      setTimeout(function() { window.close(); }, 500);
+  </script>
 </body>
 </html>
 `
