@@ -29,6 +29,7 @@ func TestCmd_Run(t *testing.T) {
 		AuthCodeBrowserOption: &authcode.BrowserOption{
 			BindAddress:           defaultListenAddress,
 			AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+			AccessType:            "offline",
 		},
 	}
 
@@ -191,6 +192,7 @@ func TestCmd_Run(t *testing.T) {
 						AuthCodeBrowserOption: &authcode.BrowserOption{
 							BindAddress:           defaultListenAddress,
 							AuthenticationTimeout: defaultAuthenticationTimeoutSec * time.Second,
+							AccessType:            "offline",
 							LocalServerCertFile:   filepath.Join(userHomeDir, ".kube/oidc-server.crt"),
 							LocalServerKeyFile:    filepath.Join(userHomeDir, ".kube/oidc-server.key"),
 						},

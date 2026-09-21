@@ -32,6 +32,7 @@ Flags:
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
       --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request (default [])
+      --oidc-auth-request-access-type string            [authcode, authcode-keyboard] Access type to request. One of (offline|online). Set to online to request no refresh token (default "offline")
       --username string                                 [password] Username for resource owner password credentials grant
       --password string                                 [password] Password for resource owner password credentials grant
   -h, --help                                            help for get-token
@@ -133,6 +134,17 @@ Deleted the token cache from the keyring
 ```
 
 For systems with immutable storage and no keyring, a cache type of none is available.
+
+### Refresh token
+
+By default kubelogin sends `access_type=offline` in the authentication request so that the provider returns a refresh token.
+If you do not want a refresh token to be issued (for example your security policy does not allow long-lived tokens on the machine), set the access type to online.
+
+```yaml
+- --oidc-auth-request-access-type=online
+```
+
+Kubelogin will re-run the authentication when the ID token has expired, since there is no refresh token to use.
 
 ### Home directory expansion
 
