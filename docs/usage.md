@@ -27,7 +27,7 @@ Flags:
       --listen-address strings                          [authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order (default [127.0.0.1:8000,127.0.0.1:18000])
       --skip-open-browser                               [authcode] Do not open the browser automatically
       --browser-command string                          [authcode] Command to open the browser
-      --authentication-timeout-sec int                  [authcode] Timeout of authentication in seconds (default 180)
+      --authentication-timeout-sec int                  [authcode, device-code] Timeout of authentication in seconds (default 180)
       --local-server-cert string                        [authcode] Certificate path for the local server
       --local-server-key string                         [authcode] Certificate key path for the local server
       --open-url-after-authentication string            [authcode] If set, open the URL in the browser after authentication
@@ -173,6 +173,9 @@ If you encounter a problem with the browser, you can change the browser command 
 # Do not open the browser
 - --skip-open-browser
 ```
+
+It waits for you to approve the device code for up to `--authentication-timeout-sec` (default 180 seconds), the same limit as the authorization code flow.
+If nobody approves in time, it gives up and releases the token cache lock so a later `kubectl` invocation is not blocked behind it.
 
 ### Authorization Code Flow
 
