@@ -8,6 +8,7 @@ import (
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/infrastructure/browser_mock"
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
 	"github.com/int128/kubelogin/pkg/oidc"
+	"github.com/int128/kubelogin/pkg/pkce"
 	"github.com/int128/kubelogin/pkg/testing/logger"
 	"github.com/int128/oauth2dev"
 	"github.com/stretchr/testify/mock"
@@ -15,6 +16,7 @@ import (
 
 func TestDeviceCode(t *testing.T) {
 	ctx := context.TODO()
+	noPKCE := pkce.Params{}
 
 	t.Run("Authorization error", func(t *testing.T) {
 		mockClient := client_mock.NewMockInterface(t)
@@ -23,7 +25,8 @@ func TestDeviceCode(t *testing.T) {
 			Logger:  logger.New(t),
 		}
 		errTest := errors.New("test error")
-		mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(nil, errTest).Once()
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod).Once()
+		mockClient.EXPECT().GetDeviceAuthorization(ctx, noPKCE).Return(nil, errTest).Once()
 		_, err := dc.Do(ctx, &Option{}, mockClient)
 		if !errors.Is(err, errTest) {
 			t.Errorf("returned error is not the test error: %v", err)
@@ -43,14 +46,15 @@ func TestDeviceCode(t *testing.T) {
 			ExpiresIn:               2,
 			Interval:                1,
 		}
-		mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&oauth2dev.AuthorizationResponse{
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod).Once()
+		mockClient.EXPECT().GetDeviceAuthorization(ctx, noPKCE).Return(&oauth2dev.AuthorizationResponse{
 			Interval:                1,
 			ExpiresIn:               2,
 			VerificationURIComplete: "https://example.com/verificationComplete?code=code123",
 			DeviceCode:              "device-code-1",
 		}, nil).Once()
 		mockBrowser.EXPECT().Open("https://example.com/verificationComplete?code=code123").Return(nil).Once()
-		mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse).Return(&oidc.TokenSet{
+		mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse, noPKCE).Return(&oidc.TokenSet{
 			IDToken: "test-id-token",
 		}, nil).Once()
 		ts, err := dc.Do(ctx, &Option{}, mockClient)
@@ -75,14 +79,15 @@ func TestDeviceCode(t *testing.T) {
 			ExpiresIn:       2,
 			Interval:        1,
 		}
-		mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&oauth2dev.AuthorizationResponse{
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod).Once()
+		mockClient.EXPECT().GetDeviceAuthorization(ctx, noPKCE).Return(&oauth2dev.AuthorizationResponse{
 			Interval:        1,
 			ExpiresIn:       2,
 			VerificationURI: "https://example.com/verificationComplete",
 			DeviceCode:      "device-code-1",
 		}, nil).Once()
 		mockBrowser.EXPECT().Open("https://example.com/verificationComplete").Return(nil).Once()
-		mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponseWithoutComplete).Return(&oidc.TokenSet{
+		mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponseWithoutComplete, noPKCE).Return(&oidc.TokenSet{
 			IDToken: "test-id-token",
 		}, nil).Once()
 		ts, err := dc.Do(ctx, &Option{}, mockClient)
@@ -107,9 +112,10 @@ func TestDeviceCode(t *testing.T) {
 			ExpiresIn:       2,
 			Interval:        1,
 		}
-		mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(mockResponse, nil).Once()
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod).Once()
+		mockClient.EXPECT().GetDeviceAuthorization(ctx, noPKCE).Return(mockResponse, nil).Once()
 		mockBrowser.EXPECT().Open("https://example.com/verificationCompleteURL").Return(nil).Once()
-		mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse).Return(&oidc.TokenSet{
+		mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse, noPKCE).Return(&oidc.TokenSet{
 			IDToken: "test-id-token",
 		}, nil).Once()
 		ts, err := dc.Do(ctx, &Option{}, mockClient)
@@ -134,14 +140,15 @@ func TestDeviceCode(t *testing.T) {
 			ExpiresIn:               2,
 			Interval:                1,
 		}
-		mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(&oauth2dev.AuthorizationResponse{
+		mockClient.EXPECT().NegotiatedPKCEMethod().Return(pkce.NoMethod).Once()
+		mockClient.EXPECT().GetDeviceAuthorization(ctx, noPKCE).Return(&oauth2dev.AuthorizationResponse{
 			Interval:                1,
 			ExpiresIn:               2,
 			VerificationURIComplete: "https://example.com/verificationComplete?code=code123",
 			DeviceCode:              "device-code-1",
 		}, nil).Once()
 		mockBrowser.EXPECT().Open("https://example.com/verificationComplete?code=code123").Return(nil).Once()
-		mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse).Return(nil, errors.New("test error")).Once()
+		mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse, noPKCE).Return(nil, errors.New("test error")).Once()
 		_, err := dc.Do(ctx, &Option{}, mockClient)
 		if err == nil {
 			t.Errorf("did not return error: %v", err)

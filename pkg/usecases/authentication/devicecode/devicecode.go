@@ -8,7 +8,9 @@ import (
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/oidc/client"
+	"github.com/int128/kubelogin/pkg/pkce"
 )
+
 
 type Option struct {
 	SkipOpenBrowser bool
@@ -24,7 +26,12 @@ type DeviceCode struct {
 func (u *DeviceCode) Do(ctx context.Context, in *Option, oidcClient client.Interface) (*oidc.TokenSet, error) {
 	u.Logger.V(1).Infof("starting the oauth2 device code flow")
 
-	authResponse, err := oidcClient.GetDeviceAuthorization(ctx)
+	pkceParams, err := pkce.New(oidcClient.NegotiatedPKCEMethod())
+	if err != nil {
+		return nil, fmt.Errorf("could not generate the PKCE parameters: %w", err)
+	}
+
+	authResponse, err := oidcClient.GetDeviceAuthorization(ctx, pkceParams)
 	if err != nil {
 		return nil, fmt.Errorf("authorization error: %w", err)
 	}
@@ -41,7 +48,7 @@ func (u *DeviceCode) Do(ctx context.Context, in *Option, oidcClient client.Inter
 		return nil, fmt.Errorf("no verification URI in the authorization response")
 	}
 
-	tokenSet, err := oidcClient.ExchangeDeviceCode(ctx, authResponse)
+	tokenSet, err := oidcClient.ExchangeDeviceCode(ctx, authResponse, pkceParams)
 	u.Logger.V(1).Infof("finished the oauth2 device code flow")
 	if err != nil {
 		return nil, fmt.Errorf("unable to exchange device code: %w", err)
