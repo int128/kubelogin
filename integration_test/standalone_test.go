@@ -197,6 +197,107 @@ func TestStandalone(t *testing.T) {
 					})
 				})
 			})
+
+			t.Run("TokenExchange", func(t *testing.T) {
+				t.Parallel()
+				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+				defer cancel()
+				sv := oidcserver.New(t, tc.keyPair, testconfig.Config{
+					Want: testconfig.Want{
+						SubjectToken:     "SUBJECT_TOKEN",
+						SubjectTokenType: "urn:ietf:params:oauth:token-type:access_token",
+					},
+					Response: testconfig.Response{
+						IDTokenExpiry: now.Add(time.Hour),
+					},
+				})
+				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+					Issuer:                  sv.IssuerURL(),
+					IDPCertificateAuthority: tc.keyPair.CACertPath,
+				})
+				runStandalone(t, ctx, standaloneConfig{
+					issuerURL:          sv.IssuerURL(),
+					kubeConfigFilename: kubeConfigFilename,
+					httpDriver:         httpdriver.Zero(t),
+					now:                now,
+					args: []string{
+						"--token-exchange-subject-token", "SUBJECT_TOKEN",
+						"--token-exchange-subject-token-type", "urn:ietf:params:oauth:token-type:access_token",
+					},
+				})
+				kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+					IDToken:      sv.LastTokenResponse().IDToken,
+					RefreshToken: "",
+				})
+			})
+			t.Run("TokenExchangeWithActor", func(t *testing.T) {
+				t.Parallel()
+				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+				defer cancel()
+				sv := oidcserver.New(t, tc.keyPair, testconfig.Config{
+					Want: testconfig.Want{
+						SubjectToken:     "SUBJECT_TOKEN",
+						SubjectTokenType: "urn:ietf:params:oauth:token-type:access_token",
+					},
+					Response: testconfig.Response{
+						IDTokenExpiry: now.Add(time.Hour),
+					},
+				})
+				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+					Issuer:                  sv.IssuerURL(),
+					IDPCertificateAuthority: tc.keyPair.CACertPath,
+				})
+				runStandalone(t, ctx, standaloneConfig{
+					issuerURL:          sv.IssuerURL(),
+					kubeConfigFilename: kubeConfigFilename,
+					httpDriver:         httpdriver.Zero(t),
+					now:                now,
+					args: []string{
+						"--token-exchange-subject-token", "SUBJECT_TOKEN",
+						"--token-exchange-subject-token-type", "urn:ietf:params:oauth:token-type:access_token",
+						"--token-exchange-actor-token", "ACTOR_TOKEN",
+						"--token-exchange-actor-token-type", "urn:ietf:params:oauth:token-type:access_token",
+					},
+				})
+				kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+					IDToken:      sv.LastTokenResponse().IDToken,
+					RefreshToken: "",
+				})
+			})
+			t.Run("TokenExchangeExtraScopes", func(t *testing.T) {
+				t.Parallel()
+				ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+				defer cancel()
+				sv := oidcserver.New(t, tc.keyPair, testconfig.Config{
+					Want: testconfig.Want{
+						SubjectToken:     "SUBJECT_TOKEN",
+						SubjectTokenType: "urn:ietf:params:oauth:token-type:access_token",
+						Scope:            "profile groups openid",
+					},
+					Response: testconfig.Response{
+						IDTokenExpiry: now.Add(time.Hour),
+					},
+				})
+				kubeConfigFilename := kubeconfig.Create(t, &kubeconfig.Values{
+					Issuer:                  sv.IssuerURL(),
+					IDPCertificateAuthority: tc.keyPair.CACertPath,
+					ExtraScopes:             "profile,groups",
+				})
+				runStandalone(t, ctx, standaloneConfig{
+					issuerURL:          sv.IssuerURL(),
+					kubeConfigFilename: kubeConfigFilename,
+					httpDriver:         httpdriver.Zero(t),
+					now:                now,
+					args: []string{
+						"--token-exchange-subject-token", "SUBJECT_TOKEN",
+						"--token-exchange-subject-token-type", "urn:ietf:params:oauth:token-type:access_token",
+					},
+				})
+				kubeconfig.Verify(t, kubeConfigFilename, kubeconfig.AuthProviderConfig{
+					IDToken:      sv.LastTokenResponse().IDToken,
+					RefreshToken: "",
+				})
+			})
 		})
 	}
 
