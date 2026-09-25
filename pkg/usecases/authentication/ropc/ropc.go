@@ -14,8 +14,9 @@ const usernamePrompt = "Username: "
 const passwordPrompt = "Password: "
 
 type Option struct {
-	Username string
-	Password string // If empty, read a password using Reader.ReadPassword()
+	Username        string
+	Password        string // If empty, read a password using PasswordCommand or Reader.ReadPassword()
+	PasswordCommand string // If set, read a password from the stdout of the command
 }
 
 // ROPC provides the resource owner password credentials flow.
@@ -31,6 +32,13 @@ func (u *ROPC) Do(ctx context.Context, in *Option, oidcClient client.Interface) 
 		in.Username, err = u.Reader.ReadString(usernamePrompt)
 		if err != nil {
 			return nil, fmt.Errorf("could not read a username: %w", err)
+		}
+	}
+	if in.Password == "" && in.PasswordCommand != "" {
+		var err error
+		in.Password, err = u.Reader.ReadPasswordFromCommand(ctx, in.PasswordCommand)
+		if err != nil {
+			return nil, fmt.Errorf("could not read a password from the command: %w", err)
 		}
 	}
 	if in.Password == "" {

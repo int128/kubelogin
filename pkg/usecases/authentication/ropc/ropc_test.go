@@ -110,6 +110,65 @@ func TestROPC_Do(t *testing.T) {
 		}
 	})
 
+	t.Run("UsePasswordCommand", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		o := &Option{
+			Username:        "USER",
+			PasswordCommand: "op read op://vault/item/password",
+		}
+		mockClient := client_mock.NewMockInterface(t)
+		mockClient.EXPECT().
+			GetTokenByROPC(mock.Anything, "USER", "PASS").
+			Return(&oidc.TokenSet{
+				IDToken:      "YOUR_ID_TOKEN",
+				RefreshToken: "YOUR_REFRESH_TOKEN",
+			}, nil)
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			ReadPasswordFromCommand(mock.Anything, "op read op://vault/item/password").
+			Return("PASS", nil)
+		u := ROPC{
+			Reader: mockReader,
+			Logger: logger.New(t),
+		}
+		got, err := u.Do(ctx, o, mockClient)
+		if err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+		want := &oidc.TokenSet{
+			IDToken:      "YOUR_ID_TOKEN",
+			RefreshToken: "YOUR_REFRESH_TOKEN",
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("UsePasswordCommandError", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		o := &Option{
+			Username:        "USER",
+			PasswordCommand: "op read op://vault/item/password",
+		}
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			ReadPasswordFromCommand(mock.Anything, "op read op://vault/item/password").
+			Return("", errors.New("error"))
+		u := ROPC{
+			Reader: mockReader,
+			Logger: logger.New(t),
+		}
+		out, err := u.Do(ctx, o, client_mock.NewMockInterface(t))
+		if err == nil {
+			t.Errorf("err wants non-nil but nil")
+		}
+		if out != nil {
+			t.Errorf("out wants nil but %+v", out)
+		}
+	})
+
 	t.Run("AskPasswordError", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()

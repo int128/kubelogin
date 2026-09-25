@@ -89,6 +89,19 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 				},
 			},
 		},
+		"GrantType=password with password-command": {
+			args: []string{
+				"--grant-type", "password",
+				"--username", "USER",
+				"--password-command", "op read op://vault/item/password",
+			},
+			want: authentication.GrantOptionSet{
+				ROPCOption: &ropc.Option{
+					Username:        "USER",
+					PasswordCommand: "op read op://vault/item/password",
+				},
+			},
+		},
 		"GrantType=client-credentials": {
 			args: []string{
 				"--grant-type", "client-credentials",
@@ -134,6 +147,34 @@ func Test_authenticationOptions_grantOptionSet(t *testing.T) {
 			}
 			if diff := cmp.Diff(c.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func Test_authenticationOptions_grantOptionSet_error(t *testing.T) {
+	tests := map[string][]string{
+		"GrantType=unknown": {
+			"--grant-type", "unknown",
+		},
+		"Password and PasswordCommand": {
+			"--username", "USER",
+			"--password", "PASS",
+			"--password-command", "op read op://vault/item/password",
+		},
+	}
+
+	for name, args := range tests {
+		t.Run(name, func(t *testing.T) {
+			var o authenticationOptions
+			f := pflag.NewFlagSet("", pflag.ContinueOnError)
+			o.addFlags(f)
+			if err := f.Parse(args); err != nil {
+				t.Fatalf("Parse error: %s", err)
+			}
+			_, err := o.grantOptionSet()
+			if err == nil {
+				t.Errorf("err wants non-nil but nil")
 			}
 		})
 	}
