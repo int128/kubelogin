@@ -3,8 +3,11 @@ package reader
 
 import (
 	"bufio"
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"syscall"
 
@@ -22,6 +25,7 @@ var Set = wire.NewSet(
 type Interface interface {
 	ReadString(prompt string) (string, error)
 	ReadPassword(prompt string) (string, error)
+	ReadPasswordFromCommand(ctx context.Context, command string) (string, error)
 }
 
 type Reader struct {
@@ -55,4 +59,26 @@ func (*Reader) ReadPassword(prompt string) (string, error) {
 		return "", fmt.Errorf("write error: %w", err)
 	}
 	return string(b), nil
+}
+
+// ReadPasswordFromCommand runs the command and returns its stdout as a password.
+// The command is split by white spaces and executed without a shell.
+func (x *Reader) ReadPasswordFromCommand(ctx context.Context, command string) (string, error) {
+	args := strings.Fields(command)
+	if len(args) == 0 {
+		return "", errors.New("password command is empty")
+	}
+	c := exec.CommandContext(ctx, args[0], args[1:]...)
+	c.Stdin = x.Stdin
+	c.Stderr = os.Stderr
+	// Do not include the output in the error, because it may contain the password.
+	b, err := c.Output()
+	if err != nil {
+		return "", fmt.Errorf("password command error: %w", err)
+	}
+	s := strings.TrimRight(string(b), "\r\n")
+	if s == "" {
+		return "", errors.New("password command returned an empty output")
+	}
+	return s, nil
 }
