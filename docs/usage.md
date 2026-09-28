@@ -143,6 +143,38 @@ If a value in the following options begins with a tilde character `~`, it is exp
 - `--local-server-key`
 - `--token-cache-dir`
 
+Note that `--browser-command` is **not** in this list.
+It is run directly (not through a shell), so `~` and environment variables such as `$HOME` are not expanded.
+Use an absolute path, or a bare command name that is resolvable on `PATH` (see [Opening the browser on WSL](#opening-the-browser-on-wsl)).
+
+### Opening the browser on WSL
+
+On WSL, kubelogin opens the browser via `xdg-open`, which in turn calls `wslview` (from [wslu](https://github.com/wslutilities/wslu)) to launch the default Windows browser.
+`wslview` reads the Windows registry to resolve the default browser, so it fails if registry access is restricted by policy, for example:
+
+```
+ERROR: Registry editing has been disabled by your administrator.
+```
+
+To work around this, set `--browser-command` to a browser that is launched by its absolute Windows path, which does not touch the registry:
+
+```yaml
+- --browser-command=/mnt/c/Program Files/Google/Chrome/Application/chrome.exe
+```
+
+If you do not want to hard-code an absolute path in a shared kubeconfig, point `--browser-command` at a small wrapper script on your `PATH`.
+Because `--browser-command` is run directly (see [Home directory expansion](#home-directory-expansion)), a bare command name is resolved via `PATH`, while `~` and `$HOME` are not expanded.
+
+```sh
+# ~/.local/bin/wsl-browser (make it executable and ensure ~/.local/bin is on PATH)
+#!/usr/bin/env bash
+exec "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe" "$@"
+```
+
+```yaml
+- --browser-command=wsl-browser
+```
+
 ## Authentication flows
 
 Kubelogin support the following flows:
@@ -173,6 +205,8 @@ If you encounter a problem with the browser, you can change the browser command 
 # Do not open the browser
 - --skip-open-browser
 ```
+
+On WSL, see [Opening the browser on WSL](#opening-the-browser-on-wsl).
 
 ### Authorization Code Flow
 
@@ -227,6 +261,8 @@ If you encounter a problem with the browser, you can change the browser command 
 # Do not open the browser
 - --skip-open-browser
 ```
+
+On WSL, see [Opening the browser on WSL](#opening-the-browser-on-wsl).
 
 ### Authorization Code Flow with a keyboard
 
