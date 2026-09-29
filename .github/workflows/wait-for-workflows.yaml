@@ -1,0 +1,11 @@
+name: wait-for-workflows
+
+on:
+  pull_request:
+
+jobs:
+  wait-for-workflows:
+    runs-on: ubuntu-slim
+    timeout-minutes: 15
+    steps:
+      - uses: int128/wait-for-workflows-action@f0dd035278e6fcb73d6be27e412dfff930fb2d10 # v1.98.0
