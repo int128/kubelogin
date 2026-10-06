@@ -34,6 +34,7 @@ Flags:
       --oidc-auth-request-extra-params stringToString   [authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request (default [])
       --username string                                 [password] Username for resource owner password credentials grant
       --password string                                 [password] Password for resource owner password credentials grant
+      --password-command string                         [password] Command whose stdout is used as the password, instead of --password
   -h, --help                                            help for get-token
 
 Global Flags:
@@ -271,6 +272,15 @@ You can set the username and password.
 ```yaml
 - --username=USERNAME
 - --password=PASSWORD
+```
+
+To avoid putting the password in the kubeconfig and the process arguments, you can set a command to print the password to stdout instead.
+The command is split by spaces and executed without a shell.
+Use a script if you need quoting or pipes.
+
+```yaml
+- --username=USERNAME
+- --password-command=op read op://vault/item/password
 ```
 
 If the password is not set, kubelogin will show the prompt for the password.
