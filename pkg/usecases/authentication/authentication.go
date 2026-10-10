@@ -13,6 +13,7 @@ import (
 	"github.com/int128/kubelogin/pkg/usecases/authentication/clientcredentials"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/devicecode"
 	"github.com/int128/kubelogin/pkg/usecases/authentication/ropc"
+	"github.com/int128/kubelogin/pkg/usecases/authentication/tokenexchange"
 )
 
 // Set provides the use-case of Authentication.
@@ -24,6 +25,7 @@ var Set = wire.NewSet(
 	wire.Struct(new(ropc.ROPC), "*"),
 	wire.Struct(new(devicecode.DeviceCode), "*"),
 	wire.Struct(new(clientcredentials.ClientCredentials), "*"),
+	wire.Struct(new(tokenexchange.TokenExchange), "*"),
 )
 
 type Interface interface {
@@ -44,6 +46,7 @@ type GrantOptionSet struct {
 	ROPCOption              *ropc.Option
 	DeviceCodeOption        *devicecode.Option
 	ClientCredentialsOption *client.GetTokenByClientCredentialsInput
+	TokenExchangeOption     *tokenexchange.TokenExchangeOption
 }
 
 // AuthRequestExtraParams returns the extra parameters for the auth request
@@ -82,8 +85,9 @@ type Output struct {
 //
 // The authentication flow is determined as:
 //
-// If the Username is not set, it performs the authorization code flow.
-// Otherwise, it performs the resource owner password credentials flow.
+// If the Username is set, it performs the resource owner password credentials flow.
+// If SubjectToken is set, it performs the token exchange flow.
+// Otherwise, it performs the authorization code flow.
 // If the Password is not set, it asks a password by the prompt.
 type Authentication struct {
 	ClientFactory     client.FactoryInterface
@@ -93,6 +97,7 @@ type Authentication struct {
 	ROPC              *ropc.ROPC
 	DeviceCode        *devicecode.DeviceCode
 	ClientCredentials *clientcredentials.ClientCredentials
+	TokenExchange     *tokenexchange.TokenExchange
 }
 
 func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
@@ -143,6 +148,13 @@ func (u *Authentication) Do(ctx context.Context, in Input) (*Output, error) {
 		tokenSet, err := u.ClientCredentials.Do(ctx, in.GrantOptionSet.ClientCredentialsOption, oidcClient)
 		if err != nil {
 			return nil, fmt.Errorf("client-credentials error: %w", err)
+		}
+		return &Output{TokenSet: *tokenSet}, nil
+	}
+	if in.GrantOptionSet.TokenExchangeOption != nil {
+		tokenSet, err := u.TokenExchange.Do(ctx, in.GrantOptionSet.TokenExchangeOption, oidcClient)
+		if err != nil {
+			return nil, fmt.Errorf("token-exchange error: %w", err)
 		}
 		return &Output{TokenSet: *tokenSet}, nil
 	}
