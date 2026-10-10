@@ -19,8 +19,8 @@ func DecodeWithoutVerify(s string) (*Claims, error) {
 		return nil, fmt.Errorf("could not decode the payload: %w", err)
 	}
 	var claims struct {
-		Subject   string `json:"sub,omitempty"`
-		ExpiresAt int64  `json:"exp,omitempty"`
+		Subject   string  `json:"sub,omitempty"`
+		ExpiresAt float64 `json:"exp,omitempty"`
 	}
 	if err := json.NewDecoder(bytes.NewReader(payload)).Decode(&claims); err != nil {
 		return nil, fmt.Errorf("could not decode the json of token: %w", err)
@@ -31,7 +31,7 @@ func DecodeWithoutVerify(s string) (*Claims, error) {
 	}
 	return &Claims{
 		Subject: claims.Subject,
-		Expiry:  time.Unix(claims.ExpiresAt, 0),
+		Expiry:  time.Unix(int64(claims.ExpiresAt), 0),
 		Pretty:  prettyJson.String(),
 	}, nil
 }
