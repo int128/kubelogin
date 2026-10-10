@@ -11,6 +11,7 @@ import (
 
 type GetTokenByClientCredentialsInput struct {
 	EndpointParams map[string][]string
+	AuthStyle      oauth2.AuthStyle
 }
 
 // GetTokenByClientCredentials performs the client credentials flow.
@@ -24,7 +25,7 @@ func (c *client) GetTokenByClientCredentials(ctx context.Context, in GetTokenByC
 		TokenURL:       c.oauth2Config.Endpoint.TokenURL,
 		Scopes:         c.oauth2Config.Scopes,
 		EndpointParams: in.EndpointParams,
-		AuthStyle:      oauth2.AuthStyleInHeader,
+		AuthStyle:      in.AuthStyle,
 	}
 	source := config.TokenSource(ctx)
 	token, err := source.Token()
