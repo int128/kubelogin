@@ -15,6 +15,7 @@ const keyboardPrompt = "Enter code: "
 
 type KeyboardOption struct {
 	AuthRequestExtraParams map[string]string
+	AccessType             string
 }
 
 // Keyboard provides the authorization code flow with keyboard interactive.
@@ -42,6 +43,7 @@ func (u *Keyboard) Do(ctx context.Context, o *KeyboardOption, oidcClient client.
 		Nonce:                  nonce,
 		PKCEParams:             pkceParams,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
+		AccessType:             o.AccessType,
 	})
 	u.Logger.Printf("Please visit the following URL in your browser: %s", authCodeURL)
 	code, err := u.Reader.ReadString(keyboardPrompt)
