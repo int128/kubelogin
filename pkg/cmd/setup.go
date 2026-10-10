@@ -12,16 +12,17 @@ import (
 
 // setupOptions represents the options for setup command.
 type setupOptions struct {
-	IssuerURL             string
-	ClientID              string
-	ClientSecret          string
-	RedirectURL           string
-	ExtraScopes           []string
-	UseAccessToken        bool
-	RequestHeaders        map[string]string
-	tlsOptions            tlsOptions
-	pkceOptions           pkceOptions
-	authenticationOptions authenticationOptions
+	IssuerURL              string
+	ClientID               string
+	ClientSecret           string
+	RedirectURL            string
+	ExtraScopes            []string
+	UseAccessToken         bool
+	RequestHeaders         map[string]string
+	DeviceAuthorizationURL string
+	tlsOptions             tlsOptions
+	pkceOptions            pkceOptions
+	authenticationOptions  authenticationOptions
 }
 
 func (o *setupOptions) addFlags(f *pflag.FlagSet) {
@@ -32,6 +33,7 @@ func (o *setupOptions) addFlags(f *pflag.FlagSet) {
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
 	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
 	f.StringToStringVar(&o.RequestHeaders, "oidc-request-header", nil, "HTTP headers to send with an authentication request")
+	f.StringVar(&o.DeviceAuthorizationURL, "oidc-device-authorization-url", "", "[device-code] Override the device_authorization_endpoint URL (e.g. GitLab: <issuer>/oauth/authorize_device)")
 	o.tlsOptions.addFlags(f)
 	o.pkceOptions.addFlags(f)
 	o.authenticationOptions.addFlags(f)
@@ -75,17 +77,18 @@ func (cmd *Setup) New() *cobra.Command {
 				return fmt.Errorf("setup: %w", err)
 			}
 			in := setup.Input{
-				IssuerURL:       o.IssuerURL,
-				ClientID:        o.ClientID,
-				ClientSecret:    o.ClientSecret,
-				RedirectURL:     o.RedirectURL,
-				ExtraScopes:     o.ExtraScopes,
-				UseAccessToken:  o.UseAccessToken,
-				RequestHeaders:  o.RequestHeaders,
-				PKCEMethod:      pkceMethod,
-				GrantOptionSet:  grantOptionSet,
-				TLSClientConfig: o.tlsOptions.tlsClientConfig(),
-				ChangedFlags:    changedFlags,
+				IssuerURL:              o.IssuerURL,
+				ClientID:               o.ClientID,
+				ClientSecret:           o.ClientSecret,
+				RedirectURL:            o.RedirectURL,
+				ExtraScopes:            o.ExtraScopes,
+				UseAccessToken:         o.UseAccessToken,
+				RequestHeaders:         o.RequestHeaders,
+				DeviceAuthorizationURL: o.DeviceAuthorizationURL,
+				PKCEMethod:             pkceMethod,
+				GrantOptionSet:         grantOptionSet,
+				TLSClientConfig:        o.tlsOptions.tlsClientConfig(),
+				ChangedFlags:           changedFlags,
 			}
 			if in.IssuerURL == "" || in.ClientID == "" {
 				return c.Help()

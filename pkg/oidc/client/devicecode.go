@@ -13,8 +13,12 @@ import (
 func (c *client) GetDeviceAuthorization(ctx context.Context) (*oauth2dev.AuthorizationResponse, error) {
 	ctx = c.wrapContext(ctx)
 	config := c.oauth2Config
+	deviceAuthURL := c.provider.Endpoint().DeviceAuthURL
+	if deviceAuthURL == "" {
+		deviceAuthURL = c.oauth2Config.Endpoint.DeviceAuthURL
+	}
 	config.Endpoint = oauth2.Endpoint{
-		AuthURL: c.provider.Endpoint().DeviceAuthURL,
+		AuthURL: deviceAuthURL,
 	}
 	return oauth2dev.RetrieveCode(ctx, config)
 }
