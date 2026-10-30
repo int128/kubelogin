@@ -32,7 +32,7 @@ jobs:
       contents: write
     steps:
       - id: create-draft-release
-        uses: int128/create-draft-release-action@0cdd1b9d8001d6b3e137a4c01f5d621b699c3b24 # v0.8.0
+        uses: int128/create-draft-release-action@e77f1819309babe81b6959cb51c7b58a72b901de # v0.9.0
         with:
           dry-run: ${{ github.event_name == 'pull_request' }}
           body: |
