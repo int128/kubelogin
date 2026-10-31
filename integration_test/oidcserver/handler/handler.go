@@ -18,6 +18,7 @@ func Register(t *testing.T, mux *http.ServeMux, provider service.Provider) {
 	mux.HandleFunc("GET /certs", h.GetCertificates)
 	mux.HandleFunc("GET /auth", h.AuthenticateCode)
 	mux.HandleFunc("POST /token", h.Exchange)
+	mux.HandleFunc("POST /device", h.DeviceAuthorization)
 }
 
 // Handlers provides HTTP handlers for the OpenID Connect Provider.
@@ -143,6 +144,18 @@ func (h *Handlers) Exchange(w http.ResponseWriter, r *http.Request) {
 			if err := e.Encode(tokenResponse); err != nil {
 				return fmt.Errorf("could not render json: %w", err)
 			}
+		case "urn:ietf:params:oauth:grant-type:device_code":
+			tokenResponse, err := h.provider.ExchangeDeviceCode(service.DeviceCodeTokenRequest{
+				DeviceCode:   r.Form.Get("device_code"),
+				CodeVerifier: r.Form.Get("code_verifier"),
+			})
+			if err != nil {
+				return fmt.Errorf("device code exchange error: %w", err)
+			}
+			w.Header().Add("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(tokenResponse); err != nil {
+				return fmt.Errorf("could not render json: %w", err)
+			}
 		default:
 			// 5.2. Error Response
 			// https://tools.ietf.org/html/rfc6749#section-5.2
@@ -150,6 +163,27 @@ func (h *Handlers) Exchange(w http.ResponseWriter, r *http.Request) {
 				Code:        "invalid_grant",
 				Description: fmt.Sprintf("unknown grant_type %s", grantType),
 			}
+		}
+		return nil
+	})
+}
+
+func (h *Handlers) DeviceAuthorization(w http.ResponseWriter, r *http.Request) {
+	h.handleError(w, r, func() error {
+		if err := r.ParseForm(); err != nil {
+			return fmt.Errorf("could not parse the form: %w", err)
+		}
+		resp, err := h.provider.DeviceAuthorization(service.DeviceAuthorizationRequest{
+			Scope:               r.Form.Get("scope"),
+			CodeChallenge:       r.Form.Get("code_challenge"),
+			CodeChallengeMethod: r.Form.Get("code_challenge_method"),
+		})
+		if err != nil {
+			return fmt.Errorf("device authorization error: %w", err)
+		}
+		w.Header().Add("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			return fmt.Errorf("could not render json: %w", err)
 		}
 		return nil
 	})
