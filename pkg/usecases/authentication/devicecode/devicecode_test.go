@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/infrastructure/browser_mock"
 	"github.com/int128/kubelogin/mocks/github.com/int128/kubelogin/pkg/oidc/client_mock"
@@ -182,4 +183,42 @@ func TestDeviceCode_openURL(t *testing.T) {
 		browserMock.EXPECT().OpenCommand(ctx, url, "test-command").Return(testError).Once()
 		deviceCode.openURL(ctx, &Option{BrowserCommand: "test-command"}, url)
 	})
+}
+
+func TestDeviceCode_AuthenticationTimeout(t *testing.T) {
+	ctx := context.TODO()
+	mockBrowser := browser_mock.NewMockInterface(t)
+	mockClient := client_mock.NewMockInterface(t)
+	dc := &DeviceCode{
+		Browser: mockBrowser,
+		Logger:  logger.New(t),
+	}
+	mockResponse := &oauth2dev.AuthorizationResponse{
+		DeviceCode:              "device-code-1",
+		VerificationURIComplete: "https://example.com/verificationComplete?code=code123",
+		ExpiresIn:               300,
+		Interval:                1,
+	}
+	mockClient.EXPECT().GetDeviceAuthorization(ctx).Return(mockResponse, nil).Once()
+	mockBrowser.EXPECT().Open("https://example.com/verificationComplete?code=code123").Return(nil).Once()
+	// Simulate a user who never approves: the poller only returns when the context is done.
+	mockClient.EXPECT().ExchangeDeviceCode(mock.Anything, mockResponse).
+		RunAndReturn(func(ctx context.Context, _ *oauth2dev.AuthorizationResponse) (*oidc.TokenSet, error) {
+			<-ctx.Done()
+			return nil, ctx.Err()
+		}).Once()
+	done := make(chan struct{})
+	var err error
+	go func() {
+		defer close(done)
+		_, err = dc.Do(ctx, &Option{AuthenticationTimeout: 50 * time.Millisecond}, mockClient)
+	}()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Do did not return within 5s; the authentication timeout was not applied")
+	}
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("returned error is not context.DeadlineExceeded: %v", err)
+	}
 }
