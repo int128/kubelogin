@@ -143,6 +143,27 @@ func (h *Handlers) Exchange(w http.ResponseWriter, r *http.Request) {
 			if err := e.Encode(tokenResponse); err != nil {
 				return fmt.Errorf("could not render json: %w", err)
 			}
+		case "urn:ietf:params:oauth:grant-type:token-exchange":
+			// RFC 8693 Token Exchange
+			// https://datatracker.ietf.org/doc/html/rfc8693
+			tokenResponse, err := h.provider.AuthenticateTokenExchange(service.TokenExchangeRequest{
+				SubjectToken:     r.Form.Get("subject_token"),
+				SubjectTokenType: r.Form.Get("subject_token_type"),
+				ActorToken:       r.Form.Get("actor_token"),
+				ActorTokenType:   r.Form.Get("actor_token_type"),
+				Resource:         r.Form["resource"],
+				Audience:         r.Form["audience"],
+				RequestTokenType: r.Form.Get("requested_token_type"),
+				Scope:            r.Form.Get("scope"),
+			})
+			if err != nil {
+				return fmt.Errorf("token exchange error: %w", err)
+			}
+			w.Header().Add("Content-Type", "application/json")
+			e := json.NewEncoder(w)
+			if err := e.Encode(tokenResponse); err != nil {
+				return fmt.Errorf("could not render json: %w", err)
+			}
 		default:
 			// 5.2. Error Response
 			// https://tools.ietf.org/html/rfc6749#section-5.2
