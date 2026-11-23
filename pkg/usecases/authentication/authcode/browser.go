@@ -20,6 +20,7 @@ type BrowserOption struct {
 	AuthenticationTimeout      time.Duration
 	OpenURLAfterAuthentication string
 	AuthRequestExtraParams     map[string]string
+	AccessType                 string
 	LocalServerCertFile        string
 	LocalServerKeyFile         string
 }
@@ -54,6 +55,7 @@ func (u *Browser) Do(ctx context.Context, o *BrowserOption, oidcClient client.In
 		Nonce:                  nonce,
 		PKCEParams:             pkceParams,
 		AuthRequestExtraParams: o.AuthRequestExtraParams,
+		AccessType:             o.AccessType,
 		LocalServerSuccessHTML: successHTML,
 		LocalServerCertFile:    o.LocalServerCertFile,
 		LocalServerKeyFile:     o.LocalServerKeyFile,
