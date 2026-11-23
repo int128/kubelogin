@@ -52,6 +52,24 @@ Global Flags:
       --vmodule moduleSpec               comma-separated list of pattern=N settings for file-filtered logging
 ```
 
+Here is the sequence diagram of the credential plugin.
+
+```mermaid
+sequenceDiagram
+  actor User
+  User ->>+ kubectl: Run
+  kubectl ->>+ kubelogin: Run the plugin
+  kubelogin ->>+ Provider: Authentication request
+  Note over User, Provider: Browser interaction
+  Provider -->>- kubelogin: Authentication response
+  kubelogin ->>+ Provider: Token request
+  Provider -->>- kubelogin: Token response
+  kubelogin -->>- kubectl: Credential
+  kubectl ->>+ kube-apiserver: Request with the credential
+  kube-apiserver -->>- kubectl: Response
+  kubectl -->>- User: Response
+```
+
 ## Options
 
 ### Authentication timeout
