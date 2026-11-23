@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -26,6 +27,7 @@ type authenticationOptions struct {
 	AuthRequestExtraParams     map[string]string
 	Username                   string
 	Password                   string
+	PasswordCommand            string
 }
 
 var allGrantType = strings.Join([]string{
@@ -49,6 +51,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringToStringVar(&o.AuthRequestExtraParams, "oidc-auth-request-extra-params", nil, "[authcode, authcode-keyboard, client-credentials] Extra query parameters to send with an authentication request")
 	f.StringVar(&o.Username, "username", "", "[password] Username for resource owner password credentials grant")
 	f.StringVar(&o.Password, "password", "", "[password] Password for resource owner password credentials grant")
+	f.StringVar(&o.PasswordCommand, "password-command", "", "[password] Command whose stdout is used as the password, instead of --password")
 }
 
 func (o *authenticationOptions) expandHomedir() {
@@ -74,9 +77,14 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 			AuthRequestExtraParams: o.AuthRequestExtraParams,
 		}
 	case o.GrantType == "password" || (o.GrantType == "auto" && o.Username != ""):
+		if o.Password != "" && o.PasswordCommand != "" {
+			err = errors.New("--password and --password-command cannot be set at the same time")
+			return
+		}
 		s.ROPCOption = &ropc.Option{
-			Username: o.Username,
-			Password: o.Password,
+			Username:        o.Username,
+			Password:        o.Password,
+			PasswordCommand: o.PasswordCommand,
 		}
 	case o.GrantType == "device-code":
 		s.DeviceCodeOption = &devicecode.Option{
