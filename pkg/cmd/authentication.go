@@ -42,7 +42,7 @@ func (o *authenticationOptions) addFlags(f *pflag.FlagSet) {
 	f.StringSliceVar(&o.ListenAddress, "listen-address", defaultListenAddress, "[authcode] Address to bind to the local server. If multiple addresses are set, it will try binding in order")
 	f.BoolVar(&o.SkipOpenBrowser, "skip-open-browser", false, "[authcode] Do not open the browser automatically")
 	f.StringVar(&o.BrowserCommand, "browser-command", "", "[authcode] Command to open the browser")
-	f.IntVar(&o.AuthenticationTimeoutSec, "authentication-timeout-sec", defaultAuthenticationTimeoutSec, "[authcode] Timeout of authentication in seconds")
+	f.IntVar(&o.AuthenticationTimeoutSec, "authentication-timeout-sec", defaultAuthenticationTimeoutSec, "[authcode, device-code] Timeout of authentication in seconds")
 	f.StringVar(&o.LocalServerCertFile, "local-server-cert", "", "[authcode] Certificate path for the local server")
 	f.StringVar(&o.LocalServerKeyFile, "local-server-key", "", "[authcode] Certificate key path for the local server")
 	f.StringVar(&o.OpenURLAfterAuthentication, "open-url-after-authentication", "", "[authcode] If set, open the URL in the browser after authentication")
@@ -80,8 +80,9 @@ func (o *authenticationOptions) grantOptionSet() (s authentication.GrantOptionSe
 		}
 	case o.GrantType == "device-code":
 		s.DeviceCodeOption = &devicecode.Option{
-			SkipOpenBrowser: o.SkipOpenBrowser,
-			BrowserCommand:  o.BrowserCommand,
+			SkipOpenBrowser:       o.SkipOpenBrowser,
+			BrowserCommand:        o.BrowserCommand,
+			AuthenticationTimeout: time.Duration(o.AuthenticationTimeoutSec) * time.Second,
 		}
 	case o.GrantType == "client-credentials":
 		endpointparams := make(map[string][]string, len(o.AuthRequestExtraParams))

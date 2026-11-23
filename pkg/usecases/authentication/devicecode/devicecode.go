@@ -3,6 +3,7 @@ package devicecode
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
@@ -11,8 +12,9 @@ import (
 )
 
 type Option struct {
-	SkipOpenBrowser bool
-	BrowserCommand  string
+	SkipOpenBrowser       bool
+	BrowserCommand        string
+	AuthenticationTimeout time.Duration
 }
 
 // DeviceCode provides the oauth2 device code flow.
@@ -27,6 +29,16 @@ func (u *DeviceCode) Do(ctx context.Context, in *Option, oidcClient client.Inter
 	authResponse, err := oidcClient.GetDeviceAuthorization(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("authorization error: %w", err)
+	}
+
+	// Bound the time we wait for the user to approve the device code.
+	// Without this, an unattended login polls the token endpoint until the
+	// authorization server expires the device code (if it ever does), and
+	// keeps the token cache lock held for all that time.
+	if in != nil && in.AuthenticationTimeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, in.AuthenticationTimeout)
+		defer cancel()
 	}
 
 	if authResponse.VerificationURIComplete != "" {
