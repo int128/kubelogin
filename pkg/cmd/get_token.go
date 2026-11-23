@@ -13,18 +13,19 @@ import (
 
 // getTokenOptions represents the options for get-token command.
 type getTokenOptions struct {
-	IssuerURL             string
-	ClientID              string
-	ClientSecret          string
-	RedirectURL           string
-	ExtraScopes           []string
-	UseAccessToken        bool
-	RequestHeaders        map[string]string
-	tokenCacheOptions     tokenCacheOptions
-	tlsOptions            tlsOptions
-	pkceOptions           pkceOptions
-	authenticationOptions authenticationOptions
-	ForceRefresh          bool
+	IssuerURL              string
+	ClientID               string
+	ClientSecret           string
+	RedirectURL            string
+	ExtraScopes            []string
+	UseAccessToken         bool
+	RequestHeaders         map[string]string
+	DeviceAuthorizationURL string
+	tokenCacheOptions      tokenCacheOptions
+	tlsOptions             tlsOptions
+	pkceOptions            pkceOptions
+	authenticationOptions  authenticationOptions
+	ForceRefresh           bool
 }
 
 func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
@@ -35,6 +36,7 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.StringSliceVar(&o.ExtraScopes, "oidc-extra-scope", nil, "Scopes to request to the provider")
 	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
 	f.StringToStringVar(&o.RequestHeaders, "oidc-request-header", nil, "HTTP headers to send with an authentication request")
+	f.StringVar(&o.DeviceAuthorizationURL, "oidc-device-authorization-url", "", "[device-code] Override the device_authorization_endpoint URL (e.g. GitLab: <issuer>/oauth/authorize_device)")
 	f.BoolVar(&o.ForceRefresh, "force-refresh", false, "If set, refresh the ID token regardless of its expiration time")
 	o.tokenCacheOptions.addFlags(f)
 	o.tlsOptions.addFlags(f)
@@ -86,14 +88,15 @@ func (cmd *GetToken) New() *cobra.Command {
 			}
 			in := credentialplugin.Input{
 				Provider: oidc.Provider{
-					IssuerURL:      o.IssuerURL,
-					ClientID:       o.ClientID,
-					ClientSecret:   o.ClientSecret,
-					RedirectURL:    o.RedirectURL,
-					PKCEMethod:     pkceMethod,
-					UseAccessToken: o.UseAccessToken,
-					ExtraScopes:    o.ExtraScopes,
-					RequestHeaders: o.RequestHeaders,
+					IssuerURL:              o.IssuerURL,
+					ClientID:               o.ClientID,
+					ClientSecret:           o.ClientSecret,
+					RedirectURL:            o.RedirectURL,
+					PKCEMethod:             pkceMethod,
+					UseAccessToken:         o.UseAccessToken,
+					ExtraScopes:            o.ExtraScopes,
+					RequestHeaders:         o.RequestHeaders,
+					DeviceAuthorizationURL: o.DeviceAuthorizationURL,
 				},
 				ForceRefresh:     o.ForceRefresh,
 				TokenCacheConfig: tokenCacheConfig,

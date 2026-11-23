@@ -14,6 +14,7 @@ Flags:
       --oidc-extra-scope strings                        Scopes to request to the provider
       --oidc-use-access-token                           Instead of using the id_token, use the access_token to authenticate to Kubernetes
       --oidc-request-header stringToString              HTTP headers to send with an authentication request (default [])
+      --oidc-device-authorization-url string            [device-code] Override the device_authorization_endpoint URL (e.g: <issuer>/oauth/authorize_device)
       --force-refresh                                   If set, refresh the ID token regardless of its expiration time
       --token-cache-dir string                          Path to a directory of the token cache (default "~/.kube/cache/oidc-login")
       --token-cache-storage string                      Storage for the token cache. One of (disk|keyring|none) (default "disk")
@@ -164,6 +165,12 @@ It performs the [Device Authorization Grant (RFC 8628)](https://tools.ietf.org/h
 It automatically opens the browser.
 If the provider returns the `verification_uri_complete` parameter, you don't need to enter the code.
 Otherwise, you need to enter the code shown.
+
+If your provider does not advertise `device_authorization_endpoint` in its OIDC discovery document (e.g. GitLab 17.x), you can override the URL manually:
+
+```yaml
+- --oidc-device-authorization-url=https://gitlab.example.com/oauth/authorize_device
+```
 
 If you encounter a problem with the browser, you can change the browser command or skip opening the browser.
 

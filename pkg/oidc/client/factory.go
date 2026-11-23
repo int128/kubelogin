@@ -67,6 +67,9 @@ func (f *Factory) New(ctx context.Context, prov oidc.Provider, tlsClientConfig t
 	if prov.ClientSecret == "" {
 		endpoint.AuthStyle = oauth2.AuthStyleInParams
 	}
+	if endpoint.DeviceAuthURL == "" && prov.DeviceAuthorizationURL != "" {
+		endpoint.DeviceAuthURL = prov.DeviceAuthorizationURL
+	}
 
 	return &client{
 		httpClient: httpClient,
