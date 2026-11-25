@@ -124,6 +124,9 @@ It depends on [zalando/go-keyring](https://github.com/zalando/go-keyring).
 - --token-cache-storage=keyring
 ```
 
+If the token cache is too large for the keyring, such as the macOS Keychain (about 3KB) or the Windows Credential Manager (2.5KB),
+kubelogin encrypts the token cache into the token cache directory and stores the encryption key in the keyring.
+
 You can delete the token cache by the clean command.
 
 ```console
