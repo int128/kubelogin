@@ -1,14 +1,18 @@
 package repository
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/int128/kubelogin/pkg/oidc"
 	"github.com/int128/kubelogin/pkg/tlsclientconfig"
 	"github.com/int128/kubelogin/pkg/tokencache"
+	"github.com/zalando/go-keyring"
 )
 
 func TestRepository_FindByKey(t *testing.T) {
@@ -176,4 +180,119 @@ func TestRepository_Save(t *testing.T) {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	})
+}
+
+func TestRepository_Keyring(t *testing.T) {
+	var r Repository
+	key := tokencache.Key{
+		Provider: oidc.Provider{
+			IssuerURL: "YOUR_ISSUER",
+			ClientID:  "YOUR_CLIENT_ID",
+		},
+	}
+	checksum, err := computeChecksum(key)
+	if err != nil {
+		t.Fatalf("could not compute the key: %s", err)
+	}
+	item := keyringItemPrefix + checksum
+	smallTokenSet := oidc.TokenSet{IDToken: "YOUR_ID_TOKEN", RefreshToken: "YOUR_REFRESH_TOKEN"}
+	largeTokenSet := oidc.TokenSet{IDToken: strings.Repeat("YOUR_ID_TOKEN", 100), RefreshToken: "YOUR_REFRESH_TOKEN"}
+
+	t.Run("SmallTokenIsStoredInKeyring", func(t *testing.T) {
+		config := setupKeyring(t)
+		if err := r.Save(config, key, smallTokenSet); err != nil {
+			t.Fatalf("could not save the token cache: %s", err)
+		}
+		got, err := keyring.Get(keyringService, item)
+		if err != nil {
+			t.Fatalf("could not get the keyring item: %s", err)
+		}
+		want := `{"id_token":"YOUR_ID_TOKEN","refresh_token":"YOUR_REFRESH_TOKEN"}`
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("keyring item mismatch (-want +got):\n%s", diff)
+		}
+		assertFindByKey(t, &r, config, key, smallTokenSet)
+	})
+
+	t.Run("LargeTokenIsStoredInEncryptedFile", func(t *testing.T) {
+		config := setupKeyring(t)
+		if err := r.Save(config, key, largeTokenSet); err != nil {
+			t.Fatalf("could not save the token cache: %s", err)
+		}
+		s, err := keyring.Get(keyringService, item)
+		if err != nil {
+			t.Fatalf("could not get the keyring item: %s", err)
+		}
+		if !strings.HasPrefix(s, keyringEncryptionKeyPrefix) {
+			t.Errorf("keyring item wants an encryption key but was %q", s)
+		}
+		b, err := os.ReadFile(filepath.Join(config.Directory, checksum+encryptedFileSuffix))
+		if err != nil {
+			t.Fatalf("could not read the encrypted file: %s", err)
+		}
+		if strings.Contains(string(b), "YOUR_REFRESH_TOKEN") {
+			t.Errorf("encrypted file contains the plaintext token")
+		}
+		assertFindByKey(t, &r, config, key, largeTokenSet)
+	})
+
+	t.Run("SmallTokenAfterLargeTokenRemovesEncryptedFile", func(t *testing.T) {
+		config := setupKeyring(t)
+		if err := r.Save(config, key, largeTokenSet); err != nil {
+			t.Fatalf("could not save the large token cache: %s", err)
+		}
+		if err := r.Save(config, key, smallTokenSet); err != nil {
+			t.Fatalf("could not save the small token cache: %s", err)
+		}
+		_, err := os.Stat(filepath.Join(config.Directory, checksum+encryptedFileSuffix))
+		if !errors.Is(err, fs.ErrNotExist) {
+			t.Errorf("encrypted file wants removed but stat returned %v", err)
+		}
+		assertFindByKey(t, &r, config, key, smallTokenSet)
+	})
+
+	t.Run("TamperedEncryptedFile", func(t *testing.T) {
+		config := setupKeyring(t)
+		if err := r.Save(config, key, largeTokenSet); err != nil {
+			t.Fatalf("could not save the token cache: %s", err)
+		}
+		p := filepath.Join(config.Directory, checksum+encryptedFileSuffix)
+		b, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatalf("could not read the encrypted file: %s", err)
+		}
+		b[len(b)-1] ^= 1
+		if err := os.WriteFile(p, b, 0600); err != nil {
+			t.Fatalf("could not write the encrypted file: %s", err)
+		}
+		if _, err := r.FindByKey(config, key); err == nil {
+			t.Errorf("err wants non-nil but was nil")
+		}
+	})
+}
+
+// setupKeyring sets up a mock keyring that rejects secrets longer than 1000 bytes,
+// and returns a config for the keyring storage.
+func setupKeyring(t *testing.T) tokencache.Config {
+	t.Helper()
+	keyring.MockInit()
+	keyringSet = func(service, user, password string) error {
+		if len(password) > 1000 {
+			return keyring.ErrSetDataTooBig
+		}
+		return keyring.Set(service, user, password)
+	}
+	t.Cleanup(func() { keyringSet = keyring.Set })
+	return tokencache.Config{Directory: t.TempDir(), Storage: tokencache.StorageKeyring}
+}
+
+func assertFindByKey(t *testing.T, r *Repository, config tokencache.Config, key tokencache.Key, want oidc.TokenSet) {
+	t.Helper()
+	got, err := r.FindByKey(config, key)
+	if err != nil {
+		t.Fatalf("could not find the token cache: %s", err)
+	}
+	if diff := cmp.Diff(&want, got); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
 }
