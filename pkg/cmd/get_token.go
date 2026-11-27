@@ -25,6 +25,8 @@ type getTokenOptions struct {
 	pkceOptions           pkceOptions
 	authenticationOptions authenticationOptions
 	ForceRefresh          bool
+	ExecClientCertificate string
+	ExecClientKey         string
 }
 
 func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
@@ -36,6 +38,8 @@ func (o *getTokenOptions) addFlags(f *pflag.FlagSet) {
 	f.BoolVar(&o.UseAccessToken, "oidc-use-access-token", false, "Instead of using the id_token, use the access_token to authenticate to Kubernetes")
 	f.StringToStringVar(&o.RequestHeaders, "oidc-request-header", nil, "HTTP headers to send with an authentication request")
 	f.BoolVar(&o.ForceRefresh, "force-refresh", false, "If set, refresh the ID token regardless of its expiration time")
+	f.StringVar(&o.ExecClientCertificate, "exec-client-certificate", "", "Path to a client certificate file passed to kubectl")
+	f.StringVar(&o.ExecClientKey, "exec-client-key", "", "Path to a client key file passed to kubectl")
 	o.tokenCacheOptions.addFlags(f)
 	o.tlsOptions.addFlags(f)
 	o.pkceOptions.addFlags(f)
@@ -46,6 +50,8 @@ func (o *getTokenOptions) expandHomedir() {
 	o.tokenCacheOptions.expandHomedir()
 	o.authenticationOptions.expandHomedir()
 	o.tlsOptions.expandHomedir()
+	o.ExecClientCertificate = expandHomedir(o.ExecClientCertificate)
+	o.ExecClientKey = expandHomedir(o.ExecClientKey)
 }
 
 type GetToken struct {
@@ -67,6 +73,9 @@ func (cmd *GetToken) New() *cobra.Command {
 			}
 			if o.ClientID == "" {
 				return errors.New("--oidc-client-id is missing")
+			}
+			if (o.ExecClientCertificate == "") != (o.ExecClientKey == "") {
+				return errors.New("--exec-client-certificate and --exec-client-key must be set together")
 			}
 			return nil
 		},
@@ -99,6 +108,9 @@ func (cmd *GetToken) New() *cobra.Command {
 				TokenCacheConfig: tokenCacheConfig,
 				GrantOptionSet:   grantOptionSet,
 				TLSClientConfig:  o.tlsOptions.tlsClientConfig(),
+
+				ExecClientCertificateFile: o.ExecClientCertificate,
+				ExecClientKeyFile:         o.ExecClientKey,
 			}
 			if err := cmd.GetToken.Do(c.Context(), in); err != nil {
 				return fmt.Errorf("get-token: %w", err)

@@ -15,6 +15,8 @@ Flags:
       --oidc-use-access-token                           Instead of using the id_token, use the access_token to authenticate to Kubernetes
       --oidc-request-header stringToString              HTTP headers to send with an authentication request (default [])
       --force-refresh                                   If set, refresh the ID token regardless of its expiration time
+      --exec-client-certificate string                  Path to a client certificate file passed to kubectl
+      --exec-client-key string                          Path to a client key file passed to kubectl
       --token-cache-dir string                          Path to a directory of the token cache (default "~/.kube/cache/oidc-login")
       --token-cache-storage string                      Storage for the token cache. One of (disk|keyring|none) (default "disk")
       --certificate-authority stringArray               Path to a cert file for the certificate authority
@@ -108,6 +110,18 @@ You can use your self-signed certificate for the provider.
 - --certificate-authority-data=LS0t...
 ```
 
+### Client certificate for the API server
+
+If an mTLS proxy is in front of the API server, kubectl needs a client certificate in addition to the token.
+kubectl does not run the credential plugin if the kubeconfig has `client-certificate`, so pass it to kubelogin instead:
+
+```yaml
+- --exec-client-certificate=/home/user/.kube/client.crt
+- --exec-client-key=/home/user/.kube/client.key
+```
+
+The files are read on every call. The credential expires no later than the certificate.
+
 ### HTTP proxy
 
 You can set the following environment variables if you are behind a proxy: `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`.
@@ -139,6 +153,8 @@ For systems with immutable storage and no keyring, a cache type of none is avail
 If a value in the following options begins with a tilde character `~`, it is expanded to the home directory.
 
 - `--certificate-authority`
+- `--exec-client-certificate`
+- `--exec-client-key`
 - `--local-server-cert`
 - `--local-server-key`
 - `--token-cache-dir`

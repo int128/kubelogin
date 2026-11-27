@@ -14,4 +14,8 @@ type Output struct {
 	Token                          string
 	Expiry                         time.Time
 	ClientAuthenticationAPIVersion string
+
+	// PEM encoded client certificate and key, presented to the API server in addition to the token.
+	ClientCertificateData string
+	ClientKeyData         string
 }

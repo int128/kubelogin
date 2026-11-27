@@ -2,7 +2,15 @@ package credentialplugin
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
+	"math/big"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -343,4 +351,145 @@ func TestGetToken_Do(t *testing.T) {
 			t.Errorf("err wants non-nil but nil")
 		}
 	})
+
+	t.Run("ExecClientCertificate", func(t *testing.T) {
+		tokenCacheKey := tokencache.Key{
+			Provider: dummyProvider,
+		}
+		// The certificate expires before the token.
+		certFile, keyFile, certPEM, keyPEM, notAfter := generateClientCertificate(t, expiryTime.Add(-30*time.Minute))
+		ctx := context.TODO()
+		in := Input{
+			Provider: dummyProvider,
+			TokenCacheConfig: tokencache.Config{
+				Directory: "/path/to/token-cache",
+			},
+			GrantOptionSet:            grantOptionSet,
+			ExecClientCertificateFile: certFile,
+			ExecClientKeyFile:         keyFile,
+		}
+		mockCloser := io_mock.NewMockCloser(t)
+		mockCloser.EXPECT().
+			Close().
+			Return(nil)
+		mockRepository := repository_mock.NewMockInterface(t)
+		mockRepository.EXPECT().
+			Lock(in.TokenCacheConfig, tokenCacheKey).
+			Return(mockCloser, nil)
+		mockRepository.EXPECT().
+			FindByKey(in.TokenCacheConfig, tokenCacheKey).
+			Return(&issuedTokenSet, nil)
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			Read().
+			Return(credentialpluginInput, nil)
+		mockWriter := writer_mock.NewMockInterface(t)
+		mockWriter.EXPECT().
+			Write(credentialplugin.Output{
+				Token:                          issuedIDToken,
+				Expiry:                         notAfter,
+				ClientAuthenticationAPIVersion: "client.authentication.k8s.io/v1",
+				ClientCertificateData:          certPEM,
+				ClientKeyData:                  keyPEM,
+			}).
+			Return(nil)
+		u := GetToken{
+			Authentication:         authentication_mock.NewMockInterface(t),
+			TokenCacheRepository:   mockRepository,
+			CredentialPluginReader: mockReader,
+			CredentialPluginWriter: mockWriter,
+			Logger:                 logger.New(t),
+			Clock:                  clock.Fake(expiryTime.Add(-time.Hour)),
+		}
+		if err := u.Do(ctx, in); err != nil {
+			t.Errorf("Do returned error: %+v", err)
+		}
+	})
+
+	t.Run("ExecClientCertificateNotFound", func(t *testing.T) {
+		in := Input{
+			Provider:                  dummyProvider,
+			ExecClientCertificateFile: filepath.Join(t.TempDir(), "client.crt"),
+			ExecClientKeyFile:         filepath.Join(t.TempDir(), "client.key"),
+		}
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			Read().
+			Return(credentialpluginInput, nil)
+		u := GetToken{
+			Authentication:         authentication_mock.NewMockInterface(t),
+			TokenCacheRepository:   repository_mock.NewMockInterface(t),
+			CredentialPluginReader: mockReader,
+			CredentialPluginWriter: writer_mock.NewMockInterface(t),
+			Logger:                 logger.New(t),
+			Clock:                  clock.Fake(expiryTime.Add(-time.Hour)),
+		}
+		if err := u.Do(context.TODO(), in); err == nil {
+			t.Errorf("err wants non-nil but nil")
+		}
+	})
+
+	t.Run("ExecClientCertificateExpired", func(t *testing.T) {
+		certFile, keyFile, _, _, _ := generateClientCertificate(t, expiryTime.Add(-2*time.Hour))
+		in := Input{
+			Provider:                  dummyProvider,
+			ExecClientCertificateFile: certFile,
+			ExecClientKeyFile:         keyFile,
+		}
+		mockReader := reader_mock.NewMockInterface(t)
+		mockReader.EXPECT().
+			Read().
+			Return(credentialpluginInput, nil)
+		u := GetToken{
+			Authentication:         authentication_mock.NewMockInterface(t),
+			TokenCacheRepository:   repository_mock.NewMockInterface(t),
+			CredentialPluginReader: mockReader,
+			CredentialPluginWriter: writer_mock.NewMockInterface(t),
+			Logger:                 logger.New(t),
+			Clock:                  clock.Fake(expiryTime.Add(-time.Hour)),
+		}
+		if err := u.Do(context.TODO(), in); err == nil {
+			t.Errorf("err wants non-nil but nil")
+		}
+	})
+}
+
+// generateClientCertificate writes a self-signed certificate and key to a temporary directory.
+// It returns the parsed NotAfter, because the certificate truncates it to seconds in UTC.
+func generateClientCertificate(t *testing.T, notAfter time.Time) (certFile, keyFile, certPEM, keyPEM string, parsedNotAfter time.Time) {
+	t.Helper()
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey: %s", err)
+	}
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		NotBefore:    notAfter.Add(-24 * time.Hour),
+		NotAfter:     notAfter,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	}
+	der, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
+	if err != nil {
+		t.Fatalf("CreateCertificate: %s", err)
+	}
+	cert, err := x509.ParseCertificate(der)
+	if err != nil {
+		t.Fatalf("ParseCertificate: %s", err)
+	}
+	keyDER, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		t.Fatalf("MarshalPKCS8PrivateKey: %s", err)
+	}
+	certPEM = string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}))
+	keyPEM = string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER}))
+	dir := t.TempDir()
+	certFile = filepath.Join(dir, "client.crt")
+	keyFile = filepath.Join(dir, "client.key")
+	if err := os.WriteFile(certFile, []byte(certPEM), 0600); err != nil {
+		t.Fatalf("WriteFile: %s", err)
+	}
+	if err := os.WriteFile(keyFile, []byte(keyPEM), 0600); err != nil {
+		t.Fatalf("WriteFile: %s", err)
+	}
+	return certFile, keyFile, certPEM, keyPEM, cert.NotAfter
 }
