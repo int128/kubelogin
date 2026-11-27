@@ -48,8 +48,10 @@ func generateExecCredential(out credentialplugin.Output) (any, error) {
 				Kind:       "ExecCredential",
 			},
 			Status: &clientauthenticationv1beta1.ExecCredentialStatus{
-				Token:               out.Token,
-				ExpirationTimestamp: &metav1.Time{Time: out.Expiry},
+				Token:                 out.Token,
+				ExpirationTimestamp:   &metav1.Time{Time: out.Expiry},
+				ClientCertificateData: out.ClientCertificateData,
+				ClientKeyData:         out.ClientKeyData,
 			},
 		}, nil
 
@@ -60,8 +62,10 @@ func generateExecCredential(out credentialplugin.Output) (any, error) {
 				Kind:       "ExecCredential",
 			},
 			Status: &clientauthenticationv1.ExecCredentialStatus{
-				Token:               out.Token,
-				ExpirationTimestamp: &metav1.Time{Time: out.Expiry},
+				Token:                 out.Token,
+				ExpirationTimestamp:   &metav1.Time{Time: out.Expiry},
+				ClientCertificateData: out.ClientCertificateData,
+				ClientKeyData:         out.ClientKeyData,
 			},
 		}, nil
 

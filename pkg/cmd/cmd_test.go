@@ -178,6 +178,8 @@ func TestCmd_Run(t *testing.T) {
 					"--local-server-cert", "~/.kube/oidc-server.crt",
 					"--local-server-key", "~/.kube/oidc-server.key",
 					"--token-cache-dir", "~/.kube/oidc-cache",
+					"--exec-client-certificate", "~/.kube/client.crt",
+					"--exec-client-key", "~/.kube/client.key",
 				},
 				in: credentialplugin.Input{
 					Provider: oidc.Provider{
@@ -198,6 +200,8 @@ func TestCmd_Run(t *testing.T) {
 					TLSClientConfig: tlsclientconfig.Config{
 						CACertFilename: []string{filepath.Join(userHomeDir, ".kube/ca.crt")},
 					},
+					ExecClientCertificateFile: filepath.Join(userHomeDir, ".kube/client.crt"),
+					ExecClientKeyFile:         filepath.Join(userHomeDir, ".kube/client.key"),
 				},
 			},
 		}
@@ -238,6 +242,29 @@ func TestCmd_Run(t *testing.T) {
 				Logger: logger.New(t),
 			}
 			exitCode := cmd.Run(ctx, []string{executable, "get-token"}, version)
+			if exitCode != 1 {
+				t.Errorf("exitCode wants 1 but %d", exitCode)
+			}
+		})
+
+		t.Run("ExecClientCertificateWithoutKey", func(t *testing.T) {
+			ctx := context.TODO()
+			cmd := Cmd{
+				Root: &Root{
+					Logger: logger.New(t),
+				},
+				GetToken: &GetToken{
+					GetToken: credentialplugin_mock.NewMockInterface(t),
+					Logger:   logger.New(t),
+				},
+				Logger: logger.New(t),
+			}
+			exitCode := cmd.Run(ctx, []string{executable,
+				"get-token",
+				"--oidc-issuer-url", "https://issuer.example.com",
+				"--oidc-client-id", "YOUR_CLIENT_ID",
+				"--exec-client-certificate", "client.crt",
+			}, version)
 			if exitCode != 1 {
 				t.Errorf("exitCode wants 1 but %d", exitCode)
 			}

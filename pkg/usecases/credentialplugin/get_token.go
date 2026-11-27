@@ -5,7 +5,10 @@ package credentialplugin
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/google/wire"
 	"github.com/int128/kubelogin/pkg/credentialplugin"
@@ -36,6 +39,10 @@ type Input struct {
 	TokenCacheConfig tokencache.Config
 	GrantOptionSet   authentication.GrantOptionSet
 	TLSClientConfig  tlsclientconfig.Config
+
+	// Client certificate for the API server, e.g. required by an mTLS proxy in front of it.
+	ExecClientCertificateFile string
+	ExecClientKeyFile         string
 }
 
 type GetToken struct {
@@ -55,6 +62,18 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		return fmt.Errorf("could not read the input of credential plugin: %w", err)
 	}
 	u.Logger.V(1).Infof("credential plugin is called with apiVersion: %s", credentialPluginInput.ClientAuthenticationAPIVersion)
+
+	clientCert, err := loadClientCertificate(in.ExecClientCertificateFile, in.ExecClientKeyFile)
+	if err != nil {
+		return fmt.Errorf("could not load the client certificate: %w", err)
+	}
+	if clientCert != nil {
+		// Otherwise the expiry would be in the past and client-go would run the plugin on every request.
+		if !u.Clock.Now().Before(clientCert.notAfter) {
+			return fmt.Errorf("the client certificate has expired at %s", clientCert.notAfter)
+		}
+		u.Logger.V(1).Infof("using the client certificate valid until %s", clientCert.notAfter)
+	}
 
 	u.Logger.V(1).Infof("finding a token cache")
 	tokenCacheKey := tokencache.Key{
@@ -101,6 +120,7 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 					Expiry:                         claims.Expiry,
 					ClientAuthenticationAPIVersion: credentialPluginInput.ClientAuthenticationAPIVersion,
 				}
+				clientCert.apply(&out)
 				if err := u.CredentialPluginWriter.Write(out); err != nil {
 					return fmt.Errorf("could not write the token to client-go: %w", err)
 				}
@@ -135,8 +155,49 @@ func (u *GetToken) Do(ctx context.Context, in Input) error {
 		Expiry:                         idTokenClaims.Expiry,
 		ClientAuthenticationAPIVersion: credentialPluginInput.ClientAuthenticationAPIVersion,
 	}
+	clientCert.apply(&out)
 	if err := u.CredentialPluginWriter.Write(out); err != nil {
 		return fmt.Errorf("could not write the token to client-go: %w", err)
 	}
 	return nil
+}
+
+type clientCertificate struct {
+	certPEM  string
+	keyPEM   string
+	notAfter time.Time
+}
+
+// loadClientCertificate returns nil if no file is given.
+// The files are read on every call so that a renewed certificate is picked up.
+func loadClientCertificate(certFile, keyFile string) (*clientCertificate, error) {
+	if certFile == "" && keyFile == "" {
+		return nil, nil
+	}
+	certPEM, err := os.ReadFile(certFile)
+	if err != nil {
+		return nil, fmt.Errorf("read certificate: %w", err)
+	}
+	keyPEM, err := os.ReadFile(keyFile)
+	if err != nil {
+		return nil, fmt.Errorf("read key: %w", err)
+	}
+	pair, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("invalid key pair: %w", err)
+	}
+	return &clientCertificate{certPEM: string(certPEM), keyPEM: string(keyPEM), notAfter: pair.Leaf.NotAfter}, nil
+}
+
+// apply sets the certificate to the output.
+// client-go runs the plugin again only after the expiry, so the expiry must not exceed the certificate lifetime.
+func (c *clientCertificate) apply(out *credentialplugin.Output) {
+	if c == nil {
+		return
+	}
+	out.ClientCertificateData = c.certPEM
+	out.ClientKeyData = c.keyPEM
+	if c.notAfter.Before(out.Expiry) {
+		out.Expiry = c.notAfter
+	}
 }

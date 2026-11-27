@@ -277,6 +277,56 @@ func TestCredentialPlugin(t *testing.T) {
 		assertCredentialPluginStdout(t, &stdout, svc.LastTokenResponse().IDToken, now.Add(time.Hour))
 	})
 
+	t.Run("ExecClientCertificate", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+		defer cancel()
+		svc := oidcserver.New(t, keypair.None, testconfig.Config{
+			Want: testconfig.Want{
+				Scope:               "openid",
+				RedirectURIPrefix:   "http://localhost:",
+				CodeChallengeMethod: "S256",
+			},
+			Response: testconfig.Response{
+				IDTokenExpiry:                 now.Add(time.Hour),
+				CodeChallengeMethodsSupported: []string{"plain", "S256"},
+			},
+		})
+		var stdout bytes.Buffer
+		runGetToken(t, ctx, getTokenConfig{
+			tokenCacheDir: t.TempDir(),
+			issuerURL:     svc.IssuerURL(),
+			httpDriver:    httpdriver.New(ctx, t, httpdriver.Config{BodyContains: "Authenticated"}),
+			now:           now,
+			stdout:        &stdout,
+			// Any key pair will do, kubelogin passes it through.
+			args: []string{
+				"--exec-client-certificate", keypair.Server.CertPath,
+				"--exec-client-key", keypair.Server.KeyPath,
+			},
+		})
+		certPEM, err := os.ReadFile(keypair.Server.CertPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		keyPEM, err := os.ReadFile(keypair.Server.KeyPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got clientauthenticationv1.ExecCredential
+		if err := json.NewDecoder(&stdout).Decode(&got); err != nil {
+			t.Fatalf("could not decode json of the credential plugin: %s", err)
+		}
+		want := &clientauthenticationv1.ExecCredentialStatus{
+			Token:                 svc.LastTokenResponse().IDToken,
+			ExpirationTimestamp:   &metav1.Time{Time: now.Add(time.Hour)},
+			ClientCertificateData: string(certPEM),
+			ClientKeyData:         string(keyPEM),
+		}
+		if diff := cmp.Diff(want, got.Status); diff != "" {
+			t.Errorf("status mismatch (-want +got):\n%s", diff)
+		}
+	})
+
 	t.Run("ExtraScopes", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 		defer cancel()
